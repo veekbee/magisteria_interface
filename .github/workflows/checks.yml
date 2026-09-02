@@ -14,7 +14,9 @@ name: checks
 on: [push, pull_request]
 
 env:
-  GODOT_VERSION: "4.3"
+  # Current stable. Bump here and in project.godot together -- a local/CI
+  # version split is a class of failure neither side can see.
+  GODOT_VERSION: "4.7.2"
 
 jobs:
   verify:

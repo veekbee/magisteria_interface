@@ -48,6 +48,13 @@ simulation's `sim/` or run directories, no internal-rung debug path. See `README
 No third-party terrain plugins and no test framework. `godot --headless --script` with hand-rolled
 asserts covers the loader and the inspector. CI enforces the absence of an `addons/` directory.
 
+## Godot version
+
+**4.7.2**, pinned in two places that must move together: `GODOT_VERSION` in
+`.github/workflows/checks.yml` and `config/features` in `project.godot`. A local/CI version split is
+a class of failure neither side can see — local goes green on one engine, CI on another, and the
+divergence only surfaces when a language feature differs.
+
 ## Before you push
 
 ```
