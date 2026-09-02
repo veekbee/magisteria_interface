@@ -1,0 +1,295 @@
+{
+  "artefact": "magisteria channel-1 schema",
+  "ruled_by": [
+    "\u00a720.4.4",
+    "decision 893",
+    "decision 894",
+    "decision 895"
+  ],
+  "version": {
+    "major": 1,
+    "minor": 0,
+    "advanced_major_because": [],
+    "advanced_minor_because": []
+  },
+  "version_rule": {
+    "minor": "additions only; new rows take since = this minor",
+    "major": "a carried row removed, renamed or changed; a ladder changed; an envelope field removed or re-semanticised. Minor resets to zero.",
+    "mismatch": "Checked unilaterally before the first delta is interpreted. Major mismatch REFUSES, naming both versions and this sha. Same major, server minor ahead: proceed, skipping AND REPORTING unknown names. Same major, client minor ahead: proceed, masking rows whose `since` exceeds the client's minor as undeclared -- never as zero.",
+    "emitter_conventions_where_895_is_silent": [
+      "first emission is 1.0",
+      "at a major advance every carried row's `since` resets to the new minor (0), because `since` is only comparable within a major"
+    ]
+  },
+  "content_digest_sha256": "1e94cd61c3eca8a2cd18c5ce4c749fed0cd9855570522af8093726536a862053",
+  "provenance": {
+    "generated_by": "tools/emit_schema.py",
+    "generated_from": "sim/registry.py",
+    "generated_at_utc": "2026-09-02T07:15:52Z",
+    "commit": "repo@32fb565e4767c5c81da854036cf204698a1be2dd",
+    "dirty": false,
+    "master_seed": 20260820,
+    "subsystem_set": {
+      "declared": [
+        "weather",
+        "climate",
+        "snow",
+        "hydrology",
+        "nutrients",
+        "vegetation_growth",
+        "fire",
+        "vegetation_offtake",
+        "dust",
+        "fauna",
+        "beaver",
+        "routing"
+      ],
+      "implemented": [
+        "weather",
+        "climate",
+        "snow",
+        "hydrology",
+        "nutrients",
+        "vegetation_growth",
+        "fire",
+        "vegetation_offtake",
+        "routing"
+      ],
+      "unimplemented": [
+        "beaver",
+        "dust",
+        "fauna"
+      ]
+    }
+  },
+  "envelope": {
+    "wire_rung_domain": {
+      "field": [
+        "internal",
+        "coarse",
+        "fine"
+      ]
+    },
+    "wire_rung_domain_note": "Declared for value_kind=\"field\" only. No domain is declared for \"subject\": decision 871's subject half is unauthored and the registry refuses it (\u00a724 gap 153). A client meeting a value_kind its envelope version does not know skips the row as it would an unknown name.",
+    "taxonomies": {
+      "aft": [
+        "life_form",
+        "functional",
+        "specific"
+      ],
+      "pft": [
+        "life_form",
+        "functional",
+        "specific"
+      ]
+    },
+    "taxonomies_note": "Ladders name rungs. Palettes enumerate members and are excluded at every rung (\u00a723.773): a per-taxon anything discloses the axis's cardinality whatever rung the message claims."
+  },
+  "row_form": [
+    "name",
+    "unit",
+    "bounds",
+    "lattice",
+    "dims",
+    "value_kind",
+    "wire_rung",
+    "taxon_rung",
+    "substrate",
+    "since"
+  ],
+  "row_form_note": "`taxon_rung` is present iff `dims` carry a decision 846 taxonomy row, and `substrate` iff declared -- absent rather than null, mirroring the registry's requiredness. The substrate VOCABULARY is issue A's observer-substrate ruling; this contract binds the field's presence and stability only.",
+  "excluded": {
+    "internal_rows": {
+      "rule": "wire_rung == \"internal\"",
+      "count": 23,
+      "why": "decision 184 applied to the schema itself, on \u00a720.4.1's principle: below the cut is structurally absent, not filtered. An internal row generates no channel-1 message, so carrying it would describe messages that cannot exist and hand every client the name, unit and shape of state the wire withholds."
+    },
+    "taxonomy_palettes": {
+      "why": "\u00a723.773 -- cardinality disclosure at every rung"
+    },
+    "declaration_fields": {
+      "fields": [
+        "conserved",
+        "persisted",
+        "has_individual_counterpart",
+        "partition_primitive",
+        "terminal",
+        "terminal_reason",
+        "description"
+      ],
+      "why": "each parameterises behaviour the client cannot observe and must not key on; a client branching on `conserved` is A reading R (\u00a71.4.3), and prose in a contract is drift surface with no consumer"
+    },
+    "values_defaults_state": {
+      "why": "absence semantics are one envelope sentence, never per-row data: within a major version, a name the artefact does not carry defaults to zero (\u00a720.4.2, bounded by the version pair)"
+    },
+    "subject_wire_rung_vocabulary": {
+      "why": "decision 871's subject half is unauthored and the registry refuses it -- \u00a724 gap 153, the perception track's. A contract implying one would assert what no section has decided."
+    }
+  },
+  "rows": [
+    {
+      "name": "band.bare_fraction",
+      "unit": "fraction",
+      "bounds": [
+        0.0,
+        1.0
+      ],
+      "lattice": "band",
+      "dims": [
+        "node",
+        "band"
+      ],
+      "value_kind": "field",
+      "wire_rung": "fine",
+      "since": 0
+    },
+    {
+      "name": "band.burned_fraction",
+      "unit": "fraction",
+      "bounds": [
+        0.0,
+        1.0
+      ],
+      "lattice": "band",
+      "dims": [
+        "node",
+        "band"
+      ],
+      "value_kind": "field",
+      "wire_rung": "fine",
+      "since": 0
+    },
+    {
+      "name": "band.pft.biomass",
+      "unit": "kg/m2",
+      "bounds": [
+        0.0,
+        100.0
+      ],
+      "lattice": "band",
+      "dims": [
+        "node",
+        "band",
+        "pft"
+      ],
+      "value_kind": "field",
+      "wire_rung": "fine",
+      "taxon_rung": "functional",
+      "since": 0
+    },
+    {
+      "name": "band.pft_fractions",
+      "unit": "fraction",
+      "bounds": [
+        0.0,
+        1.0
+      ],
+      "lattice": "band",
+      "dims": [
+        "node",
+        "band",
+        "pft"
+      ],
+      "value_kind": "field",
+      "wire_rung": "fine",
+      "taxon_rung": "functional",
+      "since": 0
+    },
+    {
+      "name": "band.snowpack_swe",
+      "unit": "m",
+      "bounds": [
+        0.0,
+        30.0
+      ],
+      "lattice": "band",
+      "dims": [
+        "node",
+        "band"
+      ],
+      "value_kind": "field",
+      "wire_rung": "fine",
+      "since": 0
+    },
+    {
+      "name": "band.surface_albedo",
+      "unit": "fraction",
+      "bounds": [
+        0.0,
+        1.0
+      ],
+      "lattice": "band",
+      "dims": [
+        "node",
+        "band"
+      ],
+      "value_kind": "field",
+      "wire_rung": "fine",
+      "since": 0
+    },
+    {
+      "name": "band.wetness",
+      "unit": "fraction",
+      "bounds": [
+        0.0,
+        1.0
+      ],
+      "lattice": "band",
+      "dims": [
+        "node",
+        "band"
+      ],
+      "value_kind": "field",
+      "wire_rung": "fine",
+      "since": 0
+    },
+    {
+      "name": "node.aft.population",
+      "unit": "count",
+      "bounds": [
+        0.0,
+        1000000000.0
+      ],
+      "lattice": "node",
+      "dims": [
+        "node",
+        "aft"
+      ],
+      "value_kind": "field",
+      "wire_rung": "fine",
+      "taxon_rung": "functional",
+      "since": 0
+    },
+    {
+      "name": "node.streamflow",
+      "unit": "m3/s",
+      "bounds": [
+        0.0,
+        100000.0
+      ],
+      "lattice": "node",
+      "dims": [
+        "node"
+      ],
+      "value_kind": "field",
+      "wire_rung": "fine",
+      "since": 0
+    },
+    {
+      "name": "node.wetland_extent",
+      "unit": "m2",
+      "bounds": [
+        0.0,
+        1000000000.0
+      ],
+      "lattice": "node",
+      "dims": [
+        "node"
+      ],
+      "value_kind": "field",
+      "wire_rung": "fine",
+      "since": 0
+    }
+  ],
+  "row_count": 10
+}

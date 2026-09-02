@@ -1,0 +1,18 @@
+# Godot's import cache and editor state. Regenerated on open; never committed.
+.godot/
+*.import
+
+# Export artefacts.
+/export/
+*.pck
+*.zip
+
+# Large sim artefacts fetched rather than committed. `assets/*/README.md`
+# says which tool produces each and how it is pinned; the bytes are not this
+# repo's to carry until the LFS-vs-fetch call is made (roadmap Phase 5 (e)).
+/assets/terrain/*
+!/assets/terrain/README.md
+/assets/fixture/*
+!/assets/fixture/README.md
+
+.DS_Store

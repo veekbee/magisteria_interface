@@ -1,0 +1,82 @@
+# .github/workflows/checks.yml
+#
+# Three checks, in the order that makes a failure legible: the contract pin,
+# then whether the project imports at all, then whether the loader agrees with
+# the contract it was written against.
+#
+# Godot is downloaded from the engine's own releases rather than through a
+# third-party setup action. The no-addons rule in README.md is about the
+# PROJECT, not about CI -- but a marketplace action is the same class of
+# dependency, and a pinned URL to an official release is both smaller and
+# easier to audit than one.
+name: checks
+
+on: [push, pull_request]
+
+env:
+  GODOT_VERSION: "4.3"
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with: { python-version: '3.12' }
+
+      # First, because it needs no engine and it is the check most likely to
+      # fail on a real change: the vendored artefact against its PIN. The
+      # cross-repo half needs a simulation-repo checkout and is deliberately
+      # not run here -- see the tool's own header.
+      - name: contract pin (local half)
+        run: python3 tools/check_contract.py
+
+      - name: no addons, of any kind
+        # README.md's rule, mechanised. A test framework or a terrain plugin
+        # arriving as an addon is exactly the thing that gets added quietly
+        # and argued about later.
+        run: |
+          if [ -d addons ]; then
+            echo "::error::addons/ exists -- see README.md's 'No addons, of any kind'"
+            exit 1
+          fi
+
+      - name: fetch Godot ${{ env.GODOT_VERSION }}
+        run: |
+          set -euo pipefail
+          url="https://github.com/godotengine/godot/releases/download/${GODOT_VERSION}-stable/Godot_v${GODOT_VERSION}-stable_linux.x86_64.zip"
+          curl -fsSL -o godot.zip "$url"
+          unzip -q godot.zip
+          mv "Godot_v${GODOT_VERSION}-stable_linux.x86_64" godot
+          chmod +x godot
+          ./godot --version
+
+      - name: project imports
+        # Generates the import cache. A scene referencing a script that does
+        # not parse fails here, which is a much clearer failure than the same
+        # thing surfacing as a null later -- but note the grep does the work:
+        # `--import` returned exit 0 over four failed script loads on the
+        # first run of this workflow.
+        run: |
+          set -euo pipefail
+          ./godot --headless --import 2>&1 | tee import.log
+          if grep -qE "SCRIPT ERROR|Parse Error|Failed to load" import.log; then
+            echo "::error::import produced script or parse errors"
+            exit 1
+          fi
+
+      - name: loader smoke (headless)
+        # The runner sets its own exit code, but the log is checked as well.
+        # MEASURED, not defensive: on this repo's first CI run Godot exited
+        # **0** with four scripts failing to load on a parse error. The grep is
+        # the only reason that run went red. A test run that cannot fail is not
+        # a test run.
+        run: |
+          set -euo pipefail
+          ./godot --headless --script res://tests/run_headless.gd 2>&1 | tee test.log
+          if grep -qE "SCRIPT ERROR|Parse Error|^FAIL:" test.log; then
+            echo "::error::headless tests reported failures"
+            exit 1
+          fi
+          grep -q "^OK -- " test.log || { echo "::error::no OK line -- the runner did not finish"; exit 1; }
