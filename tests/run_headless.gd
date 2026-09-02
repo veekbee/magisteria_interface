@@ -11,6 +11,15 @@ extends SceneTree
 
 var _failures: Array[String] = []
 var _checks: int = 0
+var _scene_root: Node = null
+var _frames: int = 0
+
+## `_ready()` is deferred to the first frame -- it does NOT fire synchronously
+## on `add_child` -- so the scene test cannot run inside `_initialize()`. It is
+## staged here and asserted from `_process`. That is not a detail: a probe that
+## checked immediately after `add_child` reported the panel empty and looked
+## exactly like a real defect.
+const SCENE_FRAMES := 3
 
 
 func _initialize() -> void:
@@ -21,7 +30,19 @@ func _initialize() -> void:
     test_wire_rung_outside_its_domain_is_skipped()
     test_a_row_from_a_future_minor_is_masked_never_zeroed()
     test_the_inspector_builds_from_a_document()
+    stage_the_main_scene()
 
+
+func _process(_delta: float) -> bool:
+    _frames += 1
+    if _frames < SCENE_FRAMES:
+        return false
+    test_the_main_scene_populated_itself()
+    _finish()
+    return true
+
+
+func _finish() -> void:
     print("")
     if _failures.is_empty():
         print("OK -- %d checks passed" % _checks)
@@ -187,3 +208,49 @@ func test_the_inspector_builds_from_a_document() -> void:
             "the panel rendered %d nodes for %d rows" % [n, panel.document.rows.size()])
     panel.free()
     print("inspector: %d nodes rendered" % n)
+
+
+# --------------------------------------------------------------------------
+# the scene as it actually runs
+# --------------------------------------------------------------------------
+
+func stage_the_main_scene() -> void:
+    var packed := load("res://scenes/main.tscn") as PackedScene
+    check(packed != null, "main.tscn did not load as a PackedScene")
+    if packed == null:
+        return
+    _scene_root = packed.instantiate()
+    check(_scene_root != null, "main.tscn did not instantiate")
+    if _scene_root != null:
+        get_root().add_child(_scene_root)
+
+
+func test_the_main_scene_populated_itself() -> void:
+    """The path the application actually takes, which every test above
+    bypasses: main.tscn loads, InspectorPanel._ready() reads the artefact off
+    disk with nobody handing it one, and the panel fills.
+
+    The tests above construct the panel, assign `document` and call `rebuild()`
+    directly. That proves the rendering and proves nothing about the wiring --
+    a broken node path, a scene referencing a stale script, or a `_ready` that
+    silently does nothing would leave all of them green. Running the scene
+    headless proves nothing either: with zero reports and no refusal the app
+    prints nothing, so exit 0 is what success AND what doing-nothing look like.
+    """
+    if _scene_root == null:
+        return
+    var insp = _scene_root.get_node_or_null("Scroll/Inspector")
+    check(insp != null, "main.tscn has no Scroll/Inspector node -- the path in main.gd is stale")
+    if insp == null:
+        return
+    check(insp.document != null,
+            "the panel's _ready() did not load the artefact after %d frames" % _frames)
+    if insp.document == null:
+        return
+    check(not insp.document.refused,
+            "the scene refused the shipped contract: %s" % insp.document.refusal_reason)
+    check(insp.document.rows.size() > 0, "the scene loaded a contract with no rows")
+    check(insp.get_child_count() > 0,
+            "the panel rendered nothing from a %d-row contract" % insp.document.rows.size())
+    print("main scene: %d rows, %d nodes rendered by _ready()"
+            % [insp.document.rows.size(), insp.get_child_count()])
