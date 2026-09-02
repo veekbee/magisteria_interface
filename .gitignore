@@ -2,6 +2,12 @@
 .godot/
 *.import
 
+# `.uid` files are NOT ignored, deliberately. Godot 4.4+ emits one per script
+# and they are meant to be version-controlled: they are what keeps a reference
+# stable when a file moves. They appeared here the first time the project was
+# opened under 4.7, so this note exists to stop someone reading them as stray
+# editor output and ignoring them.
+
 # Export artefacts.
 /export/
 *.pck
