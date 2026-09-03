@@ -93,8 +93,17 @@ func test_real_artefact_loads_clean() -> void:
     check(doc.envelope.version.major == SchemaLoader.CLIENT_MAJOR,
             "shipped contract's major is not the client's")
     check(doc.rows.size() > 0, "shipped contract yielded no rows")
-    check(doc.envelope.taxonomies.has("pft") and doc.envelope.taxonomies.has("aft"),
-            "both taxonomy ladders should be declared in the envelope")
+    # `aft` left the envelope at v2.0 with the only row that referenced it.
+    # A ladder is owed for an axis a carried row uses, and for no other -- so
+    # this checks the rule rather than the pair it happened to produce.
+    check(not doc.envelope.taxonomies.is_empty(),
+            "a carried row references a taxonomy axis, so a ladder is owed")
+    for axis in doc.envelope.taxonomies:
+        var used := false
+        for r in doc.rows:
+            if r.dims.has(axis):
+                used = true
+        check(used, "ladder %s is declared and no carried row references it" % axis)
     # A skip here would mean the shipped artefact carries something this build
     # cannot read -- which is exactly what CI exists to catch on a bump.
     check(doc.reports.is_empty(),
@@ -514,16 +523,27 @@ func test_residence_keys_never_land_where_there_is_no_ground() -> void:
 
 func test_the_fixture_loads_and_says_what_it_refused() -> void:
     """A row the build could not carry must be visible to the client. Omitting
-    it silently would make an open design question -- the aft axis is 15
-    palette members against 14 engine positions -- look like a design."""
+    it silently would make an open design question look like a design.
+
+    At v1.0 that row was `node.aft.population` -- 15 palette members against a
+    14-wide engine axis. v2.0 made it `internal`, so today there is nothing to
+    refuse and the assertion is conditional: IF a row is refused it must carry
+    a reason and must not also be carried."""
     var fl := fixture()
     check(fl.is_loaded(), "the fixture did not load")
     check(fl.n_cells > 5000, "only %d cells" % fl.n_cells)
     check(fl.windows.size() >= 2, "only %d windows" % fl.windows.size())
     var rows := fl.row_names(fl.windows[0])
     check(rows.size() >= 6, "only %d rows carried" % rows.size())
+
+    # This asserted that at least one row WAS refused, because
+    # `node.aft.population` always was -- the aft palette has 15 members
+    # against a 14-wide engine axis. Contract v2.0 made that row `internal`
+    # (decision 901: its only writer is unimplemented), so it is no longer in
+    # the carried set and there is nothing left for the build to refuse. The
+    # property was never "one row is refused"; it is "a refusal is legible",
+    # and pinning the count pinned a transient state instead.
     var refused: Dictionary = fl.refused_rows.get(fl.windows[0], {})
-    check(not refused.is_empty(), "no refused row is reported, but one is expected")
     for k in refused:
         check(str(refused[k]).length() > 30, "%s is refused without a reason" % k)
         check(not rows.has(k), "%s is both carried and refused" % k)

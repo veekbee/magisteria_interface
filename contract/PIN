@@ -12,16 +12,16 @@
     "path": "data/schema_output/schema.json",
     "_not": "data/schema_draft_output/schema.DRAFT-v0.json -- a superseded draft sharing this basename"
   },
-  "file_sha256": "fed8394feee5916c99115e49343780ecfd5ce2cfdb75678d171f80f2ec8b2264",
+  "file_sha256": "61fc91895ba04a92eaab3013bd9ca5951cab2860e16169dd9d4db745efc59680",
   "_file_sha256_note": "sha256 of contract/schema.json's BYTES. This is what the local half of the check verifies, and it needs no JSON parser to do it.",
-  "artefact_committed_at": "6a4c25876c871e46d27c4f1460d9a771ca062880",
+  "artefact_committed_at": "2e3314a0c8891f36b785db69041554434f1ac05a",
   "_artefact_committed_at_note": "The simulation-repo commit these bytes come from -- the last commit to touch that path. The cross-repo half compares `git show <this>:<path>` against file_sha256.",
-  "emitted_at_commit": "repo@32fb565e4767c5c81da854036cf204698a1be2dd",
+  "emitted_at_commit": "repo@31444c6b5e3bc2406ee9302ca9b98f286a2eaa46",
   "_emitted_at_commit_note": "provenance.commit: the tree state tools/emit_schema.py read. Distinct from artefact_committed_at, which is where the emitted bytes came to rest.",
-  "declared_content_digest_sha256": "1e94cd61c3eca8a2cd18c5ce4c749fed0cd9855570522af8093726536a862053",
+  "declared_content_digest_sha256": "d5f9a545655d0c945c46f358bdead75c90b71cab6f6f6c01c5dcd77b3aee8941",
   "_declared_content_digest_note": "The artefact's own claim about its canonical content, which excludes `since`. Recorded, not verified here: only the emitter can recompute it, and faking that check client-side would be a second implementation of the canonicalisation rule.",
   "version": {
-    "major": 1,
+    "major": 2,
     "minor": 0
   }
 }

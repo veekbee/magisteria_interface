@@ -1,5 +1,4 @@
 {
- "_what": "the client's view of fixture v1",
  "ruled_by": [
   "\u00a720.4.4",
   "decision 872",
@@ -8,7 +7,7 @@
   "\u00a723.802"
  ],
  "generated_by": "tools/build_fixture.py",
- "generated_at_utc": "2026-09-03T02:51:14Z",
+ "generated_at_utc": "2026-09-03T04:01:18Z",
  "run": {
   "dir": "millennium-001",
   "base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
@@ -17,7 +16,7 @@
   "years": 1000
  },
  "carried_set": {
-  "n": 10,
+  "n": 8,
   "names": [
    "band.bare_fraction",
    "band.burned_fraction",
@@ -26,9 +25,7 @@
    "band.snowpack_swe",
    "band.surface_albedo",
    "band.wetness",
-   "node.aft.population",
-   "node.streamflow",
-   "node.wetland_extent"
+   "node.streamflow"
   ],
   "derived_by": "emit_schema.carried() -- the contract's own function, imported rather than re-derived (894, \u00a723.815)"
  },
@@ -23944,9 +23941,311 @@
    ]
   ]
  },
+ "windows": {
+  "largest_fire": {
+   "name": "largest_fire",
+   "year_index": 753,
+   "water_year": 753,
+   "chosen_by": "max burned_fraction_sum over water years >= 751 (the flattest quarter)",
+   "trend_caveat": "burned_fraction_sum declines across the run, r = -0.836. A maximum over the whole post-spin-up range lands on the cutoff year rather than on a fire, so the window is chosen inside the stationary tail.",
+   "value": 30.532957153257396,
+   "start_doy": 152,
+   "note": "starts 1 June: the fire season, not the water year",
+   "replay": {
+    "ckpt": "ckpt_y0750.npz",
+    "ckpt_year": 750,
+    "ticks_replayed": 1336,
+    "replay_seconds": 39.3,
+    "first_tick": 274997
+   },
+   "days": 90,
+   "carried_here": [
+    "band.bare_fraction",
+    "band.burned_fraction",
+    "band.pft.biomass",
+    "band.pft_fractions",
+    "band.snowpack_swe",
+    "band.surface_albedo",
+    "band.wetness",
+    "node.streamflow"
+   ],
+   "refused_rows": {},
+   "series": {
+    "band.bare_fraction": {
+     "shape": [
+      90,
+      5684
+     ],
+     "taxon_groups": null,
+     "dtype": "float32",
+     "byte_offset": 0,
+     "byte_length": 2046240,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 0.03589052531775572,
+     "all_zero": false
+    },
+    "band.burned_fraction": {
+     "shape": [
+      90,
+      5684
+     ],
+     "taxon_groups": null,
+     "dtype": "float32",
+     "byte_offset": 2046240,
+     "byte_length": 2046240,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 1.1102230246251565e-16,
+     "all_zero": false
+    },
+    "band.pft.biomass": {
+     "shape": [
+      90,
+      5684,
+      4
+     ],
+     "taxon_groups": [
+      "grass",
+      "shrub",
+      "succulent",
+      "tree"
+     ],
+     "dtype": "float64",
+     "byte_offset": 4092480,
+     "byte_length": 16369920,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 9.02759206434e-312,
+     "all_zero": false,
+     "float64_because": "smallest non-zero magnitude is below float32's smallest normal; narrowing it is \u00a723.812's underflow"
+    },
+    "band.pft_fractions": {
+     "shape": [
+      90,
+      5684,
+      4
+     ],
+     "taxon_groups": [
+      "grass",
+      "shrub",
+      "succulent",
+      "tree"
+     ],
+     "dtype": "float32",
+     "byte_offset": 20462400,
+     "byte_length": 8184960,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 9.840853968779063e-16,
+     "all_zero": false
+    },
+    "band.snowpack_swe": {
+     "shape": [
+      90,
+      5684
+     ],
+     "taxon_groups": null,
+     "dtype": "float64",
+     "byte_offset": 28647360,
+     "byte_length": 4092480,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 2.333663959242274e-64,
+     "all_zero": false,
+     "float64_because": "smallest non-zero magnitude is below float32's smallest normal; narrowing it is \u00a723.812's underflow"
+    },
+    "band.surface_albedo": {
+     "shape": [
+      90,
+      5684
+     ],
+     "taxon_groups": null,
+     "dtype": "float32",
+     "byte_offset": 32739840,
+     "byte_length": 2046240,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 0.19752505522795716,
+     "all_zero": false
+    },
+    "band.wetness": {
+     "shape": [
+      90,
+      5684
+     ],
+     "taxon_groups": null,
+     "dtype": "float32",
+     "byte_offset": 34786080,
+     "byte_length": 2046240,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 1.013697572242851e-06,
+     "all_zero": false
+    },
+    "node.streamflow": {
+     "shape": [
+      90,
+      1154
+     ],
+     "taxon_groups": null,
+     "dtype": "float64",
+     "byte_offset": 36832320,
+     "byte_length": 830880,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 5e-324,
+     "all_zero": false,
+     "float64_because": "smallest non-zero magnitude is below float32's smallest normal; narrowing it is \u00a723.812's underflow"
+    }
+   }
+  },
+  "deepest_winter": {
+   "name": "deepest_winter",
+   "year_index": 405,
+   "water_year": 405,
+   "chosen_by": "max peak_swe_mm_area_weighted over water years >= 100",
+   "caveat": "peak SWE in this run is 9.5-32.3 mm against a 229-330 mm reference. This is the deepest winter the run HAS, not a deep winter -- see the acceptance verdict.",
+   "value": 32.27426161387005,
+   "start_doy": 1,
+   "note": "starts 1 October: the water year's own start",
+   "replay": {
+    "ckpt": "ckpt_y0400.npz",
+    "ckpt_year": 400,
+    "ticks_replayed": 1915,
+    "replay_seconds": 59.6,
+    "first_tick": 147826
+   },
+   "days": 90,
+   "carried_here": [
+    "band.bare_fraction",
+    "band.burned_fraction",
+    "band.pft.biomass",
+    "band.pft_fractions",
+    "band.snowpack_swe",
+    "band.surface_albedo",
+    "band.wetness",
+    "node.streamflow"
+   ],
+   "refused_rows": {},
+   "series": {
+    "band.bare_fraction": {
+     "shape": [
+      90,
+      5684
+     ],
+     "taxon_groups": null,
+     "dtype": "float32",
+     "byte_offset": 37663200,
+     "byte_length": 2046240,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 0.03527954237437869,
+     "all_zero": false
+    },
+    "band.burned_fraction": {
+     "shape": [
+      90,
+      5684
+     ],
+     "taxon_groups": null,
+     "dtype": "float32",
+     "byte_offset": 39709440,
+     "byte_length": 2046240,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 1.1102230246251565e-16,
+     "all_zero": false
+    },
+    "band.pft.biomass": {
+     "shape": [
+      90,
+      5684,
+      4
+     ],
+     "taxon_groups": [
+      "grass",
+      "shrub",
+      "succulent",
+      "tree"
+     ],
+     "dtype": "float64",
+     "byte_offset": 41755680,
+     "byte_length": 16369920,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 6.278069149686167e-168,
+     "all_zero": false,
+     "float64_because": "smallest non-zero magnitude is below float32's smallest normal; narrowing it is \u00a723.812's underflow"
+    },
+    "band.pft_fractions": {
+     "shape": [
+      90,
+      5684,
+      4
+     ],
+     "taxon_groups": [
+      "grass",
+      "shrub",
+      "succulent",
+      "tree"
+     ],
+     "dtype": "float32",
+     "byte_offset": 58125600,
+     "byte_length": 8184960,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 1.1625375181084243e-12,
+     "all_zero": false
+    },
+    "band.snowpack_swe": {
+     "shape": [
+      90,
+      5684
+     ],
+     "taxon_groups": null,
+     "dtype": "float64",
+     "byte_offset": 66310560,
+     "byte_length": 4092480,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 1.2157977329565549e-54,
+     "all_zero": false,
+     "float64_because": "smallest non-zero magnitude is below float32's smallest normal; narrowing it is \u00a723.812's underflow"
+    },
+    "band.surface_albedo": {
+     "shape": [
+      90,
+      5684
+     ],
+     "taxon_groups": null,
+     "dtype": "float32",
+     "byte_offset": 70403040,
+     "byte_length": 2046240,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 0.19753107554303245,
+     "all_zero": false
+    },
+    "band.wetness": {
+     "shape": [
+      90,
+      5684
+     ],
+     "taxon_groups": null,
+     "dtype": "float32",
+     "byte_offset": 72449280,
+     "byte_length": 2046240,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 8.545951356747768e-06,
+     "all_zero": false
+    },
+    "node.streamflow": {
+     "shape": [
+      90,
+      1154
+     ],
+     "taxon_groups": null,
+     "dtype": "float64",
+     "byte_offset": 74495520,
+     "byte_length": 830880,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 5e-324,
+     "all_zero": false,
+     "float64_because": "smallest non-zero magnitude is below float32's smallest normal; narrowing it is \u00a723.812's underflow"
+    }
+   }
+  }
+ },
  "client_form": {
   "file": "fixture_client.bin",
-  "bytes": 29924640,
+  "bytes": 28262880,
   "is_a_display_encoding": "NOT the fixture. Values are quantised to 65,534 levels over the CONTRACT's declared bounds so a colour ramp is comparable across windows and rebuilds. Three rows in the fixture are float64 because they reach below float32's floor; that precision is deliberately not here, and anything that needs it reads fixture_v1.bin.",
   "band_rows_quantised_node_rows_not": "Band rows are quantised to 65,534 levels over the contract's bounds -- a colour ramp needs no more. Node rows are carried at full float64 because they are 1,154 wide rather than 5,684, so exactness costs ~3 MB, and because quantising streamflow over [0, 100000] would zero everything below 1.5 m3/s. HOW to render a quantity spanning that range is an open display question; this artefact does not answer it.",
   "rows": {
@@ -24111,25 +24410,6 @@
     "min_nonzero_magnitude": 5e-324,
     "not_quantised_because": "the contract's bounds are [0, 100000]; 65,534 levels over that puts everything below 1.52593 at zero, and this row's smallest non-zero value is 4.941e-324"
    },
-   "largest_fire/node.wetland_extent": {
-    "window": "largest_fire",
-    "row": "node.wetland_extent",
-    "shape": [
-     90,
-     1154
-    ],
-    "byte_offset": 14131440,
-    "byte_length": 830880,
-    "dtype": "float64 little-endian",
-    "decode": "raw float64; no quantisation",
-    "lattice": "node",
-    "lo": 0.0,
-    "hi": 0.0,
-    "contract_lo": 0.0,
-    "contract_hi": 1000000000.0,
-    "min_nonzero_magnitude": null,
-    "not_quantised_because": "the contract's bounds are [0, 1e+09]; 65,534 levels over that puts everything below 15259.3 at zero, and this row's smallest non-zero value is n/a"
-   },
    "deepest_winter/band.bare_fraction": {
     "window": "deepest_winter",
     "row": "band.bare_fraction",
@@ -24137,7 +24417,7 @@
      90,
      5684
     ],
-    "byte_offset": 14962320,
+    "byte_offset": 14131440,
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
@@ -24157,7 +24437,7 @@
      90,
      5684
     ],
-    "byte_offset": 15985440,
+    "byte_offset": 15154560,
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
@@ -24178,7 +24458,7 @@
      5684,
      4
     ],
-    "byte_offset": 17008560,
+    "byte_offset": 16177680,
     "byte_length": 4092480,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
@@ -24199,7 +24479,7 @@
      5684,
      4
     ],
-    "byte_offset": 21101040,
+    "byte_offset": 20270160,
     "byte_length": 4092480,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
@@ -24219,7 +24499,7 @@
      90,
      5684
     ],
-    "byte_offset": 25193520,
+    "byte_offset": 24362640,
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
@@ -24239,7 +24519,7 @@
      90,
      5684
     ],
-    "byte_offset": 26216640,
+    "byte_offset": 25385760,
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
@@ -24259,7 +24539,7 @@
      90,
      5684
     ],
-    "byte_offset": 27239760,
+    "byte_offset": 26408880,
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
@@ -24279,7 +24559,7 @@
      90,
      1154
     ],
-    "byte_offset": 28262880,
+    "byte_offset": 27432000,
     "byte_length": 830880,
     "dtype": "float64 little-endian",
     "decode": "raw float64; no quantisation",
@@ -24290,100 +24570,12 @@
     "contract_hi": 100000.0,
     "min_nonzero_magnitude": 5e-324,
     "not_quantised_because": "the contract's bounds are [0, 100000]; 65,534 levels over that puts everything below 1.52593 at zero, and this row's smallest non-zero value is 4.941e-324"
-   },
-   "deepest_winter/node.wetland_extent": {
-    "window": "deepest_winter",
-    "row": "node.wetland_extent",
-    "shape": [
-     90,
-     1154
-    ],
-    "byte_offset": 29093760,
-    "byte_length": 830880,
-    "dtype": "float64 little-endian",
-    "decode": "raw float64; no quantisation",
-    "lattice": "node",
-    "lo": 0.0,
-    "hi": 0.0,
-    "contract_lo": 0.0,
-    "contract_hi": 1000000000.0,
-    "min_nonzero_magnitude": null,
-    "not_quantised_because": "the contract's bounds are [0, 1e+09]; 65,534 levels over that puts everything below 15259.3 at zero, and this row's smallest non-zero value is n/a"
    }
   }
  },
- "windows": {
-  "largest_fire": {
-   "name": "largest_fire",
-   "year_index": 753,
-   "water_year": 753,
-   "chosen_by": "max burned_fraction_sum over water years >= 751 (the flattest quarter)",
-   "trend_caveat": "burned_fraction_sum declines across the run, r = -0.836. A maximum over the whole post-spin-up range lands on the cutoff year rather than on a fire, so the window is chosen inside the stationary tail.",
-   "value": 30.532957153257396,
-   "start_doy": 152,
-   "note": "starts 1 June: the fire season, not the water year",
-   "replay": {
-    "ckpt": "ckpt_y0750.npz",
-    "ckpt_year": 750,
-    "ticks_replayed": 1336,
-    "replay_seconds": 36.4,
-    "first_tick": 274997
-   },
-   "days": 90,
-   "carried_here": [
-    "band.bare_fraction",
-    "band.burned_fraction",
-    "band.pft.biomass",
-    "band.pft_fractions",
-    "band.snowpack_swe",
-    "band.surface_albedo",
-    "band.wetness",
-    "node.streamflow",
-    "node.wetland_extent"
-   ],
-   "refused_rows": {
-    "node.aft.population": "the aft palette has 15 members and the engine's axis is 14 wide. Any placement of one on the other is a guess, and a wrong per-life-form aggregate is indistinguishable from a right one"
-   }
-  },
-  "deepest_winter": {
-   "name": "deepest_winter",
-   "year_index": 405,
-   "water_year": 405,
-   "chosen_by": "max peak_swe_mm_area_weighted over water years >= 100",
-   "caveat": "peak SWE in this run is 9.5-32.3 mm against a 229-330 mm reference. This is the deepest winter the run HAS, not a deep winter -- see the acceptance verdict.",
-   "value": 32.27426161387005,
-   "start_doy": 1,
-   "note": "starts 1 October: the water year's own start",
-   "replay": {
-    "ckpt": "ckpt_y0400.npz",
-    "ckpt_year": 400,
-    "ticks_replayed": 1915,
-    "replay_seconds": 55.7,
-    "first_tick": 147826
-   },
-   "days": 90,
-   "carried_here": [
-    "band.bare_fraction",
-    "band.burned_fraction",
-    "band.pft.biomass",
-    "band.pft_fractions",
-    "band.snowpack_swe",
-    "band.surface_albedo",
-    "band.wetness",
-    "node.streamflow",
-    "node.wetland_extent"
-   ],
-   "refused_rows": {
-    "node.aft.population": "the aft palette has 15 members and the engine's axis is 14 wide. Any placement of one on the other is a guess, and a wrong per-life-form aggregate is indistinguishable from a right one"
-   }
-  }
- },
+ "_what": "the client's view of fixture v1",
  "_refused_rows": {
-  "largest_fire": {
-   "node.aft.population": "the aft palette has 15 members and the engine's axis is 14 wide. Any placement of one on the other is a guess, and a wrong per-life-form aggregate is indistinguishable from a right one"
-  },
-  "deepest_winter": {
-   "node.aft.population": "the aft palette has 15 members and the engine's axis is 14 wide. Any placement of one on the other is a guess, and a wrong per-life-form aggregate is indistinguishable from a right one"
-  }
+  "largest_fire": {},
+  "deepest_winter": {}
  }
 }

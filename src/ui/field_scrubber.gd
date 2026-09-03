@@ -5,10 +5,14 @@ extends VBoxContainer
 ##
 ## The row list comes from the FIXTURE, not from a hardcoded list -- a row the
 ## fixture refused must not be offerable, and a row added later must appear
-## without an edit here. Refused rows are shown, disabled, with their reason:
-## `node.aft.population` is absent because the aft palette has 15 members
-## against a 14-wide engine axis, and a control that simply omitted it would
-## make an unresolved design question look like a design.
+## without an edit here. Refused rows are shown, disabled, with their reason,
+## because a control that simply omitted one would make an unresolved design
+## question look like a design.
+##
+## At contract v1.0 the one refused row was `node.aft.population` (15 palette
+## members against a 14-wide engine axis). v2.0 removed it from the carried set
+## entirely -- its only writer is unimplemented -- so nothing is refused today.
+## Deriving the list from the fixture is what made that a no-op here.
 
 signal changed(window: String, row: String, day: int, group: int)
 

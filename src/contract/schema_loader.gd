@@ -29,7 +29,15 @@ extends RefCounted
 ## What this build was written against. Bumped deliberately, by a human,
 ## when the client is updated to a new artefact -- never read from the
 ## artefact itself, which would make every mismatch check vacuous.
-const CLIENT_MAJOR: int = 1
+## v2.0 is the first major advance this contract has taken. It removed
+## `node.aft.population` and `node.wetland_extent` (their only writers are
+## unimplemented subsystems, so they published as plausible zeros), dropped the
+## `aft` ladder with its only referencing row, and removed `master_seed`,
+## `subsystem_set` and the excluded-row count from the envelope. Before the bump
+## this build refused the artefact and yielded zero rows, naming both versions
+## and the artefact sha -- which is the mismatch rule working, and is the reason
+## the constant is bumped by hand rather than read from the file.
+const CLIENT_MAJOR: int = 2
 const CLIENT_MINOR: int = 0
 
 ## Reasons a row did not make it into `Document.rows`. Reported, never silent.
