@@ -35,6 +35,7 @@ func _initialize() -> void:
     test_bicubic_does_not_terrace()
     test_a_nodata_neighbourhood_returns_nan_not_a_height()
     test_the_terrain_mesh_holes_rather_than_walls_at_nodata()
+    test_a_mesh_position_recovers_the_texel_it_was_sampled_from()
     test_flowlines_drape_and_keep_their_orders()
     test_no_lattice_geometry_reaches_the_scene()
     test_the_camera_rig_offers_both_projections()
@@ -407,6 +408,51 @@ func test_the_terrain_mesh_holes_rather_than_walls_at_nodata() -> void:
             "the mesh spans %.0f x %.0f m, which is not this basin" % [aabb.size.x, aabb.size.z])
     print("mesh: %d verts, %d quads, %d skipped at nodata"
             % [tm.vertex_count, tm.quad_count, tm.skipped_quads])
+
+
+func test_a_mesh_position_recovers_the_texel_it_was_sampled_from() -> void:
+    """M4's probe reads a world position back off the mesh, and until it did
+    nothing ever asked for the inverse. Every vertex sits at a sampled texel,
+    so the round trip has to land on one: a half-texel slip is invisible in
+    the surface, survives every M1 check, and names the neighbouring cell
+    wherever a probe lands near a residence boundary.
+
+    Checked by resampling: the height at the recovered texel must be the
+    height the vertex was built with. That pins the offset rather than the
+    arithmetic, so it fails whichever of the two transforms drops the term."""
+    var hf := heightfield()
+    var tm := TerrainMesh.new()
+    var m := tm.build(hf, 8, 1.0)
+    var verts: PackedVector3Array = m.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    check(verts.size() > 1000, "only %d vertices to sample" % verts.size())
+    var off_grid := 0
+    var off_height := 0
+    var not_inverse := 0
+    var sampled := 0
+    for n in range(0, verts.size(), 397):
+        var v := verts[n]
+        var w := tm.mesh_to_world(v, hf)
+        var t := hf.world_to_texel(w.x, w.y)
+        if absf(t.x - roundf(t.x)) > 1e-3 or absf(t.y - roundf(t.y)) > 1e-3:
+            off_grid += 1
+        elif int(roundf(t.x)) % tm.stride != 0 or int(roundf(t.y)) % tm.stride != 0:
+            off_grid += 1
+        var h := hf.height_at(t.x, t.y)
+        if is_nan(h) or absf(h - v.y) > 0.05:
+            off_height += 1
+        var back := tm.world_to_mesh(w, hf)
+        if absf(back.x - v.x) > 1e-3 or absf(back.y - v.z) > 1e-3:
+            not_inverse += 1
+        sampled += 1
+    check(sampled > 20, "only %d vertices sampled" % sampled)
+    check(off_grid == 0,
+            "%d of %d mesh positions do not land on a sampled texel" % [off_grid, sampled])
+    check(off_height == 0,
+            "%d of %d recovered positions resample to a different height than the "
+            % [off_height, sampled] + "vertex was built with")
+    check(not_inverse == 0,
+            "%d of %d positions do not survive world -> mesh -> world" % [not_inverse, sampled])
+    print("mesh<->world: %d vertices round-trip onto their own texel" % sampled)
 
 
 func test_flowlines_drape_and_keep_their_orders() -> void:

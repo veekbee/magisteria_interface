@@ -32,8 +32,6 @@ var _reach_span: PackedInt32Array = PackedInt32Array()     ## start,count pairs
 
 func build(reaches: Array, hf: Heightfield, tm: TerrainMesh) -> Dictionary:
     var by_order: Dictionary = {}
-    var half_x := 0.5 * float(int(hf.width / tm.stride) - 1) * tm.stride * hf.pixel_size_m
-    var half_y := 0.5 * float(int(hf.height / tm.stride) - 1) * tm.stride * hf.pixel_size_m
     var lift := LIFT_FRACTION * hf.pixel_size_m
 
     for r in reaches:
@@ -46,9 +44,11 @@ func build(reaches: Array, hf: Heightfield, tm: TerrainMesh) -> Dictionary:
             var h := hf.height_at_world(wx, wy)
             if is_nan(h):
                 continue          # off the valid heightfield; see dropped_offmap
-            pts.append(Vector3(wx - hf.origin_x - half_x,
-                               h * tm.exaggeration + lift,
-                               (hf.origin_y - wy) - half_y))
+            # Through the mesh's own transform, not a second copy of it: this
+            # method held a half-texel error for as long as it was written out
+            # here as well as in `mesh_to_world`.
+            var m := tm.world_to_mesh(Vector2(wx, wy), hf)
+            pts.append(Vector3(m.x, h * tm.exaggeration + lift, m.y))
         if pts.size() < 2:
             dropped_offmap += 1
             continue

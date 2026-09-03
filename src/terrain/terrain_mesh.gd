@@ -117,7 +117,34 @@ func _normal_at(h: PackedFloat32Array, nx: int, ny: int, i: int, j: int,
 
 
 ## The world (EPSG:5070) position of a mesh-space point -- M4 probes need it.
+##
+## THE HALF TEXEL IS THE WHOLE OF THIS METHOD. Vertex (i, j) samples the
+## heightfield at continuous texel coordinate (i * stride, j * stride), and a
+## texel coordinate names a texel's CENTRE -- `Heightfield.world_to_texel`
+## subtracts the half itself. Leaving it out here put every recovered world
+## position half a pixel, 500 m on this grid, off the texel the vertex was
+## built from: invisible in the surface, and enough to name the neighbouring
+## cell wherever a probe lands within half a texel of a residence boundary.
+## M4 found it by needing the inverse, which is the only thing that asks.
 func mesh_to_world(p: Vector3, hf: Heightfield) -> Vector2:
-    var half_x := 0.5 * float(int(hf.width / stride) - 1) * stride * hf.pixel_size_m
-    var half_y := 0.5 * float(int(hf.height / stride) - 1) * stride * hf.pixel_size_m
-    return Vector2(world_origin.x + p.x + half_x, world_origin.y - (p.z + half_y))
+    var h := _half_extent(hf)
+    return Vector2(world_origin.x + p.x + h.x + 0.5 * hf.pixel_size_m,
+                   world_origin.y - (p.z + h.y) - 0.5 * hf.pixel_size_m)
+
+
+## Its exact inverse: world (EPSG:5070) -> the mesh's x and z.
+##
+## Everything draping onto this mesh goes through here rather than
+## re-deriving the centring at the call site. Two copies of one transform are
+## two places for a term to go missing, and that is precisely where the half
+## texel above was hiding -- in the forward map as well as the inverse, so the
+## drape and the mesh agreed with each other and both disagreed with the grid.
+func world_to_mesh(w: Vector2, hf: Heightfield) -> Vector2:
+    var h := _half_extent(hf)
+    return Vector2(w.x - world_origin.x - h.x - 0.5 * hf.pixel_size_m,
+                   (world_origin.y - w.y) - h.y - 0.5 * hf.pixel_size_m)
+
+
+func _half_extent(hf: Heightfield) -> Vector2:
+    return Vector2(0.5 * float(int(hf.width / stride) - 1) * stride * hf.pixel_size_m,
+                   0.5 * float(int(hf.height / stride) - 1) * stride * hf.pixel_size_m)
