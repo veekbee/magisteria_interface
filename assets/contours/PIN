@@ -18,7 +18,7 @@
     "band.snowpack_swe @ 0.02 m in deepest_winter: 90 day(s), 532078 vertices"
   ],
   "files": {
-    "contours_deepest_winter_band_snowpack_swe.json": "8f6034093d9c0765576a30ec71ffcde65105aae4d2a59fd8d48f4fff17532ac7",
+    "contours_deepest_winter_band_snowpack_swe.json": "d92053928b744ef4dd729e81d6f09298e62d1b36c8671ffbfb5a59189c97714c",
     "contours_deepest_winter_band_snowpack_swe.bin": "8384e29dcdd173e2f3e9dcfb63aa312d967a6a250bbd04a530ccf93b398070cc"
   },
   "_not_here": "the per-node crossing elevations and the HUC4 band ladders they come from. Geometry ships; the generator does not (\u00a716.12).",

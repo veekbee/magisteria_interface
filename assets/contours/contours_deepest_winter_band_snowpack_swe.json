@@ -10,7 +10,7 @@
   "\u00a723.818"
  ],
  "generated_by": "tools/extract_contours.py",
- "generated_at_utc": "2026-09-03T07:45:25Z",
+ "generated_at_utc": "2026-09-03T08:02:09Z",
  "run": {
   "base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
   "master_seed": 20260820
@@ -19,6 +19,7 @@
  "row": "band.snowpack_swe",
  "unit": "m",
  "threshold": 0.02,
+ "threshold_standing": "PROVISIONAL, display-side. \u00a716.7 rules the class and its keying and leaves widths and modulation terms to the implementation session (convention 5). The default is chosen against this run, whose peak SWE is an order of magnitude below reference -- see DEFAULT_THRESHOLD in the writing tool.",
  "grid": {
   "width": 998,
   "height": 1486,
