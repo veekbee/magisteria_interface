@@ -11,14 +11,14 @@
     "repo": "git@github.com:veekbee/magisteria.git",
     "path": "data/terrain_export_output"
   },
-  "source_commit": "8ab6b9114a7b588501b89aaf8b830aece502e25a",
+  "source_commit": "6e3ea4784045dc29e0a7be3cb383e680217c37d1",
   "generated_by": "tools/build_terrain_export.py",
   "generated_at_utc": "2026-09-02T23:03:10Z",
   "files": {
     "heightfield_overview.png": "69507643c31337a1195256faf008492ffca3efcb89ca8eb4f1ab0bf2ffc0cd62",
-    "flowlines.json": "a480c0479dc0f2b10a0e1932d702dcf6fa166a024d68cc597e4d93add88e7024",
+    "flowlines.json": "42c5da1120b4a7be87afe67184ceb38e46dc827ac10f6d2828f0437fdbcbe366",
     "edges.json": "46653916cc075620708dcbdef468239db1e62c0fd4d4256940cceac66a3a2132",
-    "terrain_export.json": "f3ec97761a4b1f0863dde8476c2616e0cfcfcecae69e0c423135a1d94a80970e",
+    "terrain_export.json": "8a39dd3515fe7c128713593979e66b402f2ec9e664456fa8fd2827806615ca50",
     "residence_overview.png": "907809d974c8f2f7e2709723d1ed1741d7d0880ed1bba430be00e1b006a1751a",
     "residence_overview.json": "3296336831b2c13204fc52eb223a879c0c7ac0ab2b66bbef0a8bb4acf680b9a2"
   },

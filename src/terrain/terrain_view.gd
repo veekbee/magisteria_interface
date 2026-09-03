@@ -28,6 +28,8 @@ var fixture: FixtureLoader
 var overlay: FieldOverlay
 var _terrain_mi: MeshInstance3D
 var _terrain_mat: StandardMaterial3D
+var _flow_mi: MeshInstance3D = null
+var _flow_display: FlowDisplay = null
 var field_report: Dictionary = {}
 
 
@@ -159,12 +161,60 @@ func clear_field() -> void:
         _terrain_mat.albedo_color = Color(0.62, 0.60, 0.55)
 
 
+## The ramp's range. `lo`/`hi` are the REALISED range the fixture quantised
+## over; `contract_lo`/`contract_hi` is the declared validity range. Using the
+## realised range is what makes a field visible at all -- burned fraction
+## occupies about a ten-thousandth of its declared bounds (§23.837) -- at the
+## cost of colours not being comparable between windows. Which should be the
+## default is §25 backlog 168's, unruled; this shows the data and the legend
+## says which range it used.
 func _bounds_for(row: String) -> Vector2:
     for k in fixture.manifest.get("client_form", {}).get("rows", {}):
         var d: Dictionary = fixture.manifest["client_form"]["rows"][k]
         if str(d["row"]) == row:
             return Vector2(float(d["lo"]), float(d["hi"]))
     return Vector2(0.0, 1.0)
+
+
+## M3: paint streamflow on the flowlines for one day, and report what the
+## provisional display mapping did with it.
+func show_flow(window: String, day: int) -> Dictionary:
+    if drape == null or fixture == null:
+        return {"ok": false, "why": "no drape or fixture"}
+    var vals := fixture.day_values(window, "node.streamflow", day)
+    if vals.is_empty():
+        return {"ok": false, "why": "no streamflow for %s day %d" % [window, day]}
+    if _flow_display == null:
+        _flow_display = FlowDisplay.new()
+    var m := drape.paint_flow(vals, fixture, _flow_display)
+    if m == null:
+        return {"ok": false, "why": "nothing to paint"}
+    if _flow_mi == null:
+        _flow_mi = MeshInstance3D.new()
+        _flow_mi.name = "Flow"
+        var fm := StandardMaterial3D.new()
+        fm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+        fm.vertex_color_use_as_albedo = true
+        _flow_mi.material_override = fm
+        add_child(_flow_mi)
+        # the static order-coloured lines are replaced by the flow-coloured
+        # mesh: two sets of the same channels would be drawing the same rivers
+        # twice and reading the colour two ways.
+        for c in get_children():
+            if String(c.name).begins_with("Flowlines_order_"):
+                c.visible = false
+    _flow_mi.mesh = m
+    var d := _flow_display.describe()
+    d["ok"] = true
+    return d
+
+
+## M3: does this fixture hold a drawable burn perimeter (decision 892)?
+func burn_edge(window: String, day: int) -> Dictionary:
+    if fixture == null:
+        return {"has_edge": false, "verdict": "no fixture"}
+    var be := BurnEdge.new()
+    return be.measure(fixture.day_values(window, "band.burned_fraction", day))
 
 
 func _read_json(path: String) -> Dictionary:

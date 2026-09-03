@@ -59,7 +59,7 @@ func is_bound() -> bool:
 
 
 ## Colour texture for one row-day. `lo`/`hi` are the CONTRACT's bounds.
-func texture_for(values: PackedFloat32Array, lo: float, hi: float) -> ImageTexture:
+func texture_for(values: PackedFloat64Array, lo: float, hi: float) -> ImageTexture:
     var span: float = (hi - lo) if hi > lo else 1.0
     var buf := PackedByteArray()
     buf.resize(width * height * 4)

@@ -14,7 +14,8 @@
   },
   "is_a_display_encoding": "NOT the fixture. Values are quantised to 65,534 levels over the CONTRACT's declared bounds so a colour ramp is comparable across windows and rebuilds. Three rows in the fixture are float64 because they reach below float32's floor; that precision is deliberately not here, and anything that needs it reads fixture_v1.bin.",
   "files": {
-    "fixture_client.bin": "3170dfbaa138bca847997f5a235a1230f1d4816996072d9f763e2ae5afdaa7c3",
-    "fixture_client.json": "561e24d36fe15d78231925f227a74f78298d7cfa9954354a507d81eb20e76dfa"
-  }
+    "fixture_client.bin": "7106192d3f868ed1f9225d311754bd5263101c5b0b637440df1b4c213e2b877f",
+    "fixture_client.json": "34c0a9d477b95191dcb419fc293939c542d5642c4330f1bed006e60e5debd95f"
+  },
+  "source_commit": "a2fe3222f151446f504042989f62ec0173f4661e"
 }

@@ -23,6 +23,7 @@ var refused_rows: Dictionary = {}
 
 var _bin_path: String = ""
 var _rows: Dictionary = {}              ## "window/row" -> descriptor
+var _node_ordinal: Dictionary = {}      ## huc10 -> node axis position
 
 
 static func load_from(dir_path: String) -> FixtureLoader:
@@ -55,13 +56,32 @@ func is_loaded() -> bool:
     return n_cells > 0 and FileAccess.file_exists(_bin_path)
 
 
-func row_names(window: String) -> PackedStringArray:
+func row_names(window: String, lattice: String = "") -> PackedStringArray:
     var out := PackedStringArray()
     for k in _rows:
-        if str(_rows[k]["window"]) == window:
-            out.append(str(_rows[k]["row"]))
+        if str(_rows[k]["window"]) != window:
+            continue
+        if lattice != "" and str(_rows[k].get("lattice", "band")) != lattice:
+            continue
+        out.append(str(_rows[k]["row"]))
     out.sort()
     return out
+
+
+## The engine's node-axis position for a HUC10 id. Node-lattice rows are
+## indexed by it.
+##
+## Read from the manifest's `node_order`, which the simulation emits for this
+## purpose. It is NOT inferred from the order ids first appear in `cell_keys`
+## -- that inference agrees today and rests on cells being grouped by node
+## ordinal, which nothing promises, and a wrong node index draws the wrong
+## river's flow while looking entirely plausible.
+func node_index_of(huc10: String) -> int:
+    if _node_ordinal.is_empty():
+        var ids: Array = manifest.get("node_order", {}).get("ids", [])
+        for i in ids.size():
+            _node_ordinal[str(ids[i])] = i
+    return int(_node_ordinal.get(huc10, -1))
 
 
 func days(window: String, row: String) -> int:
@@ -74,8 +94,15 @@ func days(window: String, row: String) -> int:
 ## Taxon-dimensioned rows have a trailing group axis; `group` selects one.
 ## Values are NAN where the fixture stored nodata, never 0.0 -- zero is a real
 ## value for every one of these rows.
-func day_values(window: String, row: String, day: int, group: int = 0) -> PackedFloat32Array:
-    var out := PackedFloat32Array()
+## Returns float64, NOT float32, and that is load-bearing rather than tidy.
+## Node rows are shipped at full float64 precisely because streamflow reaches
+## 4.9e-324; storing them in a PackedFloat32Array flushes every value below
+## 1.18e-38 to zero, which would undo the exactness at the last container --
+## the same failure as rounding the fixture's JSON, one layer further along.
+## Measured: it moved thousands of samples from "below the display scale" into
+## "no flow", which are different statements about the river.
+func day_values(window: String, row: String, day: int, group: int = 0) -> PackedFloat64Array:
+    var out := PackedFloat64Array()
     var key := "%s/%s" % [window, row]
     var d: Variant = _rows.get(key, null)
     if d == null:
@@ -92,6 +119,20 @@ func day_values(window: String, row: String, day: int, group: int = 0) -> Packed
     if f == null:
         push_error("fixture: cannot open %s" % _bin_path)
         return out
+
+    # Node rows are stored as raw float64 rather than quantised -- see the
+    # manifest's `not_quantised_because`. Quantising streamflow over the
+    # contract's [0, 100000] would put everything below 1.5 m3/s at zero, and
+    # 40.9% of this window's non-zero values are below 1e-6.
+    if str(d.get("dtype", "")).begins_with("float64"):
+        var base64 := int(d["byte_offset"]) + day * cells * groups * 8
+        f.seek(base64)
+        var raw64 := f.get_buffer(cells * groups * 8)
+        out.resize(cells)
+        for c in cells:
+            out[c] = raw64.decode_double((c * groups + group) * 8)
+        return out
+
     var lo := float(d["lo"])
     var span := float(d["hi"]) - lo
     var stride_cell := groups

@@ -40,6 +40,12 @@ func _ready() -> void:
         var c := scrubber.current()
         if not c.is_empty():
             _on_field_changed(c["window"], c["row"], c["day"], c["group"])
+        var probe := _terrain.burn_edge(str(field_report["windows"][0]), 0)
+        if not probe.get("has_edge", false):
+            # Decision 892 draws a burn perimeter as a real edge. This trace has
+            # none, and saying so is the honest output -- contouring anyway
+            # would draw a curve wherever the threshold cut the noise.
+            push_warning("burn: %s" % probe.get("verdict", "no verdict"))
         print("fields: %d px resolved, %d rows, windows %s"
                 % [field_report["resolved_px"], field_report["rows"].size(),
                    str(field_report["windows"])])
@@ -60,6 +66,16 @@ func _ready() -> void:
         push_error("contract REFUSED: %s" % doc.refusal_reason)
 
 
+var flow_report: Dictionary = {}
+var burn_report: Dictionary = {}
+
+
 func _on_field_changed(window: String, row: String, day: int, group: int) -> void:
     if not _terrain.show_field(window, row, day, group):
         push_warning("fields: could not paint %s/%s day %d" % [window, row, day])
+    # M3: the day is one value. Flow and the field are painted from it together
+    # so the rivers and the ground can never show different days.
+    flow_report = _terrain.show_flow(window, day)
+    if not flow_report.get("ok", false):
+        push_warning("flow: %s" % flow_report.get("why", "unknown"))
+    burn_report = _terrain.burn_edge(window, day)

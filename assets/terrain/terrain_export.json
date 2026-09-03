@@ -12,7 +12,7 @@
   "data/flowlines_data/flowlines_order4.gpkg",
   "data/waterbodies_data/waterbodies.gpkg"
  ],
- "generated_at_utc": "2026-09-02T23:03:10Z",
+ "generated_at_utc": "2026-09-03T01:58:12Z",
  "heightfield": {
   "file": "heightfield_overview.png",
   "width": 998,
@@ -49,6 +49,7 @@
   "n_reaches": 29502,
   "n_dropped_empty": 0,
   "simplify_tolerance_m": 50.0,
+  "n_with_node": 29502,
   "n_duplicate_comid_resolved": 19
  },
  "edges": {

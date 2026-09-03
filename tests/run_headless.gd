@@ -45,6 +45,11 @@ func _initialize() -> void:
     test_decoded_values_stay_inside_the_contracts_bounds()
     test_nodata_decodes_to_nan_and_never_to_zero()
     test_the_ramp_is_ordered_and_bounds_come_from_the_contract()
+    test_node_rows_arrive_at_full_precision()
+    test_every_reach_carries_a_node_so_flow_can_be_drawn()
+    test_the_flow_mapping_distinguishes_zero_from_below_scale()
+    test_quantisation_uses_the_realised_range_not_the_contracts()
+    test_burn_asks_about_magnitude_before_geometry()
     stage_the_main_scene()
 
 
@@ -618,3 +623,123 @@ func test_the_ramp_is_ordered_and_bounds_come_from_the_contract() -> void:
     check("bounds" in str(fl.manifest["client_form"]["is_a_display_encoding"]).to_lower()
             or "contract" in str(fl.manifest["client_form"]["is_a_display_encoding"]).to_lower(),
             "the client form does not say its bounds are the contract's")
+
+
+# --------------------------------------------------------------------------
+# M3 -- time and flow
+# --------------------------------------------------------------------------
+
+func test_node_rows_arrive_at_full_precision() -> void:
+    """Streamflow reaches 4.9e-324 and 40.9% of its non-zero values are below
+    1e-6. It is shipped as float64 and must be HELD as float64: a
+    PackedFloat32Array flushes everything under 1.18e-38 to zero, which moves
+    thousands of samples from "below the display scale" to "no flow" -- a
+    different statement about the river."""
+    var fl := fixture()
+    var rows := fl.row_names(fl.windows[0], "node")
+    check(rows.has("node.streamflow"), "no node.streamflow row: %s" % str(rows))
+    var vals := fl.day_values(fl.windows[0], "node.streamflow", 45)
+    check(vals.size() > 1000, "only %d nodes" % vals.size())
+    var below_f32 := 0
+    var zeros := 0
+    for v in vals:
+        if v == 0.0:
+            zeros += 1
+        elif v < 1.18e-38:
+            below_f32 += 1
+    check(below_f32 > 0,
+            "no value below float32's floor survived -- the precision was lost in transit")
+    print("streamflow: %d nodes, %d exact zeros, %d below float32's floor"
+            % [vals.size(), zeros, below_f32])
+
+
+func test_every_reach_carries_a_node_so_flow_can_be_drawn() -> void:
+    """Flow is per node and geometry is per reach. A reach with no node is a
+    river the client can draw and cannot ever light."""
+    var f := FileAccess.open(TERRAIN_DIR + "flowlines.json", FileAccess.READ)
+    var doc: Dictionary = JSON.parse_string(f.get_as_text())
+    var reaches: Array = doc.get("reaches", [])
+    var without := 0
+    for r in reaches:
+        if not r.has("node") or str(r["node"]) == "":
+            without += 1
+    check(reaches.size() > 20000, "only %d reaches" % reaches.size())
+    check(without == 0, "%d reaches carry no node" % without)
+
+    # and the node must resolve to a position on the node axis
+    var fl := fixture()
+    var unresolved := 0
+    for i in range(0, reaches.size(), 97):
+        if fl.node_index_of(str(reaches[i]["node"])) < 0:
+            unresolved += 1
+    check(unresolved == 0, "%d sampled reaches name a node not on the axis" % unresolved)
+
+
+func test_the_flow_mapping_distinguishes_zero_from_below_scale() -> void:
+    """13.2% of samples are exactly zero -- a state, not a small number -- and
+    40.9% of the rest are below what any legible ramp resolves. Drawing those
+    two the same as each other, or as "very little water", would be this
+    project's plausible zero in the one place a viewer would never question."""
+    var d := FlowDisplay.new()
+    var zero := d.colour_for(0.0)
+    var tiny := d.colour_for(1e-20)
+    var mid := d.colour_for(1.0)
+    check(not zero.is_equal_approx(tiny), "zero and below-scale render identically")
+    check(not tiny.is_equal_approx(mid), "below-scale and in-scale render identically")
+    check(d.n_zero == 1 and d.n_below == 1 and d.n_in_scale == 1,
+            "the display does not count what it did")
+    var desc := d.describe()
+    check(bool(desc["provisional"]), "the mapping does not declare itself provisional")
+    check(str(desc["why_provisional"]).length() > 60, "no reason given for provisionality")
+
+
+func test_quantisation_uses_the_realised_range_not_the_contracts() -> void:
+    """§23.837. Quantising over the contract's bounds gave burned fraction
+    THREE of 65,534 codes, because `bounds` is a validity range and not a
+    dynamic one. Both ranges must travel with the row."""
+    var fl := fixture()
+    var seen_narrow := false
+    for k in fl.manifest["client_form"]["rows"]:
+        var d: Dictionary = fl.manifest["client_form"]["rows"][k]
+        if str(d.get("lattice", "band")) == "node":
+            continue
+        check(d.has("contract_lo") and d.has("contract_hi"),
+                "%s does not carry the contract's bounds" % k)
+        check(d.has("codes_if_quantised_over_contract"),
+                "%s does not say what the contract encoding would have cost" % k)
+        var codes: int = int(d["codes_if_quantised_over_contract"])
+        if codes < 100:
+            seen_narrow = true
+            check(float(d["hi"]) - float(d["lo"])
+                    < float(d["contract_hi"]) - float(d["contract_lo"]),
+                    "%s claims a narrow contract encoding but a full realised range" % k)
+    check(seen_narrow,
+            "no row would have been narrowed by contract-bounds quantisation -- "
+            + "then this test is not exercising §23.837's case")
+
+
+func test_burn_asks_about_magnitude_before_geometry() -> void:
+    """Decision 892 draws a burn perimeter as a real edge. A threshold sweep
+    finds thresholds at ANY magnitude -- it always does -- so magnitude has to
+    be asked first, or the geometry answers a question nobody put. This trace
+    peaks at 4.5e-05 burned fraction, four orders below a legible level."""
+    var fl := fixture()
+    var be := BurnEdge.new()
+    var r := be.measure(fl.day_values(fl.windows[0], "band.burned_fraction", 45))
+    check(float(r["max_value"]) > 0.0, "nothing burned at all -- check the fixture")
+    check(not bool(r["has_edge"]),
+            "a perimeter is claimed on a field peaking at %s"
+            % String.num_scientific(float(r["max_value"])))
+    check(str(r["verdict"]).contains("drawable"),
+            "the verdict does not say why there is no edge: %s" % str(r["verdict"]))
+
+    # and it must find one when there IS one
+    var synthetic := PackedFloat64Array()
+    synthetic.resize(1000)
+    for i in 1000:
+        synthetic[i] = 0.9 if i < 80 else 0.0
+    var be2 := BurnEdge.new()
+    var r2 := be2.measure(synthetic)
+    check(bool(r2["has_edge"]),
+            "no perimeter found on a field where 8%% of cells are 90%% burned")
+    print("burn: %s" % str(r["verdict"]).substr(0, 90))

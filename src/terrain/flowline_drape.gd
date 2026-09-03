@@ -19,6 +19,15 @@ const LIFT_FRACTION := 0.004   ## of one heightfield pixel, per §892's scale-fr
 var order_meshes: Dictionary = {}     ## stream order -> ArrayMesh
 var reach_count: int = 0
 var dropped_offmap: int = 0
+var reaches_without_node: int = 0
+
+## M3 repaints per day, so the geometry is built once and only the colours are
+## rewritten. One combined mesh rather than one per order: colour now carries
+## flow, and grouping by order would put a second meaning on the same channel.
+var flow_mesh: ArrayMesh = null
+var _flow_verts: PackedVector3Array = PackedVector3Array()
+var _reach_node: PackedStringArray = PackedStringArray()   ## per reach
+var _reach_span: PackedInt32Array = PackedInt32Array()     ## start,count pairs
 
 
 func build(reaches: Array, hf: Heightfield, tm: TerrainMesh) -> Dictionary:
@@ -54,6 +63,18 @@ func build(reaches: Array, hf: Heightfield, tm: TerrainMesh) -> Dictionary:
         by_order[order] = acc
         reach_count += 1
 
+        # the flow mesh: same segments, one surface, colour repainted per day
+        var start := _flow_verts.size()
+        for k in pts.size() - 1:
+            _flow_verts.append(pts[k])
+            _flow_verts.append(pts[k + 1])
+        _reach_span.append(start)
+        _reach_span.append(_flow_verts.size() - start)
+        var node_id := str(r.get("node", ""))
+        if node_id == "":
+            reaches_without_node += 1
+        _reach_node.append(node_id)
+
     for order in by_order:
         var arrays := []
         arrays.resize(Mesh.ARRAY_MAX)
@@ -62,3 +83,34 @@ func build(reaches: Array, hf: Heightfield, tm: TerrainMesh) -> Dictionary:
         m.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, arrays)
         order_meshes[order] = m
     return order_meshes
+
+
+## Repaint the flow mesh for one day. `flow_of_node` is looked up per reach;
+## a reach with no node is drawn as NO_FLOW rather than skipped -- the channel
+## exists on the ground whatever the fixture can say about it, and hiding it
+## would make the map disagree with M1's.
+func paint_flow(values: PackedFloat64Array, fl: FixtureLoader,
+                disp: FlowDisplay) -> ArrayMesh:
+    if _flow_verts.is_empty():
+        return null
+    disp.reset_counts()
+    var colours := PackedColorArray()
+    colours.resize(_flow_verts.size())
+    for i in _reach_node.size():
+        var node := _reach_node[i]
+        var idx := -1 if node == "" else fl.node_index_of(node)
+        var v := NAN
+        if idx >= 0 and idx < values.size():
+            v = values[idx]
+        var col := disp.colour_for(v)
+        var start := _reach_span[i * 2]
+        var count := _reach_span[i * 2 + 1]
+        for k in count:
+            colours[start + k] = col
+    var arrays := []
+    arrays.resize(Mesh.ARRAY_MAX)
+    arrays[Mesh.ARRAY_VERTEX] = _flow_verts
+    arrays[Mesh.ARRAY_COLOR] = colours
+    flow_mesh = ArrayMesh.new()
+    flow_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, arrays)
+    return flow_mesh

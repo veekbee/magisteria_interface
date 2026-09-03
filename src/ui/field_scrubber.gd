@@ -12,6 +12,15 @@ extends VBoxContainer
 
 signal changed(window: String, row: String, day: int, group: int)
 
+## M3: daily playback. The scrubber owns the clock because the day is one
+## value shared by the field overlay and the flow lines -- two clocks would
+## drift and show a field and a river from different days, which is the kind
+## of wrongness a viewer reads as physics.
+const FRAMES_PER_DAY := 3
+
+var playing := false
+var _tick := 0
+
 var window_pick: OptionButton
 var row_pick: OptionButton
 var day_slider: HSlider
@@ -44,6 +53,13 @@ func setup(fl: FixtureLoader) -> void:
     day_label = Label.new()
     add_child(_labelled("day", day_slider))
     add_child(day_label)
+
+    var play := Button.new()
+    play.text = "play / pause"
+    play.pressed.connect(func():
+        playing = not playing
+        play.text = "pause" if playing else "play")
+    add_child(play)
 
     refused_label = Label.new()
     refused_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
@@ -105,3 +121,15 @@ func _labelled(text: String, control: Control) -> HBoxContainer:
     box.add_child(l)
     box.add_child(control)
     return box
+
+
+func _process(_delta: float) -> void:
+    if not playing or day_slider == null:
+        return
+    _tick += 1
+    if _tick % FRAMES_PER_DAY != 0:
+        return
+    var next := int(day_slider.value) + 1
+    if next > int(day_slider.max_value):
+        next = 0
+    day_slider.value = next      # emits value_changed -> _emit()
