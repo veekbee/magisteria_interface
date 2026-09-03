@@ -16,6 +16,14 @@ render_mode cull_disabled;
 // deep winter -- two states that must not look alike. Custom data does not
 // multiply, so the mask stays the mask.
 //
+// THE MULTIMESH MUST STILL ENABLE INSTANCE COLOURS AND WRITE WHITE. With
+// `use_colors` off, the compatibility renderer delivers COLOR as ZERO rather
+// than as the mesh's own vertex colour -- so `mask` reads 0 for every vertex,
+// every plant renders as `structure`, and the season never shows. It looks like
+// perfectly good vegetation, which is why it survived a full milestone: the
+// data was right, the shader was right, and the channel between them was empty.
+// Measured before and after: mask 0.0 -> 1.0 on foliage.
+//
 // CULLING IS OFF because grass is single-sided quads: a blade seen from behind
 // is still a blade, and back-face culling would delete half of every tussock.
 

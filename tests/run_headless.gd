@@ -2079,6 +2079,16 @@ func test_the_tint_moves_with_the_season_it_is_read_from() -> void:
                 "the scatter's ShaderMaterial carries no shader")
         check((node.multimesh as MultiMesh).use_custom_data,
                 "the MultiMesh does not carry custom data, so the tint reaches nothing")
+        # With use_colors off, the compatibility renderer delivers COLOR as zero
+        # rather than the mesh's vertex colour: the authored mask arrives as 0,
+        # every plant renders as bare structure, and the season never shows. It
+        # looks like working vegetation, which is how it survived a milestone.
+        # Only the FLAG is checkable here -- the instance colours themselves read
+        # back black headless like everything else in a MultiMesh, and the values
+        # were confirmed by rendering the shader's inputs to a window instead.
+        check((node.multimesh as MultiMesh).use_colors,
+                "the MultiMesh does not enable instance colours, so COLOR reaches the "
+                + "shader as zero and the phenology mask is lost")
     v.queue_free()
 
 

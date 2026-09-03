@@ -268,11 +268,18 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
         # the authored phenology MASK -- the product is zero both for a trunk in
         # summer and for foliage in midwinter, which must not look alike.
         mm.use_custom_data = true
+        # WHITE INSTANCE COLOURS, AND THEY ARE NOT DECORATION. With `use_colors`
+        # off, the compatibility renderer hands the shader COLOR = 0 instead of
+        # the mesh's vertex colour, so the authored phenology mask arrives as
+        # zero and every plant renders as bare structure in every season. White
+        # is the identity for that multiply; the mask survives it.
+        mm.use_colors = true
         mm.mesh = _fs.mesh_for(life_form)
         mm.instance_count = transforms.size()
         var pf: PackedFloat32Array = phen_of[life_form]
         for i in transforms.size():
             mm.set_instance_transform(i, transforms[i])
+            mm.set_instance_color(i, Color.WHITE)
             mm.set_instance_custom_data(i, Color(pf[i], 0.0, 0.0, 1.0))
         meshes[life_form] = mm
         triangles += _fs.triangles_of(life_form) * transforms.size()

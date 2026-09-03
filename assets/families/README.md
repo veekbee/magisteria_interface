@@ -69,6 +69,11 @@ Carried as an instance *colour* the engine would multiply them together before t
 either, and the product is zero both for a trunk in summer and for foliage in midwinter, which must
 not look alike.
 
+One engine detail the mask depends on: the MultiMesh must enable **instance colours and write
+white** as well as custom data. With `use_colors` off the compatibility renderer delivers `COLOR` as
+zero rather than the mesh's vertex colour, so the mask arrives as 0, every plant renders as bare
+structure, and the season never shows — while still looking like perfectly good vegetation.
+
 **None of that can be read back headless.** Under the dummy renderer a MultiMesh has no per-instance
 store: transforms return the identity, custom data returns zeros, `buffer` is empty. So the scatter's
 report is the checkable statement, and a test asserting on the instances would pass by comparing zero
