@@ -73,6 +73,7 @@ func _initialize() -> void:
     test_the_families_hold_the_unit_convention_the_transform_relies_on()
     test_the_cost_model_refuses_outside_its_measured_span()
     test_the_scatter_reports_what_it_could_not_draw()
+    test_the_project_does_not_import_blend_sources()
     stage_the_main_scene()
 
 
@@ -1874,3 +1875,37 @@ func test_the_scatter_reports_what_it_could_not_draw() -> void:
                     "%s is not a MultiMeshInstance3D" % child.name)
     check(nodes > 0, "no vegetation reached the scene")
     v.queue_free()
+
+
+func test_the_project_does_not_import_blend_sources() -> void:
+    """Godot imports .blend natively by shelling out to Blender, and headless
+    with no Blender path configured that fails with "Blender path is invalid or
+    not set" -- red gate, over files the project never loads. tools/blender/
+    holds the form-archetype SOURCES; the exported .glb is what the client
+    reads.
+
+    The guard is here rather than in the shell because re-enabling the importer
+    is something the editor does silently, and the failure it causes looks like
+    a broken Blender install rather than like a decision that was reversed."""
+    check(ProjectSettings.has_setting("filesystem/import/blender/enabled"),
+            "this engine has no .blend import setting -- the guard is checking nothing")
+    check(not bool(ProjectSettings.get_setting("filesystem/import/blender/enabled", true)),
+            "the .blend importer is enabled. tools/blender/ holds sources the project never "
+            + "loads, and importing them shells out to Blender, which fails headlessly.")
+
+    # and the sources are really there, or the setting is guarding nothing
+    var dir := DirAccess.open("res://tools/blender/")
+    var blends := 0
+    if dir != null:
+        for f in dir.get_files():
+            if f.ends_with(".blend"):
+                blends += 1
+    check(blends > 0,
+            "no .blend sources in tools/blender/ -- either they moved or the build never ran")
+
+    # the exported families load through the glTF importer, which is a
+    # different importer and must not be affected by the setting above
+    var fs := family_set()
+    check(fs.is_loaded(), "the exported families did not load: %s" % fs.why_absent)
+    print("blend import: disabled, %d sources present, %d families load from glTF"
+            % [blends, fs.life_forms().size()])

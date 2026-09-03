@@ -16,14 +16,22 @@ the archetypes can be rebuilt from nothing on a machine that has never opened Bl
 The `.blend` files still commit. They are the thing the roadmap asks for, they are the input a
 future hand-edit would start from, and at ~87 KB each they cost nothing.
 
-## `.gdignore`, and why this directory needs one
+## Why the project turns the `.blend` importer off
 
 Godot 4 imports `.blend` files natively by shelling out to Blender. Headless, with no Blender path
 configured, that fails with *"Blender path is invalid or not set"* — which would turn `verify.sh`
-red over files the project never loads. `.gdignore` keeps the engine out of the directory entirely.
+red over files the project never loads.
 
-`tools/build_families.sh` asserts the file is still there, because the failure it prevents appears
-in the gate rather than here, and looks like a broken engine rather than a missing marker.
+So `project.godot` sets `filesystem/import/blender/enabled=false`, and `tests/run_headless.gd`
+asserts it. A `.gdignore` in this directory would also work and is worse on three counts: it hides
+the whole directory from the engine, so a `.gd` file or a resource added here later would silently
+never be seen; it covers this directory only, while the setting covers a `.blend` committed
+anywhere; and an empty marker file states nothing, whereas the setting is a sentence about the
+project sitting where project decisions live.
+
+The guard is a test rather than a shell check for the same reason: re-enabling the importer in the
+editor should fail the gate with its own reason, not with a Blender error that looks like a broken
+install.
 
 ## Blender
 

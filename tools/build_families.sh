@@ -24,11 +24,6 @@ fi
 "$BLENDER" --background --python tools/blender/build_families.py 2>&1 \
   | grep -E "^family |^wrote |Error|Traceback" || true
 
-# The .blend sources are build machinery and tools/blender/.gdignore keeps the
-# engine out of them: Godot imports .blend natively by shelling out to Blender,
-# which fails headlessly with "Blender path is invalid or not set" and would
-# turn the gate red for a file the project never loads.
-[ -f tools/blender/.gdignore ] || { echo "tools/blender/.gdignore is missing" >&2; exit 1; }
 python3 - <<'PY'
 import json, pathlib
 m = json.loads(pathlib.Path("assets/families/families.json").read_text())
