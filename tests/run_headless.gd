@@ -571,9 +571,16 @@ func test_decoded_values_stay_inside_the_contracts_bounds() -> void:
             continue
         var lo := float(d["lo"])
         var hi := float(d["hi"])
+        if hi <= lo:
+            continue        # an all-zero row has no range to test
         var vals := fl.day_values(w, row, 0)
-        check(vals.size() == fl.n_cells,
-                "%s gave %d values for %d cells" % [row, vals.size(), fl.n_cells])
+        # A row's width is its LATTICE's, not the cell count: node rows are
+        # 1,154 wide and band rows 5,684. Asserting one number for both was
+        # assuming every carried row lives on the band lattice, which stopped
+        # being true the moment M3 needed streamflow.
+        var expected := int(d["shape"][1])
+        check(vals.size() == expected,
+                "%s gave %d values, its shape says %d" % [row, vals.size(), expected])
         for i in range(0, vals.size(), 37):
             var v := vals[i]
             if is_nan(v):
