@@ -1,0 +1,81 @@
+{
+ "artefact": "terrain export: the client's drawn substrate",
+ "ruled_by": [
+  "decision 890",
+  "decision 892",
+  "\u00a716.5",
+  "\u00a716.7"
+ ],
+ "generated_by": "tools/build_terrain_export.py",
+ "generated_from": [
+  "data/basin_topography_data/dem_100m.tif",
+  "data/flowlines_data/flowlines_order4.gpkg",
+  "data/waterbodies_data/waterbodies.gpkg"
+ ],
+ "generated_at_utc": "2026-09-02T23:03:10Z",
+ "heightfield": {
+  "file": "heightfield_overview.png",
+  "width": 998,
+  "height": 1486,
+  "crs": "EPSG:5070",
+  "transform": [
+   1000.0,
+   0.0,
+   -1809292.9365744274,
+   0.0,
+   -1000.0,
+   2356726.304046243
+  ],
+  "pixel_size_m": 1000.0,
+  "encoding": {
+   "dtype": "uint8 x 3",
+   "channels": {
+    "R": "height high byte",
+    "G": "height low byte",
+    "B": "validity: 255 = ground, 0 = no data"
+   },
+   "height_m": "offset_m + (R * 256 + G) * scale_m_per_step, where B > 0",
+   "offset_m": -5.130364418029785,
+   "scale_m_per_step": 0.06542992582398877,
+   "levels": 65535,
+   "max_round_trip_error_m": 0.03284511143556301,
+   "why_two_channels": "measured against Godot 4.7.2: Image.load() returns FORMAT_L8 for a 16-bit greyscale PNG and discards the low byte, which over this range is a 17 m step and visible terracing. B is a flag rather than a sentinel height because a sentinel in the height channels is a real number a shader will interpolate towards."
+  },
+  "resampling": "average",
+  "valid_px": 722616
+ },
+ "flowlines": {
+  "file": "flowlines.json",
+  "n_reaches": 29502,
+  "n_dropped_empty": 0,
+  "simplify_tolerance_m": 50.0,
+  "n_duplicate_comid_resolved": 19
+ },
+ "edges": {
+  "file": "edges.json",
+  "n_confluence": 3076,
+  "n_shoreline": 7534,
+  "classes": [
+   "confluence",
+   "shoreline",
+   "burn_perimeter",
+   "territory"
+  ]
+ },
+ "tiles": {
+  "emitted": false,
+  "why_not": "the git-LFS-versus-fetch-by-manifest decision has not been made, and the roadmap's own appendix says to make it BEFORE the first large artefact lands. The grid is declared so a client can be written against it; the bytes follow the ruling.",
+  "native_pixel_size_m": 100.0,
+  "full_width_px": 9980,
+  "full_height_px": 14860,
+  "tile_px": 512,
+  "tiles_x": 20,
+  "tiles_y": 30,
+  "naming": "tiles/{z}/{x}_{y}.png at the same encoding as the overview",
+  "origin": [
+   -1809292.9365744274,
+   2356726.304046243
+  ]
+ },
+ "no_lattice_geometry": "decision 890 -- the drawn substrate is the DEM. No cell polygons, no patch outlines, no band boundaries, and no debugging exception."
+}

@@ -30,6 +30,14 @@ func _initialize() -> void:
     test_wire_rung_outside_its_domain_is_skipped()
     test_a_row_from_a_future_minor_is_masked_never_zeroed()
     test_the_inspector_builds_from_a_document()
+    test_the_heightfield_decodes_to_real_elevations()
+    test_bicubic_reproduces_texel_values_exactly()
+    test_bicubic_does_not_terrace()
+    test_a_nodata_neighbourhood_returns_nan_not_a_height()
+    test_the_terrain_mesh_holes_rather_than_walls_at_nodata()
+    test_flowlines_drape_and_keep_their_orders()
+    test_no_lattice_geometry_reaches_the_scene()
+    test_the_camera_rig_offers_both_projections()
     stage_the_main_scene()
 
 
@@ -239,8 +247,8 @@ func test_the_main_scene_populated_itself() -> void:
     """
     if _scene_root == null:
         return
-    var insp = _scene_root.get_node_or_null("Scroll/Inspector")
-    check(insp != null, "main.tscn has no Scroll/Inspector node -- the path in main.gd is stale")
+    var insp = _scene_root.get_node_or_null("UI/Scroll/Inspector")
+    check(insp != null, "main.tscn has no UI/Scroll/Inspector node -- the path in main.gd is stale")
     if insp == null:
         return
     check(insp.document != null,
@@ -254,3 +262,178 @@ func test_the_main_scene_populated_itself() -> void:
             "the panel rendered nothing from a %d-row contract" % insp.document.rows.size())
     print("main scene: %d rows, %d nodes rendered by _ready()"
             % [insp.document.rows.size(), insp.get_child_count()])
+
+    # M1's half of the same scene. The two consume different artefacts and the
+    # report says which did what, so a terrain failure cannot hide behind a
+    # rendered inspector.
+    var rep: Dictionary = _scene_root.terrain_report
+    check(rep.get("ok", false), "the scene's terrain did not build: %s" % rep.get("why", "?"))
+    if rep.get("ok", false):
+        check(int(rep["vertices"]) > 1000, "terrain built %d vertices" % rep["vertices"])
+        check(int(rep["reaches_drawn"]) > 20000,
+                "terrain drew %d reaches" % rep["reaches_drawn"])
+        check(_scene_root.get_node_or_null("TerrainView/Terrain") != null,
+                "no Terrain mesh instance in the running scene")
+        check(_scene_root.get_node_or_null("TerrainView/Hillshade") != null,
+                "no hillshade light -- relief would render flat")
+        print("main scene terrain: %d verts, %d reaches"
+                % [rep["vertices"], rep["reaches_drawn"]])
+
+
+# --------------------------------------------------------------------------
+# M1 -- the terrain viewer
+# --------------------------------------------------------------------------
+
+const TERRAIN_DIR := "res://assets/terrain/"
+
+var _hf: Heightfield = null
+
+
+func heightfield() -> Heightfield:
+    if _hf == null:
+        var f := FileAccess.open(TERRAIN_DIR + "terrain_export.json", FileAccess.READ)
+        var man: Dictionary = JSON.parse_string(f.get_as_text())
+        _hf = Heightfield.load_from(man, TERRAIN_DIR + "heightfield_overview.png")
+    return _hf
+
+
+func test_the_heightfield_decodes_to_real_elevations() -> void:
+    """The encoding survives the engine. Height is in two BYTES -- a single
+    16-bit channel is loaded as L8 and silently loses the low one -- so what is
+    checked is that the decoded range is the basin's, not that a file loaded."""
+    var hf := heightfield()
+    check(hf.is_loaded(), "the heightfield did not load")
+    if not hf.is_loaded():
+        return
+    var lo := 1e30
+    var hi := -1e30
+    var n := 0
+    for y in range(0, hf.height, 7):
+        for x in range(0, hf.width, 7):
+            var h := hf.height_at_texel(x, y)
+            if not is_nan(h):
+                n += 1
+                lo = min(lo, h)
+                hi = max(hi, h)
+    check(n > 10000, "only %d ground texels found" % n)
+    check(lo > -50.0 and lo < 50.0, "basin floor decoded as %.1f m" % lo)
+    check(hi > 3000.0 and hi < 5000.0, "basin ceiling decoded as %.1f m" % hi)
+    print("heightfield: %d ground texels, %.1f .. %.1f m" % [n, lo, hi])
+
+
+func test_bicubic_reproduces_texel_values_exactly() -> void:
+    """Catmull-Rom is interpolating, not approximating: at a texel centre it
+    must return that texel. A scheme that merely passes near them would drift
+    the whole surface off the data it was built from."""
+    var hf := heightfield()
+    var worst := 0.0
+    var checked := 0
+    for y in range(6, hf.height - 6, 97):
+        for x in range(6, hf.width - 6, 73):
+            var exact := hf.height_at_texel(x, y)
+            var interp := hf.height_at(float(x), float(y))
+            if is_nan(exact) or is_nan(interp):
+                continue
+            worst = max(worst, abs(exact - interp))
+            checked += 1
+    check(checked > 50, "only %d interior samples" % checked)
+    check(worst < 1e-6, "bicubic misses texel centres by up to %f m" % worst)
+
+
+func test_bicubic_does_not_terrace() -> void:
+    """§16.5's first visible defect. A midpoint between two different texels
+    must lie strictly between them; snapping to either is nearest-neighbour
+    wearing an interpolator's name."""
+    var hf := heightfield()
+    var strictly_between := 0
+    var snapped := 0
+    for y in range(20, hf.height - 20, 149):
+        for x in range(20, hf.width - 20, 113):
+            var a := hf.height_at_texel(x, y)
+            var b := hf.height_at_texel(x + 1, y)
+            var mid := hf.height_at(float(x) + 0.5, float(y))
+            if is_nan(a) or is_nan(b) or is_nan(mid) or is_equal_approx(a, b):
+                continue
+            if is_equal_approx(mid, a) or is_equal_approx(mid, b):
+                snapped += 1
+            else:
+                strictly_between += 1
+    check(strictly_between > 5, "only %d interpolated midpoints" % strictly_between)
+    check(snapped == 0, "%d midpoints snapped to a neighbour -- that is terracing" % snapped)
+    print("bicubic: %d midpoints strictly between neighbours, %d snapped"
+            % [strictly_between, snapped])
+
+
+func test_a_nodata_neighbourhood_returns_nan_not_a_height() -> void:
+    """Zero is sea level and this basin's floor is -6.39 m, so a sentinel that
+    is also a value would build a plateau at the boundary."""
+    var hf := heightfield()
+    check(is_nan(hf.height_at_texel(-1, 10)), "a texel left of the raster returned a height")
+    check(is_nan(hf.height_at_texel(hf.width + 5, 10)), "a texel right of the raster returned a height")
+    check(is_nan(hf.height_at(-4.0, -4.0)), "bicubic outside the raster returned a height")
+
+
+func test_the_terrain_mesh_holes_rather_than_walls_at_nodata() -> void:
+    var hf := heightfield()
+    var tm := TerrainMesh.new()
+    var m := tm.build(hf, 8, 1.0)
+    check(m.get_surface_count() == 1, "the mesh has %d surfaces" % m.get_surface_count())
+    check(tm.vertex_count > 1000, "only %d vertices" % tm.vertex_count)
+    check(tm.skipped_quads > 0,
+            "no quad was skipped -- nodata is being filled rather than left open")
+    var aabb := m.get_aabb()
+    check(aabb.size.x > 500000.0 and aabb.size.z > 500000.0,
+            "the mesh spans %.0f x %.0f m, which is not this basin" % [aabb.size.x, aabb.size.z])
+    print("mesh: %d verts, %d quads, %d skipped at nodata"
+            % [tm.vertex_count, tm.quad_count, tm.skipped_quads])
+
+
+func test_flowlines_drape_and_keep_their_orders() -> void:
+    """M3 keys streamflow onto the comid, and stream order is what M1 can draw
+    with today. A drape that lost either would be decoration."""
+    var hf := heightfield()
+    var tm := TerrainMesh.new()
+    tm.build(hf, 8, 1.0)
+    var f := FileAccess.open(TERRAIN_DIR + "flowlines.json", FileAccess.READ)
+    var doc: Dictionary = JSON.parse_string(f.get_as_text())
+    var drape := FlowlineDrape.new()
+    var by_order := drape.build(doc.get("reaches", []), hf, tm)
+    check(by_order.size() >= 4, "only %d stream orders drawn" % by_order.size())
+    check(drape.reach_count > 20000, "only %d reaches drawn" % drape.reach_count)
+    check(drape.dropped_offmap < drape.reach_count / 100,
+            "%d reaches fell off the heightfield" % drape.dropped_offmap)
+    print("flowlines: %d reaches over %d orders, %d off-map"
+            % [drape.reach_count, by_order.size(), drape.dropped_offmap])
+
+
+func test_no_lattice_geometry_reaches_the_scene() -> void:
+    """Decision 890, asserted against the built scene rather than intended.
+    Cell outlines and patch grids must not exist as geometry, and there is no
+    debugging exception -- the moment they exist, something draws them."""
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    var r := v.build()
+    check(r.get("ok", false), "the terrain view did not build: %s" % r.get("why", ""))
+    for child in v.get_children():
+        var n := String(child.name).to_lower()
+        for forbidden in ["cell", "patch", "band", "lattice"]:
+            check(not n.contains(forbidden),
+                    "a node named for a lattice is in the scene: %s" % child.name)
+    check(int(r.get("lattice_geometry", -1)) == 0, "the view reports lattice geometry")
+    v.queue_free()
+
+
+func test_the_camera_rig_offers_both_projections() -> void:
+    """A heightfield is read two ways -- relief from a perspective camera, and
+    geography from an orthographic one. One camera would make the viewer good
+    at only half of what M1 is for."""
+    var rig := CameraRig.new()
+    get_root().add_child(rig)
+    rig.setup(AABB(Vector3.ZERO, Vector3(1000000, 4000, 1500000)))
+    check(rig.ortho != null and rig.fly != null, "the rig is missing a camera")
+    check(rig.ortho.projection == Camera3D.PROJECTION_ORTHOGONAL, "ortho is not orthographic")
+    check(rig.using_ortho(), "the rig should start top-down")
+    rig.toggle()
+    check(not rig.using_ortho(), "toggle did not switch projection")
+    check(rig.fly.current, "the fly camera is not current after toggling")
+    rig.queue_free()

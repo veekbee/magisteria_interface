@@ -1,6 +1,16 @@
 # Godot's import cache and editor state. Regenerated on open; never committed.
 .godot/
-*.import
+
+# `*.import` files ARE committed, deliberately, and this line used to ignore
+# them. They carry the per-file import settings -- and for
+# assets/terrain/heightfield_overview.png those settings decide whether the
+# RGB bytes survive at all. Height is encoded IN those bytes (R high, G low),
+# so a VRAM-compressed import would silently corrupt the terrain while every
+# checksum still passed. Losing the settings to .gitignore means the next
+# clone re-imports with whatever the defaults are that week.
+#
+# `src/terrain/heightfield.gd` also asserts the loaded format at runtime, so
+# the guarantee does not rest on a file being present.
 
 # `.uid` files are NOT ignored, deliberately. Godot 4.4+ emits one per script
 # and they are meant to be version-controlled: they are what keeps a reference
@@ -16,8 +26,12 @@
 # Large sim artefacts fetched rather than committed. `assets/*/README.md`
 # says which tool produces each and how it is pinned; the bytes are not this
 # repo's to carry until the LFS-vs-fetch call is made (roadmap Phase 5 (e)).
-/assets/terrain/*
-!/assets/terrain/README.md
+# The terrain export COMMITS. At 6.0 MB -- a 1 km overview plus manifests --
+# it is the "small overview + manifests" half of appendix (e)'s split, and
+# committing it is what lets a fresh clone build the viewer from the repo
+# alone. What does NOT commit is the full-resolution tile pyramid, which the
+# export declares and does not emit for exactly that reason.
+/assets/terrain/tiles/
 /assets/fixture/*
 !/assets/fixture/README.md
 
