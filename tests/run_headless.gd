@@ -404,6 +404,36 @@ func test_the_main_scene_populated_itself() -> void:
                     print("main scene scatter: %d texels, share %s, families %s"
                             % [int(sr["texels"]), String.num(float(sr["share_drawn"]), 5),
                                str(drawn)])
+
+                    # AND IT HAS TO BE REACHABLE. The overview camera shows
+                    # 1,545,600 m of basin and the scatter is 3,000 m across, so
+                    # the whole of it lands on about a pixel. Both numbers are
+                    # right and three orders of magnitude apart -- run as an
+                    # application rather than as a test, that is a window with
+                    # nothing in it, which is how this was found.
+                    var tv: TerrainView = _scene_root.get_node("TerrainView")
+                    var overview_px := float(sr["on_screen_px"])
+                    check(not is_nan(overview_px),
+                            "the scatter does not report its size on screen")
+                    check(overview_px < 8.0,
+                            "the scatter is %.1f px at the overview camera; this check is "
+                            % overview_px + "no longer exercising the case it exists for")
+                    check(_scene_root.probe_panel.scatter_where.text.contains("press"),
+                            "the panel does not say how to reach a sub-pixel scatter: %s"
+                            % _scene_root.probe_panel.scatter_where.text)
+                    check(tv.rig.using_ortho(), "the viewer did not start on the overview")
+                    check(tv.focus_on_scatter(), "the scatter could not be reached")
+                    check(not tv.rig.using_ortho(), "reaching it left the overview current")
+                    var close_px := tv._on_screen_px(2.0 * TerrainView.SCATTER_HORIZON_M)
+                    check(close_px > overview_px * 100.0,
+                            "reaching it moved the scatter from %.2f px to %.2f px"
+                            % [overview_px, close_px])
+                    var vh := float(get_root().get_visible_rect().size.y)
+                    check(close_px > 0.5 * vh,
+                            "the scatter fills %.0f px of a %.0f px viewport after reaching it"
+                            % [close_px, vh])
+                    print("main scene reach: %.2f px at the overview, %.0f px of %.0f after G"
+                            % [overview_px, close_px, vh])
             print("main scene probe: %s" % str(_scene_root.probe_report.get("state", "?")))
 
         print("main scene contours: window %s, %s"

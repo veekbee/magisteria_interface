@@ -61,6 +61,8 @@ var families: FamilySet = null
 var frame_cost: FrameCost = null
 var scatter: VegetationScatter = null
 var _scatter_nodes: Dictionary = {}      ## life_form -> MultiMeshInstance3D
+var scatter_centre_mesh := Vector3.ZERO
+var has_scatter := false
 
 var contour_sets: Dictionary = {}        ## window -> ContourSet
 var contour_drape: ContourDrape = null
@@ -335,6 +337,9 @@ func _unhandled_input(event: InputEvent) -> void:
         if overlay == null:
             return
         probed.emit(probe_at_screen(get_viewport().get_camera_3d(), event.position))
+    elif event is InputEventKey and event.pressed and not event.echo \
+            and event.keycode == KEY_G:
+        focus_on_scatter()
 
 
 ## M4: load whatever contour sets are vendored, and say which windows have
@@ -444,7 +449,43 @@ func scatter_at(centre: Vector2, radius_m: float = SCATTER_HORIZON_M) -> Diction
     for life_form in _scatter_nodes:
         if not scatter.meshes.has(life_form):
             (_scatter_nodes[life_form] as MultiMeshInstance3D).visible = false
+
+    # Where it stands, and how big it is on screen right now. The second number
+    # is the one that explains an empty-looking window: at the overview camera
+    # the whole scatter is about a pixel, and a viewer has no way to know that
+    # from looking.
+    var h := heightfield.height_at_world(centre.x, centre.y)
+    var m := terrain.world_to_mesh(centre, heightfield)
+    scatter_centre_mesh = Vector3(m.x, (0.0 if is_nan(h) else h) * terrain.exaggeration, m.y)
+    has_scatter = true
+    r["on_screen_px"] = _on_screen_px(radius_m * 2.0)
+    r["focus_key"] = "G"
     return r
+
+
+## How many pixels across a span of `metres` is under the current camera.
+func _on_screen_px(metres: float) -> float:
+    if rig == null or get_viewport() == null:
+        return NAN
+    var height_px := get_viewport().get_visible_rect().size.y
+    if height_px <= 0.0:
+        return NAN
+    if rig.using_ortho() and rig.ortho != null:
+        return metres / (rig.ortho.size / height_px)
+    if rig.fly == null:
+        return NAN
+    var d := rig.fly.global_position.distance_to(scatter_centre_mesh)
+    if d <= 0.0:
+        return NAN
+    return metres / (2.0 * d * tan(deg_to_rad(0.5 * rig.fly.fov)) / height_px)
+
+
+## Take the camera to the last scatter, on the fly camera.
+func focus_on_scatter() -> bool:
+    if not has_scatter or rig == null:
+        return false
+    rig.focus_on(scatter_centre_mesh, SCATTER_HORIZON_M)
+    return true
 
 
 func clear_scatter() -> void:

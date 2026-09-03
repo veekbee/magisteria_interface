@@ -1,6 +1,10 @@
 ; Engine configuration file.
-; Minimal by intent: renderer and main scene only. Anything else added here is
-; a decision someone should have to argue for in review.
+; It's best edited using the editor UI and not directly,
+; since the parameters that go here are not all obvious.
+;
+; Format:
+;   [section] ; section goes between []
+;   param=value ; assign values to parameters
 
 config_version=5
 
@@ -13,16 +17,6 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [filesystem]
 
-; Godot imports .blend natively by shelling out to Blender. tools/blender/
-; holds the M5 form-archetype SOURCES, which the project never loads -- and
-; headless, with no Blender path configured, that import fails with "Blender
-; path is invalid or not set" and turns the gate red over files nothing reads.
-;
-; Off here rather than behind a .gdignore in that directory: this says what is
-; true of the PROJECT, it covers a .blend committed anywhere rather than one
-; directory, and it does not hide a directory from the engine along the way.
-; tests/run_headless.gd asserts it, so re-enabling it in the editor fails the
-; gate with the reason instead of a Blender error.
 import/blender/enabled=false
 
 [rendering]

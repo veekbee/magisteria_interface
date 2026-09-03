@@ -24,7 +24,8 @@ extends VBoxContainer
 ## than drawing one plot and leaving the reader to wonder about the other:
 ## FieldScrubber's refused-row label again, and for the same reason.
 
-const NOT_PROBED := "click the terrain to probe a cell"
+const NOT_PROBED := ("click the terrain to probe a cell — the click also scatters vegetation "
+        + "there, and G takes the camera to it")
 
 #: The node rows M4 asks for. A row here that the fixture does not carry is
 #: reported by name rather than dropped from the panel.
@@ -39,6 +40,7 @@ var series_caption: Label
 var series: SeriesPlot
 var absent_rows: Label
 var scatter_line: Label
+var scatter_where: Label
 var scatter_share: Label
 
 var _fl: FixtureLoader = null
@@ -60,6 +62,7 @@ func setup(fl: FixtureLoader = null) -> void:
     add_child(series)
     absent_rows = _line()
     scatter_line = _line()
+    scatter_where = _line()
     scatter_share = _line()
     clear()
 
@@ -73,6 +76,7 @@ func clear() -> void:
     series.clear()
     absent_rows.text = ""
     scatter_line.text = ""
+    scatter_where.text = ""
     scatter_share.text = ""
 
 
@@ -182,6 +186,7 @@ func _line(font_size: int = 0) -> Label:
 func show_scatter(r: Dictionary) -> void:
     if not bool(r.get("ok", false)):
         scatter_line.text = "scatter: %s" % str(r.get("why", "not built"))
+        scatter_where.text = ""
         scatter_share.text = ""
         return
     var parts := PackedStringArray()
@@ -192,6 +197,18 @@ func show_scatter(r: Dictionary) -> void:
                 _si(float(implied.get(life_form, 0.0)))])
     scatter_line.text = "scatter %.0f m horizon, %d texels — %s (drawn/implied)" % [
             float(r.get("radius_m", 0.0)), int(r.get("texels", 0)), " ".join(parts)]
+
+    # WHY THE WINDOW CAN LOOK EMPTY. The overview camera shows 1,545,600 m of
+    # basin; the scatter is 3,000 m across. Everything can be working and the
+    # result still lands on about one pixel, and a viewer has no way to tell
+    # that from nothing having happened.
+    var px := float(r.get("on_screen_px", NAN))
+    if not is_nan(px):
+        if px < 8.0:
+            scatter_where.text = ("the whole scatter is %s px across at this camera — press %s "
+                    + "to stand in it") % [String.num(px, 1), str(r.get("focus_key", "G"))]
+        else:
+            scatter_where.text = "the scatter is %s px across at this camera" % String.num(px, 0)
 
     var budget: Dictionary = r.get("budget", {})
     var share := float(r.get("share_drawn", 1.0))

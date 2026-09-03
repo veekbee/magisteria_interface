@@ -45,6 +45,27 @@ func setup(aabb: AABB) -> void:
     _apply()
 
 
+## Frame a disc of `radius_m` around a point, on the fly camera.
+##
+## M5's scatter is 1,500 m across and the overview camera shows 1,545,600 m of
+## basin, so the whole of it lands on about one pixel. Nothing is wrong with
+## either number -- they are just three orders of magnitude apart, and without
+## a way to cross that distance the scatter is a thing the app computes and
+## nobody can look at.
+##
+## The offset is taken from the FOV rather than fixed, so the disc fills the
+## frame whatever the camera's field of view is set to.
+func focus_on(target: Vector3, radius_m: float) -> void:
+    if fly == null:
+        return
+    var back: float = maxf(radius_m, 1.0) / tan(deg_to_rad(0.5 * fly.fov))
+    fly.near = maxf(1.0, back * 0.001)
+    fly.position = target + Vector3(0.0, back * 0.75, back * 0.75)
+    fly.look_at_from_position(fly.position, target, Vector3.UP)
+    _using_ortho = false
+    _apply()
+
+
 func toggle() -> void:
     _using_ortho = not _using_ortho
     _apply()
