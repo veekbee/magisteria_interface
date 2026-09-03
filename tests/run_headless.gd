@@ -55,6 +55,9 @@ func _initialize() -> void:
     test_contour_arcs_land_on_the_terrain_they_were_extracted_on()
     test_the_contour_line_stays_broken()
     test_no_contour_set_is_invented_for_a_window_that_has_none()
+    test_the_probe_tells_the_three_absences_apart()
+    test_the_probe_reads_the_row_that_is_drawn()
+    test_the_ray_march_lands_on_the_surface_it_marched()
     stage_the_main_scene()
 
 
@@ -326,6 +329,22 @@ func test_the_main_scene_populated_itself() -> void:
                     "contours were drawn for %s, which has no vendored set" % c["window"])
             check(str(cd.get("why", "")).contains(str(c["window"])),
                     "the layer does not say why %s has no contours" % c["window"])
+        # M4's probe, through the input path the application uses. The panel
+        # is what a click has to reach: a signal wired to nothing looks exactly
+        # like a signal wired correctly until someone clicks.
+        var click := InputEventMouseButton.new()
+        click.button_index = MOUSE_BUTTON_LEFT
+        click.pressed = true
+        click.position = Vector2(get_root().size) * 0.5
+        get_root().push_input(click)
+        check(_scene_root.probe_panel != null, "no probe panel in the running scene")
+        if _scene_root.probe_panel != null:
+            check(_scene_root.probe_panel.state.text != ProbePanel.NOT_PROBED,
+                    "a click on the terrain did not reach the probe panel")
+            check(not _scene_root.probe_report.is_empty(),
+                    "the probe emitted nothing")
+            print("main scene probe: %s" % str(_scene_root.probe_report.get("state", "?")))
+
         print("main scene contours: window %s, %s"
                 % [c["window"], "day %d drawn" % int(cd.get("day", -1)) if has_set
                         else str(cd.get("why", ""))])
@@ -1070,4 +1089,155 @@ func test_no_contour_set_is_invented_for_a_window_that_has_none() -> void:
     check(legend.standing.text.contains("PROVISIONAL"),
             "the legend does not carry the threshold's standing: %s" % legend.standing.text)
     legend.queue_free()
+    v.queue_free()
+
+
+# --------------------------------------------------------------------------
+# M4 -- the probe
+# --------------------------------------------------------------------------
+
+func test_the_probe_tells_the_three_absences_apart() -> void:
+    """Two of the three absences are not errors. A point with no ground, a
+    point with ground and no residence key (4,973 of them, and `key_at`
+    returns [] by design), and a key the fixture cannot join are three
+    different statements, and reporting them as one "no data" is what
+    ResidenceLayer's header is written against."""
+    var hf := heightfield()
+    var rl := residence()
+    var fl := fixture()
+    var cp := CellProbe.new()
+    cp.bind(hf, rl, fl)
+    check(cp.is_bound(), "the probe did not bind")
+
+    var off := hf.texel_to_world(-500.0, -500.0)
+    var no_ground := cp.at_world(off.x, off.y)
+    check(str(no_ground["state"]) == CellProbe.NO_GROUND,
+            "a point off the raster reported %s" % str(no_ground["state"]))
+
+    # a ground texel with no key, and a ground texel with one, from the raster
+    # itself -- neither is constructed, both are conditions the artefacts hold
+    var no_key := {}
+    var resolved := {}
+    for y in range(0, hf.height, 7):
+        for x in range(0, hf.width, 7):
+            if is_nan(hf.height_at_texel(x, y)):
+                continue
+            var w := hf.texel_to_world(float(x), float(y))
+            var r := cp.at_world(w.x, w.y)
+            if str(r["state"]) == CellProbe.NO_KEY and no_key.is_empty():
+                no_key = r
+            elif str(r["state"]) == CellProbe.RESOLVED and resolved.is_empty():
+                resolved = r
+        if not no_key.is_empty() and not resolved.is_empty():
+            break
+    check(not no_key.is_empty(), "no ground texel without a residence key was found")
+    check(not resolved.is_empty(), "no texel resolved to a cell")
+    if no_key.is_empty() or resolved.is_empty():
+        return
+    check(not no_key.has("cell"), "a keyless point still reported a cell")
+    check(str(no_key["why"]).contains("891"),
+            "the empty key is not reported as the ruled answer: %s" % str(no_key["why"]))
+    check(int(resolved["cell"]) >= 0, "the resolved point carries no cell")
+    check(int(resolved["node_axis"]) >= 0, "the resolved point has no node-axis position")
+    check(str(resolved["huc10"]).length() > 0, "the resolved point names no node")
+
+    # the fourth state, which should never occur against these artefacts and
+    # is therefore the branch that would otherwise never have run
+    var no_cell := cp.for_key("00000000000", 0)
+    check(str(no_cell["state"]) == CellProbe.NO_CELL,
+            "a key the fixture has never seen reported %s" % str(no_cell["state"]))
+    check(str(no_cell["why"]).contains("no cell"),
+            "the join failure does not say what disagreed: %s" % str(no_cell["why"]))
+
+    var whys := [str(no_ground["why"]), str(no_key["why"]), str(no_cell["why"])]
+    for i in whys.size():
+        check(whys[i].length() > 20, "absence %d gives no reason" % i)
+        for j in range(i + 1, whys.size()):
+            check(whys[i] != whys[j], "two absences give the same reason")
+    print("probe: no-ground, no-key at texel %s, resolved at texel %s, no-cell"
+            % [str(no_key["texel"]), str(resolved["texel"])])
+
+
+func test_the_probe_reads_the_row_that_is_drawn() -> void:
+    """§16.12 makes the scalar at (x, y) the fine rung. This is a development
+    view of the server's own data and is exempt on that ground alone, which is
+    why CellProbe says so in the file rather than leaving it to be remembered.
+
+    What is checked here is narrower: the value in the readout is the value
+    the terrain is painted with. A probe reading a row it was told about
+    separately would print a number for one row under the colours of
+    another."""
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    var bound := v.bind_fields()
+    check(bool(bound["ok"]), "the view did not bind fields: %s" % str(bound.get("why", "")))
+    check(v.show_field("deepest_winter", "band.snowpack_swe", 29),
+            "the view did not paint band.snowpack_swe")
+
+    var hf := v.heightfield
+    var found := false
+    for y in range(0, hf.height, 11):
+        for x in range(0, hf.width, 11):
+            var w := hf.texel_to_world(float(x), float(y))
+            var r := v.probe_world(w.x, w.y)
+            if str(r.get("state", "")) != CellProbe.RESOLVED:
+                continue
+            check(str(r["row"]) == "band.snowpack_swe",
+                    "the probe read %s while band.snowpack_swe is drawn" % str(r["row"]))
+            check(int(r["day"]) == 29, "the probe read day %d, day 29 is drawn" % int(r["day"]))
+            var vals := v.fixture.day_values("deepest_winter", "band.snowpack_swe", 29)
+            var direct := vals[int(r["cell"])]
+            if bool(r["has_value"]):
+                check(absf(float(r["value"]) - direct) < 1e-12,
+                        "the probe read %s and the cell holds %s"
+                        % [String.num(float(r["value"]), 9), String.num(direct, 9)])
+            else:
+                check(is_nan(direct), "the probe found no value where the cell holds one")
+            found = true
+            break
+        if found:
+            break
+    check(found, "no texel resolved through the view")
+    v.queue_free()
+
+
+func test_the_ray_march_lands_on_the_surface_it_marched() -> void:
+    """The probe turns a click into a world position by marching the camera
+    ray against the heightfield the mesh was built from, rather than against a
+    collision shape -- a second copy of the terrain would be free to disagree
+    with the drawn one, and a probe answering about an invisible surface is
+    worse than one that answers nothing."""
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    var rep := v.build()
+    check(bool(rep["ok"]), "the view did not build")
+    var verts: PackedVector3Array = v.terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var aabb: AABB = v.terrain.mesh.get_aabb()
+    var tested := 0
+    var wrong_xy := 0
+    var wrong_y := 0
+    for n in range(37, verts.size(), 971):
+        var target := verts[n]
+        var origin := Vector3(target.x, aabb.end.y + 100000.0, target.z)
+        var hit := v.world_under_ray(origin, Vector3.DOWN)
+        if not bool(hit.get("hit", false)):
+            wrong_xy += 1
+            continue
+        var m: Vector3 = hit["mesh"]
+        if absf(m.x - target.x) > 1.0 or absf(m.z - target.z) > 1.0:
+            wrong_xy += 1
+        if absf(m.y - target.y) > 1.0:
+            wrong_y += 1
+        tested += 1
+    check(tested > 8, "only %d rays hit the surface" % tested)
+    check(wrong_xy == 0, "%d rays landed away from the vertex they were aimed at" % wrong_xy)
+    check(wrong_y == 0, "%d rays stopped at a height the vertex does not have" % wrong_y)
+
+    var up := v.world_under_ray(Vector3(0.0, aabb.end.y + 1000.0, 0.0), Vector3.UP)
+    check(not bool(up.get("hit", false)), "a ray pointing away from the basin hit it")
+    check(str(up.get("why", "")).length() > 10, "a miss gives no reason: %s" % str(up))
+    check(str(v.probe_at_screen(null, Vector2.ZERO)["state"]) == CellProbe.NO_GROUND,
+            "probing with no current camera did not report an absence")
+    print("ray march: %d rays land on the vertex they were aimed at" % tested)
     v.queue_free()

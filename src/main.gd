@@ -52,15 +52,20 @@ func _ready() -> void:
         if not contour_report.get("ok", false):
             push_warning("contours: %s" % contour_report.get("why", "unknown"))
 
+        probe_panel = ProbePanel.new()
+        probe_panel.setup()
+        _controls.add_child(probe_panel)
+        _terrain.probed.connect(_on_probed)
+
         var c := scrubber.current()
         if not c.is_empty():
             _on_field_changed(c["window"], c["row"], c["day"], c["group"])
-        var probe := _terrain.burn_edge(str(field_report["windows"][0]), 0)
-        if not probe.get("has_edge", false):
+        var burn := _terrain.burn_edge(str(field_report["windows"][0]), 0)
+        if not burn.get("has_edge", false):
             # Decision 892 draws a burn perimeter as a real edge. This trace has
             # none, and saying so is the honest output -- contouring anyway
             # would draw a curve wherever the threshold cut the noise.
-            push_warning("burn: %s" % probe.get("verdict", "no verdict"))
+            push_warning("burn: %s" % burn.get("verdict", "no verdict"))
         print("fields: %d px resolved, %d rows, windows %s"
                 % [field_report["resolved_px"], field_report["rows"].size(),
                    str(field_report["windows"])])
@@ -86,6 +91,8 @@ var burn_report: Dictionary = {}
 var contour_report: Dictionary = {}
 var contour_day_report: Dictionary = {}
 var legend: ContourLegend = null
+var probe_panel: ProbePanel = null
+var probe_report: Dictionary = {}
 
 
 func _on_field_changed(window: String, row: String, day: int, group: int) -> void:
@@ -105,3 +112,11 @@ func _on_field_changed(window: String, row: String, day: int, group: int) -> voi
             legend.show_absent(window)
         else:
             legend.show_set(cs, day, contour_day_report)
+
+
+## M4. The probe is assembled by the view that holds the cameras and the
+## painted row; main only routes the answer to the panel.
+func _on_probed(result: Dictionary) -> void:
+    probe_report = result
+    if probe_panel != null:
+        probe_panel.show_probe(result)

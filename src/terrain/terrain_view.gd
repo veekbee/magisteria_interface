@@ -12,7 +12,18 @@ extends Node3D
 ## normals gives relief that responds to the camera and costs nothing; a baked
 ## shade map would be a second copy of the terrain, free to disagree with it.
 
+## M4: a click resolved to a residence key. Emitted by this node because it is
+## the one that holds the cameras, the heightfield and the row currently
+## painted -- a probe assembled anywhere else would need a second copy of all
+## three and could disagree with what is on screen.
+signal probed(result: Dictionary)
+
 const TERRAIN_DIR := "res://assets/terrain/"
+
+## The march samples the surface every half heightfield pixel. Coarser steps
+## walk over ridges at a grazing angle and report the ground behind them.
+const PROBE_STEP_FRACTION := 0.5
+const PROBE_REFINEMENTS := 24
 
 @export var stride: int = 4
 @export var exaggeration: float = 12.0   ## a 4 km relief over a 1,000 km basin
@@ -31,6 +42,12 @@ var _terrain_mat: StandardMaterial3D
 var _flow_mi: MeshInstance3D = null
 var _flow_display: FlowDisplay = null
 var field_report: Dictionary = {}
+
+var probe: CellProbe = null
+## What `show_field` last painted. The probe reads the row that is DRAWN
+## rather than one it was told about separately, so the number in the readout
+## and the colour under the cursor cannot come from different rows.
+var shown: Dictionary = {}
 
 var contour_sets: Dictionary = {}        ## window -> ContourSet
 var contour_drape: ContourDrape = null
@@ -156,6 +173,7 @@ func show_field(window: String, row: String, day: int, group: int = 0) -> bool:
         return false
     _terrain_mat.albedo_texture = overlay.texture_for(vals, b.x, b.y)
     _terrain_mat.albedo_color = Color.WHITE
+    shown = {"window": window, "row": row, "day": day, "group": group}
     return true
 
 
@@ -211,6 +229,99 @@ func show_flow(window: String, day: int) -> Dictionary:
     var d := _flow_display.describe()
     d["ok"] = true
     return d
+
+
+## M4: the world position on the terrain surface under a camera ray.
+##
+## MARCHED, NOT COLLIDED. A collision shape for this mesh would be a second
+## copy of the terrain in the scene, free to drift from the drawn one, and the
+## drift would surface as a probe answering confidently about a surface nobody
+## can see. The march samples the SAME heightfield the mesh was built from, so
+## a hit is a point on the drawn surface by construction rather than by
+## agreement between two things.
+##
+## A NAN sample is not a miss and not a floor: the ray is over one of the
+## basin's holes there, and the march carries on past it. Treating NAN as
+## height zero would put a lake-level plateau across every hole and stop the
+## ray on it.
+func world_under_ray(origin: Vector3, dir: Vector3) -> Dictionary:
+    if heightfield == null or terrain == null:
+        return {"hit": false, "why": "no terrain to march against"}
+    var d := dir.normalized()
+    var aabb: AABB = _terrain_mi.mesh.get_aabb()
+    var reach: float = (maxf(aabb.size.x, aabb.size.z) + origin.distance_to(aabb.get_center())) * 2.0
+    var step := PROBE_STEP_FRACTION * heightfield.pixel_size_m
+    var t := 0.0
+    var last_above := -1.0
+    while t < reach:
+        var p := origin + d * t
+        var h := _surface_y(p)
+        if not is_nan(h):
+            if p.y <= h:
+                if last_above < 0.0:
+                    return {"hit": false,
+                            "why": "the ray starts under the surface -- nothing above to march"}
+                return _refine(origin, d, last_above, t)
+            last_above = t
+        t += step
+    return {"hit": false, "why": "the ray leaves the basin without meeting the surface"}
+
+
+## Bisection between a t known above the surface and a t known below it.
+## Halving is bounded and exact enough at 24 steps -- 1e6 m of reach becomes
+## 0.06 m, well under the metre the arcs themselves are rounded to.
+func _refine(origin: Vector3, d: Vector3, above: float, below: float) -> Dictionary:
+    for _i in PROBE_REFINEMENTS:
+        var mid := 0.5 * (above + below)
+        var p := origin + d * mid
+        var h := _surface_y(p)
+        if is_nan(h) or p.y > h:
+            above = mid
+        else:
+            below = mid
+    var hit := origin + d * below
+    return {"hit": true, "mesh": hit, "world": terrain.mesh_to_world(hit, heightfield),
+            "t": below}
+
+
+func _surface_y(p: Vector3) -> float:
+    var w := terrain.mesh_to_world(p, heightfield)
+    var h := heightfield.height_at_world(w.x, w.y)
+    return NAN if is_nan(h) else h * terrain.exaggeration
+
+
+## M4: what a world position resolves to, read against the row now painted.
+func probe_world(wx: float, wy: float) -> Dictionary:
+    if probe == null:
+        probe = CellProbe.new()
+        probe.bind(heightfield, residence, fixture)
+    var vals := PackedFloat64Array()
+    if not shown.is_empty() and fixture != null:
+        vals = fixture.day_values(shown["window"], shown["row"], shown["day"], shown["group"])
+    var r := probe.at_world(wx, wy, vals)
+    r.merge(shown)
+    return r
+
+
+## M4: a screen point, through the camera that is current, to a probe result.
+func probe_at_screen(cam: Camera3D, screen: Vector2) -> Dictionary:
+    if cam == null:
+        return {"state": CellProbe.NO_GROUND, "why": "no camera is current"}
+    var hit := world_under_ray(cam.project_ray_origin(screen), cam.project_ray_normal(screen))
+    if not bool(hit.get("hit", false)):
+        var r := {"state": CellProbe.NO_GROUND, "why": str(hit.get("why", "no hit"))}
+        r.merge(shown)
+        return r
+    var w: Vector2 = hit["world"]
+    return probe_world(w.x, w.y)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+    if event is InputEventMouseButton and event.pressed \
+            and event.button_index == MOUSE_BUTTON_LEFT:
+        if overlay == null:
+            return
+        probed.emit(probe_at_screen(get_viewport().get_camera_3d(), event.position))
 
 
 ## M4: load whatever contour sets are vendored, and say which windows have

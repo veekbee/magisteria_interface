@@ -140,9 +140,20 @@ func height_at(fx: float, fy: float) -> float:
 
 
 ## World (EPSG:5070 metres) -> continuous texel coordinate.
+##
+## The half is the difference between a texel's corner and its CENTRE, and a
+## texel coordinate names the centre -- `height_at(0, 0)` is the value of
+## texel (0, 0), not a corner between four of them.
 func world_to_texel(wx: float, wy: float) -> Vector2:
     return Vector2((wx - origin_x) / pixel_size_m - 0.5,
                    (origin_y - wy) / pixel_size_m - 0.5)
+
+
+## Its exact inverse: a texel coordinate -> the world position of that texel's
+## centre. Here rather than at the call site so the half above has one home.
+func texel_to_world(tx: float, ty: float) -> Vector2:
+    return Vector2(origin_x + (tx + 0.5) * pixel_size_m,
+                   origin_y - (ty + 0.5) * pixel_size_m)
 
 
 ## Height in metres at a world position, bicubic. NAN outside the basin.
