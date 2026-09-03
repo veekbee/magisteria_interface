@@ -12,10 +12,10 @@
     "baseline_period": "1905-1922",
     "years": 1000
   },
-  "is_a_display_encoding": "NOT the fixture. Values are quantised to 65,534 levels over the CONTRACT's declared bounds so a colour ramp is comparable across windows and rebuilds. Three rows in the fixture are float64 because they reach below float32's floor; that precision is deliberately not here, and anything that needs it reads fixture_v1.bin.",
+  "is_a_display_encoding": "NOT the fixture. Band rows are quantised to 65,534 levels over each row's REALISED range in its own window -- not over the contract's declared bounds, which are a validity range and gave two rows 3 and 12 usable codes when they were used as a dynamic one (\u00a723.837). Every row carries its own `lo`/`hi` beside `contract_lo`/`contract_hi` so both are readable. 2 row-window(s) here are float64 because they reach below float32's floor; the full precision is in fixture_v1.bin.",
   "files": {
     "fixture_client.bin": "36697e92a8e08af4a2d9cd4cd1a1899f501b074ab8f66a6476e8c93a5839cfbc",
-    "fixture_client.json": "ea98f47965d331d60c63e78049c6425c2f157dd65586b776a9b931d12f32c497"
+    "fixture_client.json": "8bcb328c38d73eb6b673fe72a277f6bcb09ed25282116f1d73d0b7a159355e34"
   },
   "source_commit": "2e3314a0c8891f36b785db69041554434f1ac05a",
   "carried_rows": [

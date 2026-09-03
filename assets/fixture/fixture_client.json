@@ -7,7 +7,7 @@
   "\u00a723.802"
  ],
  "generated_by": "tools/build_fixture.py",
- "generated_at_utc": "2026-09-03T04:01:18Z",
+ "generated_at_utc": "2026-09-03T04:24:30Z",
  "run": {
   "dir": "millennium-001",
   "base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
@@ -23955,7 +23955,7 @@
     "ckpt": "ckpt_y0750.npz",
     "ckpt_year": 750,
     "ticks_replayed": 1336,
-    "replay_seconds": 39.3,
+    "replay_seconds": 37.0,
     "first_tick": 274997
    },
    "days": 90,
@@ -24105,7 +24105,7 @@
     "ckpt": "ckpt_y0400.npz",
     "ckpt_year": 400,
     "ticks_replayed": 1915,
-    "replay_seconds": 59.6,
+    "replay_seconds": 55.1,
     "first_tick": 147826
    },
    "days": 90,
@@ -24246,8 +24246,8 @@
  "client_form": {
   "file": "fixture_client.bin",
   "bytes": 28262880,
-  "is_a_display_encoding": "NOT the fixture. Values are quantised to 65,534 levels over the CONTRACT's declared bounds so a colour ramp is comparable across windows and rebuilds. Three rows in the fixture are float64 because they reach below float32's floor; that precision is deliberately not here, and anything that needs it reads fixture_v1.bin.",
-  "band_rows_quantised_node_rows_not": "Band rows are quantised to 65,534 levels over the contract's bounds -- a colour ramp needs no more. Node rows are carried at full float64 because they are 1,154 wide rather than 5,684, so exactness costs ~3 MB, and because quantising streamflow over [0, 100000] would zero everything below 1.5 m3/s. HOW to render a quantity spanning that range is an open display question; this artefact does not answer it.",
+  "is_a_display_encoding": "NOT the fixture. Band rows are quantised to 65,534 levels over each row's REALISED range in its own window -- not over the contract's declared bounds, which are a validity range and gave two rows 3 and 12 usable codes when they were used as a dynamic one (\u00a723.837). Every row carries its own `lo`/`hi` beside `contract_lo`/`contract_hi` so both are readable. 2 row-window(s) here are float64 because they reach below float32's floor; the full precision is in fixture_v1.bin.",
+  "band_rows_quantised_node_rows_not": "Band rows are quantised because a colour ramp needs no more. Node rows are carried at full float64 because they are 1,154 wide rather than 5,684, so exactness costs little, and because quantising streamflow over its contract bounds would zero everything below 1.5 m3/s. HOW to render a quantity spanning that range is an open display question; this artefact does not answer it.",
   "rows": {
    "largest_fire/band.bare_fraction": {
     "window": "largest_fire",
