@@ -62,6 +62,10 @@ func _initialize() -> void:
     test_the_plot_separates_no_flow_from_below_the_scale()
     test_the_series_is_indexed_by_the_manifests_node_order()
     test_the_panel_says_why_the_second_node_row_has_no_plot()
+    test_quantiles_are_nearest_rank_and_never_interpolate()
+    test_the_fit_reports_what_it_costs_to_believe_it()
+    test_the_benchmark_refuses_to_measure_frame_cost_headless()
+    test_the_fit_survives_a_renderer_with_no_gpu_timer()
     stage_the_main_scene()
 
 
@@ -1424,3 +1428,157 @@ func test_the_panel_says_why_the_second_node_row_has_no_plot() -> void:
             "%d days classified out of %d" % [counted, panel.series.values.size()])
     print("series panel: %s" % panel.series_caption.text)
     panel.queue_free()
+
+
+# --------------------------------------------------------------------------
+# the per-instance frame-cost benchmark (§19.8.9)
+# --------------------------------------------------------------------------
+
+func test_quantiles_are_nearest_rank_and_never_interpolate() -> void:
+    """A frame budget is blown by the worst frame, so the benchmark quotes
+    quantiles rather than a mean -- and a quantile with an unstated rule is not
+    comparable with anyone else's. Nearest-rank returns a frame that actually
+    happened; interpolating invents a frame time between two real ones and
+    reports it as measured."""
+    var s := PackedFloat64Array([10.0, 1.0, 3.0, 2.0, 100.0])
+    check(FrameStats.quantile(s, 0.0) == 1.0, "q0 is not the smallest sample")
+    check(FrameStats.quantile(s, 1.0) == 100.0, "q1 is not the largest sample")
+    check(FrameStats.quantile(s, 0.5) == 3.0, "p50 of 5 samples is not the 3rd")
+    # every returned value must be a sample, at every quantile
+    for i in 101:
+        var q := FrameStats.quantile(s, float(i) / 100.0)
+        var found := false
+        for v in s:
+            if v == q:
+                found = true
+        check(found, "quantile %.2f returned %f, which is not one of the samples" % [float(i) / 100.0, q])
+    check(is_nan(FrameStats.quantile(PackedFloat64Array(), 0.5)),
+            "an empty run reported a quantile")
+
+    var d := FrameStats.summarise(s)
+    check(int(d["n"]) == 5, "summarise counted %d samples" % int(d["n"]))
+    check(float(d["max"]) == 100.0 and float(d["min"]) == 1.0, "min/max are wrong")
+    # the mean is carried only so it can be compared with p50: this run has one
+    # frame at 100 ms and a median of 3, which is the shape a mean would hide
+    check(float(d["mean"]) > float(d["p50"]) * 5.0,
+            "the fixture no longer has a tail, so it is not testing for one")
+    check(float(d["p99"]) == 100.0, "p99 of a 5-frame run is not its worst frame")
+
+
+func test_the_fit_reports_what_it_costs_to_believe_it() -> void:
+    """§19.8.9 asks for a coefficient, and a coefficient is only the right
+    shape for the answer if cost is linear in instance count. The fit
+    therefore travels with its residual and with the marginal cost between
+    rungs: a straight line through a curve has a slope, and the slope is not a
+    number anyone should carry away."""
+    var xs := PackedFloat64Array([1000.0, 2000.0, 4000.0, 8000.0])
+    var linear := PackedFloat64Array([2.0, 3.0, 5.0, 9.0])       # 1 ms + 1 us each
+    var f := FrameStats.fit_linear(xs, linear)
+    check(bool(f["ok"]), "a clean line did not fit: %s" % str(f.get("why", "")))
+    check(absf(float(f["ms_per_instance"]) - 0.001) < 1e-9,
+            "slope %s, expected 0.001" % String.num(float(f["ms_per_instance"]), 9))
+    check(absf(float(f["intercept_ms"]) - 1.0) < 1e-9, "intercept is not 1 ms")
+    check(float(f["r2"]) > 0.9999, "r2 of an exact line is %f" % float(f["r2"]))
+    check(float(f["max_rel_residual"]) < 1e-9, "an exact line has a residual")
+
+    # a curve still yields a slope, and the residual is what says not to use it
+    var curved := PackedFloat64Array([1.0, 1.0, 1.0, 40.0])
+    var g := FrameStats.fit_linear(xs, curved)
+    check(bool(g["ok"]), "the curve did not fit at all")
+    check(float(g["max_rel_residual"]) > 0.2,
+            "a knee reported a %.3f residual -- the fit is not reporting its own cost"
+            % float(g["max_rel_residual"]))
+    var m := FrameStats.marginals(xs, curved)
+    check(bool(m["ok"]), "marginals refused a 4-rung sweep")
+    check(float(m["spread"]) > 10.0,
+            "a flat-then-knee sweep reports a spread of %.1f between its cheapest and "
+            % float(m["spread"]) + "dearest marginal instance")
+    var m2 := FrameStats.marginals(xs, linear)
+    check(absf(float(m2["spread"]) - 1.0) < 1e-6,
+            "a straight line reports a marginal spread of %f" % float(m2["spread"]))
+
+    check(not bool(FrameStats.fit_linear(
+            PackedFloat64Array([1.0]), PackedFloat64Array([1.0]))["ok"]),
+            "a single point was fitted with a line")
+    check(not bool(FrameStats.fit_linear(
+            PackedFloat64Array([5.0, 5.0]), PackedFloat64Array([1.0, 2.0]))["ok"]),
+            "two samples at one instance count were fitted with a slope")
+
+
+func test_the_benchmark_refuses_to_measure_frame_cost_headless() -> void:
+    """The one thing this suite can assert about the benchmark is the thing
+    that matters most: under --headless the display server draws nothing and
+    still reports frame times, and those numbers look exactly like a very fast
+    GPU. This test runs headless, so the refusal is the observable behaviour
+    here -- if it ever stops refusing, the artefact starts carrying frame times
+    for work that never happened."""
+    check(DisplayServer.get_name() == "headless",
+            "this suite is not running headless, so it cannot check the refusal")
+    var packed := load("res://scenes/bench_instances.tscn") as PackedScene
+    check(packed != null, "bench_instances.tscn did not load")
+    if packed == null:
+        return
+    var bench = packed.instantiate()
+    check(bench != null, "the benchmark scene did not instantiate")
+    check(bench.get("configs") != null, "the benchmark exposes no configuration list")
+
+    # the plan itself, which needs no display at all
+    var plan: Array = bench.plan()
+    check(plan.size() == 54, "the plan holds %d configurations" % plan.size())
+    var techniques := {}
+    var complexities := {}
+    var counts := {}
+    for c in plan:
+        techniques[c["technique"]] = true
+        complexities[c["complexity"]] = true
+        counts[c["instances"]] = true
+    check(techniques.size() == 2,
+            "%d techniques swept -- MultiMesh and individual nodes are different "
+            % techniques.size() + "coefficients and a single number would hide which")
+    check(complexities.size() >= 2,
+            "%d mesh complexities -- a per-instance cost quoted without a triangle "
+            % complexities.size() + "count does not transfer to M5's archetypes")
+    check(counts.size() >= 8, "%d instance counts on the ladder" % counts.size())
+    check(counts.has(1000) and counts.has(150000),
+            "the ladder does not span the 1e3..1.5e5 range §19.8.4's horizons land in")
+    bench.free()
+
+
+func test_the_fit_survives_a_renderer_with_no_gpu_timer() -> void:
+    """`gpu_ms` carries an absence and a reason where the renderer does not
+    implement the timer, rather than the zeros it reads -- and the code that
+    fits a line across the sweep read `p50` straight off that absence. It threw
+    at the very end of the run, after every configuration had been measured, so
+    two complete benchmark runs produced results and no coefficients.
+
+    An absence has to be handled everywhere it can appear. This builds the
+    shape the fit sees on such a renderer and asks for the fits."""
+    var packed := load("res://scenes/bench_instances.tscn") as PackedScene
+    var bench = packed.instantiate()
+    var rows := []
+    for i in 4:
+        rows.append({
+            "technique": "multimesh", "complexity": "high",
+            "instances": 1000 * (i + 1), "measured": true,
+            "frame_ms": {"p50": 1.0 + float(i)},
+            "gpu_ms": {"available": false, "why": "not implemented under this renderer"},
+        })
+    # one unmeasured rung, which must contribute nothing rather than a zero
+    rows.append({
+        "technique": "multimesh", "complexity": "high", "instances": 8000,
+        "measured": false, "suspect": "the frames were not drawn",
+    })
+    bench.results = rows
+    var f: Dictionary = bench.fits()
+    check(f.has("multimesh|high"), "no fit for the only sweep given: %s" % str(f.keys()))
+    if not f.has("multimesh|high"):
+        bench.free()
+        return
+    var one: Dictionary = f["multimesh|high"]
+    check(int(one["rungs_measured"]) == 4,
+            "%d rungs fitted, and one of the five was unmeasured" % int(one["rungs_measured"]))
+    check(bool(one["frame_p50"]["ok"]), "the frame fit failed: %s" % str(one["frame_p50"]))
+    check(not bool(one["gpu_p50"]["ok"]),
+            "a GPU fit was reported on a renderer that measures no GPU time")
+    check(str(one["gpu_p50"]["why"]).length() > 10, "the absent GPU fit gives no reason")
+    bench.free()
