@@ -53,6 +53,7 @@ ARTEFACT_PATH = ROOT / "contract" / "schema.json"
 #: `file_sha256` -- the shape differs, the discipline does not.
 TERRAIN_PIN = ROOT / "assets" / "terrain" / "PIN"
 FIXTURE_PIN = ROOT / "assets" / "fixture" / "PIN"
+CONTOUR_PIN = ROOT / "assets" / "contours" / "PIN"
 
 
 def sha256(data: bytes) -> str:
@@ -162,7 +163,8 @@ def main(argv=None) -> int:
 
     pin = load_pin()
     problems = (check_local(pin) + check_multi(TERRAIN_PIN, "terrain")
-                + check_multi(FIXTURE_PIN, "fixture"))
+                + check_multi(FIXTURE_PIN, "fixture")
+                + check_multi(CONTOUR_PIN, "contours"))
     scope = "local"
     if a.against is not None:
         problems += check_against(pin, a.against.resolve())
@@ -178,7 +180,8 @@ def main(argv=None) -> int:
     print(f"contract OK ({scope}): v{v.get('major')}.{v.get('minor')}, "
           f"sha256 {pin.get('file_sha256', '')[:16]}…, "
           f"pinned at {pin.get('artefact_committed_at', '')[:12]}")
-    for pp, label in ((TERRAIN_PIN, "terrain"), (FIXTURE_PIN, "fixture")):
+    for pp, label in ((TERRAIN_PIN, "terrain"), (FIXTURE_PIN, "fixture"),
+                      (CONTOUR_PIN, "contours")):
         if pp.exists():
             d = json.loads(pp.read_text())
             print(f"{label} OK: {len(d.get('files', {}))} file(s)")
