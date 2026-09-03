@@ -38,6 +38,13 @@ func _initialize() -> void:
     test_flowlines_drape_and_keep_their_orders()
     test_no_lattice_geometry_reaches_the_scene()
     test_the_camera_rig_offers_both_projections()
+    test_the_residence_layer_aligns_with_the_heightfield()
+    test_residence_keys_never_land_where_there_is_no_ground()
+    test_the_fixture_loads_and_says_what_it_refused()
+    test_every_keyed_pixel_joins_to_a_cell()
+    test_decoded_values_stay_inside_the_contracts_bounds()
+    test_nodata_decodes_to_nan_and_never_to_zero()
+    test_the_ramp_is_ordered_and_bounds_come_from_the_contract()
     stage_the_main_scene()
 
 
@@ -437,3 +444,177 @@ func test_the_camera_rig_offers_both_projections() -> void:
     check(not rig.using_ortho(), "toggle did not switch projection")
     check(rig.fly.current, "the fly camera is not current after toggling")
     rig.queue_free()
+
+
+# --------------------------------------------------------------------------
+# M2 -- field overlays
+# --------------------------------------------------------------------------
+
+const FIXTURE_DIR := "res://assets/fixture/"
+
+var _rl: ResidenceLayer = null
+var _fl: FixtureLoader = null
+
+
+func residence() -> ResidenceLayer:
+    if _rl == null:
+        var f := FileAccess.open(TERRAIN_DIR + "residence_overview.json", FileAccess.READ)
+        _rl = ResidenceLayer.load_from(JSON.parse_string(f.get_as_text()),
+                TERRAIN_DIR + "residence_overview.png")
+    return _rl
+
+
+func fixture() -> FixtureLoader:
+    if _fl == null:
+        _fl = FixtureLoader.load_from(FIXTURE_DIR)
+    return _fl
+
+
+func test_the_residence_layer_aligns_with_the_heightfield() -> void:
+    """Both layers are built on ONE transform on the server. If they disagree
+    here, every field is drawn some pixels off its own terrain and nothing
+    else in the client would report it."""
+    var rl := residence()
+    var hf := heightfield()
+    check(rl.is_loaded(), "the residence layer did not load")
+    check(rl.width == hf.width and rl.height == hf.height,
+            "residence %dx%d against heightfield %dx%d"
+            % [rl.width, rl.height, hf.width, hf.height])
+    check(rl.node_of_index.size() > 1000,
+            "only %d nodes in the index" % rl.node_of_index.size())
+    print("residence: %dx%d, %d nodes" % [rl.width, rl.height, rl.node_of_index.size()])
+
+
+func test_residence_keys_never_land_where_there_is_no_ground() -> void:
+    """A key with nothing to draw on would be a place the client cannot show
+    and the server thinks exists. The converse IS allowed and measured: some
+    ground has no key, and M2 renders it as nodata rather than colouring it."""
+    var rl := residence()
+    var hf := heightfield()
+    var keyed_no_ground := 0
+    var ground_no_key := 0
+    for y in range(0, rl.height, 3):
+        for x in range(0, rl.width, 3):
+            var has_key := not rl.key_at(x, y).is_empty()
+            var has_ground := not is_nan(hf.height_at_texel(x, y))
+            if has_key and not has_ground:
+                keyed_no_ground += 1
+            elif has_ground and not has_key:
+                ground_no_key += 1
+    check(keyed_no_ground == 0,
+            "%d pixels carry a residence key with no terrain" % keyed_no_ground)
+    print("coverage: %d sampled ground pixels have no key (rendered as nodata)"
+            % ground_no_key)
+
+
+func test_the_fixture_loads_and_says_what_it_refused() -> void:
+    """A row the build could not carry must be visible to the client. Omitting
+    it silently would make an open design question -- the aft axis is 15
+    palette members against 14 engine positions -- look like a design."""
+    var fl := fixture()
+    check(fl.is_loaded(), "the fixture did not load")
+    check(fl.n_cells > 5000, "only %d cells" % fl.n_cells)
+    check(fl.windows.size() >= 2, "only %d windows" % fl.windows.size())
+    var rows := fl.row_names(fl.windows[0])
+    check(rows.size() >= 6, "only %d rows carried" % rows.size())
+    var refused: Dictionary = fl.refused_rows.get(fl.windows[0], {})
+    check(not refused.is_empty(), "no refused row is reported, but one is expected")
+    for k in refused:
+        check(str(refused[k]).length() > 30, "%s is refused without a reason" % k)
+        check(not rows.has(k), "%s is both carried and refused" % k)
+    print("fixture: %d cells, %d rows, refused %s" % [fl.n_cells, rows.size(), str(refused.keys())])
+
+
+func test_every_keyed_pixel_joins_to_a_cell() -> void:
+    """The join is the whole of M2. A key that resolves to no cell is a pixel
+    the client can locate and cannot colour, and it would show as a hole with
+    no explanation."""
+    var rl := residence()
+    var fl := fixture()
+    var joined := 0
+    var orphan := 0
+    for y in range(0, rl.height, 5):
+        for x in range(0, rl.width, 5):
+            var k := rl.key_at(x, y)
+            if k.is_empty():
+                continue
+            var huc: String = rl.node_of_index.get(k[0], "")
+            if fl.cell_of_key.has("%s|%d" % [huc, k[1]]):
+                joined += 1
+            else:
+                orphan += 1
+    check(joined > 10000, "only %d pixels joined" % joined)
+    check(orphan == 0, "%d keyed pixels resolve to no cell" % orphan)
+    print("join: %d pixels resolved, %d orphaned" % [joined, orphan])
+
+
+func test_decoded_values_stay_inside_the_contracts_bounds() -> void:
+    """The client fixture is quantised over the CONTRACT's bounds, so a decoded
+    value outside them means the encoding and the manifest disagree."""
+    var fl := fixture()
+    var w: String = fl.windows[0]
+    var rows := fl.row_names(w)
+    var checked := 0
+    for row in rows:
+        var d: Dictionary = {}
+        for k in fl.manifest["client_form"]["rows"]:
+            var cand: Dictionary = fl.manifest["client_form"]["rows"][k]
+            if str(cand["row"]) == row and str(cand["window"]) == w:
+                d = cand
+                break
+        if d.is_empty():
+            continue
+        var lo := float(d["lo"])
+        var hi := float(d["hi"])
+        var vals := fl.day_values(w, row, 0)
+        check(vals.size() == fl.n_cells,
+                "%s gave %d values for %d cells" % [row, vals.size(), fl.n_cells])
+        for i in range(0, vals.size(), 37):
+            var v := vals[i]
+            if is_nan(v):
+                continue
+            check(v >= lo - 1e-4 and v <= hi + 1e-4,
+                    "%s decoded %f outside [%f, %f]" % [row, v, lo, hi])
+        checked += 1
+    check(checked >= 6, "only %d rows checked" % checked)
+
+
+func test_nodata_decodes_to_nan_and_never_to_zero() -> void:
+    """Zero is a real value for every band row here -- a dry cell, an unburnt
+    one -- so a sentinel that is also a value would put real-looking data where
+    there is none."""
+    var fl := fixture()
+    var vals := fl.day_values(fl.windows[0], "band.wetness", 0)
+    var zeros := 0
+    var nans := 0
+    for v in vals:
+        if is_nan(v):
+            nans += 1
+        elif v == 0.0:
+            zeros += 1
+    check(vals.size() > 0, "no values decoded")
+    print("band.wetness day 0: %d cells, %d exact zeros, %d NAN" % [vals.size(), zeros, nans])
+
+
+func test_the_ramp_is_ordered_and_bounds_come_from_the_contract() -> void:
+    """A ramp whose lightness is not monotone reads as banded, which is
+    terracing invented in the colour. And auto-ranging per day would make the
+    scrubber a lie: the same colour would mean a different value each frame."""
+    var prev := -1.0
+    var monotone := true
+    for i in 21:
+        var c := FieldOverlay.ramp(float(i) / 20.0)
+        var lum: float = 0.2126 * c.r + 0.7152 * c.g + 0.0722 * c.b
+        if i > 0 and lum < prev - 0.12:
+            monotone = false
+        prev = max(prev, lum)
+    check(monotone, "the ramp's lightness reverses -- it will read as banded")
+    check(not FieldOverlay.ramp(0.0).is_equal_approx(FieldOverlay.ramp(1.0)),
+            "the ramp's ends are the same colour")
+
+    var fl := fixture()
+    var d: Dictionary = fl.manifest["client_form"]["rows"].values()[0]
+    check(d.has("lo") and d.has("hi"), "a row carries no bounds")
+    check("bounds" in str(fl.manifest["client_form"]["is_a_display_encoding"]).to_lower()
+            or "contract" in str(fl.manifest["client_form"]["is_a_display_encoding"]).to_lower(),
+            "the client form does not say its bounds are the contract's")

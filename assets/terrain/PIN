@@ -18,7 +18,9 @@
     "heightfield_overview.png": "69507643c31337a1195256faf008492ffca3efcb89ca8eb4f1ab0bf2ffc0cd62",
     "flowlines.json": "a480c0479dc0f2b10a0e1932d702dcf6fa166a024d68cc597e4d93add88e7024",
     "edges.json": "46653916cc075620708dcbdef468239db1e62c0fd4d4256940cceac66a3a2132",
-    "terrain_export.json": "f3ec97761a4b1f0863dde8476c2616e0cfcfcecae69e0c423135a1d94a80970e"
+    "terrain_export.json": "f3ec97761a4b1f0863dde8476c2616e0cfcfcecae69e0c423135a1d94a80970e",
+    "residence_overview.png": "907809d974c8f2f7e2709723d1ed1741d7d0880ed1bba430be00e1b006a1751a",
+    "residence_overview.json": "3296336831b2c13204fc52eb223a879c0c7ac0ab2b66bbef0a8bb4acf680b9a2"
   },
   "_tiles_note": "The full-resolution tile pyramid is declared in terrain_export.json and NOT emitted; when it lands it is fetched, not committed, and gets its own pin."
 }

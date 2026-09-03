@@ -32,7 +32,11 @@
 # alone. What does NOT commit is the full-resolution tile pyramid, which the
 # export declares and does not emit for exactly that reason.
 /assets/terrain/tiles/
-/assets/fixture/*
-!/assets/fixture/README.md
+# The client fixture COMMITS, at 25 MB. It is the quantised DISPLAY form --
+# band rows over the contract's declared bounds -- not the fixture itself: the
+# full-precision payload is 76 MB and stays in the simulation repo, because
+# three of its rows are float64 for values below float32's floor and no colour
+# ramp can show those. Committing the display form is what lets a fresh clone
+# run M2 from the repo alone; anything needing the precision goes upstream.
 
 .DS_Store

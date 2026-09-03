@@ -1,0 +1,107 @@
+class_name FieldScrubber
+extends VBoxContainer
+
+## M2's controls: which window, which row, which day.
+##
+## The row list comes from the FIXTURE, not from a hardcoded list -- a row the
+## fixture refused must not be offerable, and a row added later must appear
+## without an edit here. Refused rows are shown, disabled, with their reason:
+## `node.aft.population` is absent because the aft palette has 15 members
+## against a 14-wide engine axis, and a control that simply omitted it would
+## make an unresolved design question look like a design.
+
+signal changed(window: String, row: String, day: int, group: int)
+
+var window_pick: OptionButton
+var row_pick: OptionButton
+var day_slider: HSlider
+var day_label: Label
+var refused_label: Label
+
+var _fl: FixtureLoader
+var _rows: PackedStringArray = PackedStringArray()
+
+
+func setup(fl: FixtureLoader) -> void:
+    _fl = fl
+    custom_minimum_size = Vector2(420, 0)
+
+    window_pick = OptionButton.new()
+    for w in fl.windows:
+        window_pick.add_item(w)
+    window_pick.item_selected.connect(func(_i): _reload_rows(); _emit())
+    add_child(_labelled("window", window_pick))
+
+    row_pick = OptionButton.new()
+    row_pick.item_selected.connect(func(_i): _emit())
+    add_child(_labelled("field", row_pick))
+
+    day_slider = HSlider.new()
+    day_slider.min_value = 0
+    day_slider.step = 1
+    day_slider.custom_minimum_size = Vector2(300, 0)
+    day_slider.value_changed.connect(func(_v): _update_day_label(); _emit())
+    day_label = Label.new()
+    add_child(_labelled("day", day_slider))
+    add_child(day_label)
+
+    refused_label = Label.new()
+    refused_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+    refused_label.custom_minimum_size = Vector2(400, 0)
+    add_child(refused_label)
+
+    _reload_rows()
+
+
+func current() -> Dictionary:
+    if row_pick == null or row_pick.selected < 0:
+        return {}
+    return {
+        "window": window_pick.get_item_text(max(window_pick.selected, 0)),
+        "row": row_pick.get_item_text(row_pick.selected),
+        "day": int(day_slider.value),
+        "group": 0,
+    }
+
+
+func _reload_rows() -> void:
+    var w := window_pick.get_item_text(max(window_pick.selected, 0))
+    _rows = _fl.row_names(w)
+    row_pick.clear()
+    for r in _rows:
+        row_pick.add_item(r)
+    if _rows.size() > 0:
+        row_pick.select(0)
+        day_slider.max_value = max(_fl.days(w, _rows[0]) - 1, 0)
+    _update_day_label()
+
+    var refused: Dictionary = _fl.refused_rows.get(w, {})
+    if refused.is_empty():
+        refused_label.text = ""
+    else:
+        var parts := PackedStringArray()
+        for k in refused:
+            parts.append("%s — not carried: %s" % [k, str(refused[k])])
+        refused_label.text = "\n".join(parts)
+
+
+func _update_day_label() -> void:
+    if day_label:
+        day_label.text = "day %d of %d" % [int(day_slider.value) + 1,
+                                           int(day_slider.max_value) + 1]
+
+
+func _emit() -> void:
+    var c := current()
+    if not c.is_empty():
+        changed.emit(c["window"], c["row"], c["day"], c["group"])
+
+
+func _labelled(text: String, control: Control) -> HBoxContainer:
+    var box := HBoxContainer.new()
+    var l := Label.new()
+    l.text = text
+    l.custom_minimum_size = Vector2(60, 0)
+    box.add_child(l)
+    box.add_child(control)
+    return box

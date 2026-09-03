@@ -10,8 +10,11 @@ extends Node3D
 
 @onready var _terrain: TerrainView = $TerrainView
 @onready var _inspector: InspectorPanel = $UI/Scroll/Inspector
+@onready var _controls: VBoxContainer = $UI/Controls
 
 var terrain_report: Dictionary = {}
+var field_report: Dictionary = {}
+var scrubber: FieldScrubber = null
 
 
 func _ready() -> void:
@@ -26,6 +29,26 @@ func _ready() -> void:
     else:
         push_error("terrain: %s" % terrain_report.get("why", "unknown"))
 
+    # M2 rides on M1 and is reported separately: a fixture failure must not
+    # read as a terrain failure, and the viewer stays usable without one.
+    field_report = _terrain.bind_fields()
+    if field_report.get("ok", false):
+        scrubber = FieldScrubber.new()
+        scrubber.setup(_terrain.fixture)
+        scrubber.changed.connect(_on_field_changed)
+        _controls.add_child(scrubber)
+        var c := scrubber.current()
+        if not c.is_empty():
+            _on_field_changed(c["window"], c["row"], c["day"], c["group"])
+        print("fields: %d px resolved, %d rows, windows %s"
+                % [field_report["resolved_px"], field_report["rows"].size(),
+                   str(field_report["windows"])])
+        for w in field_report["refused"]:
+            for r in field_report["refused"][w]:
+                push_warning("fixture %s: %s not carried" % [w, r])
+    else:
+        push_warning("fields: %s" % field_report.get("why", "unknown"))
+
     var doc := _inspector.document
     if doc == null:
         doc = SchemaLoader.load_from_file(InspectorPanel.ARTEFACT_PATH)
@@ -35,3 +58,8 @@ func _ready() -> void:
         push_warning("contract: %s" % r)
     if doc.refused:
         push_error("contract REFUSED: %s" % doc.refusal_reason)
+
+
+func _on_field_changed(window: String, row: String, day: int, group: int) -> void:
+    if not _terrain.show_field(window, row, day, group):
+        push_warning("fields: could not paint %s/%s day %d" % [window, row, day])

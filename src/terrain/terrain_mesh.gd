@@ -47,6 +47,9 @@ func build(hf: Heightfield, stride_: int = 2, exaggeration_: float = 1.0) -> Arr
 
     var verts := PackedVector3Array()
     var normals := PackedVector3Array()
+    # UVs address the heightfield's own texel grid, so an overlay built on that
+    # grid lands on the terrain without a second alignment rule to get wrong.
+    var uvs := PackedVector2Array()
     var indices := PackedInt32Array()
     var index_of := PackedInt32Array()
     index_of.resize(nx * ny)
@@ -68,6 +71,8 @@ func build(hf: Heightfield, stride_: int = 2, exaggeration_: float = 1.0) -> Arr
                                  z * exaggeration,
                                  float(j) * step - half_y))
             normals.append(_normal_at(h, nx, ny, i, j, step, exaggeration))
+            uvs.append(Vector2((float(i * stride) + 0.5) / float(hf.width),
+                               (float(j * stride) + 0.5) / float(hf.height)))
 
     for j in ny - 1:
         for i in nx - 1:
@@ -86,6 +91,7 @@ func build(hf: Heightfield, stride_: int = 2, exaggeration_: float = 1.0) -> Arr
     arrays.resize(Mesh.ARRAY_MAX)
     arrays[Mesh.ARRAY_VERTEX] = verts
     arrays[Mesh.ARRAY_NORMAL] = normals
+    arrays[Mesh.ARRAY_TEX_UV] = uvs
     arrays[Mesh.ARRAY_INDEX] = indices
     mesh = ArrayMesh.new()
     if indices.size() > 0:

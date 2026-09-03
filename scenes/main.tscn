@@ -12,6 +12,14 @@ script = ExtResource("2_terrain")
 
 [node name="UI" type="CanvasLayer" parent="."]
 
+[node name="Controls" type="VBoxContainer" parent="UI"]
+anchors_preset = 1
+anchor_left = 1.0
+anchor_right = 1.0
+offset_left = -440.0
+offset_bottom = 200.0
+grow_horizontal = 0
+
 [node name="Scroll" type="ScrollContainer" parent="UI"]
 anchors_preset = 9
 anchor_bottom = 1.0

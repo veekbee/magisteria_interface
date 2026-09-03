@@ -52,6 +52,7 @@ ARTEFACT_PATH = ROOT / "contract" / "schema.json"
 #: rather than one, so its PIN carries a `files` map instead of a single
 #: `file_sha256` -- the shape differs, the discipline does not.
 TERRAIN_PIN = ROOT / "assets" / "terrain" / "PIN"
+FIXTURE_PIN = ROOT / "assets" / "fixture" / "PIN"
 
 
 def sha256(data: bytes) -> str:
@@ -125,29 +126,29 @@ def check_against(pin: dict, sim: Path) -> list[str]:
     return []
 
 
-def check_terrain() -> list[str]:
+def check_multi(pin_path: Path, label: str) -> list[str]:
     """The terrain export against its own PIN.
 
     Absent is not a failure: the export is a separate artefact and a checkout
     predating it is a legitimate state. A PIN naming a file that is missing IS
     a failure -- that is a claim about something that is not there.
     """
-    if not TERRAIN_PIN.exists():
+    if not pin_path.exists():
         return []
     try:
-        pin = json.loads(TERRAIN_PIN.read_text())
+        pin = json.loads(pin_path.read_text())
     except json.JSONDecodeError as exc:
-        return [f"terrain PIN is not valid JSON: {exc}"]
+        return [f"{label} PIN is not valid JSON: {exc}"]
     problems = []
     for name, claimed in pin.get("files", {}).items():
-        path = TERRAIN_PIN.parent / name
+        path = pin_path.parent / name
         if not path.exists():
-            problems.append(f"terrain PIN names {name}, which is not present")
+            problems.append(f"{label} PIN names {name}, which is not present")
             continue
         actual = sha256(path.read_bytes())
         if actual != claimed:
             problems.append(
-                f"terrain artefact {name} does not match its PIN\n"
+                f"{label} artefact {name} does not match its PIN\n"
                 f"    PIN claims  {claimed}\n"
                 f"    file is     {actual}")
     return problems
@@ -160,7 +161,8 @@ def main(argv=None) -> int:
     a = ap.parse_args(argv)
 
     pin = load_pin()
-    problems = check_local(pin) + check_terrain()
+    problems = (check_local(pin) + check_multi(TERRAIN_PIN, "terrain")
+                + check_multi(FIXTURE_PIN, "fixture"))
     scope = "local"
     if a.against is not None:
         problems += check_against(pin, a.against.resolve())
@@ -176,10 +178,10 @@ def main(argv=None) -> int:
     print(f"contract OK ({scope}): v{v.get('major')}.{v.get('minor')}, "
           f"sha256 {pin.get('file_sha256', '')[:16]}…, "
           f"pinned at {pin.get('artefact_committed_at', '')[:12]}")
-    if TERRAIN_PIN.exists():
-        tp = json.loads(TERRAIN_PIN.read_text())
-        print(f"terrain OK: {len(tp.get('files', {}))} file(s), "
-              f"pinned at {tp.get('source_commit', '')[:12]}")
+    for pp, label in ((TERRAIN_PIN, "terrain"), (FIXTURE_PIN, "fixture")):
+        if pp.exists():
+            d = json.loads(pp.read_text())
+            print(f"{label} OK: {len(d.get('files', {}))} file(s)")
     if a.against is None:
         print("  (cross-repo half not run -- pass --against <sim-checkout> when one is at hand)")
     return 0

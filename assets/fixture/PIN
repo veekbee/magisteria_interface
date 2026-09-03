@@ -1,0 +1,20 @@
+{
+  "_form": "The claim about the vendored fixture. Same discipline as contract/PIN.",
+  "artefact": "fixture v1, client display form",
+  "source": {
+    "repo": "git@github.com:veekbee/magisteria.git",
+    "path": "data/fixture_output"
+  },
+  "run": {
+    "dir": "millennium-001",
+    "base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
+    "master_seed": 20260820,
+    "baseline_period": "1905-1922",
+    "years": 1000
+  },
+  "is_a_display_encoding": "NOT the fixture. Values are quantised to 65,534 levels over the CONTRACT's declared bounds so a colour ramp is comparable across windows and rebuilds. Three rows in the fixture are float64 because they reach below float32's floor; that precision is deliberately not here, and anything that needs it reads fixture_v1.bin.",
+  "files": {
+    "fixture_client.bin": "3170dfbaa138bca847997f5a235a1230f1d4816996072d9f763e2ae5afdaa7c3",
+    "fixture_client.json": "561e24d36fe15d78231925f227a74f78298d7cfa9954354a507d81eb20e76dfa"
+  }
+}
