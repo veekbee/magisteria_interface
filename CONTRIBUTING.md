@@ -39,8 +39,8 @@ lands in the corpus and comes back as a ruling.
 
 ## The import boundary
 
-This repo consumes exactly three artefacts from the simulation repo — the schema artefact, the
-terrain export, and the fixture — each vendored and pinned. No Python imports, no reading the
+This repo consumes exactly four artefacts from the simulation repo — the schema artefact, the
+terrain export, the fixture, and the pre-extracted contours — each vendored and pinned. No Python imports, no reading the
 simulation's `sim/` or run directories, no internal-rung debug path. See `README.md`.
 
 ## No addons, of any kind
