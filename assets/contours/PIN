@@ -21,6 +21,21 @@
     "contours_deepest_winter_band_snowpack_swe.json": "d92053928b744ef4dd729e81d6f09298e62d1b36c8671ffbfb5a59189c97714c",
     "contours_deepest_winter_band_snowpack_swe.bin": "8384e29dcdd173e2f3e9dcfb63aa312d967a6a250bbd04a530ccf93b398070cc"
   },
+  "cross_repo": {
+    "_what": "how each file above is checkable against `source_commit` in a simulation checkout. Declared per file because the answer differs per file, and one rule would be wrong for half of them.",
+    "files": {
+      "contours_deepest_winter_band_snowpack_swe.json": {
+        "upstream": "data/contour_output/contours_deepest_winter_band_snowpack_swe.json",
+        "how": "derived",
+        "by": "tools/vendor_contours.py:client_manifest"
+      },
+      "contours_deepest_winter_band_snowpack_swe.bin": {
+        "upstream": "data/contour_output/contours_deepest_winter_band_snowpack_swe.bin",
+        "how": "not_tracked_upstream",
+        "note": "rides `data/**/*.bin` in the simulation repo. The PIN's own sha256 covers the vendored copy; nothing can compare it to a source commit, and saying so is the point."
+      }
+    }
+  },
   "_not_here": "the per-node crossing elevations and the HUC4 band ladders they come from. Geometry ships; the generator does not (\u00a716.12).",
-  "source_commit": "4e5e46984a7fa48e60203e5aa210fa514da8c713"
+  "source_commit": "0c28f6262f3b354bc6187917944c0596cf80313a"
 }

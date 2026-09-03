@@ -106,6 +106,24 @@ def main(argv=None) -> int:
         "fixture_client.bin": sha256(DEST / "fixture_client.bin"),
         "fixture_client.json": sha256(DEST / "fixture_client.json"),
     }
+    # HOW EACH FILE IS CHECKABLE against `source_commit`, declared by the tool
+    # that made it rather than hand-added to the PIN, which does not survive the
+    # next vendor run.
+    pin["cross_repo"] = {
+        "_what": "how each file above is checkable against `source_commit` in a simulation "
+                 "checkout. Per file, because the answer differs per file.",
+        "files": {
+            "fixture_client.json": {
+                "upstream": "data/fixture_output/fixture_v1.json",
+                "how": "derived", "by": "tools/vendor_fixture.py:client_manifest"},
+            "fixture_client.bin": {
+                "upstream": "data/fixture_output/fixture_client.bin",
+                "how": "not_tracked_upstream",
+                "note": "rides `data/**/*.bin` in the simulation repo. The PIN's own sha256 "
+                        "covers the vendored copy; nothing can compare it to a source "
+                        "commit, and saying so is the point."},
+        },
+    }
     pin["carried_rows"] = sorted(carried)
     pin["contract_version"] = f"{version['major']}.{version['minor']}"
     if a.sim:

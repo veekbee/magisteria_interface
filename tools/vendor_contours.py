@@ -42,6 +42,10 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 DEST = ROOT / "assets" / "contours"
 
+#: The simulation repo path these come from, named once so the PIN's `source`
+#: and its per-file `upstream` entries cannot drift apart.
+SRC_PATH = "data/contour_output"
+
 #: Keys the client does not get. `generated_from` names paths inside the sim
 #: repo, which are not facts about the client's copy; the PIN carries the
 #: source commit instead, which is.
@@ -58,6 +62,21 @@ def sha256(p: Path) -> str:
 
 def _json(path: Path) -> dict:
     return json.loads(path.read_text())
+
+
+def client_manifest(full: dict) -> dict:
+    """The client's view of one contour set.
+
+    A FUNCTION rather than four lines inside `main`, because
+    `tools/check_contract.py` re-derives it from the source commit to check the
+    vendored copy. Two copies of a transform agree until one is edited, which is
+    the whole failure the cross-repo half exists to catch -- so there is one.
+    """
+    out = {k: v for k, v in full.items() if k not in NOT_VENDORED}
+    out["_what"] = ("pre-extracted contour geometry. The band ladder it was "
+                    "extracted from is not here and is not derivable from it "
+                    "for any node whose arc is absent -- §16.12.")
+    return out
 
 
 def refusals(doc: dict) -> list[str]:
@@ -109,6 +128,7 @@ def main(argv=None) -> int:
 
     DEST.mkdir(parents=True, exist_ok=True)
     files: dict[str, str] = {}
+    cross: dict[str, dict] = {}
     rows: list[str] = []
     for mpath in manifests:
         doc = _json(mpath)
@@ -123,14 +143,24 @@ def main(argv=None) -> int:
             print(f"{mpath.name} names {payload.name}, which is not in {a.src}",
                   file=sys.stderr)
             return 2
-        client = {k: v for k, v in doc.items() if k not in NOT_VENDORED}
-        client["_what"] = ("pre-extracted contour geometry. The band ladder it was "
-                           "extracted from is not here and is not derivable from it "
-                           "for any node whose arc is absent -- §16.12.")
-        (DEST / mpath.name).write_text(json.dumps(client, indent=1) + "\n")
+        (DEST / mpath.name).write_text(
+            json.dumps(client_manifest(doc), indent=1) + "\n")
         shutil.copy2(payload, DEST / payload.name)
         files[mpath.name] = sha256(DEST / mpath.name)
         files[payload.name] = sha256(DEST / payload.name)
+        # HOW EACH FILE IS CHECKABLE against `source_commit`, declared by the
+        # tool that made it. Hand-adding this to the PIN does not survive the
+        # next vendor run -- measured, once -- and a claim that a rebuild
+        # silently drops is worse than none.
+        cross[mpath.name] = {
+            "upstream": f"{SRC_PATH}/{mpath.name}",
+            "how": "derived", "by": "tools/vendor_contours.py:client_manifest"}
+        cross[payload.name] = {
+            "upstream": f"{SRC_PATH}/{payload.name}",
+            "how": "not_tracked_upstream",
+            "note": "rides `data/**/*.bin` in the simulation repo. The PIN's own sha256 "
+                    "covers the vendored copy; nothing can compare it to a source "
+                    "commit, and saying so is the point."}
         days = doc["days"]
         rows.append(f"{doc['row']} @ {doc['threshold']} {doc['unit']} in {doc['window']}: "
                     f"{len(days)} day(s), {doc['payload']['vertices']} vertices")
@@ -139,12 +169,17 @@ def main(argv=None) -> int:
         "_form": "The claim about the vendored contours. Same shape as assets/terrain/PIN.",
         "artefact": "pre-extracted contours of band-quantised fields",
         "ruled_by": ["§16.12", "§16.12.1", "§16.7", "decision 296", "decision 890"],
-        "source": {"repo": "git@github.com:veekbee/magisteria.git",
-                   "path": "data/contour_output"},
+        "source": {"repo": "git@github.com:veekbee/magisteria.git", "path": SRC_PATH},
         "generated_by": "tools/extract_contours.py",
         "vendored_by": "tools/vendor_contours.py",
         "sets": rows,
         "files": files,
+        "cross_repo": {
+            "_what": "how each file above is checkable against `source_commit` in a "
+                     "simulation checkout. Declared per file because the answer differs "
+                     "per file, and one rule would be wrong for half of them.",
+            "files": cross,
+        },
         "_not_here": ("the per-node crossing elevations and the HUC4 band ladders they "
                       "come from. Geometry ships; the generator does not (§16.12)."),
     }

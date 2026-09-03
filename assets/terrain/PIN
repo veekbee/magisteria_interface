@@ -22,5 +22,36 @@
     "residence_overview.png": "907809d974c8f2f7e2709723d1ed1741d7d0880ed1bba430be00e1b006a1751a",
     "residence_overview.json": "3296336831b2c13204fc52eb223a879c0c7ac0ab2b66bbef0a8bb4acf680b9a2"
   },
-  "_tiles_note": "The full-resolution tile pyramid is declared in terrain_export.json and NOT emitted; when it lands it is fetched, not committed, and gets its own pin."
+  "_tiles_note": "The full-resolution tile pyramid is declared in terrain_export.json and NOT emitted; when it lands it is fetched, not committed, and gets its own pin.",
+  "cross_repo": {
+    "_what": "how each file above is checkable against `source_commit` in a simulation checkout. Declared per file because the answer differs per file, and a single rule would be wrong for three of these.",
+    "files": {
+      "terrain_export.json": {
+        "upstream": "data/terrain_export_output/terrain_export.json",
+        "how": "bytes"
+      },
+      "heightfield_overview.png": {
+        "upstream": "data/terrain_export_output/heightfield_overview.png",
+        "how": "bytes"
+      },
+      "flowlines.json": {
+        "upstream": "data/terrain_export_output/flowlines.json",
+        "how": "bytes"
+      },
+      "edges.json": {
+        "upstream": "data/terrain_export_output/edges.json",
+        "how": "bytes"
+      },
+      "residence_overview.png": {
+        "upstream": "data/residence_raster_output/residence_overview.png",
+        "how": "bytes"
+      },
+      "residence_overview.json": {
+        "upstream": "data/residence_raster_output/residence_100m.json",
+        "how": "key_subset",
+        "note": "a projection: five keys copied verbatim, `_what` and `_not_here` added here. Byte equality is the wrong test and would report a defect on a correct file."
+      }
+    },
+    "_maintained": "HAND-WRITTEN, unlike the fixture's and the contours', which their vendor tools emit. The terrain export was vendored by hand at M2 before any vendor tool existed, so nothing regenerates this block and nothing will notice if the export gains a file. If a vendor_terrain.py is ever written, it takes this over -- a hand-added block did not survive the first re-vendor of the contours, which is how this came to be declared by the tools instead."
+  }
 }

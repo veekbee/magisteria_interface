@@ -17,7 +17,7 @@
     "fixture_client.bin": "36697e92a8e08af4a2d9cd4cd1a1899f501b074ab8f66a6476e8c93a5839cfbc",
     "fixture_client.json": "8bcb328c38d73eb6b673fe72a277f6bcb09ed25282116f1d73d0b7a159355e34"
   },
-  "source_commit": "2e3314a0c8891f36b785db69041554434f1ac05a",
+  "source_commit": "0c28f6262f3b354bc6187917944c0596cf80313a",
   "carried_rows": [
     "band.bare_fraction",
     "band.burned_fraction",
@@ -28,5 +28,20 @@
     "band.wetness",
     "node.streamflow"
   ],
-  "contract_version": "2.0"
+  "contract_version": "2.0",
+  "cross_repo": {
+    "_what": "how each file above is checkable against `source_commit` in a simulation checkout. Per file, because the answer differs per file.",
+    "files": {
+      "fixture_client.json": {
+        "upstream": "data/fixture_output/fixture_v1.json",
+        "how": "derived",
+        "by": "tools/vendor_fixture.py:client_manifest"
+      },
+      "fixture_client.bin": {
+        "upstream": "data/fixture_output/fixture_client.bin",
+        "how": "not_tracked_upstream",
+        "note": "rides `data/**/*.bin` in the simulation repo. The PIN's own sha256 covers the vendored copy; nothing can compare it to a source commit, and saying so is the point."
+      }
+    }
+  }
 }
