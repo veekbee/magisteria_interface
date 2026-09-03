@@ -51,6 +51,10 @@ func _initialize() -> void:
     test_the_flow_mapping_distinguishes_zero_from_below_scale()
     test_quantisation_uses_the_realised_range_not_the_contracts()
     test_burn_asks_about_magnitude_before_geometry()
+    test_contours_index_the_day_the_manifest_says()
+    test_contour_arcs_land_on_the_terrain_they_were_extracted_on()
+    test_the_contour_line_stays_broken()
+    test_no_contour_set_is_invented_for_a_window_that_has_none()
     stage_the_main_scene()
 
 
@@ -300,6 +304,31 @@ func test_the_main_scene_populated_itself() -> void:
                 "no hillshade light -- relief would render flat")
         print("main scene terrain: %d verts, %d reaches"
                 % [rep["vertices"], rep["reaches_drawn"]])
+
+    # M4's layer, in the scene the application actually runs. The scrubber owns
+    # the clock; the contour layer takes the day from it and never asks for
+    # one. Two clocks would show a snowline and a snowpack from different days,
+    # which reads as physics rather than as a bug -- so what is checked is that
+    # the day the layer drew is the day the scrubber holds.
+    if _scene_root.scrubber != null:
+        var c: Dictionary = _scene_root.scrubber.current()
+        var cd: Dictionary = _scene_root.contour_day_report
+        check(_scene_root.legend != null, "no contour legend in the running scene")
+        var has_set: bool = _scene_root._terrain.contour_sets.has(c["window"])
+        if has_set:
+            check(int(cd.get("day", -1)) == int(c["day"]),
+                    "the contour layer drew day %s and the scrubber holds day %d"
+                    % [str(cd.get("day", "?")), int(c["day"])])
+            check(_scene_root.get_node_or_null("TerrainView/Contours") != null,
+                    "no Contours mesh instance for a window that has a set")
+        else:
+            check(not bool(cd.get("ok", false)),
+                    "contours were drawn for %s, which has no vendored set" % c["window"])
+            check(str(cd.get("why", "")).contains(str(c["window"])),
+                    "the layer does not say why %s has no contours" % c["window"])
+        print("main scene contours: window %s, %s"
+                % [c["window"], "day %d drawn" % int(cd.get("day", -1)) if has_set
+                        else str(cd.get("why", ""))])
 
 
 # --------------------------------------------------------------------------
@@ -816,3 +845,229 @@ func test_burn_asks_about_magnitude_before_geometry() -> void:
     check(bool(r2["has_edge"]),
             "no perimeter found on a field where 8%% of cells are 90%% burned")
     print("burn: %s" % str(r["verdict"]).substr(0, 90))
+
+
+# --------------------------------------------------------------------------
+# M4 -- contours
+# --------------------------------------------------------------------------
+
+const CONTOUR_DIR := "res://assets/contours/"
+
+var _cs: ContourSet = null
+
+
+func contours() -> ContourSet:
+    if _cs == null:
+        var sets := ContourSet.discover(CONTOUR_DIR)
+        _cs = sets.get("deepest_winter", ContourSet.new())
+    return _cs
+
+
+func contour_manifest() -> Dictionary:
+    var f := FileAccess.open(
+            CONTOUR_DIR + "contours_deepest_winter_band_snowpack_swe.json", FileAccess.READ)
+    return JSON.parse_string(f.get_as_text())
+
+
+func test_contours_index_the_day_the_manifest_says() -> void:
+    """A day's arcs are found by `byte_offset` and cut apart by
+    `arc_vertex_counts`; nothing in the payload marks where one day or one arc
+    ends. An index off by one arc reads the next day's geometry and draws it
+    as this one's -- a snowline from the wrong day, correct in every other
+    respect and impossible to see."""
+    var cs := contours()
+    check(cs.is_loaded(), "no contour set loaded: %s" % cs.why_absent)
+    if not cs.is_loaded():
+        return
+    var man := contour_manifest()
+    var days: Dictionary = man["days"]
+    check(cs.day_count() == days.size(),
+            "the set offers %d days and the manifest holds %d" % [cs.day_count(), days.size()])
+
+    var checked := 0
+    for day in [0, 1, 29, 45, days.size() - 1]:
+        var d: Dictionary = days[str(day)]
+        var arcs := cs.arcs_for_day(day)
+        check(arcs.size() == int(d["arc_count"]),
+                "day %d gave %d arcs, the manifest says %d"
+                % [day, arcs.size(), int(d["arc_count"])])
+        var counts: Array = d["arc_vertex_counts"]
+        var total := 0
+        var wrong := 0
+        for i in mini(arcs.size(), counts.size()):
+            var arc: PackedVector2Array = arcs[i]
+            if arc.size() != int(counts[i]):
+                wrong += 1
+            total += arc.size()
+        check(wrong == 0, "day %d: %d arcs are not the length the manifest gives" % [day, wrong])
+        check(total == int(d["vertex_count"]),
+                "day %d read %d vertices, the manifest says %d"
+                % [day, total, int(d["vertex_count"])])
+        checked += 1
+    check(checked == 5, "only %d days indexed" % checked)
+
+    # The offsets are the manifest's claim about the payload, so they are
+    # checked against the payload rather than trusted for sitting beside it.
+    var at := 0
+    var gaps := 0
+    for day in days.size():
+        var d: Dictionary = days[str(day)]
+        if int(d["byte_offset"]) != at:
+            gaps += 1
+        at += int(d["vertex_count"]) * 8
+    check(gaps == 0, "%d day offsets do not follow the day before them" % gaps)
+    var bin := FileAccess.open(CONTOUR_DIR + str(man["payload"]["file"]), FileAccess.READ)
+    check(bin != null, "the payload named by the manifest did not open")
+    if bin != null:
+        check(int(bin.get_length()) == at,
+                "the payload is %d bytes and the days account for %d" % [bin.get_length(), at])
+    print("contours: %d days, %d vertices, %d bytes accounted for"
+            % [days.size(), at / 8, at])
+
+
+func test_contour_arcs_land_on_the_terrain_they_were_extracted_on() -> void:
+    """The arcs were extracted on the overview raster's own transform, which
+    is what `tools/vendor_contours.py` refuses to vendor against. If that ever
+    stopped holding, every arc would sit off its own ground -- so this asks
+    the terrain, not the manifest: a vertex's bicubic neighbourhood must be
+    valid, or the vertex is off the heightfield and gets dropped and counted
+    rather than clamped to a height it does not have."""
+    var cs := contours()
+    if not cs.is_loaded():
+        return
+    var hf := heightfield()
+    var arcs := cs.arcs_for_day(29)
+    var sampled := 0
+    var offmap := 0
+    for i in range(0, arcs.size(), 2):
+        var arc: PackedVector2Array = arcs[i]
+        for k in arc.size():
+            if is_nan(hf.height_at_world(arc[k].x, arc[k].y)):
+                offmap += 1
+            sampled += 1
+    check(sampled > 500, "only %d vertices sampled" % sampled)
+    check(offmap * 100 < sampled,
+            "%d of %d sampled vertices are off the heightfield -- the arcs and the "
+            % [offmap, sampled] + "terrain are not on one grid")
+
+    var tm := TerrainMesh.new()
+    tm.build(hf, 8, 1.0)
+    var cd := ContourDrape.new()
+    var m := cd.build(arcs, hf, tm)
+    check(m.get_surface_count() == 1, "the drape built %d surfaces" % m.get_surface_count())
+    check(cd.dropped_offmap * 100 < cd.arcs_in + cd.vertices_drawn,
+            "%d vertices were dropped off-map" % cd.dropped_offmap)
+    # Some arcs are lost entirely, and the number is the cost of a stated rule
+    # rather than a defect: `height_at` returns NAN for any point whose bicubic
+    # neighbourhood touches nodata, which is a one-texel border of terrain, and
+    # a two-vertex arc that loses one vertex has nothing left to draw. Dropped
+    # and counted; never clamped to a height the heightfield does not hold.
+    check(cd.arcs_lost * 20 < cd.arcs_in,
+            "%d of %d arcs drape to nothing -- more than the one-texel nodata border costs"
+            % [cd.arcs_lost, cd.arcs_in])
+    print("contour drape: %d arcs, %d runs, %d segments, %d off-map, %d splits, %d arcs lost"
+            % [cd.arcs_in, cd.runs_out, cd.segments, cd.dropped_offmap, cd.splits,
+               cd.arcs_lost])
+
+
+func test_the_contour_line_stays_broken() -> void:
+    """Decision 890. 39.6% of this boundary is not in the artefact, because it
+    falls on divides between nodes that hold no crossing; a continuous
+    snowline would be lattice geometry with a physical name on it, and it
+    would look better than the honest version for being continuous.
+
+    Two ways the client could close a gap by accident, and both are pinned
+    here: joining the end of one arc to the start of the next, and bridging a
+    vertex the heightfield could not support."""
+    var cs := contours()
+    if not cs.is_loaded():
+        return
+    var hf := heightfield()
+    var tm := TerrainMesh.new()
+    var mesh := tm.build(hf, 8, 1.0)
+    var verts: PackedVector3Array = mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var w := []
+    for n in 6:
+        w.append(tm.mesh_to_world(verts[100 + n], hf))
+    var offmap := Vector2(hf.origin_x - 2.0e6, hf.origin_y)
+    check(is_nan(hf.height_at_world(offmap.x, offmap.y)),
+            "the off-map probe point is on the heightfield after all")
+
+    # two arcs, no gaps: 2 + 2 segments and never a fifth joining them
+    var cd := ContourDrape.new()
+    cd.build([PackedVector2Array([w[0], w[1], w[2]]),
+              PackedVector2Array([w[3], w[4], w[5]])], hf, tm)
+    check(cd.segments == 4,
+            "two 3-vertex arcs drew %d segments, not 4 -- something joined them" % cd.segments)
+    check(cd.runs_out == 2, "two arcs became %d runs" % cd.runs_out)
+
+    # one arc with an unsupported vertex in the middle: it splits, never bridges
+    var cd2 := ContourDrape.new()
+    cd2.build([PackedVector2Array([w[0], w[1], offmap, w[2], w[3]])], hf, tm)
+    check(cd2.dropped_offmap == 1, "%d vertices dropped, expected 1" % cd2.dropped_offmap)
+    check(cd2.splits == 1, "the gap did not split the arc (%d splits)" % cd2.splits)
+    check(cd2.segments == 2,
+            "the gap was bridged: %d segments where the two halves give 2" % cd2.segments)
+
+    # and on the real day, every segment is accounted for inside some run
+    var arcs := cs.arcs_for_day(29)
+    var read := 0
+    for a in arcs:
+        read += (a as PackedVector2Array).size()
+    var cd3 := ContourDrape.new()
+    cd3.build(arcs, hf, tm)
+    check(cd3.segments == read - cd3.dropped_offmap - cd3.runs_too_short - cd3.runs_out,
+            "%d segments do not account for %d vertices in %d runs"
+            % [cd3.segments, read, cd3.runs_out])
+
+    var st := cs.standing(29)
+    check(float(st["share_drawn"]) < 1.0,
+            "the day claims the whole boundary is drawn, which this artefact does not")
+    check(int(st["declined_crossings"]) > 0, "no crossing is recorded as declined")
+    check(str(st["verdict"]).contains("declined"),
+            "the standing does not say the rest is declined: %s" % str(st["verdict"]))
+    check(float(st["corridor_m"]) <= float(st["band_m"]) / 2.0,
+            "%.1f m is outside half the %.1f m band the crossing is interpolated in"
+            % [float(st["corridor_m"]), float(st["band_m"])])
+    print("contour standing day 30: %s" % str(st["verdict"]))
+
+
+func test_no_contour_set_is_invented_for_a_window_that_has_none() -> void:
+    """Extraction is server-side (§16.12.1) and per window. A window with no
+    set draws nothing and says why -- there is no client-side fallback to fall
+    back to, and a contour computed here would be the generator §16.12 keeps
+    off the wire, rebuilt from the data it is meant to be withheld from."""
+    var sets := ContourSet.discover(CONTOUR_DIR)
+    check(sets.has("deepest_winter"), "no set for deepest_winter: %s" % str(sets.keys()))
+    check(not sets.has("largest_fire"),
+            "a contour set appeared for largest_fire, which was never extracted")
+
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    var bound := v.bind_contours()
+    check(bool(bound["ok"]), "no contour set bound: %s" % str(bound.get("why", "")))
+    var absent := v.show_contours("largest_fire", 0)
+    check(not bool(absent.get("ok", false)), "largest_fire drew contours")
+    check(str(absent.get("why", "")).contains("largest_fire"),
+            "the refusal does not name the window: %s" % str(absent.get("why", "")))
+    var drawn := v.show_contours("deepest_winter", 29)
+    check(bool(drawn.get("ok", false)), "deepest_winter drew nothing")
+    check(int(drawn.get("segments", 0)) > 1000, "%d segments drawn" % int(drawn.get("segments", 0)))
+    var mi := v.get_node_or_null("Contours")
+    check(mi != null, "no Contours mesh instance after drawing")
+
+    var legend := ContourLegend.new()
+    get_root().add_child(legend)
+    legend.setup()
+    legend.show_absent("largest_fire")
+    check(legend.standing.text.contains("§16.12.1"),
+            "the legend does not say where extraction happens: %s" % legend.standing.text)
+    legend.show_set(v.contour_sets["deepest_winter"], 29, drawn)
+    check(legend.day_line.text.contains("declined"),
+            "the legend does not surface the declined share: %s" % legend.day_line.text)
+    check(legend.standing.text.contains("PROVISIONAL"),
+            "the legend does not carry the threshold's standing: %s" % legend.standing.text)
+    legend.queue_free()
+    v.queue_free()

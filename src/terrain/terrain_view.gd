@@ -32,6 +32,10 @@ var _flow_mi: MeshInstance3D = null
 var _flow_display: FlowDisplay = null
 var field_report: Dictionary = {}
 
+var contour_sets: Dictionary = {}        ## window -> ContourSet
+var contour_drape: ContourDrape = null
+var _contour_mi: MeshInstance3D = null
+
 
 func build() -> Dictionary:
     var man := _read_json(TERRAIN_DIR + "terrain_export.json")
@@ -207,6 +211,56 @@ func show_flow(window: String, day: int) -> Dictionary:
     var d := _flow_display.describe()
     d["ok"] = true
     return d
+
+
+## M4: load whatever contour sets are vendored, and say which windows have
+## one. A window without a set is not a failure -- extraction is per window and
+## server-side -- so this reports rather than refuses.
+func bind_contours(dir_path: String = ContourSet.DIR) -> Dictionary:
+    contour_sets = ContourSet.discover(dir_path)
+    var sets := []
+    for w in contour_sets:
+        sets.append((contour_sets[w] as ContourSet).describe())
+    return {
+        "ok": not contour_sets.is_empty(),
+        "windows": contour_sets.keys(),
+        "sets": sets,
+        "why": "" if not contour_sets.is_empty() else "no contour set is vendored",
+    }
+
+
+## M4: draw one day's arcs, draped.
+##
+## THE DAY COMES FROM THE CALLER, which is the scrubber (FieldScrubber owns the
+## clock). A layer holding its own day would drift against the field under it
+## and show a snowline from one day over a snowpack from another, which is the
+## kind of wrongness a viewer reads as physics rather than as a bug.
+func show_contours(window: String, day: int) -> Dictionary:
+    var cs: ContourSet = contour_sets.get(window, null)
+    if _contour_mi != null:
+        _contour_mi.visible = cs != null
+    if cs == null:
+        return {"ok": false, "window": window,
+                "why": "no contour set is vendored for %s" % window}
+    if heightfield == null or terrain == null:
+        return {"ok": false, "why": "no terrain to drape onto"}
+    contour_drape = ContourDrape.new()
+    var m := contour_drape.build(cs.arcs_for_day(day), heightfield, terrain)
+    if _contour_mi == null:
+        _contour_mi = MeshInstance3D.new()
+        _contour_mi.name = "Contours"
+        var cm := StandardMaterial3D.new()
+        cm.shading_mode = BaseMaterial3D.SHADING_MODE_UNSHADED
+        cm.albedo_color = Color(0.97, 0.99, 1.0)
+        _contour_mi.material_override = cm
+        add_child(_contour_mi)
+    _contour_mi.mesh = m
+    var out := contour_drape.describe()
+    out["ok"] = m.get_surface_count() > 0
+    out["window"] = window
+    out["day"] = day
+    out["standing"] = cs.standing(day)
+    return out
 
 
 ## M3: does this fixture hold a drawable burn perimeter (decision 892)?

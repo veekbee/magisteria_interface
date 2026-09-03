@@ -37,6 +37,21 @@ func _ready() -> void:
         scrubber.setup(_terrain.fixture)
         scrubber.changed.connect(_on_field_changed)
         _controls.add_child(scrubber)
+
+        # M4. The legend is built before the first paint because the paint
+        # writes to it: the share of the boundary that is real is part of what
+        # the layer draws, not a note about it.
+        contour_report = _terrain.bind_contours()
+        legend = ContourLegend.new()
+        legend.setup()
+        _controls.add_child(legend)
+        for d in contour_report.get("sets", []):
+            print("contours: %s %s @ %s %s, %d days"
+                    % [d["window"], d["row"], String.num(d["threshold"], 4), d["unit"],
+                       d["days"]])
+        if not contour_report.get("ok", false):
+            push_warning("contours: %s" % contour_report.get("why", "unknown"))
+
         var c := scrubber.current()
         if not c.is_empty():
             _on_field_changed(c["window"], c["row"], c["day"], c["group"])
@@ -68,6 +83,9 @@ func _ready() -> void:
 
 var flow_report: Dictionary = {}
 var burn_report: Dictionary = {}
+var contour_report: Dictionary = {}
+var contour_day_report: Dictionary = {}
+var legend: ContourLegend = null
 
 
 func _on_field_changed(window: String, row: String, day: int, group: int) -> void:
@@ -79,3 +97,11 @@ func _on_field_changed(window: String, row: String, day: int, group: int) -> voi
     if not flow_report.get("ok", false):
         push_warning("flow: %s" % flow_report.get("why", "unknown"))
     burn_report = _terrain.burn_edge(window, day)
+    # M4: the same day again. The contour layer never asks the clock itself.
+    contour_day_report = _terrain.show_contours(window, day)
+    if legend != null:
+        var cs: ContourSet = _terrain.contour_sets.get(window, null)
+        if cs == null:
+            legend.show_absent(window)
+        else:
+            legend.show_set(cs, day, contour_day_report)
