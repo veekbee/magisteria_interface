@@ -58,6 +58,10 @@ func _initialize() -> void:
     test_the_probe_tells_the_three_absences_apart()
     test_the_probe_reads_the_row_that_is_drawn()
     test_the_ray_march_lands_on_the_surface_it_marched()
+    test_the_series_keeps_what_float32_would_flush_to_zero()
+    test_the_plot_separates_no_flow_from_below_the_scale()
+    test_the_series_is_indexed_by_the_manifests_node_order()
+    test_the_panel_says_why_the_second_node_row_has_no_plot()
     stage_the_main_scene()
 
 
@@ -343,6 +347,11 @@ func test_the_main_scene_populated_itself() -> void:
                     "a click on the terrain did not reach the probe panel")
             check(not _scene_root.probe_report.is_empty(),
                     "the probe emitted nothing")
+            if str(_scene_root.probe_report.get("state", "")) == CellProbe.RESOLVED:
+                check(_scene_root.probe_panel.series.values.size() > 0,
+                        "a click that resolved to a cell drew no time series")
+                check(_scene_root.probe_panel.absent_rows.text.contains("wetland"),
+                        "the panel does not say why the second node row is absent")
             print("main scene probe: %s" % str(_scene_root.probe_report.get("state", "?")))
 
         print("main scene contours: window %s, %s"
@@ -1241,3 +1250,177 @@ func test_the_ray_march_lands_on_the_surface_it_marched() -> void:
             "probing with no current camera did not report an absence")
     print("ray march: %d rays land on the vertex they were aimed at" % tested)
     v.queue_free()
+
+
+# --------------------------------------------------------------------------
+# M4 -- per-node time series
+# --------------------------------------------------------------------------
+
+func test_the_series_keeps_what_float32_would_flush_to_zero() -> void:
+    """The series is read through `day_values`, which returns
+    PackedFloat64Array, and it stays float64 all the way to the classification.
+    Streamflow reaches 4.9e-324; float32 flushes everything under 1.18e-38 to
+    zero, which moves samples out of "below the display scale" and into "no
+    flow" -- two different statements about the river (§23.812).
+
+    Proved against the container rather than argued: the same value is put
+    through a PackedFloat32Array here and comes back as zero."""
+    var fl := fixture()
+    var vals := fl.day_values("deepest_winter", "node.streamflow", 45)
+    var axis := -1
+    var tiny := 0.0
+    for i in vals.size():
+        if vals[i] != 0.0 and vals[i] < 1.18e-38:
+            axis = i
+            tiny = vals[i]
+            break
+    check(axis >= 0, "no value below float32's floor in this window -- nothing to lose")
+    if axis < 0:
+        return
+    var as32 := PackedFloat32Array([tiny])
+    check(as32[0] == 0.0,
+            "float32 no longer flushes %s -- this test is not testing what it says"
+            % String.num_scientific(tiny))
+    check(SeriesPlot.band_of(tiny) == SeriesPlot.BELOW,
+            "a value below the scale is not classified as below it")
+    check(SeriesPlot.band_of(float(as32[0])) == SeriesPlot.ZERO,
+            "the flushed value is not classified as no flow, so the loss would be silent")
+
+    var series := SeriesPlot.series_for(fl, "deepest_winter", "node.streamflow", axis)
+    check(series is PackedFloat64Array, "the series is not a PackedFloat64Array")
+    check(series.size() == fl.days("deepest_winter", "node.streamflow"),
+            "the series is %d days and the row holds %d"
+            % [series.size(), fl.days("deepest_winter", "node.streamflow")])
+    check(series[45] == tiny,
+            "day 45 of the series is %s and the row holds %s"
+            % [String.num_scientific(series[45]), String.num_scientific(tiny)])
+    var survived := 0
+    for v in series:
+        if v != 0.0 and v < 1.18e-38:
+            survived += 1
+    check(survived > 0, "no sub-float32 value survived the series read")
+    print("series: node axis %d, %d of %d days below float32's floor and not zero"
+            % [axis, survived, series.size()])
+
+
+func test_the_plot_separates_no_flow_from_below_the_scale() -> void:
+    """FlowDisplay's answer, reused rather than reinvented: a second scale
+    would let a reach and its own time series disagree about whether a day had
+    no flow or a little. The two rows sit OUTSIDE the decades, because a
+    sample at the axis floor reads as the smallest value on the scale rather
+    than as one that is not on it."""
+    check(SeriesPlot.band_of(0.0) == SeriesPlot.ZERO, "zero is not classified as no flow")
+    check(SeriesPlot.band_of(1e-20) == SeriesPlot.BELOW, "1e-20 is not below the scale")
+    check(SeriesPlot.band_of(1.0) == SeriesPlot.IN_SCALE, "1 m3/s is not on the scale")
+    check(SeriesPlot.band_of(NAN) == SeriesPlot.NO_VALUE, "nodata is not held apart")
+
+    # the thresholds are FlowDisplay's, not a second set that could drift
+    check(SeriesPlot.band_of(pow(10.0, FlowDisplay.DECADE_LO)) == SeriesPlot.IN_SCALE,
+            "the bottom decade is not on the scale")
+    check(SeriesPlot.band_of(pow(10.0, FlowDisplay.DECADE_LO - 1.0)) == SeriesPlot.BELOW,
+            "a decade under the window is not below the scale")
+
+    var yz := SeriesPlot.y_fraction(0.0)
+    var yb := SeriesPlot.y_fraction(1e-20)
+    var ym := SeriesPlot.y_fraction(1.0)
+    check(yz != yb, "no flow and below-scale are drawn at the same height")
+    check(yb != ym, "below-scale and on-scale are drawn at the same height")
+    check(yb > SeriesPlot.SCALE_BOTTOM and yz > yb,
+            "the two rows are not below the decades: %.2f, %.2f" % [yb, yz])
+    check(is_nan(SeriesPlot.y_fraction(NAN)), "a day with no value was given a height")
+    check(SeriesPlot.y_fraction(100.0) < SeriesPlot.y_fraction(0.1),
+            "more flow is not drawn higher")
+
+    # and nothing is joined across the boundary
+    check(SeriesPlot.joins(1.0, 10.0), "two on-scale days are not joined")
+    check(not SeriesPlot.joins(1.0, 0.0),
+            "an on-scale day is joined to a no-flow day, drawing a descent through "
+            + "values the river never had")
+    check(not SeriesPlot.joins(1.0, 1e-20), "an on-scale day is joined to a below-scale one")
+    check(not SeriesPlot.joins(1.0, NAN), "a day with no value is joined to one with a value")
+
+
+func test_the_series_is_indexed_by_the_manifests_node_order() -> void:
+    """`node_order` is what the simulation emits for this purpose. The order
+    ids first appear in `cell_keys` agrees with it today, rests on nothing
+    anyone promised, and a wrong index plots the wrong river's flow while
+    looking entirely plausible."""
+    var fl := fixture()
+    var ids: Array = fl.manifest["node_order"]["ids"]
+    check(ids.size() > 1000, "only %d ids in node_order" % ids.size())
+    var wrong := 0
+    for i in range(0, ids.size(), 53):
+        if fl.node_index_of(str(ids[i])) != i:
+            wrong += 1
+    check(wrong == 0, "%d sampled ids do not sit where node_order puts them" % wrong)
+
+    # the order cell_keys happens to introduce ids in, which is what this must
+    # not be: it agrees today, so agreement is not evidence and the source is
+    var first_seen := {}
+    var pairs: Array = fl.manifest["cell_keys"]["pairs"]
+    for pr in pairs:
+        var huc := str(pr[0])
+        if not first_seen.has(huc):
+            first_seen[huc] = first_seen.size()
+    check(first_seen.size() == ids.size(),
+            "%d nodes in cell_keys against %d on the axis" % [first_seen.size(), ids.size()])
+
+    var probe := CellProbe.new()
+    probe.bind(heightfield(), residence(), fl)
+    var checked := 0
+    for i in range(0, ids.size(), 211):
+        var huc := str(ids[i])
+        var r := probe.for_key(huc, 0)
+        if str(r["state"]) != CellProbe.RESOLVED:
+            continue
+        check(int(r["node_axis"]) == i,
+                "%s probes to axis %d and node_order puts it at %d"
+                % [huc, int(r["node_axis"]), i])
+        checked += 1
+    check(checked > 0, "no probed key resolved to a node axis")
+
+
+func test_the_panel_says_why_the_second_node_row_has_no_plot() -> void:
+    """M4 asks for two node rows and one of them is not on the wire: contract
+    v2.0 advanced its major for "row removed or renamed: node.wetland_extent",
+    and the fixture carries eight rows without it. A panel that plotted one
+    and omitted the other silently would make an upstream absence look like a
+    design decision taken here -- FieldScrubber's case again."""
+    var fl := fixture()
+    var node_rows := fl.row_names("deepest_winter", "node")
+    check(node_rows.has("node.streamflow"), "no node.streamflow: %s" % str(node_rows))
+    check(not node_rows.has("node.wetland_extent"),
+            "node.wetland_extent is carried after all -- then the panel should plot it")
+
+    var panel := ProbePanel.new()
+    get_root().add_child(panel)
+    panel.setup(fl)
+    check(panel.state.text == ProbePanel.NOT_PROBED, "the panel does not start unprobed")
+
+    var huc := str(fl.manifest["node_order"]["ids"][17])
+    var probe := CellProbe.new()
+    probe.bind(heightfield(), residence(), fl)
+    var r := probe.for_key(huc, 0)
+    r["window"] = "deepest_winter"
+    r["row"] = "band.snowpack_swe"
+    r["day"] = 29
+    panel.show_probe(r)
+
+    check(panel.absent_rows.text.contains("node.wetland_extent"),
+            "the panel does not name the row it cannot plot: %s" % panel.absent_rows.text)
+    check(panel.absent_rows.text.contains("901"),
+            "the panel does not cite why the row left: %s" % panel.absent_rows.text)
+    check(not panel.absent_rows.text.contains("node.streamflow"),
+            "the panel reports the row it CAN plot as absent")
+    check(panel.series.values.size() == fl.days("deepest_winter", "node.streamflow"),
+            "the plot holds %d days" % panel.series.values.size())
+    check(panel.series.marked_day == 29,
+            "the plot marks day %d, the probe read day 29" % panel.series.marked_day)
+    check(panel.series_caption.text.contains("node.streamflow"),
+            "the caption does not name the row plotted: %s" % panel.series_caption.text)
+    var counted: int = (int(panel.series.counts["zero"]) + int(panel.series.counts["below"])
+            + int(panel.series.counts["in_scale"]) + int(panel.series.counts["no_value"]))
+    check(counted == panel.series.values.size(),
+            "%d days classified out of %d" % [counted, panel.series.values.size()])
+    print("series panel: %s" % panel.series_caption.text)
+    panel.queue_free()

@@ -53,7 +53,7 @@ func _ready() -> void:
             push_warning("contours: %s" % contour_report.get("why", "unknown"))
 
         probe_panel = ProbePanel.new()
-        probe_panel.setup()
+        probe_panel.setup(_terrain.fixture)
         _controls.add_child(probe_panel)
         _terrain.probed.connect(_on_probed)
 

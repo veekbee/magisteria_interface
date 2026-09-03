@@ -14,17 +14,36 @@ extends VBoxContainer
 ## terrain is painted with. Showing a bare number would leave the reader to
 ## remember which row it came from, and they would remember the one they
 ## selected rather than the one that is drawn.
+##
+## ONE NODE ROW IS PLOTTED AND THE OTHER IS EXPLAINED. The milestone asks for
+## `node.streamflow` and `node.wetland_extent`; only the first is on the wire.
+## Contract v2.0 advanced its major for, in the artefact's own words, "row
+## removed or renamed: node.wetland_extent" -- its only writer is an
+## unimplemented subsystem (decision 901) -- and the fixture's carried set has
+## eight rows without it. So the panel says the row is absent UPSTREAM rather
+## than drawing one plot and leaving the reader to wonder about the other:
+## FieldScrubber's refused-row label again, and for the same reason.
 
 const NOT_PROBED := "click the terrain to probe a cell"
+
+#: The node rows M4 asks for. A row here that the fixture does not carry is
+#: reported by name rather than dropped from the panel.
+const NODE_ROWS := ["node.streamflow", "node.wetland_extent"]
 
 var heading: Label
 var where: Label
 var state: Label
 var key: Label
 var value: Label
+var series_caption: Label
+var series: SeriesPlot
+var absent_rows: Label
+
+var _fl: FixtureLoader = null
 
 
-func setup() -> void:
+func setup(fl: FixtureLoader = null) -> void:
+    _fl = fl
     custom_minimum_size = Vector2(420, 0)
     heading = _line(18)
     heading.text = "probe"
@@ -32,6 +51,12 @@ func setup() -> void:
     state = _line()
     key = _line()
     value = _line()
+
+    series_caption = _line()
+    series = SeriesPlot.new()
+    series.custom_minimum_size = Vector2(400, 130)
+    add_child(series)
+    absent_rows = _line()
     clear()
 
 
@@ -40,6 +65,9 @@ func clear() -> void:
     state.text = NOT_PROBED
     key.text = ""
     value.text = ""
+    series_caption.text = ""
+    series.clear()
+    absent_rows.text = ""
 
 
 func show_probe(r: Dictionary) -> void:
@@ -72,6 +100,44 @@ func show_probe(r: Dictionary) -> void:
             state.text = NOT_PROBED
             key.text = ""
             value.text = ""
+
+    if st == CellProbe.RESOLVED or st == CellProbe.NO_CELL:
+        _show_series(r)
+    else:
+        series_caption.text = ""
+        series.clear()
+        absent_rows.text = ""
+
+
+## The node's own time series, and the standing of the rows there is no series
+## for. The node axis position comes from `FixtureLoader.node_index_of`, which
+## reads the manifest's `node_order`.
+func _show_series(r: Dictionary) -> void:
+    var window := str(r.get("window", ""))
+    var carried := PackedStringArray() if _fl == null else _fl.row_names(window, "node")
+    var missing := PackedStringArray()
+    for row in NODE_ROWS:
+        if not carried.has(row):
+            missing.append(str(row))
+    absent_rows.text = "" if missing.is_empty() else (
+            "%s: not on the wire. Contract v2.0 advanced its major for \"row removed or "
+            % ", ".join(missing)
+            + "renamed\" (decision 901); the fixture's carried set does not hold it. "
+            + "Absent upstream, not omitted here.")
+
+    var axis := int(r.get("node_axis", -1))
+    if _fl == null or axis < 0 or not carried.has("node.streamflow"):
+        series_caption.text = "no node series for this cell"
+        series.clear()
+        return
+    var s := SeriesPlot.series_for(_fl, window, "node.streamflow", axis)
+    series.show_series(s, int(r.get("day", -1)))
+    series_caption.text = ("node.streamflow  node %s (axis %d), %d days — "
+            + "%d on scale, %d below it, %d no flow%s") % [
+            str(r.get("huc10", "?")), axis, s.size(), series.counts["in_scale"],
+            series.counts["below"], series.counts["zero"],
+            "" if int(series.counts["no_value"]) == 0
+                    else ", %d with no value" % int(series.counts["no_value"])]
 
 
 func _key_line(r: Dictionary) -> String:
