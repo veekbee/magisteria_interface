@@ -31,6 +31,8 @@ const PROBE_REFINEMENTS := 24
 ## horizons, and the cost of it is reported rather than assumed.
 const SCATTER_HORIZON_M := 1500.0
 
+const VEGETATION_SHADER := "res://src/fixture/vegetation.gdshader"
+
 @export var stride: int = 4
 @export var exaggeration: float = 12.0   ## a 4 km relief over a 1,000 km basin
 
@@ -427,12 +429,13 @@ func scatter_at(centre: Vector2, radius_m: float = SCATTER_HORIZON_M) -> Diction
         if node == null:
             node = MultiMeshInstance3D.new()
             node.name = "Vegetation_%s" % life_form
-            var mat := StandardMaterial3D.new()
-            # Vertex colour carries the phenology mask, not an albedo: reading
-            # it as colour would paint every plant by its own mask.
-            mat.vertex_color_use_as_albedo = false
-            mat.albedo_color = Color(0.29, 0.44, 0.24)
-            mat.roughness = 1.0
+            # The tint is a shader, not an albedo. Vertex colour carries the
+            # authored phenology MASK and the MultiMesh's custom data carries
+            # the value computed from the wire; a StandardMaterial3D can only
+            # read the first, and reading it as a colour would paint every
+            # plant by its own mask.
+            var mat := ShaderMaterial.new()
+            mat.shader = load(VEGETATION_SHADER)
             node.material_override = mat
             add_child(node)
             _scatter_nodes[life_form] = node

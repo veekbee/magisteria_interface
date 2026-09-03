@@ -74,6 +74,9 @@ func _initialize() -> void:
     test_the_cost_model_refuses_outside_its_measured_span()
     test_the_scatter_reports_what_it_could_not_draw()
     test_the_project_does_not_import_blend_sources()
+    test_phenology_is_the_cell_measured_against_itself()
+    test_the_tint_moves_with_the_season_it_is_read_from()
+    test_multimesh_custom_data_does_not_read_back_headless()
     stage_the_main_scene()
 
 
@@ -364,6 +367,43 @@ func test_the_main_scene_populated_itself() -> void:
                         "a click that resolved to a cell drew no time series")
                 check(_scene_root.probe_panel.absent_rows.text.contains("wetland"),
                         "the panel does not say why the second node row is absent")
+
+                # M5 rides on the same click. The scatter needs a place to
+                # stand, and main.gd gives it the point the viewer just asked
+                # about -- a wiring that exists nowhere else and would look
+                # exactly like working code if the signal reached nothing.
+                var sr: Dictionary = _scene_root.scatter_report
+                check(not sr.is_empty(), "a resolved click scattered nothing")
+                check(bool(sr.get("ok", false)),
+                        "the scene's scatter failed: %s" % str(sr.get("why", "")))
+                if bool(sr.get("ok", false)):
+                    var world: Vector2 = _scene_root.probe_report["world"]
+                    var at: Array = sr["centre_m"]
+                    check(Vector2(float(at[0]), float(at[1])).distance_to(world) < 1.0,
+                            "the scatter stood at %s and the probe resolved at %s"
+                            % [str(at), str(world)])
+                    check(int(sr["day"]) == int(_scene_root.scrubber.current()["day"]),
+                            "the scatter drew day %d and the scrubber holds day %d"
+                            % [int(sr["day"]), int(_scene_root.scrubber.current()["day"])])
+                    check(_scene_root.probe_panel.scatter_line.text.length() > 20,
+                            "the scatter did not reach the panel")
+                    check(_scene_root.probe_panel.scatter_share.text.contains("share drawn"),
+                            "the panel does not surface the share: %s"
+                            % _scene_root.probe_panel.scatter_share.text)
+                    # Which families are present depends on what grows there,
+                    # so the assertion is that every family that placed
+                    # instances reached the scene -- not that a chosen one did.
+                    var drawn := PackedStringArray()
+                    for g in sr["groups"]:
+                        if int((sr["placed"] as Dictionary).get(g, 0)) > 0:
+                            drawn.append(str(g))
+                            check(_scene_root.get_node_or_null(
+                                    "TerrainView/Vegetation_%s" % g) != null,
+                                    "%s placed instances and reached no node in the scene" % g)
+                    check(drawn.size() > 0, "the scatter placed nothing at all here")
+                    print("main scene scatter: %d texels, share %s, families %s"
+                            % [int(sr["texels"]), String.num(float(sr["share_drawn"]), 5),
+                               str(drawn)])
             print("main scene probe: %s" % str(_scene_root.probe_report.get("state", "?")))
 
         print("main scene contours: window %s, %s"
@@ -1909,3 +1949,132 @@ func test_the_project_does_not_import_blend_sources() -> void:
     check(fs.is_loaded(), "the exported families did not load: %s" % fs.why_absent)
     print("blend import: disabled, %d sources present, %d families load from glTF"
             % [blends, fs.life_forms().size()])
+
+
+func test_phenology_is_the_cell_measured_against_itself() -> void:
+    """Normalised over the ROW's range instead, a cell that never carries much
+    biomass would read as permanently wintering and a productive one as
+    permanently at peak -- a statement about where a cell sits in the basin,
+    not about where it sits in its year."""
+    var vs := VegetationScatter.new()
+    var season := {
+        "lo": PackedFloat64Array([0.0, 2.0, 5.0, 0.0]),
+        "hi": PackedFloat64Array([10.0, 4.0, 5.0, 0.0]),
+    }
+    check(vs.phenology_for(season, 0, 0.0) == 0.0, "a cell at its own trough is not 0")
+    check(vs.phenology_for(season, 0, 10.0) == 1.0, "a cell at its own peak is not 1")
+    check(absf(vs.phenology_for(season, 0, 5.0) - 0.5) < 1e-9, "the midpoint is not 0.5")
+    # cell 1 has a narrow range: the same absolute value reads differently there,
+    # which is the whole point of measuring a cell against itself
+    check(absf(vs.phenology_for(season, 1, 3.0) - 0.5) < 1e-9,
+            "a narrow-range cell is not normalised over its own range")
+    check(vs.phenology_for(season, 0, 3.0) != vs.phenology_for(season, 1, 3.0),
+            "two cells with different ranges gave one value for one biomass")
+    # a cell whose biomass never moves: trough == peak == today, and the
+    # ratio's limit is 1 because the day's value IS the cell's maximum
+    check(vs.phenology_for(season, 2, 5.0) == 1.0,
+            "a cell with no seasonal signal was given a midpoint rather than its own state")
+    check(vs.phenology_for(season, 3, 0.0) == 1.0, "a flat zero cell was not handled")
+    check(vs.phenology_for(season, 0, NAN) == 1.0, "a NAN biomass produced a NAN tint")
+    check(vs.phenology_for(season, 99, 1.0) == 1.0, "an out-of-range cell was not handled")
+    for v in [-5.0, 50.0]:
+        var p := vs.phenology_for(season, 0, v)
+        check(p >= 0.0 and p <= 1.0, "phenology left [0, 1] at biomass %f: %f" % [v, p])
+
+
+func test_the_tint_moves_with_the_season_it_is_read_from() -> void:
+    """§17.8.2 asks for phenology as a mask plus a shader parameter. The mask is
+    authored; the parameter has to come from the wire, and a tint that reads the
+    same on every day of the window is not reading anything.
+
+    Checked through the scatter's own report rather than through the instances:
+    MultiMesh custom data does not read back under the headless renderer, so an
+    assertion on the instances would be an assertion on zeros."""
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    v.bind_families()
+    var verts: PackedVector3Array = v.terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var centre := v.terrain.mesh_to_world(verts[5000], v.heightfield)
+
+    var seen := []
+    for day in [22, 89]:
+        check(v.show_field("deepest_winter", "band.pft_fractions", day),
+                "the field did not paint for day %d" % day)
+        var r := v.scatter_at(centre)
+        check(bool(r.get("ok", false)), "the scatter failed on day %d" % day)
+        var ph: Dictionary = r["phenology"]
+        var span: Array = ph["range_drawn"]
+        check(span.size() == 2, "day %d reported no phenology range" % day)
+        for x in span:
+            check(float(x) >= 0.0 and float(x) <= 1.0,
+                    "phenology %f is outside its declared [0, 1] range" % float(x))
+        check(int(ph["days_sampled"]) > 1,
+                "the seasonal range was taken from %d day(s)" % int(ph["days_sampled"]))
+        check(int(r["refused_parameters"]) == 0,
+                "%d instances refused on day %d" % [int(r["refused_parameters"]), day])
+        seen.append(span)
+    check(float(seen[1][0]) - float(seen[0][1]) > 0.2,
+            "the tint barely moves between mid-window (%s) and the window's end (%s) -- "
+            % [str(seen[0]), str(seen[1])] + "it is not carrying the season")
+    print("phenology: mid-window %s, window end %s" % [str(seen[0]), str(seen[1])])
+
+    # and the tint has to reach the scene as a shader, not as a flat albedo:
+    # a StandardMaterial3D cannot read custom data at all
+    var node := v.get_node_or_null("Vegetation_grass")
+    check(node != null, "no grass in the scene to check the material on")
+    if node != null:
+        check(node.material_override is ShaderMaterial,
+                "the scatter's material is %s, which cannot read per-instance custom data"
+                % node.material_override.get_class())
+        check((node.material_override as ShaderMaterial).shader != null,
+                "the scatter's ShaderMaterial carries no shader")
+        check((node.multimesh as MultiMesh).use_custom_data,
+                "the MultiMesh does not carry custom data, so the tint reaches nothing")
+    v.queue_free()
+
+
+func test_multimesh_custom_data_does_not_read_back_headless() -> void:
+    """Pinning an ENGINE limitation, not this project's code. Under the dummy
+    renderer a MultiMesh has no per-instance store at all: transforms read back
+    as the identity, custom data as zeros, and `buffer` is empty, whatever was
+    written into them.
+
+    Without this test the next person writes the obvious assertion -- read an
+    instance back and compare -- and gets a test that passes by comparing zero
+    against zero, or one they debug in the wrong file. The first version of this
+    very test asserted that transforms DID round-trip, because it happened to
+    write the identity and read the identity back.
+
+    If a future engine starts returning the data, this fails and says so, which
+    is the moment to assert on the instances instead of on the scatter's report.
+    """
+    if DisplayServer.get_name() != "headless":
+        return
+    var mm := MultiMesh.new()
+    mm.transform_format = MultiMesh.TRANSFORM_3D
+    mm.use_custom_data = true
+    mm.mesh = BoxMesh.new()
+    mm.instance_count = 2
+    var xf := Transform3D(Basis().scaled(Vector3(2.0, 3.0, 4.0)), Vector3(1.0, 2.0, 3.0))
+    for i in 2:
+        mm.set_instance_transform(i, xf)
+        mm.set_instance_custom_data(i, Color(0.75, 0.25, 0.5, 1.0))
+
+    # what DOES survive: the resource's own properties, which is why the scatter
+    # test can assert instance counts and the custom-data flag and nothing else
+    check(mm.instance_count == 2, "instance_count no longer survives headless")
+    check(mm.use_custom_data, "use_custom_data no longer survives headless")
+
+    var back := mm.get_instance_transform(0)
+    check(back == Transform3D.IDENTITY,
+            "transforms now read back headless as %s -- assert the scatter's instances "
+            % str(back) + "directly instead of its report")
+    var read := mm.get_instance_custom_data(0)
+    check(read.r == 0.0 and read.g == 0.0 and read.b == 0.0,
+            "custom data now reads back headless as %s: assert the scatter's instances "
+            % str(read) + "directly instead of its report")
+    check(mm.buffer.size() == 0,
+            "the MultiMesh buffer is %d long headless, so the instances can be checked "
+            % mm.buffer.size() + "directly now")

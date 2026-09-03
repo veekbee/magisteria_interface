@@ -56,6 +56,25 @@ not a parameter.
 — 1.0 on foliage, 0.0 on permanent structure — so one family covers the year under a shader
 parameter instead of one mesh per season. G carries height fraction along the form.
 
+The value that mask is multiplied by comes from the wire: **this cell's biomass today against its
+own trough and peak across the window**, sampled every ninth day. Normalised over the *row's* range
+instead, a cell that never carries much biomass would read as permanently wintering and a productive
+one as permanently at peak — a statement about where a cell sits in the basin, not where it sits in
+its year. Over `deepest_winter` the tint runs from 0.0 mid-window to 1.0 at the window's end, which
+is spring green-up.
+
+The two numbers travel down **separate channels** — the mask in the mesh's vertex colour, the
+computed value in the MultiMesh's custom data — and `src/fixture/vegetation.gdshader` combines them.
+Carried as an instance *colour* the engine would multiply them together before the shader saw
+either, and the product is zero both for a trunk in summer and for foliage in midwinter, which must
+not look alike.
+
+**None of that can be read back headless.** Under the dummy renderer a MultiMesh has no per-instance
+store: transforms return the identity, custom data returns zeros, `buffer` is empty. So the scatter's
+report is the checkable statement, and a test asserting on the instances would pass by comparing zero
+against zero. `tests/run_headless.gd` pins the limitation so the next reader does not have to
+rediscover it.
+
 ## The ranges are coarse on purpose
 
 They are the span a life form can physically occupy, wide enough to contain whatever the field

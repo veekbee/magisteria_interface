@@ -35,6 +35,17 @@ extends RefCounted
 ## of 1e-4 is a sample of a stand and says so; a picture that silently drew the
 ## thousand instances that happened to fit would be a different stand.
 ##
+## NOTHING WRITTEN INTO A MultiMesh CAN BE READ BACK HEADLESS. Under the dummy
+## renderer the per-instance store does not exist: `get_instance_transform`
+## returns the identity, `get_instance_custom_data` returns zeros, and `buffer`
+## is empty, whatever was written. `instance_count` and the format flags are
+## properties of the resource and do survive.
+##
+## So THIS REPORT is the checkable statement about what the scatter placed --
+## every figure in it is computed in GDScript from the same values that go into
+## the instances. A test that read the instances back would be testing the stub,
+## and would pass by comparing zero against zero.
+##
 ## THE VERTICAL EXAGGERATION APPLIES TO THE PLANTS TOO. M1 draws this basin at
 ## 12x relief. Vegetation at true scale on 12x terrain reads as twelve times
 ## too short, so the same factor scales plant height and the report carries it.
@@ -52,6 +63,15 @@ const SCATTER_SEED := 20260903
 ## spend a minute building it".
 const MAX_BUILT_INSTANCES := 120000
 
+## Days sampled to find a cell's own yearly trough and peak for phenology.
+##
+## Ten of the window's ninety, because the alternative is reading every day of
+## every group for a number that moves slowly. The sampling is stated in the
+## report: a trough between two samples is missed, which widens no cell's range
+## and narrows some, so a sampled phenology is conservative rather than wrong
+## in an unknown direction.
+const PHENOLOGY_SAMPLE_STRIDE := 9
+
 var meshes: Dictionary = {}          ## life_form -> MultiMesh
 var report: Dictionary = {}
 
@@ -61,6 +81,7 @@ var _fl: FixtureLoader = null
 var _fs: FamilySet = null
 var _fc: FrameCost = null
 var _tm: TerrainMesh = null
+var _season: Dictionary = {}         ## "window|group" -> {"lo": .., "hi": ..} per cell
 
 
 func bind(hf: Heightfield, rl: ResidenceLayer, fl: FixtureLoader,
@@ -107,6 +128,9 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
         fractions.append(_fl.day_values(window, "band.pft_fractions", day, g))
         biomass.append(_fl.day_values(window, "band.pft.biomass", day, g))
     var biomass_hi := _row_hi(window, "band.pft.biomass")
+    var seasons: Array = []
+    for g in groups.size():
+        seasons.append(_season_range(window, "band.pft.biomass", g))
 
     # PASS ONE: what the wire implies, before any question of what fits.
     var texel_area := _hf.pixel_size_m * _hf.pixel_size_m
@@ -115,6 +139,9 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
     for g in groups:
         implied[g] = 0.0
     var texels := 0
+    var flat_cells := 0
+    var phen_lo := 1.0
+    var phen_hi := 0.0
     var centre_texel := _hf.world_to_texel(centre.x, centre.y)
     var reach := int(ceil(radius_m / _hf.pixel_size_m))
     for dy in range(-reach, reach + 1):
@@ -158,9 +185,17 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
                     continue
                 var count := frac * texel_area / crown_area
                 implied[life_form] = float(implied[life_form]) + count
+                var phen := phenology_for(seasons[gi], cell, bio)
+                var why_phen := _fs.check(life_form, "phenology", phen)
+                if why_phen != "":
+                    # The tint is a declared parameter with a declared range,
+                    # so it is refused on the same terms as height and crown.
+                    continue
+                if float(seasons[gi]["hi"][cell]) - float(seasons[gi]["lo"][cell]) <= 0.0:
+                    flat_cells += 1
                 wanted.append({"texel": Vector2i(tx, ty), "life_form": life_form,
                                "count": count, "height_m": float(params["height_m"]),
-                               "crown_m": crown})
+                               "crown_m": crown, "phenology": phen})
 
     # What one frame can hold, from the measurement rather than from a guess.
     var total_implied := 0.0
@@ -187,9 +222,11 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
     var placed: Dictionary = {}
     var refused := 0
     var by_family: Dictionary = {}
+    var phen_of: Dictionary = {}
     for g in groups:
         placed[g] = 0
         by_family[g] = []
+        phen_of[g] = PackedFloat32Array()
     for item in wanted:
         var n := int(round(float(item["count"]) * share))
         if n <= 0:
@@ -212,6 +249,11 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
                 refused += 1
                 continue
             (by_family[life_form] as Array).append(xf["transform"])
+            var pf: PackedFloat32Array = phen_of[life_form]
+            pf.append(float(item["phenology"]))
+            phen_of[life_form] = pf
+            phen_lo = minf(phen_lo, float(item["phenology"]))
+            phen_hi = maxf(phen_hi, float(item["phenology"]))
             placed[life_form] = int(placed[life_form]) + 1
 
     var triangles := 0
@@ -221,10 +263,17 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
             continue
         var mm := MultiMesh.new()
         mm.transform_format = MultiMesh.TRANSFORM_3D
+        # CUSTOM DATA, NOT INSTANCE COLOUR. The engine multiplies an instance
+        # colour into the mesh's vertex colour, and the mesh's vertex colour is
+        # the authored phenology MASK -- the product is zero both for a trunk in
+        # summer and for foliage in midwinter, which must not look alike.
+        mm.use_custom_data = true
         mm.mesh = _fs.mesh_for(life_form)
         mm.instance_count = transforms.size()
+        var pf: PackedFloat32Array = phen_of[life_form]
         for i in transforms.size():
             mm.set_instance_transform(i, transforms[i])
+            mm.set_instance_custom_data(i, Color(pf[i], 0.0, 0.0, 1.0))
         meshes[life_form] = mm
         triangles += _fs.triangles_of(life_form) * transforms.size()
 
@@ -245,6 +294,14 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
         "share_bound_by": bound_by,
         "build_ceiling": MAX_BUILT_INSTANCES,
         "refused_parameters": refused,
+        "phenology": {
+            "from": ("this cell's biomass today against its own trough and peak across the "
+                    + "window, not against the row's range: the row's range says where a "
+                    + "cell sits in the basin, not where it sits in its year"),
+            "days_sampled": int(seasons[0]["days_sampled"]) if seasons.size() > 0 else 0,
+            "range_drawn": [phen_lo, phen_hi] if phen_hi >= phen_lo else [],
+            "cells_with_no_seasonal_signal": flat_cells,
+        },
         "triangles_in_frame": triangles,
         "budget": afford,
         "what_share_means": ("one share across every family, so the mix between them is what "
@@ -316,6 +373,58 @@ func _affordable(groups: PackedStringArray, implied: Dictionary) -> Dictionary:
         "measured_on": str(_fc.host.get("gpu", "?")) + " / "
                 + str(_fc.host.get("rendering_method", "?")),
     }
+
+
+## A cell's own yearly trough and peak for one life form's biomass.
+##
+## PHENOLOGY IS RELATIVE TO THE CELL, NOT TO THE ROW. Normalised over the row's
+## realised range instead, a cell that never carries much biomass would read as
+## permanently wintering, and a productive one as permanently at peak -- which
+## is a statement about where a cell sits in the basin, not about where it sits
+## in its year. The seasonal signal is the cell against itself.
+func _season_range(window: String, row: String, group: int) -> Dictionary:
+    var key := "%s|%s|%d" % [window, row, group]
+    if _season.has(key):
+        return _season[key]
+    var n_days := _fl.days(window, row)
+    var lo := PackedFloat64Array()
+    var hi := PackedFloat64Array()
+    var day := 0
+    while day < n_days:
+        var vals := _fl.day_values(window, row, day, group)
+        if lo.is_empty():
+            lo = vals.duplicate()
+            hi = vals.duplicate()
+        else:
+            for c in vals.size():
+                var v := vals[c]
+                if is_nan(v):
+                    continue
+                if is_nan(lo[c]) or v < lo[c]:
+                    lo[c] = v
+                if is_nan(hi[c]) or v > hi[c]:
+                    hi[c] = v
+        day += PHENOLOGY_SAMPLE_STRIDE
+    var out := {"lo": lo, "hi": hi, "days_sampled": int(ceil(float(n_days) / float(PHENOLOGY_SAMPLE_STRIDE)))}
+    _season[key] = out
+    return out
+
+
+## Where today sits between this cell's own trough and peak, in [0, 1].
+##
+## A cell whose biomass does not move across the window has trough == peak ==
+## today, and the ratio's limit there is 1: the day's value IS the cell's
+## maximum. That is the honest degenerate answer rather than a chosen midpoint,
+## and the count of such cells travels in the report.
+func phenology_for(season: Dictionary, cell: int, today: float) -> float:
+    var lo: PackedFloat64Array = season["lo"]
+    var hi: PackedFloat64Array = season["hi"]
+    if cell >= lo.size() or cell >= hi.size() or is_nan(today):
+        return 1.0
+    var span := hi[cell] - lo[cell]
+    if is_nan(span) or span <= 0.0:
+        return 1.0
+    return clampf((today - lo[cell]) / span, 0.0, 1.0)
 
 
 func _row_hi(window: String, row: String) -> float:
