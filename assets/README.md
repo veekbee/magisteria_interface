@@ -54,6 +54,7 @@ Everything now in `assets/` stays committed. All three sets are read by `tests/r
 | `fixture/` | 27 MB | the headless tests decode it — precision, nodata, bounds, the cell join |
 | `terrain/` | 6.8 MB | the heightfield, residence and flowline tests all read it |
 | `contours/` | 4.4 MB | M4's arc-indexing and level-set tests read it |
+| `families/` | 23 KB | M5's form archetypes — the scatter and unit-convention tests read them |
 
 **Fetched when they arrive:** the full-resolution tile pyramid (declared in `terrain_export.json`
 and deliberately not emitted), any full-resolution raster, and any future artefact in the hundreds

@@ -52,6 +52,17 @@ func _ready() -> void:
         if not contour_report.get("ok", false):
             push_warning("contours: %s" % contour_report.get("why", "unknown"))
 
+        family_report = _terrain.bind_families()
+        if family_report.get("ok", false):
+            print("families: %s for wire groups %s%s"
+                    % [str(family_report["families"]), str(family_report["wire_groups"]),
+                       "" if family_report["missing"].is_empty()
+                            else ", MISSING " + str(family_report["missing"])])
+            for m in family_report["missing"]:
+                push_warning("families: the wire names life form %s and no family answers it" % m)
+        else:
+            push_warning("families: %s" % family_report.get("why", "unknown"))
+
         probe_panel = ProbePanel.new()
         probe_panel.setup(_terrain.fixture)
         _controls.add_child(probe_panel)
@@ -93,6 +104,8 @@ var contour_day_report: Dictionary = {}
 var legend: ContourLegend = null
 var probe_panel: ProbePanel = null
 var probe_report: Dictionary = {}
+var family_report: Dictionary = {}
+var scatter_report: Dictionary = {}
 
 
 func _on_field_changed(window: String, row: String, day: int, group: int) -> void:
@@ -120,3 +133,9 @@ func _on_probed(result: Dictionary) -> void:
     probe_report = result
     if probe_panel != null:
         probe_panel.show_probe(result)
+    # M5 rides on the probe: the scatter needs a place to stand, and the point
+    # the viewer just asked about is the one they are looking at.
+    if str(result.get("state", "")) == CellProbe.RESOLVED and result.has("world"):
+        scatter_report = _terrain.scatter_at(result["world"])
+        if probe_panel != null:
+            probe_panel.show_scatter(scatter_report)

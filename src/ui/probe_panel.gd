@@ -38,6 +38,8 @@ var value: Label
 var series_caption: Label
 var series: SeriesPlot
 var absent_rows: Label
+var scatter_line: Label
+var scatter_share: Label
 
 var _fl: FixtureLoader = null
 
@@ -57,6 +59,8 @@ func setup(fl: FixtureLoader = null) -> void:
     series.custom_minimum_size = Vector2(400, 130)
     add_child(series)
     absent_rows = _line()
+    scatter_line = _line()
+    scatter_share = _line()
     clear()
 
 
@@ -68,6 +72,8 @@ func clear() -> void:
     series_caption.text = ""
     series.clear()
     absent_rows.text = ""
+    scatter_line.text = ""
+    scatter_share.text = ""
 
 
 func show_probe(r: Dictionary) -> void:
@@ -163,3 +169,51 @@ func _line(font_size: int = 0) -> Label:
         l.add_theme_font_size_override("font_size", font_size)
     add_child(l)
     return l
+
+
+## M5's scatter, reported where the click that caused it is reported.
+##
+## THE SHARE IS ON SCREEN FOR THE SAME REASON THE CONTOUR LEGEND'S IS. What the
+## wire implies is very often more instances than a frame can hold -- grass runs
+## to millions per square kilometre -- and the scatter draws one stated share
+## across every family rather than thinning quietly. A picture at a share of
+## 1e-4 is a sample of a stand, and it is only readable as one if the number is
+## next to it.
+func show_scatter(r: Dictionary) -> void:
+    if not bool(r.get("ok", false)):
+        scatter_line.text = "scatter: %s" % str(r.get("why", "not built"))
+        scatter_share.text = ""
+        return
+    var parts := PackedStringArray()
+    var placed: Dictionary = r.get("placed", {})
+    var implied: Dictionary = r.get("implied", {})
+    for life_form in r.get("groups", []):
+        parts.append("%s %d/%s" % [life_form, int(placed.get(life_form, 0)),
+                _si(float(implied.get(life_form, 0.0)))])
+    scatter_line.text = "scatter %.0f m horizon, %d texels — %s (drawn/implied)" % [
+            float(r.get("radius_m", 0.0)), int(r.get("texels", 0)), " ".join(parts)]
+
+    var budget: Dictionary = r.get("budget", {})
+    var share := float(r.get("share_drawn", 1.0))
+    if not bool(budget.get("ok", false)):
+        scatter_share.text = "no frame-cost budget: %s" % str(budget.get("why", ""))
+        return
+    # NOTE: GDScript's format has no %g. It fails at runtime rather than at
+    # parse, exactly as burn_edge.gd records for %e, so the share goes through
+    # String.num instead.
+    scatter_share.text = ("share drawn %s — the wire implies %s instances at %.1f ms; "
+            + "the %.1f ms budget holds %s on %s") % [
+            String.num(share, 5), _si(float(budget.get("implied_total", 0.0))),
+            float(budget.get("implied_ms", 0.0)), float(budget.get("budget_ms", 0.0)),
+            _si(float(budget.get("instances", 0.0))), str(budget.get("measured_on", "?"))]
+
+
+## Counts here span single instances to billions, and a raw integer at either
+## end is unreadable next to the other.
+func _si(v: float) -> String:
+    if v < 1000.0:
+        return str(int(round(v)))
+    for pair in [[1.0e9, "G"], [1.0e6, "M"], [1.0e3, "k"]]:
+        if v >= float(pair[0]):
+            return "%.1f%s" % [v / float(pair[0]), str(pair[1])]
+    return str(int(round(v)))

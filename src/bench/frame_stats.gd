@@ -123,10 +123,22 @@ static func marginals(xs: PackedFloat64Array, ys: PackedFloat64Array) -> Diction
     for v in out:
         lo = minf(lo, v)
         hi = maxf(hi, v)
-    return {
+    # A NON-FINITE RATIO IS NOT A NUMBER TO RECORD. A marginal of zero or below
+    # -- one rung measuring no dearer than the one under it, which happens where
+    # the frame sits on its fixed-cost floor -- makes the ratio meaningless, and
+    # INF here serialises into the artefact as `1e99999`: not valid JSON, and a
+    # fabricated magnitude standing exactly where a measurement should be. The
+    # absence is stated instead.
+    var result := {
         "ok": true,
         "min_ms_per_instance": lo,
         "max_ms_per_instance": hi,
-        "spread": (hi / lo) if lo > 0.0 else INF,
         "per_rung": out,
     }
+    if lo > 0.0:
+        result["spread"] = hi / lo
+    else:
+        result["spread_undefined_because"] = ("the cheapest marginal is %s ms per instance, "
+                + "at or below zero: a rung that cost no more than the one below it, which "
+                + "is the fixed-cost floor rather than a per-instance cost") % String.num(lo, 6)
+    return result

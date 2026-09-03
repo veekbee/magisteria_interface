@@ -9,8 +9,9 @@ build machinery live here. **The design corpus does not.**
 contract/     the vendored artefact and its pin
 src/          GDScript — contract loader, UI
 scenes/       Godot scenes
-assets/       terrain and fixture fetched not committed; families commit normally
-tools/        the contract check, and M5 build machinery
+assets/       the vendored artefacts and M5's families; see assets/README.md for what commits
+measurements/ numbers measured here rather than vendored — see measurements/README.md
+tools/        the contract check, the vendoring tools, and the Blender and benchmark machinery
 tests/        headless GDScript tests, no framework
 ```
 

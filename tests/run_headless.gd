@@ -66,6 +66,13 @@ func _initialize() -> void:
     test_the_fit_reports_what_it_costs_to_believe_it()
     test_the_benchmark_refuses_to_measure_frame_cost_headless()
     test_the_fit_survives_a_renderer_with_no_gpu_timer()
+    test_every_wire_life_form_resolves_to_a_family()
+    test_no_family_is_keyed_below_life_form()
+    test_a_parameter_outside_its_range_is_refused_not_clamped()
+    test_the_exaggeration_is_applied_after_the_check_not_before()
+    test_the_families_hold_the_unit_convention_the_transform_relies_on()
+    test_the_cost_model_refuses_outside_its_measured_span()
+    test_the_scatter_reports_what_it_could_not_draw()
     stage_the_main_scene()
 
 
@@ -1482,7 +1489,7 @@ func test_the_fit_reports_what_it_costs_to_believe_it() -> void:
     check(float(f["max_rel_residual"]) < 1e-9, "an exact line has a residual")
 
     # a curve still yields a slope, and the residual is what says not to use it
-    var curved := PackedFloat64Array([1.0, 1.0, 1.0, 40.0])
+    var curved := PackedFloat64Array([1.0, 1.1, 1.2, 40.0])
     var g := FrameStats.fit_linear(xs, curved)
     check(bool(g["ok"]), "the curve did not fit at all")
     check(float(g["max_rel_residual"]) > 0.2,
@@ -1496,6 +1503,15 @@ func test_the_fit_reports_what_it_costs_to_believe_it() -> void:
     var m2 := FrameStats.marginals(xs, linear)
     check(absf(float(m2["spread"]) - 1.0) < 1e-6,
             "a straight line reports a marginal spread of %f" % float(m2["spread"]))
+
+    # A rung that costs no more than the one below it makes the ratio
+    # meaningless, and INF here reaches the artefact as `1e99999` -- not valid
+    # JSON, and a fabricated magnitude standing where a measurement should be.
+    var flat := FrameStats.marginals(xs, PackedFloat64Array([5.0, 5.0, 5.0, 40.0]))
+    check(not flat.has("spread"),
+            "a zero marginal still reported a ratio: %s" % str(flat.get("spread", "?")))
+    check(str(flat.get("spread_undefined_because", "")).length() > 20,
+            "the undefined spread gives no reason")
 
     check(not bool(FrameStats.fit_linear(
             PackedFloat64Array([1.0]), PackedFloat64Array([1.0]))["ok"]),
@@ -1582,3 +1598,279 @@ func test_the_fit_survives_a_renderer_with_no_gpu_timer() -> void:
             "a GPU fit was reported on a renderer that measures no GPU time")
     check(str(one["gpu_p50"]["why"]).length() > 10, "the absent GPU fit gives no reason")
     bench.free()
+
+
+# --------------------------------------------------------------------------
+# M5 -- form archetypes and the vegetation scatter
+# --------------------------------------------------------------------------
+
+const FAMILY_DIR := "res://assets/families/"
+
+var _fs: FamilySet = null
+
+
+func family_set() -> FamilySet:
+    if _fs == null:
+        _fs = FamilySet.load_from(FAMILY_DIR)
+    return _fs
+
+
+func test_every_wire_life_form_resolves_to_a_family() -> void:
+    """The wire decides how many families are owed. `taxon_groups` names the
+    group axis of the two vegetation rows, and a group with no family is a
+    life form the client can be told about and cannot draw."""
+    var fl := fixture()
+    var fs := family_set()
+    check(fs.is_loaded(), "no families loaded: %s" % fs.why_absent)
+    if not fs.is_loaded():
+        return
+    var groups := fl.taxon_groups("deepest_winter", "band.pft_fractions")
+    check(groups.size() == 4, "the wire names %d groups: %s" % [groups.size(), str(groups)])
+    check(fs.missing_for(groups).is_empty(),
+            "the wire names life forms with no family: %s" % str(fs.missing_for(groups)))
+    for g in groups:
+        check(fs.mesh_for(g) != null, "family %s carries no mesh" % g)
+        check(fs.triangles_of(g) > 0, "family %s reports no triangles" % g)
+
+    # both vegetation rows must name ONE group axis, or a plant would take its
+    # width from one life form and its height from another
+    check(Array(groups) == Array(fl.taxon_groups("deepest_winter", "band.pft.biomass")),
+            "the two vegetation rows name different group axes")
+
+    # and the five the roadmap asks for and the wire cannot key must be
+    # recorded as absent WITH the reason, not merely missing
+    var absent: Dictionary = fs.not_here().get("animal_families", {})
+    check(absent.has("families") and (absent["families"] as Array).size() == 5,
+            "the manifest does not record the five animal families as absent")
+    check(str(absent.get("why", "")).contains("AFT"),
+            "the manifest does not say why they are absent: %s" % str(absent.get("why", "")))
+    print("families: %s for wire groups %s" % [str(fs.life_forms()), str(groups)])
+
+
+func test_no_family_is_keyed_below_life_form() -> void:
+    """Palettes are off the wire (decision 894) and the fixture aggregates to
+    life form (872, 889), so a per-PFT or per-AFT mesh set has no key it could
+    legally be indexed by -- and a size-baked form token is wrong rather than
+    imprecise on most of a palette (§23.302, decision 180).
+
+    Checked against the manifest rather than against intent: the family count
+    must equal the wire's group count, not the 12-position PFT axis the sim
+    aggregates from."""
+    var fs := family_set()
+    if not fs.is_loaded():
+        return
+    var fl := fixture()
+    var groups := fl.taxon_groups("deepest_winter", "band.pft_fractions")
+    check(fs.life_forms().size() == groups.size(),
+            "%d families against %d wire groups -- a family set keyed below life form"
+            % [fs.life_forms().size(), groups.size()])
+    var shape: Array = fl.manifest["client_form"]["rows"]["deepest_winter/band.pft.biomass"]["shape"]
+    check(int(shape[2]) == fs.life_forms().size(),
+            "the row's group axis is %d wide and there are %d families"
+            % [int(shape[2]), fs.life_forms().size()])
+    check(str(fs.manifest.get("keyed_by", {}).get("axis", "")) == "life_form",
+            "the manifest does not declare life_form as its key")
+    check(str(fs.manifest.get("keyed_by", {}).get("never", "")).contains("894"),
+            "the manifest does not cite why it is not keyed lower")
+
+    # no family entry may carry a size: the family is authored, the individual
+    # is parameters (§17.8.2)
+    for life_form in fs.life_forms():
+        var entry: Dictionary = fs.families[life_form]
+        for forbidden in ["height", "size", "scale", "species", "pft", "aft"]:
+            for k in entry:
+                check(not str(k).to_lower().contains(forbidden),
+                        "family %s carries a baked %s" % [life_form, forbidden])
+
+
+func test_a_parameter_outside_its_range_is_refused_not_clamped() -> void:
+    """A height outside a family's legal range is a computation that went wrong
+    upstream. Pulling it to the nearest legal value produces a plausible plant
+    and destroys the evidence -- the refusal has to survive as a refusal."""
+    var fs := family_set()
+    if not fs.is_loaded():
+        return
+    var r := fs.range_of("tree", "height_m")
+    check(not r.is_empty(), "tree declares no height range")
+    var too_tall := float(r["max"]) * 2.0
+    var too_short := float(r["min"]) * 0.5
+
+    check(fs.check("tree", "height_m", float(r["max"])) == "",
+            "a height at the top of the range was refused")
+    check(fs.check("tree", "height_m", too_tall) != "", "an over-tall tree was accepted")
+    check(fs.check("tree", "height_m", too_short) != "", "an under-tall tree was accepted")
+    check(fs.check("tree", "height_m", NAN) != "", "a NAN height was accepted")
+    check(fs.check("tree", "girth_m", 1.0) != "",
+            "a parameter the family does not declare was accepted")
+    check(fs.check("nothing", "height_m", 5.0) != "", "a life form with no family was accepted")
+
+    var bad := fs.instance_transform("tree", Vector3.ZERO, too_tall, 3.0)
+    check(not bool(bad["ok"]), "an out-of-range height produced a transform")
+    check(str(bad["why"]).contains("legal range"),
+            "the refusal does not name the range: %s" % str(bad["why"]))
+    var t: Transform3D = bad["transform"]
+    check(t == Transform3D.IDENTITY,
+            "the refusal returned a usable transform -- a caller ignoring it would draw a plant")
+    # the clamped value must NOT appear anywhere in the returned transform
+    check(absf(t.basis.get_scale().y - float(r["max"])) > 0.001,
+            "the refusal returned the clamped height, which is the thing it is not allowed to do")
+
+    var good := fs.instance_transform("tree", Vector3.ZERO, 20.0, 6.0)
+    check(bool(good["ok"]), "a legal tree was refused: %s" % str(good["why"]))
+    var gt: Transform3D = good["transform"]
+    check(absf(gt.basis.get_scale().y - 20.0) < 1e-4, "the height did not reach the transform")
+    check(absf(gt.basis.get_scale().x - 6.0) < 1e-4, "the crown did not reach the transform")
+
+
+func test_the_exaggeration_is_applied_after_the_check_not_before() -> void:
+    """M1 draws this basin at 12x relief, so a plant at true height reads as
+    twelve times too short against the ground it stands on. The exaggeration is
+    a property of the view and not of the plant: applied BEFORE the range check
+    it refused every legal tree in the basin, which is how the first version of
+    the scatter placed exactly zero instances out of two and a half million."""
+    var fs := family_set()
+    if not fs.is_loaded():
+        return
+    var r := fs.range_of("tree", "height_m")
+    var height := 20.0
+    check(height * 12.0 > float(r["max"]),
+            "the fixture no longer exceeds the range under exaggeration, so this test is idle")
+    var out := fs.instance_transform("tree", Vector3.ZERO, height, 6.0, 12.0)
+    check(bool(out["ok"]),
+            "a legal height was refused once the view's exaggeration was applied: %s"
+            % str(out["why"]))
+    var t: Transform3D = out["transform"]
+    check(absf(t.basis.get_scale().y - height * 12.0) < 1e-3,
+            "the exaggeration did not reach the transform: y scale %f" % t.basis.get_scale().y)
+    check(absf(t.basis.get_scale().x - 6.0) < 1e-4,
+            "the exaggeration reached the crown axis, which is horizontal")
+
+
+func test_the_families_hold_the_unit_convention_the_transform_relies_on() -> void:
+    """An instance transform is scale(crown_m, height_m, crown_m), which is only
+    a size if the mesh is one metre tall and one metre across standing on the
+    origin plane. The builder normalises the geometry rather than trusting the
+    authoring numbers, and this is where that is checked."""
+    var fs := family_set()
+    if not fs.is_loaded():
+        return
+    for life_form in fs.life_forms():
+        var mesh := fs.mesh_for(life_form)
+        var aabb := mesh.get_aabb()
+        check(absf(aabb.size.y - 1.0) < 0.01,
+                "%s is %.3f m tall at unit scale" % [life_form, aabb.size.y])
+        check(absf(aabb.position.y) < 0.01,
+                "%s does not stand on the origin plane (base at %.3f)"
+                % [life_form, aabb.position.y])
+        check(aabb.size.x <= 1.001 and aabb.size.z <= 1.001,
+                "%s is %.3f x %.3f across at unit scale" % [life_form, aabb.size.x, aabb.size.z])
+        # the phenology mask has to survive export, or a shader has nothing to
+        # multiply and every plant tints as one thing
+        var colours: PackedColorArray = mesh.surface_get_arrays(0)[Mesh.ARRAY_COLOR]
+        check(colours.size() > 0, "%s exported no vertex colours -- no phenology mask" % life_form)
+    var woody: Mesh = fs.mesh_for("tree")
+    var tc: PackedColorArray = woody.surface_get_arrays(0)[Mesh.ARRAY_COLOR]
+    var lo := 2.0
+    var hi := -1.0
+    for c in tc:
+        lo = minf(lo, c.r)
+        hi = maxf(hi, c.r)
+    check(lo < 0.5 and hi > 0.5,
+            "the tree's phenology mask does not separate trunk from canopy (%f..%f)" % [lo, hi])
+
+
+func test_the_cost_model_refuses_outside_its_measured_span() -> void:
+    """The model is a line through the three mesh complexities the benchmark
+    measured. Carried past them it is an extrapolation wearing a measurement's
+    name, which is the thing §19.8.9 declined to write."""
+    var fc := FrameCost.load_from("multimesh")
+    check(fc.is_loaded(), "no frame-cost measurement: %s" % fc.why_absent)
+    if not fc.is_loaded():
+        return
+    var span := fc.measured_span()
+    check(span.x > 0.0 and span.y > span.x, "the measured span is degenerate: %s" % str(span))
+    check(bool(fc.per_instance_ns(int(span.x))["ok"]), "the bottom of the span was refused")
+    check(bool(fc.per_instance_ns(int(span.y))["ok"]), "the top of the span was refused")
+    var under := fc.per_instance_ns(int(span.x) - 1)
+    check(not bool(under["ok"]), "a complexity below the measured span was priced")
+    check(str(under["why"]).contains("measured span"),
+            "the refusal does not say why: %s" % str(under["why"]))
+    check(not bool(fc.per_instance_ns(int(span.y) * 2)["ok"]),
+            "a complexity above the measured span was priced")
+
+    # every family must sit inside the span, or it cannot be priced at all
+    var fs := family_set()
+    for life_form in fs.life_forms():
+        var t := fs.triangles_of(life_form)
+        check(bool(fc.per_instance_ns(t)["ok"]),
+                "family %s at %d triangles cannot be priced by the measurement" % [life_form, t])
+    var budget := fc.instances_within_budget(fs.triangles_of("tree"))
+    check(budget > 1000, "the budget holds only %d trees" % budget)
+    print("cost model: %.2f + %.5f ns per triangle, budget holds %d trees of %d triangles"
+            % [fc.intercept_ns, fc.slope_ns_per_triangle, budget, fs.triangles_of("tree")])
+
+
+func test_the_scatter_reports_what_it_could_not_draw() -> void:
+    """The density the wire implies is very often more than a frame holds --
+    grass runs to a hundred million instances inside a 1.5 km horizon. The
+    scatter draws one stated share across every family and reports it, rather
+    than thinning quietly: a picture at a share of 1e-3 is a sample of a stand,
+    and it is only readable as one if the number travels with it."""
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    var bound := v.bind_families()
+    check(bool(bound["ok"]), "families did not bind: %s" % str(bound.get("why", "")))
+    check(v.show_field("deepest_winter", "band.pft_fractions", 45), "the field did not paint")
+
+    var verts: PackedVector3Array = v.terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var centre := v.terrain.mesh_to_world(verts[5000], v.heightfield)
+    var r := v.scatter_at(centre)
+    check(bool(r.get("ok", false)), "the scatter did not build: %s" % str(r.get("why", "")))
+    if not bool(r.get("ok", false)):
+        v.queue_free()
+        return
+
+    check(int(r["texels"]) > 0, "the scatter covered no texels")
+    check(int(r["day"]) == 45, "the scatter used day %d and the terrain shows 45" % int(r["day"]))
+    check(str(r["window"]) == "deepest_winter", "the scatter used the wrong window")
+    check(int(r["refused_parameters"]) == 0,
+            "%d instances were refused -- the scatter is computing illegal parameters"
+            % int(r["refused_parameters"]))
+
+    var implied: Dictionary = r["implied"]
+    var placed: Dictionary = r["placed"]
+    var total_implied := 0.0
+    var total_placed := 0
+    for g in r["groups"]:
+        total_implied += float(implied.get(g, 0.0))
+        total_placed += int(placed.get(g, 0))
+    check(total_implied > 0.0, "the wire implied no vegetation at all here")
+    check(total_placed > 0, "nothing was placed")
+    check(float(r["share_drawn"]) <= 1.0, "a share above one was reported")
+    check(str(r["share_bound_by"]).length() > 10,
+            "the report does not say what bound the share: %s" % str(r["share_bound_by"]))
+    check(absf(float(r["share_drawn"]) * total_implied - float(total_placed))
+            < 0.05 * float(total_placed) + 100.0,
+            "placed %d does not follow from share %f of implied %f"
+            % [total_placed, float(r["share_drawn"]), total_implied])
+
+    var budget: Dictionary = r["budget"]
+    check(bool(budget["ok"]), "no budget was computed: %s" % str(budget.get("why", "")))
+    check(float(budget["implied_ms"]) > 0.0, "the implied cost is zero")
+    check(float(budget["budget_ms"]) > 0.0, "no frame budget came from the measurement")
+    print("scatter: %d texels, %s implied at %.0f ms against a %.1f ms budget, share %s (%s)"
+            % [int(r["texels"]), String.num(total_implied, 0), float(budget["implied_ms"]),
+               float(budget["budget_ms"]), String.num(float(r["share_drawn"]), 5),
+               str(r["share_bound_by"])])
+
+    # the scatter must exist in the scene as MultiMesh instances, one per family
+    var nodes := 0
+    for child in v.get_children():
+        if String(child.name).begins_with("Vegetation_"):
+            nodes += 1
+            check(child is MultiMeshInstance3D,
+                    "%s is not a MultiMeshInstance3D" % child.name)
+    check(nodes > 0, "no vegetation reached the scene")
+    v.queue_free()

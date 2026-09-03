@@ -84,6 +84,23 @@ func node_index_of(huc10: String) -> int:
     return int(_node_ordinal.get(huc10, -1))
 
 
+## The names of a taxon-dimensioned row's group axis, in the order the wire
+## indexes it.
+##
+## Read from the fixture's own `taxon_groups` rather than assumed. The order is
+## alphabetical -- grass, shrub, succulent, tree -- and any other order a reader
+## might expect (the roadmap lists them by member count) would scatter every
+## family over another family's ground while looking entirely plausible. The
+## same failure `node_index_of` exists to prevent, one axis over.
+func taxon_groups(window: String, row: String) -> PackedStringArray:
+    var out := PackedStringArray()
+    var w: Dictionary = manifest.get("windows", {}).get(window, {})
+    var series: Dictionary = w.get("series", {})
+    for g in series.get(row, {}).get("taxon_groups", []):
+        out.append(str(g))
+    return out
+
+
 func days(window: String, row: String) -> int:
     var d: Variant = _rows.get("%s/%s" % [window, row], null)
     return 0 if d == null else int(d["shape"][0])

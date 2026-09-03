@@ -25,6 +25,12 @@ const TERRAIN_DIR := "res://assets/terrain/"
 const PROBE_STEP_FRACTION := 0.5
 const PROBE_REFINEMENTS := 24
 
+## M5 scatters within a horizon rather than over the basin. A cell here is
+## about 126 km2 and there are 5,684 of them, so "scatter the fixture" is not
+## a thing any frame contains. 1,500 m is the largest of §19.8.4's example
+## horizons, and the cost of it is reported rather than assumed.
+const SCATTER_HORIZON_M := 1500.0
+
 @export var stride: int = 4
 @export var exaggeration: float = 12.0   ## a 4 km relief over a 1,000 km basin
 
@@ -48,6 +54,11 @@ var probe: CellProbe = null
 ## rather than one it was told about separately, so the number in the readout
 ## and the colour under the cursor cannot come from different rows.
 var shown: Dictionary = {}
+
+var families: FamilySet = null
+var frame_cost: FrameCost = null
+var scatter: VegetationScatter = null
+var _scatter_nodes: Dictionary = {}      ## life_form -> MultiMeshInstance3D
 
 var contour_sets: Dictionary = {}        ## window -> ContourSet
 var contour_drape: ContourDrape = null
@@ -372,6 +383,70 @@ func show_contours(window: String, day: int) -> Dictionary:
     out["day"] = day
     out["standing"] = cs.standing(day)
     return out
+
+
+## M5: bind the form archetypes and the frame-cost measurement they are
+## priced against. Neither is required for the viewer to run, so both report
+## rather than refuse -- the terrain and the fields stand without them.
+func bind_families() -> Dictionary:
+    families = FamilySet.load_from()
+    frame_cost = FrameCost.load_from("multimesh")
+    if not families.is_loaded():
+        return {"ok": false, "why": families.why_absent}
+    var groups := PackedStringArray()
+    if fixture != null and fixture.windows.size() > 0:
+        groups = fixture.taxon_groups(fixture.windows[0], "band.pft_fractions")
+    scatter = VegetationScatter.new()
+    scatter.bind(heightfield, residence, fixture, families, frame_cost, terrain)
+    return {
+        "ok": true,
+        "families": Array(families.life_forms()),
+        "wire_groups": Array(groups),
+        "missing": Array(families.missing_for(groups)),
+        "absent_by_ruling": families.not_here(),
+        "cost_model": ("" if frame_cost.is_loaded()
+                else "no frame-cost measurement: " + frame_cost.why_absent),
+    }
+
+
+## M5: scatter vegetation within the horizon of a world position, for the day
+## the terrain is painted with.
+##
+## THE DAY IS THE SCRUBBER'S, through `shown`. A scatter holding its own day
+## would put winter's canopy over summer's ground.
+func scatter_at(centre: Vector2, radius_m: float = SCATTER_HORIZON_M) -> Dictionary:
+    if scatter == null or not scatter.is_bound():
+        return {"ok": false, "why": "no vegetation scatter is bound"}
+    if shown.is_empty():
+        return {"ok": false, "why": "no row is painted, so there is no day to scatter"}
+    var r := scatter.build(str(shown["window"]), int(shown["day"]), centre, radius_m)
+    if not bool(r.get("ok", false)):
+        return r
+    for life_form in scatter.meshes:
+        var node: MultiMeshInstance3D = _scatter_nodes.get(life_form, null)
+        if node == null:
+            node = MultiMeshInstance3D.new()
+            node.name = "Vegetation_%s" % life_form
+            var mat := StandardMaterial3D.new()
+            # Vertex colour carries the phenology mask, not an albedo: reading
+            # it as colour would paint every plant by its own mask.
+            mat.vertex_color_use_as_albedo = false
+            mat.albedo_color = Color(0.29, 0.44, 0.24)
+            mat.roughness = 1.0
+            node.material_override = mat
+            add_child(node)
+            _scatter_nodes[life_form] = node
+        node.multimesh = scatter.meshes[life_form]
+        node.visible = true
+    for life_form in _scatter_nodes:
+        if not scatter.meshes.has(life_form):
+            (_scatter_nodes[life_form] as MultiMeshInstance3D).visible = false
+    return r
+
+
+func clear_scatter() -> void:
+    for life_form in _scatter_nodes:
+        (_scatter_nodes[life_form] as MultiMeshInstance3D).visible = false
 
 
 ## M3: does this fixture hold a drawable burn perimeter (decision 892)?

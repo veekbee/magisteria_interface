@@ -1,0 +1,143 @@
+{
+ "artefact": "M5 form archetypes, keyed by life form",
+ "blender": "5.2.1 LTS",
+ "convention": {
+  "units": "each mesh is normalised to 1 m tall and 1 m across, standing on the origin plane, so an instance transform is scale(crown_m, height_m, crown_m) and the two axes move independently",
+  "up": "+Y after glTF export",
+  "vertex_colour_g": "height fraction along the form, 0 at the base",
+  "vertex_colour_r": "phenology mask: 1 on foliage, 0 on permanent structure"
+ },
+ "families": {
+  "grass": {
+   "blend_source": "tools/blender/family_grass.blend",
+   "file": "family_grass.glb",
+   "parameters": {
+    "crown_m": {
+     "from": "a tussock, not a canopy: the width span is narrow because the form does not build one",
+     "max": 0.6,
+     "min": 0.05,
+     "unit": "m"
+    },
+    "height_m": {
+     "from": "cropped sward to tall bunchgrass in seed",
+     "max": 2.5,
+     "min": 0.03,
+     "unit": "m"
+    },
+    "phenology": {
+     "from": "a shader parameter multiplied by vertex colour R, which is the authored mask of what changes with the season. The mask is in the mesh; the value is computed at the instance.",
+     "max": 1.0,
+     "min": 0.0,
+     "unit": "fraction"
+    }
+   },
+   "triangles": 12,
+   "vertices": 24
+  },
+  "shrub": {
+   "blend_source": "tools/blender/family_shrub.blend",
+   "file": "family_shrub.glb",
+   "parameters": {
+    "crown_m": {
+     "from": "crowns are wider than tall in this life form more often than not, so the span is not a scaled copy of the height range",
+     "max": 4.0,
+     "min": 0.2,
+     "unit": "m"
+    },
+    "height_m": {
+     "from": "prostrate dwarf-shrub to tall chaparral",
+     "max": 5.0,
+     "min": 0.15,
+     "unit": "m"
+    },
+    "phenology": {
+     "from": "a shader parameter multiplied by vertex colour R, which is the authored mask of what changes with the season. The mask is in the mesh; the value is computed at the instance.",
+     "max": 1.0,
+     "min": 0.0,
+     "unit": "fraction"
+    }
+   },
+   "triangles": 70,
+   "vertices": 46
+  },
+  "succulent": {
+   "blend_source": "tools/blender/family_succulent.blend",
+   "file": "family_succulent.glb",
+   "parameters": {
+    "crown_m": {
+     "from": "columnar forms stay narrow as they grow tall, so width and height are least correlated in this family",
+     "max": 1.2,
+     "min": 0.05,
+     "unit": "m"
+    },
+    "height_m": {
+     "from": "cushion cactus to columnar; the widest height span of the four, which is why one authored size would be wrong here rather than imprecise",
+     "max": 12.0,
+     "min": 0.05,
+     "unit": "m"
+    },
+    "phenology": {
+     "from": "a shader parameter multiplied by vertex colour R, which is the authored mask of what changes with the season. The mask is in the mesh; the value is computed at the instance.",
+     "max": 1.0,
+     "min": 0.0,
+     "unit": "fraction"
+    }
+   },
+   "triangles": 48,
+   "vertices": 26
+  },
+  "tree": {
+   "blend_source": "tools/blender/family_tree.blend",
+   "file": "family_tree.glb",
+   "parameters": {
+    "crown_m": {
+     "from": "cover fraction is crown area times count, so crown width is the axis the wire constrains; the span covers a sapling to a mature open-grown crown",
+     "max": 15.0,
+     "min": 0.8,
+     "unit": "m"
+    },
+    "height_m": {
+     "from": "woody life form spanning sapling to closed-canopy conifer; the upper end is generous for this basin rather than fitted to it, because no carried row says which trees these are",
+     "max": 40.0,
+     "min": 1.5,
+     "unit": "m"
+    },
+    "phenology": {
+     "from": "a shader parameter multiplied by vertex colour R, which is the authored mask of what changes with the season. The mask is in the mesh; the value is computed at the instance.",
+     "max": 1.0,
+     "min": 0.0,
+     "unit": "fraction"
+    }
+   },
+   "triangles": 44,
+   "vertices": 32
+  }
+ },
+ "generated_by": "tools/blender/build_families.py",
+ "keyed_by": {
+  "axis": "life_form",
+  "never": "per PFT member and per AFT. Palettes are off the wire (894), the fixture aggregates to life form (872, 889), and a size-baked form token is wrong rather than imprecise (\u00a723.302, decision 180).",
+  "read_from": "fixture_client.json's windows.<window>.series.<row>.taxon_groups. The client reads that list rather than assuming this file's order: the wire's order is alphabetical and any other order here would scatter each family over another family's ground while looking entirely plausible."
+ },
+ "not_here": {
+  "animal_families": {
+   "families": [
+    "quadruped",
+    "bird",
+    "fish",
+    "herptile",
+    "invertebrate"
+   ],
+   "when": "author them when an AFT row reaches the wire. The count of families here is read from the fixture's taxon_groups, so a new group appears as a missing family rather than as silence.",
+   "why": "no AFT row is carried. contract/schema.json at v2.0 has 8 rows, none with an `aft` dim, and the envelope declares only the `pft` taxonomy; decision 901 re-declared node.aft.population internal because its only writer is unimplemented. There is no density, no presence and no count to place an animal with, so a legal range for one could only be invented -- which is the single thing M5's parameter rule forbids."
+  }
+ },
+ "ruled_by": [
+  "\u00a717.8.2",
+  "\u00a723.302",
+  "decision 180",
+  "decision 872",
+  "decision 889",
+  "decision 894"
+ ]
+}

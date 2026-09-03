@@ -40,3 +40,7 @@
 # run M2 from the repo alone; anything needing the precision goes upstream.
 
 .DS_Store
+
+# Blender writes a .blend1 backup beside every save. The source is the .blend;
+# the backup is the previous save of the same file and belongs to nobody.
+*.blend1
