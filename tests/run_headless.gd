@@ -68,6 +68,10 @@ func _initialize() -> void:
     test_the_benchmark_refuses_to_measure_frame_cost_headless()
     test_the_fit_survives_a_renderer_with_no_gpu_timer()
     test_the_frame_probe_measures_what_a_look_would_report()
+    test_the_frame_probe_can_tell_a_lit_surface_from_a_flat_one()
+    test_ramp_agreement_survives_a_light_and_not_a_highlight()
+    test_the_hillshade_arrives_from_the_north_west()
+    test_the_verdict_is_read_and_never_supplied()
     test_every_wire_life_form_resolves_to_a_family()
     test_no_family_is_keyed_below_life_form()
     test_a_parameter_outside_its_range_is_refused_not_clamped()
@@ -328,6 +332,67 @@ func test_the_main_scene_populated_itself() -> void:
                 "no hillshade light -- relief would render flat")
         print("main scene terrain: %d verts, %d reaches"
                 % [rep["vertices"], rep["reaches_drawn"]])
+
+        # THREE RULINGS ABOUT THE TERRAIN'S SURFACE, all made by looking at it
+        # and none of them visible to anything else in this file. They are
+        # pinned here rather than in the view because what matters is the
+        # material the RUNNING SCENE ends up with, which is what was
+        # photographed.
+        var mi := _scene_root.get_node_or_null("TerrainView/Terrain") as MeshInstance3D
+        var mat := (mi.material_override if mi != null else null) as StandardMaterial3D
+        check(mat != null, "the terrain in the running scene has no StandardMaterial3D")
+        if mat != null:
+            check(mat.metallic_specular == 0.0,
+                    "the terrain carries a specular term of %f. It adds WHITE in proportion "
+                    % mat.metallic_specular
+                    + "to nothing in the data, and white washes a viridis colour off the ramp: "
+                    + "measured, 43.5%% of the overlay's pixels lay on the declared ramp with "
+                    + "the default term and 99.8%% with it off.")
+            check(mat.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED,
+                    "the terrain material enables transparency. The overlay's nodata was black "
+                    + "because alpha was ignored here, and turning alpha ON is not the fix: "
+                    + "photographed both ways it moved 17.89% of the frame -- 183,000 pixels "
+                    + "blended with the sky -- to change a few hundred, and the nodata texels "
+                    + "became holes onto the background rather than bare hillshade. Nodata is "
+                    + "painted with TerrainView.BARE_ALBEDO instead.")
+        var amb := _scene_root.get_node_or_null("TerrainView/Ambient") as WorldEnvironment
+        check(amb != null and amb.environment != null
+                and amb.environment.ambient_light_energy > 0.0,
+                "no ambient fill. With one directional light and no ambient, a slope facing "
+                + "away from the sun renders PURE BLACK -- 738 pixels of a 1,024,000-pixel "
+                + "frame, sitting next to a ramp whose low end is near-black, so they read as "
+                + "the lowest value in the field rather than as unlit ground.")
+
+        # And the nodata colour the overlay was bound with is the terrain's own,
+        # so "no measurement here" renders as the ground rather than as a colour.
+        var view = _scene_root.get_node_or_null("TerrainView")
+        if view != null and view.overlay != null and view.overlay.is_bound():
+            var nd: Color = view.overlay.nodata_colour()
+            check(nd.a >= 1.0, "nodata is written transparent into a material that ignores "
+                    + "alpha, which is how it reached the screen as black")
+            check(absf(nd.r - TerrainView.BARE_ALBEDO.r) <= 1.0 / 255.0
+                    and absf(nd.g - TerrainView.BARE_ALBEDO.g) <= 1.0 / 255.0
+                    and absf(nd.b - TerrainView.BARE_ALBEDO.b) <= 1.0 / 255.0,
+                    "nodata is painted %s, not the terrain's own %s"
+                    % [str(nd), str(TerrainView.BARE_ALBEDO)])
+            # An all-NAN day must produce a texture that is entirely bare ground
+            # and contains no ramp colour at all -- the failure this guards is a
+            # field of no measurements rendering as a field of low ones.
+            var all_nan := PackedFloat64Array()
+            all_nan.resize(view.fixture.n_cells)
+            all_nan.fill(NAN)
+            var img: Image = view.overlay.texture_for(all_nan, 0.0, 1.0).get_image()
+            var off := 0
+            for y in range(0, img.get_height(), 7):
+                for x in range(0, img.get_width(), 7):
+                    var px: Color = img.get_pixel(x, y)
+                    if absf(px.r - nd.r) > 2.0 / 255.0 or absf(px.g - nd.g) > 2.0 / 255.0 \
+                            or absf(px.b - nd.b) > 2.0 / 255.0 or px.a < 1.0:
+                        off += 1
+            check(off == 0, "%d sampled texels of an all-NAN day are not bare ground" % off)
+            print("main scene overlay: nodata %s, %d nodata px of %d"
+                    % [str(nd), view.overlay.nodata_px,
+                       view.overlay.nodata_px + view.overlay.resolved_px])
 
     # M4's layer, in the scene the application actually runs. The scrubber owns
     # the clock; the contour layer takes the day from it and never asks for
@@ -2252,3 +2317,174 @@ func test_the_frame_probe_measures_what_a_look_would_report() -> void:
     print("frame probe: green g-r %+.2f, brown g-r %+.2f, grey %d neutral, black %d near-black"
             % [float(g["green_minus_red"]), float(b["green_minus_red"]),
                int(n["neutral"]), int(k["near_black"])])
+
+
+func test_the_frame_probe_can_tell_a_lit_surface_from_a_flat_one() -> void:
+    """`summarise` reports the MEAN, and a hillshade that failed is a frame
+    whose mean is fine. A terrain lit flat, one whose normals all point up, and
+    one drawn with no light at all differ from a working hillshade in the
+    SPREAD of brightness and in nothing else -- so this is the half of the
+    instrument that can see relief, and these are its two ends.
+    """
+    var flat := Image.create_empty(64, 64, false, Image.FORMAT_RGBA8)
+    flat.fill(Color(0.5, 0.5, 0.5))
+    var lf := FrameProbe.luminance(flat)
+    check(int(lf["levels"]) == 1, "a single-colour frame reports %d brightness levels"
+            % int(lf["levels"]))
+    check(absf(float(lf["spread"])) < 0.01, "a flat frame has a spread of %f"
+            % float(lf["spread"]))
+
+    var lit := Image.create_empty(64, 64, false, Image.FORMAT_RGBA8)
+    for y in 64:
+        for x in 64:
+            var v := 0.1 + 0.8 * float(x) / 63.0
+            lit.set_pixel(x, y, Color(v, v, v))
+    var ll := FrameProbe.luminance(lit)
+    check(int(ll["levels"]) > 20, "a graded frame reports only %d brightness levels"
+            % int(ll["levels"]))
+    check(float(ll["spread"]) > 0.5, "a frame graded 0.1..0.9 has a spread of %f"
+            % float(ll["spread"]))
+    check(float(ll["p05"]) < float(ll["p50"]) and float(ll["p50"]) < float(ll["p95"]),
+            "the percentiles are not ordered")
+
+    # A frame that drew nothing must say so rather than report a spread of zero,
+    # which is what a flat surface ALSO reports. The two must not read alike.
+    var dark := Image.create_empty(8, 8, false, Image.FORMAT_RGBA8)
+    dark.fill(Color(0, 0, 0))
+    var ld := FrameProbe.luminance(dark)
+    check(int(ld["counted"]) == 0, "a black frame counted %d pixels" % int(ld["counted"]))
+    check(ld.has("why"), "a black frame reported a spread instead of saying it is black")
+
+    print("frame probe relief: flat %d level, graded %d levels spread %.2f"
+            % [int(lf["levels"]), int(ll["levels"]), float(ll["spread"])])
+
+
+func test_ramp_agreement_survives_a_light_and_not_a_highlight() -> void:
+    """The measurement that found the specular defect, and the reason it can be
+    trusted: it has to pass a frame that is only the ramp UNDER A LIGHT, and
+    fail one where white has been added to it.
+
+    A diffuse light scales all three channels by one number, so it moves a
+    pixel along a ray from the origin and leaves the ratio between channels --
+    which is the part the ramp chose -- untouched. A specular highlight ADDS
+    the light's colour instead, and white added to a saturated ramp colour is a
+    different colour, not a brighter one. Measured on the running app: 43.5% of
+    the overlay's pixels lay on the declared ramp with the default specular
+    term and 99.8% with it off.
+    """
+    var lit := Image.create_empty(64, 64, false, Image.FORMAT_RGBA8)
+    var washed := Image.create_empty(64, 64, false, Image.FORMAT_RGBA8)
+    for y in 64:
+        for x in 64:
+            var c := FieldOverlay.ramp(float(x) / 63.0)
+            # a plausible hillshade: a scalar per pixel, never the same twice
+            var k: float = 0.35 + 0.6 * float(y) / 63.0
+            lit.set_pixel(x, y, Color(c.r * k, c.g * k, c.b * k))
+            # the same surface with a white specular term added on top
+            var w := 0.35
+            washed.set_pixel(x, y, Color(minf(c.r * k + w, 1.0), minf(c.g * k + w, 1.0),
+                                         minf(c.b * k + w, 1.0)))
+    var a := FrameProbe.ramp_agreement(lit, FieldOverlay.RAMP_STOPS)
+    check(float(a["on_ramp_fraction"]) > 0.95,
+            "only %.1f%% of a frame that IS the ramp under a light reads as on the ramp, so "
+            % (100.0 * float(a["on_ramp_fraction"]))
+            + "the measurement is reporting the light rather than the colour")
+    var b := FrameProbe.ramp_agreement(washed, FieldOverlay.RAMP_STOPS)
+    check(float(b["on_ramp_fraction"]) < float(a["on_ramp_fraction"]) - 0.3,
+            "adding white to every pixel barely moved the agreement (%.2f -> %.2f), so this "
+            % [float(a["on_ramp_fraction"]), float(b["on_ramp_fraction"])]
+            + "measurement could not have found the specular highlight it did find")
+
+    # And a frame of some other palette entirely must not read as this ramp.
+    var alien := Image.create_empty(16, 16, false, Image.FORMAT_RGBA8)
+    alien.fill(Color(0.9, 0.35, 0.1))
+    var c := FrameProbe.ramp_agreement(alien, FieldOverlay.RAMP_STOPS)
+    check(float(c["on_ramp_fraction"]) < 0.05, "an orange frame reads as %.1f%% viridis"
+            % (100.0 * float(c["on_ramp_fraction"])))
+
+    print("ramp agreement: lit %.1f%%, white-washed %.1f%%, alien %.1f%%"
+            % [100.0 * float(a["on_ramp_fraction"]), 100.0 * float(b["on_ramp_fraction"]),
+               100.0 * float(c["on_ramp_fraction"])])
+
+
+func test_the_hillshade_arrives_from_the_north_west() -> void:
+    """A comment said `# NW, the cartographic default` beside a light that came
+    from the NORTH-EAST, and it said so for four milestones. Nothing blind
+    could catch it: the light was on, the surface was shaded, every number in
+    every report was right, and the shading simply came from the wrong side.
+    Relief inversion -- ridges read as valleys -- is what that costs, and it is
+    the one hillshade error a reader mistakes for the terrain.
+
+    WHICH WAY IS NORTH IS ASKED OF THE TRANSFORM, not restated from the comment
+    beside it. `mesh_to_world` is the only thing in the project that knows, so
+    a test that repeated the convention from a docstring would agree with
+    whatever the docstring said -- which is exactly how this survived.
+    """
+    var hf := heightfield()
+    var tm := TerrainMesh.new()
+    tm.build(hf, 16, 1.0)
+    var here := tm.mesh_to_world(Vector3.ZERO, hf)
+    var zward := tm.mesh_to_world(Vector3(0.0, 0.0, 1000.0), hf)
+    var xward := tm.mesh_to_world(Vector3(1000.0, 0.0, 0.0), hf)
+    check(zward.y < here.y, "+Z in mesh space does not go south in EPSG:5070")
+    check(xward.x > here.x, "+X in mesh space does not go east in EPSG:5070")
+
+    # Where the photons go. A DirectionalLight3D shines down its own -Z.
+    var basis := Basis.from_euler(Vector3(deg_to_rad(TerrainView.SUN_ALTITUDE_DEGREES),
+                                          deg_to_rad(TerrainView.SUN_AZIMUTH_DEGREES), 0.0))
+    var travel := basis * Vector3(0.0, 0.0, -1.0)
+    check(travel.y < 0.0, "the sun shines upward")
+    check(travel.x > 0.1, "the light does not travel east, so it does not arrive from the west")
+    check(travel.z > 0.1, "the light does not travel south, so it does not arrive from the north")
+    print("hillshade: light travels (%.2f, %.2f, %.2f) -- east and south, so it arrives "
+            % [travel.x, travel.y, travel.z] + "from the north-west")
+
+
+func test_the_verdict_is_read_and_never_supplied() -> void:
+    """A screenshot of this basin is a screenshot of a run that fails several
+    of its acceptance criteria, and the verdict has to travel with the picture.
+    The three states are the whole design: today's fixtures carry no verdict at
+    all, so ABSENT is not an edge case -- it is the case, and it has to be as
+    loud as a failure rather than as quiet as a pass.
+    """
+    var none := AncestorVerdict.read_from({"run": {"base_commit": "abc1234567"}})
+    check(none.state == AncestorVerdict.ABSENT, "a manifest with no acceptance block read as %s"
+            % none.state)
+    check(none.headline().contains("NO ACCEPTANCE VERDICT"),
+            "an absent verdict does not announce itself: %s" % none.headline())
+    check(none.passed < 0 and none.failed < 0,
+            "an absent verdict supplied counts, which is the one thing it must never do")
+
+    var scored := AncestorVerdict.read_from({"run": {"base_commit": "897285dabcdef",
+            "acceptance": {"scored_at_commit": "897285d", "passed": 7, "failed": 5,
+                           "not_evaluable": 0,
+                           "failed_criteria": [{"id": 1, "name": "snow",
+                                                "renders_as": "a near-bare snowpack"}]}}})
+    check(scored.state == AncestorVerdict.SCORED, "a matching verdict read as %s" % scored.state)
+    check(scored.passed == 7 and scored.failed == 5, "the counts did not survive the read")
+    check(scored.headline().contains("7 pass") and scored.headline().contains("5 fail"),
+            "the headline does not carry the score: %s" % scored.headline())
+    var named := scored.named_fails()
+    check(named.size() == 1 and named[0].contains("near-bare snowpack"),
+            "the named fail lost how it renders, which is the half a picture needs")
+
+    # An abbreviated hash against a full one is the SAME commit. Reporting that
+    # as stale would put the word on a correct verdict and teach a reader to
+    # ignore it.
+    check(AncestorVerdict.read_from({"run": {"base_commit": "897285dabcdef",
+            "acceptance": {"scored_at_commit": "897285dabcdef0000", "passed": 1,
+                           "failed": 0}}}).state == AncestorVerdict.SCORED,
+            "a full hash and its abbreviation read as two different commits")
+
+    var stale := AncestorVerdict.read_from({"run": {"base_commit": "aaaaaaa1111",
+            "acceptance": {"scored_at_commit": "bbbbbbb2222", "passed": 12, "failed": 0}}})
+    check(stale.state == AncestorVerdict.STALE,
+            "a verdict scored at another commit read as %s" % stale.state)
+    check(stale.headline().contains("DOES NOT MATCH"),
+            "a stale verdict reads as a passing one: %s" % stale.headline())
+
+    # The fixture this repo actually ships, so the state above is not
+    # hypothetical and the day it changes, this line says so.
+    var shipped := AncestorVerdict.read_from(
+            FixtureLoader.load_from("res://assets/fixture/").manifest)
+    print("verdict: the shipped fixture reads %s -- %s" % [shipped.state, shipped.headline()])

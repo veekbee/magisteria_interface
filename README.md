@@ -13,7 +13,8 @@ assets/       the vendored artefacts and M5's families; see assets/README.md for
 measurements/ numbers measured here rather than vendored — see measurements/README.md
 tools/        the contract check, the vendoring tools, and the Blender, benchmark and
               screenshot machinery — see tools/screenshot.sh, which photographs the running
-              app because the headless suite cannot see the screen
+              app because the headless suite cannot see the screen, and tools/audit.sh,
+              which takes one named shot per milestone claim
 tests/        headless GDScript tests, no framework
 ```
 

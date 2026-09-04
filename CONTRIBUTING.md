@@ -76,6 +76,22 @@ Two habits it enforces, both learned by getting them wrong:
 Screenshots go to `shots/`, which is ignored: a frame is large and regenerable, so quote the
 measurement in the commit message rather than committing the picture.
 
+**`bash tools/audit.sh` is the named set** — one shot per milestone's visible claim, so the next
+person can re-take the same picture and compare rather than take a different one and conclude. Its
+record is `measurements/visual_audit.md`, and it found five defects the suite could not see: a
+hillshade lit from the wrong compass point beside a comment naming the right one, a specular
+highlight washing the field overlay off its own ramp, unlit slopes rendering pure black next to a
+ramp whose low end is nearly black, an overlay nodata fix that would have moved 700× more of the
+frame than the defect did, and the harness captioning its own screenshots with a state the picture
+was not in.
+
+**The audit is not part of the gate, and everything it finds is.** `verify.sh` runs headless and
+the harness refuses headless; a check that cannot run where the gate runs is a checklist wearing a
+gate's name. So each finding is re-expressed as something a blind suite *can* hold — a light's
+direction as a vector, a material property, a colour written into a texture — and the assert
+message carries the measurement that found it. Look with the harness; keep what you find in
+`tests/run_headless.gd`.
+
 ## `project.godot` is minimal by intent, and cannot hold its own rule
 
 Renderer and main scene only. Anything else added there is a decision someone should have to argue

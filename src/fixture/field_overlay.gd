@@ -15,28 +15,35 @@ extends RefCounted
 ## and a field that barely moves would look as dramatic as one that swings. The
 ## schema declares bounds for exactly this.
 ##
-## NO DATA IS NOT A COLOUR. The 4,973 overview pixels that carry terrain and no
-## residence key, and any cell whose value is NAN, are written as fully
-## transparent black rather than at the ramp's low end, which would invent a
-## measurement.
+## NO DATA IS NOT A VALUE, and it is now painted rather than left out. The
+## overview pixels that carry terrain and no residence key, and any cell whose
+## value is NAN, are written with the TERRAIN'S OWN BARE ALBEDO -- so those
+## texels render as the lit ground underneath and read as "nothing measured
+## here" rather than as a measurement. The colour is passed in by the view that
+## owns it (`TerrainView.BARE_ALBEDO`) rather than repeated here, because two
+## copies of it is how they come to differ.
 ##
-## THAT ALPHA IS CURRENTLY INERT, AND SAYING SO IS BETTER THAN IMPLYING
-## OTHERWISE. The terrain material leaves `transparency` at DISABLED, so the
-## engine ignores the alpha channel and those texels reach the screen as BLACK
-## rather than letting the bare hillshade through. Measured on the running app:
-## 105 pixels of a 157,000-pixel frame, because almost every texel with ground
-## also has a key and a cell -- so the intent above is unrealised and the cost
-## of it is currently negligible.
+## IT WAS TRANSPARENT BLACK, AND THE TRANSPARENCY WAS INERT. The terrain
+## material leaves `transparency` at DISABLED, so the engine ignored the alpha
+## and those texels reached the screen as BLACK -- next to a ramp whose low end
+## is (0.267, 0.005, 0.329), which reads as a low value rather than as no
+## value. Bilinear filtering made it worse than a count of texels suggests: a
+## black texel darkens the pixels around it too, so the artefact was a smudge
+## rather than a hole.
 ##
-## It stops being negligible the moment a carried row is NAN over an area
-## rather than a scatter, because black sits next to this ramp's low end
-## (0.267, 0.005, 0.329) and would read as a low value rather than as no value.
-## Enabling alpha on the terrain is not a free fix: a transparent material is
-## depth-sorted and stops writing depth by default, which changes how the
-## vegetation and the flowlines resolve against the ground. That is a decision
-## with a picture attached, and it is not made here.
-
-const NODATA := Color(0, 0, 0, 0)
+## ENABLING ALPHA WAS THE OBVIOUS FIX AND IT IS THE WRONG ONE, which is a
+## measurement rather than an opinion. A transparent material is depth-sorted
+## and stops writing depth, and the ramp already writes alpha 200, so turning
+## it on blends the WHOLE basin with the sky: photographed both ways,
+## `transparency = ALPHA` moved 17.89% of the frame -- 183,000 pixels -- to fix
+## a few hundred, and the nodata texels became holes onto the background rather
+## than bare hillshade. Painting the bare albedo moved 0.02% and left the
+## sorting alone.
+##
+## (The 105-pixel figure once recorded against this was measuring something
+## else: most of the black in that frame was terrain facing away from a single
+## directional light with no ambient, which is now filled by
+## `TerrainView.AMBIENT_ENERGY` and was never this layer's doing.)
 
 var width: int = 0
 var height: int = 0
@@ -44,11 +51,14 @@ var resolved_px: int = 0
 var nodata_px: int = 0
 
 var _cell_of_px: PackedInt32Array = PackedInt32Array()   ## -1 where unkeyed
+var _nodata := PackedByteArray([0, 0, 0, 255])
 
 
 ## Precompute the pixel -> cell join once. It depends only on the two layers,
 ## not on which row or day is shown, so doing it per frame would repay nothing.
-func bind(rl: ResidenceLayer, fl: FixtureLoader) -> void:
+func bind(rl: ResidenceLayer, fl: FixtureLoader, nodata: Color) -> void:
+    _nodata = PackedByteArray([int(nodata.r * 255.0), int(nodata.g * 255.0),
+                               int(nodata.b * 255.0), 255])
     width = rl.width
     height = rl.height
     _cell_of_px.resize(width * height)
@@ -84,11 +94,11 @@ func texture_for(values: PackedFloat64Array, lo: float, hi: float) -> ImageTextu
         var o := i * 4
         var c := _cell_of_px[i]
         if c < 0 or c >= values.size():
-            buf[o] = 0; buf[o + 1] = 0; buf[o + 2] = 0; buf[o + 3] = 0
+            _write_nodata(buf, o)
             continue
         var v := values[c]
         if is_nan(v):
-            buf[o] = 0; buf[o + 1] = 0; buf[o + 2] = 0; buf[o + 3] = 0
+            _write_nodata(buf, o)
             continue
         var col := ramp(clampf((v - lo) / span, 0.0, 1.0))
         buf[o] = int(col.r * 255.0)
@@ -98,6 +108,19 @@ func texture_for(values: PackedFloat64Array, lo: float, hi: float) -> ImageTextu
         painted += 1
     var img := Image.create_from_data(width, height, false, Image.FORMAT_RGBA8, buf)
     return ImageTexture.create_from_image(img)
+
+
+func _write_nodata(buf: PackedByteArray, o: int) -> void:
+    buf[o] = _nodata[0]
+    buf[o + 1] = _nodata[1]
+    buf[o + 2] = _nodata[2]
+    buf[o + 3] = _nodata[3]
+
+
+## The nodata colour this overlay was bound with, so a test and a legend can
+## ask rather than assume.
+func nodata_colour() -> Color:
+    return Color8(_nodata[0], _nodata[1], _nodata[2], _nodata[3])
 
 
 #: Viridis, sampled at five stops. Chosen for ONE property: its lightness

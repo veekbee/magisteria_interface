@@ -5,6 +5,12 @@ opposite: a measurement that can only be taken *here*, because the thing being m
 engine. It has no `PIN` and no upstream, and it is not vendored — but it carries the same four
 claims a `PIN` does: what was measured, how, on what, and what it does not cover.
 
+## What is here
+
+- `render_cost.json` — per-instance frame cost, and the ladder it was fitted from.
+- `visual_audit.md` — what each milestone's claim looks like when photographed, and the five
+  defects that came out of looking. Re-take it with `bash tools/audit.sh`.
+
 ## `render_cost.json` — per-instance frame cost
 
 §19.8 prices the individual tier's rendering. Every term in it is measured except one, and the

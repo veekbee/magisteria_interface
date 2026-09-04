@@ -11,6 +11,9 @@ extends Node3D
 ## HILLSHADE IS A LIGHT, NOT A TEXTURE. A DirectionalLight3D over per-vertex
 ## normals gives relief that responds to the camera and costs nothing; a baked
 ## shade map would be a second copy of the terrain, free to disagree with it.
+## Checkable by moving it: `tools/screenshot.sh --sun 135,-45` turns the light
+## between two frames, and 18% of the frame differs -- which a texture could
+## not do.
 
 ## M4: a click resolved to a residence key. Emitted by this node because it is
 ## the one that holds the cameras, the heightfield and the row currently
@@ -32,6 +35,34 @@ const PROBE_REFINEMENTS := 24
 const SCATTER_HORIZON_M := 1500.0
 
 const VEGETATION_SHADER := "res://src/fixture/vegetation.gdshader"
+
+## The terrain with no field on it. It is also what a nodata texel is painted
+## with, so "no measurement here" reads as bare ground rather than as a colour
+## -- which is why the two live on one constant instead of two.
+const BARE_ALBEDO := Color(0.62, 0.60, 0.55)
+
+## Sun azimuth in mesh degrees. The mesh is +X east, +Z south, so a light at
+## 225 travels south-east and therefore arrives FROM THE NORTH-WEST, which is
+## the cartographic default and the direction relief inversion does not happen
+## in.
+##
+## IT WAS 135 UNTIL THE VISUAL AUDIT, and 135 lights the basin from the
+## NORTH-EAST while the comment beside it said north-west. Nothing in a blind
+## suite could catch that: the light was on, the surface was shaded, every
+## number was right, and the shading was simply coming from the wrong side.
+## `test_the_hillshade_comes_from_the_north_west` now pins it as a vector.
+const SUN_AZIMUTH_DEGREES := 225.0
+const SUN_ALTITUDE_DEGREES := -45.0
+
+## A fill so that a slope facing away from the sun still shows its albedo.
+##
+## WITHOUT IT A SHADOWED SLOPE IS PURE BLACK, and black is not a spare colour
+## here: it sits next to this ramp's low end, so 738 pixels of a 1,024,000-pixel
+## frame were reading as the lowest value in the field rather than as ground
+## the light did not reach. Measured before and after at 0.15: 738 near-black
+## pixels -> 1, with the relief spread WIDER rather than flatter (0.195 ->
+## 0.219), because those pixels now carry their field colour instead of none.
+const AMBIENT_ENERGY := 0.15
 
 @export var stride: int = 4
 @export var exaggeration: float = 12.0   ## a 4 km relief over a 1,000 km basin
@@ -90,8 +121,15 @@ func build() -> Dictionary:
     mi.name = "Terrain"
     mi.mesh = mesh
     var mat := StandardMaterial3D.new()
-    mat.albedo_color = Color(0.62, 0.60, 0.55)
+    mat.albedo_color = BARE_ALBEDO
     mat.roughness = 1.0
+    # NO SPECULAR. A hillshade is a diffuse relief model; a specular term adds
+    # WHITE in proportion to nothing in the data, and white is the one thing
+    # this ramp cannot afford -- viridis was chosen because its lightness rises
+    # monotonically, and a highlight washing a colour toward white moves it off
+    # the ramp entirely. Measured: 43.5% of the overlay's pixels lay on the
+    # declared ramp with the default specular, and 99.8% with it off.
+    mat.metallic_specular = 0.0
     mi.material_override = mat
     add_child(mi)
     _terrain_mi = mi
@@ -113,9 +151,22 @@ func build() -> Dictionary:
 
     var sun := DirectionalLight3D.new()
     sun.name = "Hillshade"
-    sun.rotation_degrees = Vector3(-45, 135, 0)   # NW, the cartographic default
+    sun.rotation_degrees = Vector3(SUN_ALTITUDE_DEGREES, SUN_AZIMUTH_DEGREES, 0)
     sun.light_energy = 1.1
     add_child(sun)
+
+    # The ambient fill. A WorldEnvironment rather than a second light: a fill
+    # light from the opposite side would flatten the relief the first one is
+    # there to show, while ambient lifts the floor without touching the shape.
+    var env := WorldEnvironment.new()
+    env.name = "Ambient"
+    var e := Environment.new()
+    e.background_mode = Environment.BG_CLEAR_COLOR
+    e.ambient_light_source = Environment.AMBIENT_SOURCE_COLOR
+    e.ambient_light_color = Color(1, 1, 1)
+    e.ambient_light_energy = AMBIENT_ENERGY
+    env.environment = e
+    add_child(env)
 
     rig = CameraRig.new()
     rig.name = "CameraRig"
@@ -165,7 +216,7 @@ func bind_fields(terrain_dir: String = TERRAIN_DIR,
         return field_report
 
     overlay = FieldOverlay.new()
-    overlay.bind(residence, fixture)
+    overlay.bind(residence, fixture, BARE_ALBEDO)
     field_report = {
         "ok": true,
         "resolved_px": overlay.resolved_px,
@@ -195,7 +246,7 @@ func show_field(window: String, row: String, day: int, group: int = 0) -> bool:
 func clear_field() -> void:
     if _terrain_mat:
         _terrain_mat.albedo_texture = null
-        _terrain_mat.albedo_color = Color(0.62, 0.60, 0.55)
+        _terrain_mat.albedo_color = BARE_ALBEDO
 
 
 ## The ramp's range. `lo`/`hi` are the REALISED range the fixture quantised

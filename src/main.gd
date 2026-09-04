@@ -63,6 +63,22 @@ func _ready() -> void:
         else:
             push_warning("families: %s" % family_report.get("why", "unknown"))
 
+        # Post-M0: the basin on screen is an ancestor trace that fails several
+        # of its acceptance criteria, so the verdict belongs on the picture
+        # rather than in a paragraph somebody has to remember. It is READ from
+        # the manifest, and the manifest carries none today -- which the banner
+        # says out loud, because a silent banner and a passing run look alike.
+        verdict = AncestorVerdict.read_from(_terrain.fixture.manifest)
+        verdict_banner = VerdictBanner.new()
+        verdict_banner.setup()
+        _controls.add_child(verdict_banner)
+        verdict_banner.show_verdict(verdict)
+        print("verdict: %s" % verdict.headline())
+        for f in verdict.named_fails():
+            print("verdict:   %s" % f)
+        if verdict.state != AncestorVerdict.SCORED:
+            push_warning("verdict: %s" % verdict.why)
+
         probe_panel = ProbePanel.new()
         probe_panel.setup(_terrain.fixture)
         _controls.add_child(probe_panel)
@@ -106,6 +122,8 @@ var probe_panel: ProbePanel = null
 var probe_report: Dictionary = {}
 var family_report: Dictionary = {}
 var scatter_report: Dictionary = {}
+var verdict: AncestorVerdict = null
+var verdict_banner: VerdictBanner = null
 
 
 func _on_field_changed(window: String, row: String, day: int, group: int) -> void:

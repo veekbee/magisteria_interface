@@ -84,6 +84,47 @@ func current() -> Dictionary:
     }
 
 
+## Put the controls into a named state and emit, exactly as three clicks would.
+##
+## THE CONTROLS ARE PART OF THE PICTURE. `tools/capture.gd` painted the terrain
+## by calling main's `_on_field_changed` directly, which left every widget
+## showing whatever it had been showing: a composite screenshot came back with
+## the basin drawn for `deepest_winter / band.wetness / day 46` and the panel
+## beside it reading `largest_fire / band.bare_fraction / day 1`. Nothing was
+## wrong with the render and the caption on it was false, which is worse -- a
+## capture whose own UI contradicts its frame is the failure the harness exists
+## to prevent, committed by the harness.
+##
+## Selecting an OptionButton in code does not emit `item_selected`, so this
+## does the reload the signal would have done and emits ONCE at the end rather
+## than three times on the way.
+func select(window: String, row: String, day: int) -> Dictionary:
+    var wi := -1
+    for i in window_pick.item_count:
+        if window_pick.get_item_text(i) == window:
+            wi = i
+    if wi < 0:
+        return {"ok": false, "why": "no window named %s is offered" % window}
+    window_pick.select(wi)
+    _reload_rows()
+    var ri := -1
+    for i in row_pick.item_count:
+        if row_pick.get_item_text(i) == row:
+            ri = i
+    if ri < 0:
+        return {"ok": false, "why": "%s offers no row named %s; it has %s"
+                % [window, row, str(_rows)]}
+    row_pick.select(ri)
+    day_slider.max_value = max(_fl.days(window, row) - 1, 0)
+    if day < 0 or day > int(day_slider.max_value):
+        return {"ok": false, "why": "%s/%s has %d days; day %d is not one of them"
+                % [window, row, int(day_slider.max_value) + 1, day]}
+    day_slider.set_value_no_signal(day)
+    _update_day_label()
+    _emit()
+    return {"ok": true, "state": current()}
+
+
 func _reload_rows() -> void:
     var w := window_pick.get_item_text(max(window_pick.selected, 0))
     _rows = _fl.row_names(w)

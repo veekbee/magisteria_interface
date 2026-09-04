@@ -21,6 +21,12 @@
 #   --days a,b,c    one shot per day          (default: 45)
 #   --scatter       probe screen centre, scatter there, fly the camera to it
 #   --hide LIST     ui,terrain,flowlines,vegetation,contours
+#   --only LIST     the same names, kept instead of removed (wins over --hide)
+#   --no-field      leave the terrain's own albedo on, so relief is the subject
+#   --sun DEG       aim the hillshade; a lit surface changes and a texture does not
+#   --compare PNG   diff the last shot against a frame from an earlier run
+#   --backdrop black  clear to black, so the sky drops out of the measurements
+#   --camera NAME   ortho or fly              (default: whatever the scene starts on)
 #   --size WxH      window size               (default: 1280x800)
 #   --out DIR       output directory          (default: shots)
 set -uo pipefail
