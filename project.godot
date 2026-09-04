@@ -1,10 +1,8 @@
 ; Engine configuration file.
-; It's best edited using the editor UI and not directly,
-; since the parameters that go here are not all obvious.
-;
-; Format:
-;   [section] ; section goes between []
-;   param=value ; assign values to parameters
+; Minimal by intent: renderer and main scene only. Anything else added here is
+; a decision someone should have to argue for in review. That rule is restated
+; in CONTRIBUTING.md, because the engine rewrites this file and deletes every
+; comment in it whenever it does -- so nothing here can be relied on to survive.
 
 config_version=5
 
@@ -17,6 +15,9 @@ config/features=PackedStringArray("4.7", "GL Compatibility")
 
 [filesystem]
 
+; Off because Godot imports .blend natively by shelling out to Blender, which
+; fails headlessly. The durable copy of this reason is tools/blender/README.md;
+; a comment here does not survive the next time the engine writes the file.
 import/blender/enabled=false
 
 [rendering]

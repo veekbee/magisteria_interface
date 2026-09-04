@@ -2040,22 +2040,17 @@ func test_the_project_does_not_import_blend_sources() -> void:
     check(blends > 0,
             "no .blend sources in tools/blender/ -- either they moved or the build never ran")
 
-    # THE ENGINE DELETES THE REASONS. Running the app once rewrote
-    # project.godot and stripped every comment in it, including the project's
-    # own "minimal by intent" rule and the note explaining the setting above --
-    # replaced with the editor's default boilerplate, in a commit where the
-    # change was invisible among real ones. The setting survived; the reasons
-    # for it did not, which is the worse half to lose.
-    var cfg := FileAccess.open("res://project.godot", FileAccess.READ)
-    check(cfg != null, "project.godot could not be read")
-    if cfg != null:
-        var text := cfg.get_as_text()
-        check(text.contains("Minimal by intent"),
-                "project.godot has lost its own rule about what may be added to it -- the "
-                + "engine rewrote the file and dropped the comments. Restore them.")
-        check(text.contains("shelling out to Blender"),
-                "project.godot has lost the reason the .blend importer is off. The setting "
-                + "without its reason is a line nobody will dare to touch or to keep.")
+    # THE COMMENTS IN project.godot ARE NOT ASSERTED HERE, AND THAT IS A
+    # RETRACTION. A previous version of this test required them to be present,
+    # because the engine had silently deleted them once. But the engine rewrites
+    # that file on any run -- including this suite's own import step -- so the
+    # assertion turned the gate red for something no change to the code caused,
+    # which is exactly the failure tools/verify.sh's header warns about: a gate
+    # that fails for unrelated reasons is a gate someone switches off.
+    #
+    # The setting survives rewrites and is asserted above. The reasons live in
+    # tools/blender/README.md and CONTRIBUTING.md, which the engine does not
+    # own. Prose does not belong in a file another program writes.
 
     # the exported families load through the glTF importer, which is a
     # different importer and must not be affected by the setting above

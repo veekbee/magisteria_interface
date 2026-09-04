@@ -48,6 +48,21 @@ simulation's `sim/` or run directories, no internal-rung debug path. See `README
 No third-party terrain plugins and no test framework. `godot --headless --script` with hand-rolled
 asserts covers the loader and the inspector. CI enforces the absence of an `addons/` directory.
 
+## `project.godot` is minimal by intent, and cannot hold its own rule
+
+Renderer and main scene only. Anything else added there is a decision someone should have to argue
+for in review.
+
+The rule lives **here** because it cannot live in the file it governs: Godot rewrites
+`project.godot` whenever it runs — the editor, a windowed run, even `--headless --import` — and
+deletes every comment in it. That happened twice during M5, once reaching a commit unnoticed. A test
+that asserted the comments were present was worse than the disease: it turned the gate red for
+something no code change caused, which is how a gate gets disabled.
+
+So: settings are asserted by `tests/run_headless.gd`, which survives; reasons go in a Markdown file,
+which the engine does not own. If you find `project.godot` carrying the engine's default boilerplate
+header again, that is expected — restore the comment if you like, and do not build anything on it.
+
 ## Godot version
 
 **4.7.2**, pinned in two places that must move together: `GODOT_VERSION` in
