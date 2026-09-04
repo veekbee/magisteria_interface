@@ -1,5 +1,5 @@
 {
-  "_form": "The machine-readable claim about contract/schema.json. The vendored file is DATA; this is the CLAIM about it, so CI can verify one against the other without parsing either. An artefact bump is a two-file diff whose entire review surface is the version movement.",
+  "_form": "The machine-readable claim about contract/schema.json. The vendored file is DATA; this is the CLAIM about it, so CI can verify one against the other without parsing either. An artefact bump is a two-file diff, and its review surface is the version pair AND the content digest. Both can hold still across a real bump: the first exercise of this pin moved bytes, provenance and two published `why` texts at v2.0 with the digest unchanged, which is precisely the witness that no carried content moved. A reviewer who looks only for a version change would read that diff as a mistake.",
   "artefact": "magisteria channel-1 schema",
   "ruled_by": [
     "\u00a720.4.4",
@@ -12,11 +12,11 @@
     "path": "data/schema_output/schema.json",
     "_not": "data/schema_draft_output/schema.DRAFT-v0.json -- a superseded draft sharing this basename"
   },
-  "file_sha256": "61fc91895ba04a92eaab3013bd9ca5951cab2860e16169dd9d4db745efc59680",
+  "file_sha256": "b44a2280919732b7e4795603bbe658888e7e6f6789285832c14f53b7c6a8393b",
   "_file_sha256_note": "sha256 of contract/schema.json's BYTES. This is what the local half of the check verifies, and it needs no JSON parser to do it.",
-  "artefact_committed_at": "2e3314a0c8891f36b785db69041554434f1ac05a",
+  "artefact_committed_at": "296786473668823e860e273b55f16f1d2c47ddf0",
   "_artefact_committed_at_note": "The simulation-repo commit these bytes come from -- the last commit to touch that path. The cross-repo half compares `git show <this>:<path>` against file_sha256.",
-  "emitted_at_commit": "repo@31444c6b5e3bc2406ee9302ca9b98f286a2eaa46",
+  "emitted_at_commit": "repo@c62347c5ec6d9200f96153f4c5f37560cc11129e",
   "_emitted_at_commit_note": "provenance.commit: the tree state tools/emit_schema.py read. Distinct from artefact_committed_at, which is where the emitted bytes came to rest.",
   "declared_content_digest_sha256": "d5f9a545655d0c945c46f358bdead75c90b71cab6f6f6c01c5dcd77b3aee8941",
   "_declared_content_digest_note": "The artefact's own claim about its canonical content, which excludes `since`. Recorded, not verified here: only the emitter can recompute it, and faking that check client-side would be a second implementation of the canonicalisation rule.",

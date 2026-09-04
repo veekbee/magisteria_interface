@@ -9,11 +9,7 @@
   "version": {
     "major": 2,
     "minor": 0,
-    "advanced_major_because": [
-      "row removed or renamed: node.aft.population",
-      "row removed or renamed: node.wetland_extent",
-      "taxonomy axis dropped: aft"
-    ],
+    "advanced_major_because": [],
     "advanced_minor_because": []
   },
   "version_rule": {
@@ -29,8 +25,8 @@
   "provenance": {
     "generated_by": "tools/emit_schema.py",
     "generated_from": "sim/registry.py",
-    "generated_at_utc": "2026-09-03T03:57:20Z",
-    "commit": "repo@31444c6b5e3bc2406ee9302ca9b98f286a2eaa46",
+    "generated_at_utc": "2026-09-03T09:12:59Z",
+    "commit": "repo@c62347c5ec6d9200f96153f4c5f37560cc11129e",
     "dirty": false
   },
   "envelope": {
@@ -41,7 +37,7 @@
         "fine"
       ]
     },
-    "wire_rung_domain_note": "Declared for value_kind=\"field\" only. No domain is declared for \"subject\": decision 871's subject half is unauthored and the registry refuses it (\u00a724 gap 153). A client meeting a value_kind its envelope version does not know skips the row as it would an unknown name.",
+    "wire_rung_domain_note": "Declared for value_kind=\"field\" only. The subject half is NOT unauthored -- decisions 903 and 904 rule it the two-valued gate (\"internal\", \"percept\"), a gate and not a ladder over attribute precisions -- but this envelope does not carry that key yet and the registry still refuses a subject row (\u00a724 gap 153, \u00a725 backlog 174). This note read \"decision 871's subject half is unauthored and the registry refuses it\" through v2.0; the first half stopped being true before that version was published. A client meeting a value_kind its envelope version does not know skips the row as it would an unknown name, so the subject domain still arrives as an addition and moves no carried content.",
     "taxonomies": {
       "pft": [
         "life_form",
@@ -88,7 +84,7 @@
       "why": "absence semantics are one envelope sentence, never per-row data: within a major version, a name the artefact does not carry defaults to zero (\u00a720.4.2, bounded by the version pair)"
     },
     "subject_wire_rung_vocabulary": {
-      "why": "decision 871's subject half is unauthored and the registry refuses it -- \u00a724 gap 153, the perception track's. A contract implying one would assert what no section has decided."
+      "why": "\u00a717.8.2's rung 1 is a set of attributes whose precisions \u00a717.8.4 computes per (observer, subject, attribute) and \u00a717.8.1 forbids authoring, so there is no subject PRECISION vocabulary to carry at any version (decisions 903, 904). What IS authored is the gate (\"internal\", \"percept\"), which is a domain rather than a vocabulary; this entry excludes the vocabulary only. Read \"decision 871's subject half is unauthored and the registry refuses it\" through v2.0, which 903 and 904 had already answered (\u00a723.854, \u00a724 gap 153)."
     }
   },
   "rows": [
