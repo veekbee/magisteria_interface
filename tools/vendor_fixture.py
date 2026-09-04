@@ -17,6 +17,12 @@ What the client gets is the full manifest MINUS three keys:
 plus `_what` and `_refused_rows`, which the client reads and the full manifest
 carries per-window instead.
 
+**Every refusal happens before the first write.** This tool once validated the
+carried set, wrote both files, and only then reached for a manifest key that
+was not there -- leaving the working tree half-vendored, with a client manifest
+derived from an upstream the client cannot use and a PIN still describing the
+old one. A tool that refuses after writing has not refused.
+
 **The refusal this tool exists for.** The fixture and the contract are vendored
 separately and nothing compared them. Contract v2.0 removed two carried rows,
 and a fixture built before it would still have shipped nine rows against an
@@ -41,6 +47,17 @@ DEST = ROOT / "assets" / "fixture"
 
 #: Keys the client does not get, each for its own reason -- see the header.
 NOT_VENDORED = ("artefact", "payload", "flow_precision")
+
+#: Keys the client cannot run without. `client_form` carries the display
+#: encoding: the bin's filename and every row's realised lo/hi. Without it
+#: `FixtureLoader` has no bin path and no rows, so the fixture does not load at
+#: all and the viewer falls back to bare terrain -- which looks like a client
+#: bug and is a build that was emitted without `--client`.
+REQUIRED = {
+    "client_form": ("the display encoding: the bin's filename and every row's realised lo/hi. "
+                    "The fixture was almost certainly built without `--client`; rebuild it with "
+                    "that flag rather than vendoring a manifest the client cannot load."),
+}
 
 
 def sha256(p: Path) -> str:
@@ -80,6 +97,16 @@ def main(argv=None) -> int:
         print(f"no fixture_client.bin in {a.src} -- build with --client",
               file=sys.stderr)
         return 2
+
+    missing = [(k, why) for k, why in REQUIRED.items() if k not in full]
+    if missing:
+        print("REFUSED: the upstream manifest is missing what the client needs.", file=sys.stderr)
+        for k, why in missing:
+            print(f"  {k} -- {why}", file=sys.stderr)
+        print(f"  in {a.src / 'fixture_v1.json'}, which carries: "
+              f"{', '.join(sorted(full))}", file=sys.stderr)
+        print("  Nothing was written.", file=sys.stderr)
+        return 1
 
     rows, version = contract_rows()
     carried = set(full["carried_set"]["names"])

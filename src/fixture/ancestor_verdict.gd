@@ -25,22 +25,33 @@ extends RefCounted
 ##     "run": {
 ##       "base_commit": "6421064...",
 ##       "acceptance": {
-##         "scored_at_commit": "897285d...",
-##         "scored_on_run": "m0-instrumented-001",
+##         "scored_at_commit": "5317027...",
+##         "scored_run_dir": "runs/m0-instrumented-001",
 ##         "passed": 7, "failed": 5, "not_evaluable": 0,
 ##         "failed_criteria": [{"id": 1, "name": "...", "renders_as": "..."}],
 ##         "equivalence": {                     // only when the two differ
 ##           "to_commit": "6421064...",
-##           "to_run": "millennium-001",
-##           "method": "M0 purity gate, recorders-on against recorders-off",
-##           "ticks": 3650,
-##           "state_arrays_identical": 33,
-##           "state_arrays_compared": 33,
 ##           "fields_compared": 18, "fields_matching": 18,
 ##           "fields_excluded": [{"field": "outlet_q", "why": "a deliberate gauge change"}]
 ##         }
 ##       }
 ##     }
+##
+## `ticks`, `state_arrays_identical` and `to_run` are read when present and are
+## not required: they enlarge the proof rather than constitute it. The three
+## fields that DO constitute it are `to_commit` and the two field counts.
+##
+## `scored_at_commit` IS THE RUN'S STAMP, not the commit the score artefact came
+## to rest at. Only a run stamp is comparable to `run.base_commit`, which is the
+## other side of every comparison here; a score-artefact commit would be
+## compared against a run stamp and would read as stale forever. This header
+## carried the wrong one of the two until the first real verdict was emitted.
+##
+## `scored_run_dir` and `scored_on_run` are both accepted, because this header
+## declared the second and the emitter wrote the first, and refusing a proof
+## that checks out over the name of a label neither side reads would be the
+## wrong place to be strict. Named here so the two can converge rather than
+## drift quietly.
 ##
 ## `failed_criteria` may be a list of plain ids; the names are what make the
 ## banner say something, and their absence is reported rather than filled in.
@@ -97,7 +108,7 @@ static func read_from(manifest: Dictionary) -> AncestorVerdict:
     v.failed = int(acc.get("failed", -1))
     v.not_evaluable = int(acc.get("not_evaluable", -1))
     v.scored_at_commit = str(acc.get("scored_at_commit", ""))
-    v.scored_on_run = str(acc.get("scored_on_run", ""))
+    v.scored_on_run = str(acc.get("scored_run_dir", acc.get("scored_on_run", "")))
     v.failed_criteria = acc.get("failed_criteria", [])
     if typeof(acc.get("equivalence", null)) == TYPE_DICTIONARY:
         v.equivalence = acc["equivalence"]

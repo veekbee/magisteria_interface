@@ -2458,8 +2458,8 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     check(none.passed < 0 and none.failed < 0,
             "an absent verdict supplied counts, which is the one thing it must never do")
 
-    var scored := AncestorVerdict.read_from({"run": {"base_commit": "897285dabcdef",
-            "acceptance": {"scored_at_commit": "897285d", "passed": 7, "failed": 5,
+    var scored := AncestorVerdict.read_from({"run": {"base_commit": "5317027abcdef",
+            "acceptance": {"scored_at_commit": "5317027", "passed": 7, "failed": 5,
                            "not_evaluable": 0,
                            "failed_criteria": [{"id": 1, "name": "snow",
                                                 "renders_as": "a near-bare snowpack"}]}}})
@@ -2474,8 +2474,8 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     # An abbreviated hash against a full one is the SAME commit. Reporting that
     # as stale would put the word on a correct verdict and teach a reader to
     # ignore it.
-    check(AncestorVerdict.read_from({"run": {"base_commit": "897285dabcdef",
-            "acceptance": {"scored_at_commit": "897285dabcdef0000", "passed": 1,
+    check(AncestorVerdict.read_from({"run": {"base_commit": "5317027abcdef",
+            "acceptance": {"scored_at_commit": "5317027abcdef0000", "passed": 1,
                            "failed": 0}}}).state == AncestorVerdict.SCORED,
             "a full hash and its abbreviation read as two different commits")
 
@@ -2491,7 +2491,7 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     # `millennium-001` at 6421064. Commit equality calls that stale. The
     # trajectory was proven identical field by field, so it is not.
     var proven := {"run": {"base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
-            "acceptance": {"scored_at_commit": "897285d", "scored_on_run": "m0-instrumented-001",
+            "acceptance": {"scored_at_commit": "5317027", "scored_run_dir": "m0-instrumented-001",
                     "passed": 7, "failed": 5, "not_evaluable": 0,
                     "equivalence": {"to_commit": "6421064", "to_run": "millennium-001",
                             "method": "M0 purity gate", "ticks": 3650,
@@ -2511,6 +2511,14 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     check(eq.excluded_fields().size() == 1
             and eq.excluded_fields()[0].contains("gauge"),
             "the excluded field's reason did not survive the read")
+    # The emitter writes `scored_run_dir`; this header declared `scored_on_run`.
+    # Both are read, so a proof that checks out is not refused over the name of
+    # a label neither side interprets.
+    var alias := proven.duplicate(true)
+    alias["run"]["acceptance"].erase("scored_run_dir")
+    alias["run"]["acceptance"]["scored_on_run"] = "m0-instrumented-001"
+    check(AncestorVerdict.read_from(alias).headline().contains("m0-instrumented-001"),
+            "the older of the two run-name keys stopped being read")
 
     # THE PROOF IS CHECKED, NOT BELIEVED, and each of these is a way a claim
     # could be true-looking and wrong. All of them fall back to STALE, which is
@@ -2533,7 +2541,7 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     for label in broken:
         var bad := AncestorVerdict.read_from({"run": {
                 "base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
-                "acceptance": {"scored_at_commit": "897285d", "passed": 7, "failed": 5,
+                "acceptance": {"scored_at_commit": "5317027", "passed": 7, "failed": 5,
                         "equivalence": broken[label]}}})
         check(bad.state == AncestorVerdict.STALE,
                 "an equivalence proof that %s read as %s rather than stale" % [label, bad.state])
