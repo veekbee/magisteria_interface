@@ -2486,6 +2486,84 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     check(stale.headline().contains("DOES NOT MATCH"),
             "a stale verdict reads as a passing one: %s" % stale.headline())
 
+    # THE FOURTH STATE, on the numbers it was written for: the verdict was
+    # scored on `m0-instrumented-001` at 897285d and this fixture was cut from
+    # `millennium-001` at 6421064. Commit equality calls that stale. The
+    # trajectory was proven identical field by field, so it is not.
+    var proven := {"run": {"base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
+            "acceptance": {"scored_at_commit": "897285d", "scored_on_run": "m0-instrumented-001",
+                    "passed": 7, "failed": 5, "not_evaluable": 0,
+                    "equivalence": {"to_commit": "6421064", "to_run": "millennium-001",
+                            "method": "M0 purity gate", "ticks": 3650,
+                            "state_arrays_identical": 33, "fields_compared": 18,
+                            "fields_matching": 18,
+                            "fields_excluded": [
+                                    {"field": "outlet_q", "why": "a deliberate gauge change"}]}}}}
+    var eq := AncestorVerdict.read_from(proven)
+    check(eq.state == AncestorVerdict.EQUIVALENT,
+            "a verdict scored on a run proven identical to this fixture read as %s" % eq.state)
+    check(eq.headline().contains("m0-instrumented-001"),
+            "the headline hides which run was actually scored: %s" % eq.headline())
+    check(eq.headline().contains("18/18") and eq.headline().contains("3650 ticks"),
+            "the headline carries the claim without the proof: %s" % eq.headline())
+    check(eq.headline().contains("1 field excluded"),
+            "the proof excluded a field and the banner did not say so: %s" % eq.headline())
+    check(eq.excluded_fields().size() == 1
+            and eq.excluded_fields()[0].contains("gauge"),
+            "the excluded field's reason did not survive the read")
+
+    # THE PROOF IS CHECKED, NOT BELIEVED, and each of these is a way a claim
+    # could be true-looking and wrong. All of them fall back to STALE, which is
+    # the conservative reading, and say which test failed rather than which
+    # word they landed on.
+    var broken := {
+        "proves equivalence to a third commit": {"to_commit": "deadbee",
+                "fields_compared": 18, "fields_matching": 18},
+        "compares nothing": {"to_commit": "6421064",
+                "fields_compared": 0, "fields_matching": 0},
+        "matches most rather than all": {"to_commit": "6421064",
+                "fields_compared": 18, "fields_matching": 17},
+        "steps around a field without saying why": {"to_commit": "6421064",
+                "fields_compared": 18, "fields_matching": 18,
+                "fields_excluded": [{"field": "outlet_q"}]},
+        "excludes something unnamed": {"to_commit": "6421064",
+                "fields_compared": 18, "fields_matching": 18,
+                "fields_excluded": ["outlet_q"]},
+    }
+    for label in broken:
+        var bad := AncestorVerdict.read_from({"run": {
+                "base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
+                "acceptance": {"scored_at_commit": "897285d", "passed": 7, "failed": 5,
+                        "equivalence": broken[label]}}})
+        check(bad.state == AncestorVerdict.STALE,
+                "an equivalence proof that %s read as %s rather than stale" % [label, bad.state])
+        check(bad.headline().contains("does not check out"),
+                "a broken proof reads like a missing one, which is quieter than it should be: %s"
+                % bad.headline())
+    # A missing proof and a broken one must not read alike either: one is a
+    # verdict nobody connected to this fixture, the other is a connection that
+    # failed, and the second is the more alarming of the two.
+    check(not stale.headline().contains("does not check out"),
+            "a verdict with no equivalence claim is reported as a failed one")
+
+    # THE BANNER ITSELF, for each state. Headless cannot see the colour, and it
+    # can see the text -- which is the half that carries the meaning, and the
+    # half that has four branches now rather than three.
+    var banner := VerdictBanner.new()
+    banner.setup()
+    for v in [none, scored, eq, stale]:
+        banner.show_verdict(v)
+        check(banner._headline.text == v.headline(),
+                "the banner did not render the %s headline" % v.state)
+        check(banner._headline.text.length() > 20,
+                "the %s banner is nearly empty, which reads as nothing to declare" % v.state)
+    banner.show_verdict(eq)
+    check(banner._fails.visible and banner._fails.text.contains("excluded"),
+            "the banner drops the equivalence proof's exclusions: %s" % banner._fails.text)
+    banner.show_verdict(none)
+    check(not banner._fails.visible, "an absent verdict shows an empty second line")
+    banner.free()
+
     # The fixture this repo actually ships, so the state above is not
     # hypothetical and the day it changes, this line says so.
     var shipped := AncestorVerdict.read_from(

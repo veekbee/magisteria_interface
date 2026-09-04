@@ -30,13 +30,20 @@ func setup() -> void:
 func show_verdict(v: AncestorVerdict) -> void:
     _headline.text = v.headline()
     match v.state:
-        AncestorVerdict.SCORED:
+        # A proven-equivalent verdict is a VALID verdict of this basin, so it
+        # gets the colour of one. What separates it from SCORED is the sentence,
+        # which names the other run and the size of the proof -- a second amber
+        # would say "unlike the one beside it" and stop there.
+        AncestorVerdict.SCORED, AncestorVerdict.EQUIVALENT:
             _headline.add_theme_color_override("font_color", Color(0.95, 0.78, 0.30))
         AncestorVerdict.STALE:
             _headline.add_theme_color_override("font_color", Color(0.97, 0.45, 0.35))
         _:
             _headline.add_theme_color_override("font_color", Color(0.70, 0.70, 0.74))
     var lines := v.named_fails()
+    var excluded := v.excluded_fields()
+    if not excluded.is_empty():
+        lines.append("equivalence excluded " + "; ".join(excluded))
     _fails.text = "" if lines.is_empty() else "fails: " + ", ".join(lines)
     _fails.visible = not lines.is_empty()
 

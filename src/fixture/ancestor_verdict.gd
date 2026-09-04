@@ -19,30 +19,54 @@ extends RefCounted
 ## field, and when the field is not there it says the fixture carries no
 ## verdict rather than supplying one.
 ##
-## THE FIELD IS NOT ON THE WIRE YET. Today's manifests carry `run` with `dir`,
-## `base_commit`, `master_seed`, `baseline_period` and `years`, and no verdict
-## of any kind, so every fixture in this repo reads as ABSENT. The shape below
-## is what this reader accepts, stated here so that the side which emits it has
-## something to match rather than something to guess:
+## THE SHAPE THIS READER ACCEPTS, stated here so that the side which emits it
+## has something to match rather than something to guess:
 ##
 ##     "run": {
-##       "base_commit": "...",
+##       "base_commit": "6421064...",
 ##       "acceptance": {
 ##         "scored_at_commit": "897285d...",
+##         "scored_on_run": "m0-instrumented-001",
 ##         "passed": 7, "failed": 5, "not_evaluable": 0,
-##         "failed_criteria": [{"id": 1, "name": "...", "renders_as": "..."}]
+##         "failed_criteria": [{"id": 1, "name": "...", "renders_as": "..."}],
+##         "equivalence": {                     // only when the two differ
+##           "to_commit": "6421064...",
+##           "to_run": "millennium-001",
+##           "method": "M0 purity gate, recorders-on against recorders-off",
+##           "ticks": 3650,
+##           "state_arrays_identical": 33,
+##           "state_arrays_compared": 33,
+##           "fields_compared": 18, "fields_matching": 18,
+##           "fields_excluded": [{"field": "outlet_q", "why": "a deliberate gauge change"}]
+##         }
 ##       }
 ##     }
 ##
 ## `failed_criteria` may be a list of plain ids; the names are what make the
 ## banner say something, and their absence is reported rather than filled in.
+##
+## WHY THERE IS A FOURTH STATE, AND WHY IT IS NOT A FLAG. Commit equality was
+## only ever a PROXY for the question that matters, which is whether the
+## verdict describes the trajectory being drawn. The first verdict this reader
+## will meet breaks the proxy honestly: it was scored on a different run at a
+## different commit, and that run's trajectory was proven identical to this
+## fixture's field by field. Three states cannot say that -- SCORED would hide
+## that a different run was scored, STALE would throw away a proof -- so there
+## is a fourth, and it is keyed on the PROOF rather than on a claim.
+##
+## `equivalence` is therefore checked, not believed. A `same_trajectory: true`
+## would be a field any future fixture could assert its way past; a comparison
+## with a denominator cannot be. If the block is present and does not check
+## out, the state is STALE and the banner says the proof failed -- which is
+## louder than a plain STALE, because a broken proof is worse than none.
 
-## What the manifest turned out to carry. Three states, and the middle one is
-## the whole reason this class exists: a verdict scored against a DIFFERENT
-## commit than the fixture was cut at is not a verdict of this fixture, and it
-## is the failure mode that a bare pass/fail count cannot show.
+## What the manifest turned out to carry. The middle two are the whole reason
+## this class exists: a verdict scored against a different run is not
+## automatically a verdict of this fixture, and it is not automatically NOT one
+## either.
 const ABSENT := "absent"
 const STALE := "stale"
+const EQUIVALENT := "equivalent"
 const SCORED := "scored"
 
 var state: String = ABSENT
@@ -52,8 +76,10 @@ var passed: int = -1
 var failed: int = -1
 var not_evaluable: int = -1
 var scored_at_commit: String = ""
+var scored_on_run: String = ""
 var base_commit: String = ""
 var failed_criteria: Array = []
+var equivalence: Dictionary = {}
 
 
 static func read_from(manifest: Dictionary) -> AncestorVerdict:
@@ -71,7 +97,10 @@ static func read_from(manifest: Dictionary) -> AncestorVerdict:
     v.failed = int(acc.get("failed", -1))
     v.not_evaluable = int(acc.get("not_evaluable", -1))
     v.scored_at_commit = str(acc.get("scored_at_commit", ""))
+    v.scored_on_run = str(acc.get("scored_on_run", ""))
     v.failed_criteria = acc.get("failed_criteria", [])
+    if typeof(acc.get("equivalence", null)) == TYPE_DICTIONARY:
+        v.equivalence = acc["equivalence"]
     if v.passed < 0 or v.failed < 0:
         v.state = ABSENT
         v.why = "an acceptance block is present and carries no pass/fail count"
@@ -79,14 +108,54 @@ static func read_from(manifest: Dictionary) -> AncestorVerdict:
     # Prefix comparison, because one side abbreviates and the other does not.
     # Equal-length-only would report every short-hashed verdict as stale, which
     # trains a reader to ignore the word.
-    if not _same_commit(v.scored_at_commit, v.base_commit):
-        v.state = STALE
-        v.why = ("scored at %s, but this fixture was cut at %s: the verdict is of a different "
-                + "run and does not describe what is drawn") % [
-                _short(v.scored_at_commit), _short(v.base_commit)]
+    if _same_commit(v.scored_at_commit, v.base_commit):
+        v.state = SCORED
         return v
-    v.state = SCORED
+    if v.equivalence.is_empty():
+        v.state = STALE
+        v.why = ("scored at %s, and this fixture was cut at %s with nothing offered to connect "
+                + "them: the verdict is of a different run and does not describe what is drawn"
+                ) % [_short(v.scored_at_commit), _short(v.base_commit)]
+        return v
+    var checked := v._check_equivalence()
+    if checked != "":
+        v.state = STALE
+        v.why = ("scored at %s against a fixture cut at %s, with an equivalence claim that does "
+                + "not check out: %s") % [_short(v.scored_at_commit), _short(v.base_commit),
+                                          checked]
+        return v
+    v.state = EQUIVALENT
     return v
+
+
+## Does the offered proof prove what it claims? Returns "" when it does, and
+## what failed when it does not.
+##
+## THE DENOMINATORS ARE THE POINT. A count of matching fields with no count of
+## compared fields is a number that gets larger as the comparison gets weaker.
+## An excluded field with no reason is a field the proof stepped around.
+func _check_equivalence() -> String:
+    var to_commit := str(equivalence.get("to_commit", ""))
+    if not _same_commit(to_commit, base_commit):
+        return ("it proves equivalence to %s, and this fixture was cut at %s"
+                % [_short(to_commit), _short(base_commit)])
+    var compared := int(equivalence.get("fields_compared", 0))
+    var matching := int(equivalence.get("fields_matching", -1))
+    if compared <= 0:
+        return "it compares no fields at all"
+    if matching != compared:
+        return "%d of %d compared fields matched, which is not identity" % [matching, compared]
+    var excluded = equivalence.get("fields_excluded", [])
+    if typeof(excluded) != TYPE_ARRAY:
+        return "its excluded-field list is not a list"
+    for e in excluded:
+        if typeof(e) != TYPE_DICTIONARY:
+            return "a field was excluded from the comparison without a reason"
+        var d: Dictionary = e
+        if str(d.get("field", "")).is_empty() or str(d.get("why", "")).is_empty():
+            return ("a field was excluded from the comparison without naming itself or its "
+                    + "reason, so the proof cannot be read")
+    return ""
 
 
 static func _same_commit(a: String, b: String) -> bool:
@@ -100,19 +169,47 @@ static func _short(c: String) -> String:
     return "(none)" if c.is_empty() else c.substr(0, mini(12, c.length()))
 
 
+func _score() -> String:
+    return "%d pass / %d fail%s" % [passed, failed,
+            "" if not_evaluable <= 0 else " / %d not evaluable" % not_evaluable]
+
+
 ## The one line a screenshot has to carry. Never empty: an absent verdict is a
 ## sentence, because a blank space beside a picture reads as nothing to declare.
 func headline() -> String:
     match state:
         SCORED:
-            return "ancestor trace — acceptance %d pass / %d fail%s, scored at %s" % [
-                    passed, failed,
-                    "" if not_evaluable <= 0 else " / %d not evaluable" % not_evaluable,
-                    _short(scored_at_commit)]
+            return "ancestor trace — acceptance %s, scored at %s" % [
+                    _score(), _short(scored_at_commit)]
+        EQUIVALENT:
+            # The different run is named rather than smoothed over. A reader who
+            # is told only "7 pass / 5 fail" cannot ask the next question.
+            return ("ancestor trace — acceptance %s, scored at %s on %s: a different run, "
+                    + "proven identical to this one (%s)") % [
+                    _score(), _short(scored_at_commit),
+                    "another run" if scored_on_run.is_empty() else scored_on_run, _proof()]
         STALE:
             return "ancestor trace — VERDICT DOES NOT MATCH THIS FIXTURE: " + why
         _:
             return "ancestor trace — NO ACCEPTANCE VERDICT: " + why
+
+
+## The proof in one clause, including what it left out. An equivalence that
+## excluded fields is weaker than one that excluded none, and the banner is the
+## wrong place to be tactful about which this is.
+func _proof() -> String:
+    var parts := PackedStringArray()
+    parts.append("%d/%d fields" % [int(equivalence.get("fields_matching", 0)),
+                                   int(equivalence.get("fields_compared", 0))])
+    if int(equivalence.get("state_arrays_identical", 0)) > 0:
+        parts.append("%d state arrays" % int(equivalence.get("state_arrays_identical", 0)))
+    if int(equivalence.get("ticks", 0)) > 0:
+        parts.append("%d ticks" % int(equivalence.get("ticks", 0)))
+    var excluded: Array = equivalence.get("fields_excluded", [])
+    if not excluded.is_empty():
+        parts.append("%d field%s excluded" % [excluded.size(),
+                "" if excluded.size() == 1 else "s"])
+    return ", ".join(parts)
 
 
 ## The named fails, which are the half that says how a failure looks on screen.
@@ -130,4 +227,15 @@ func named_fails() -> PackedStringArray:
         else:
             out.append("criterion %s — unnamed in the manifest, so how it renders is not said"
                     % str(c))
+    return out
+
+
+## What the equivalence proof left out, for a reader who wants the caveat
+## rather than the count of it.
+func excluded_fields() -> PackedStringArray:
+    var out := PackedStringArray()
+    for e in equivalence.get("fields_excluded", []):
+        if typeof(e) == TYPE_DICTIONARY:
+            out.append("%s — %s" % [str((e as Dictionary).get("field", "?")),
+                                    str((e as Dictionary).get("why", "?"))])
     return out
