@@ -61,6 +61,31 @@ plants — until the far-field tint aggregated the same rows and reported **ever
 canopy**. The figures in `measurements/scatter_cost.json` and `scatter_bands.json` predate the
 correction; their headers say so.
 
+## Crown from cover: measured, and left alone
+
+The cover correction made the crown mapping worth a second look, because crown reads cover and
+count is cover ÷ crown area — so cover enters the count twice. The first reading of that was that
+count goes as 1/cover and blows up on sparse ground. **That reading is wrong**: crown is a lerp from
+a non-zero minimum, so as cover falls crown tends to `crown_m.min` rather than to zero, and count
+tends to zero with it. Checked at every cell of `deepest_winter` day 22: `count × crown_area` comes
+back to `cover` exactly, so the identity the derivation is built on holds everywhere.
+
+What is true is that individuals per km² fall steeply as cover rises, because big plants are few:
+
+| crown reads | sparse-to-dense density ratio | basin implied |
+|---|---:|---:|
+| **cover** (today) | 296× | 4.1 × 10¹² |
+| the composition share | 204× | 3.0 × 10¹² |
+| biomass per covered area (allometric with height) | 85× | 1.4 × 10¹² |
+
+Three defensible mappings inside a factor of three of each other, and none of them pathological — a
+square kilometre of 6%-cover scrub really does hold more individuals than a square kilometre of
+80%-cover forest. So this is a **choice, not a defect**, and it is left where M5 put it. What the
+correction did change is the input's scale: crown used to read the composition share (mean 0.25) and
+now reads ground cover (mean 0.13), so crowns sit lower in their declared ranges than they did.
+Re-scaling to compensate would be inventing a normalisation, and inventing one is what the coarse
+ranges exist to avoid.
+
 ## The convention an instance transform relies on
 
 Each mesh is normalised to **one metre tall and one metre across, standing on the origin plane**, so
