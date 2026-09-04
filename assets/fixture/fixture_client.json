@@ -7,13 +7,70 @@
   "\u00a723.802"
  ],
  "generated_by": "tools/build_fixture.py",
- "generated_at_utc": "2026-09-03T04:24:30Z",
+ "generated_at_utc": "2026-09-04T23:12:25Z",
  "run": {
   "dir": "millennium-001",
   "base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
   "master_seed": 20260820,
   "baseline_period": "1905-1922",
-  "years": 1000
+  "years": 1000,
+  "acceptance": {
+   "scored_at_commit": "5317027b6543de846a4c53745996f0ed70d61119",
+   "scored_run_dir": "runs/m0-instrumented-001",
+   "passed": 7,
+   "failed": 5,
+   "not_evaluable": 0,
+   "failed_criteria": [
+    {
+     "id": "1",
+     "name": "seasonal snowpack",
+     "renders_as": "a near-bare snowpack overlay -- area-weighted peak SWE 17.4 mm against a 229-330 mm reference, and no peaks at all June-September"
+    },
+    {
+     "id": "3",
+     "name": "melt-led discharge peak",
+     "renders_as": "melt timing wrong at the outlet: it peaks in early winter, and only 43.7% of years peak in the melt season"
+    },
+    {
+     "id": "6",
+     "name": "two-way equilibrium (stationarity)",
+     "renders_as": "the basin has not settled -- area-weighted cover runs 0.909 to 0.521 across the run and is still drifting at the end"
+    },
+    {
+     "id": "7",
+     "name": "surface-fire survival contrast",
+     "renders_as": "an instrument shape rather than a mechanism failure: the criterion's 1e-3 floor is unreachable against a hazard whose per-tick maximum is ~5.5e-05, so the fire regime on screen is not the thing that failed"
+    },
+    {
+     "id": "8",
+     "name": "no quantity runs to a bound",
+     "renders_as": "stem density pinned at its floor -- occupancy 0.9994, so a vegetation field drawn per-stem is showing an absorbing state, not a stand"
+    }
+   ],
+   "equivalence": {
+    "to_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
+    "fields_compared": 18,
+    "fields_matching": 18,
+    "fields_excluded": [
+     {
+      "field": "outlet_min_daily_q_m3_s",
+      "why": "the criterion-2 gauge moved from the legacy playa terminal to the maximum-contributing-area outlet (Morelos). A deliberate instrument change, not a trajectory difference -- the same water, read at a different node"
+     },
+     {
+      "field": "outlet_peak_q_m3_s",
+      "why": "the criterion-2 gauge moved from the legacy playa terminal to the maximum-contributing-area outlet (Morelos). A deliberate instrument change, not a trajectory difference -- the same water, read at a different node"
+     },
+     {
+      "field": "outlet_peak_doy",
+      "why": "the criterion-2 gauge moved from the legacy playa terminal to the maximum-contributing-area outlet (Morelos). A deliberate instrument change, not a trajectory difference -- the same water, read at a different node"
+     }
+    ],
+    "state_arrays_bit_identical": true,
+    "state_arrays_compared": 33,
+    "ticks": 3650,
+    "method": "the model run twice, every recorder attached and none, requiring BIT-identical state -- not allclose, because a recorder that moved one cell's last bit still moved the run"
+   }
+  }
  },
  "carried_set": {
   "n": 8,
@@ -23955,7 +24012,7 @@
     "ckpt": "ckpt_y0750.npz",
     "ckpt_year": 750,
     "ticks_replayed": 1336,
-    "replay_seconds": 37.0,
+    "replay_seconds": 37.4,
     "first_tick": 274997
    },
    "days": 90,
@@ -24105,7 +24162,7 @@
     "ckpt": "ckpt_y0400.npz",
     "ckpt_year": 400,
     "ticks_replayed": 1915,
-    "replay_seconds": 55.1,
+    "replay_seconds": 56.2,
     "first_tick": 147826
    },
    "days": 90,
