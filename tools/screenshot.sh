@@ -23,6 +23,7 @@
 #   --hide LIST     ui,terrain,flowlines,vegetation,contours
 #   --only LIST     the same names, kept instead of removed (wins over --hide)
 #   --no-field      leave the terrain's own albedo on, so relief is the subject
+#   --natural       naturalistic view: the far-field vegetation tint, not the ramp
 #   --sun DEG       aim the hillshade; a lit surface changes and a texture does not
 #   --compare PNG   diff the last shot against a frame from an earlier run
 #   --backdrop black  clear to black, so the sky drops out of the measurements

@@ -35,6 +35,7 @@ const PROBE_REFINEMENTS := 24
 const SCATTER_HORIZON_M := 1500.0
 
 const VEGETATION_SHADER := "res://src/fixture/vegetation.gdshader"
+const TERRAIN_SHADER := "res://src/terrain/terrain.gdshader"
 
 ## The terrain with no field on it. It is also what a nodata texel is painted
 ## with, so "no measurement here" reads as bare ground rather than as a colour
@@ -77,7 +78,7 @@ var residence: ResidenceLayer
 var fixture: FixtureLoader
 var overlay: FieldOverlay
 var _terrain_mi: MeshInstance3D
-var _terrain_mat: StandardMaterial3D
+var _terrain_mat: ShaderMaterial
 var _flow_mi: MeshInstance3D = null
 var _flow_display: FlowDisplay = null
 var field_report: Dictionary = {}
@@ -94,6 +95,13 @@ var scatter: VegetationScatter = null
 var _scatter_nodes: Dictionary = {}      ## life_form -> MultiMeshInstance3D
 var scatter_centre_mesh := Vector3.ZERO
 var has_scatter := false
+
+## Seam candidate #1: the far field as a per-cell colour and coverage rather
+## than as instances. Off by default -- data view is what M2 built and this
+## brief does not touch it.
+var tint: VegetationTint = null
+var naturalistic := false
+var tint_report: Dictionary = {}
 
 var contour_sets: Dictionary = {}        ## window -> ContourSet
 var contour_drape: ContourDrape = null
@@ -120,16 +128,17 @@ func build() -> Dictionary:
     var mi := MeshInstance3D.new()
     mi.name = "Terrain"
     mi.mesh = mesh
-    var mat := StandardMaterial3D.new()
-    mat.albedo_color = BARE_ALBEDO
-    mat.roughness = 1.0
-    # NO SPECULAR. A hillshade is a diffuse relief model; a specular term adds
-    # WHITE in proportion to nothing in the data, and white is the one thing
-    # this ramp cannot afford -- viridis was chosen because its lightness rises
-    # monotonically, and a highlight washing a colour toward white moves it off
-    # the ramp entirely. Measured: 43.5% of the overlay's pixels lay on the
-    # declared ramp with the default specular, and 99.8% with it off.
-    mat.metallic_specular = 0.0
+    # A SHADER RATHER THAN A StandardMaterial3D, because the naturalistic view
+    # needs a coverage MASK and a standard material can only blend an alpha.
+    # Every ruling the visual audit made about the old material is reproduced
+    # in it -- roughness 1, no specular, no transparency, the field texture
+    # straight into albedo -- and the data view was photographed either side of
+    # the swap to check that it did not move.
+    var mat := ShaderMaterial.new()
+    mat.shader = load(TERRAIN_SHADER)
+    mat.set_shader_parameter("bare", BARE_ALBEDO)
+    mat.set_shader_parameter("has_field", false)
+    mat.set_shader_parameter("naturalistic", false)
     mi.material_override = mat
     add_child(mi)
     _terrain_mi = mi
@@ -237,16 +246,57 @@ func show_field(window: String, row: String, day: int, group: int = 0) -> bool:
     var vals := fixture.day_values(window, row, day, group)
     if vals.is_empty():
         return false
-    _terrain_mat.albedo_texture = overlay.texture_for(vals, b.x, b.y)
-    _terrain_mat.albedo_color = Color.WHITE
+    _terrain_mat.set_shader_parameter("field", overlay.texture_for(vals, b.x, b.y))
+    _terrain_mat.set_shader_parameter("has_field", true)
     shown = {"window": window, "row": row, "day": day, "group": group}
+    # PER DAY-STEP, NOT PER FRAME. The 128,000 instances/second build wall does
+    # not apply to a texture, and the cost of the rebuild is reported rather
+    # than assumed -- it is one pass over the cells and one over the residence
+    # raster, and the second is the expensive half.
+    if naturalistic:
+        _rebuild_tint(window, day)
     return true
+
+
+## Which view the terrain is in. Data view is the ramp over a carried row;
+## naturalistic view is the stand. Neither decorates the other.
+func set_naturalistic(on: bool) -> void:
+    naturalistic = on
+    if _terrain_mat != null:
+        _terrain_mat.set_shader_parameter("naturalistic", on)
+    if on and not shown.is_empty():
+        _rebuild_tint(str(shown["window"]), int(shown["day"]))
+
+
+## The range curve the tint is attenuated by, fitted from `measure_seam`'s
+## binned oracle. `k0` of 1 and `matched` false is the constant-colour baseline.
+func set_range_curve(matched: bool, k0: float, r0: float) -> void:
+    if _terrain_mat == null:
+        return
+    _terrain_mat.set_shader_parameter("range_matched", matched)
+    _terrain_mat.set_shader_parameter("range_k0", k0)
+    _terrain_mat.set_shader_parameter("range_r0", r0)
+
+
+func _rebuild_tint(window: String, day: int) -> void:
+    if tint == null or not tint.is_bound() or overlay == null or not overlay.is_bound():
+        tint_report = {"ok": false, "why": "no tint is bound"}
+        return
+    var t0 := Time.get_ticks_usec()
+    var colours := tint.cell_colours(window, day)
+    var cells_ms := float(Time.get_ticks_usec() - t0) / 1000.0
+    if colours.is_empty():
+        tint_report = tint.report
+        return
+    _terrain_mat.set_shader_parameter("vegetation", overlay.texture_from_cells(colours))
+    tint_report = tint.report.duplicate()
+    tint_report["cells_ms"] = cells_ms
+    tint_report["rebuild_ms"] = float(Time.get_ticks_usec() - t0) / 1000.0
 
 
 func clear_field() -> void:
     if _terrain_mat:
-        _terrain_mat.albedo_texture = null
-        _terrain_mat.albedo_color = BARE_ALBEDO
+        _terrain_mat.set_shader_parameter("has_field", false)
 
 
 ## The ramp's range. `lo`/`hi` are the REALISED range the fixture quantised
@@ -391,6 +441,9 @@ func _unhandled_input(event: InputEvent) -> void:
     elif event is InputEventKey and event.pressed and not event.echo \
             and event.keycode == KEY_G:
         focus_on_scatter()
+    elif event is InputEventKey and event.pressed and not event.echo \
+            and event.keycode == KEY_V:
+        set_naturalistic(not naturalistic)
 
 
 ## M4: load whatever contour sets are vendored, and say which windows have
@@ -456,6 +509,8 @@ func bind_families() -> Dictionary:
         groups = fixture.taxon_groups(fixture.windows[0], "band.pft_fractions")
     scatter = VegetationScatter.new()
     scatter.bind(heightfield, residence, fixture, families, frame_cost, terrain)
+    tint = VegetationTint.new()
+    tint.bind(residence, fixture, families, scatter)
     return {
         "ok": true,
         "families": Array(families.life_forms()),

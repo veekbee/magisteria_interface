@@ -45,6 +45,9 @@ var have_scatter_world := false
 var hide: PackedStringArray = PackedStringArray()
 var only: PackedStringArray = PackedStringArray()
 var no_field := false
+## Seam candidate #1's view: the far field as a per-cell tint rather than as
+## instances. Off is data view, which is what M2 built.
+var natural := false
 ## Sun azimuths to photograph. More than one turns the light between shots,
 ## which is the only way to tell a LIT surface from a baked shade map: move the
 ## light, and only one of the two changes.
@@ -86,6 +89,7 @@ func _initialize() -> void:
         if o != "":
             only.append(o)
     no_field = _has("--no-field")
+    natural = _has("--natural")
     want_camera = _arg("--camera", "")
     compare_path = _arg("--compare", "")
     backdrop = _arg("--backdrop", "")
@@ -125,6 +129,8 @@ func _process(_delta: float) -> bool:
         if frames < SETTLE_FRAMES:
             return false
         _say_verdict()
+        if natural:
+            view.set_naturalistic(true)
         _choose_camera(view)
         stage = 1
         frames = 0
@@ -267,6 +273,15 @@ func _set_state(view, day: int) -> void:
             return
     else:
         scene._on_field_changed(w, r, day, 0)
+    if natural:
+        var tr: Dictionary = view.tint_report
+        if bool(tr.get("ok", false)):
+            print("tint   %d/%d cells covered, mean cover %.3f, rebuild %.0f ms (cells %.0f ms)"
+                    % [int(tr["cells_with_cover"]), int(tr["cells"]),
+                       float(tr["mean_cover_where_covered"]), float(tr.get("rebuild_ms", NAN)),
+                       float(tr.get("cells_ms", NAN))])
+        else:
+            print("tint   FAILED: %s" % str(tr.get("why", "?")))
     if not want_scatter:
         return
     # THE PLACE IS HELD CONSTANT ACROSS DAYS. Probing the screen centre again

@@ -158,16 +158,17 @@ gives. Apple M5 / `gl_compatibility` / Godot 4.7.2, windowed at 1280 × 800, vsy
 
 | | |
 |---|---:|
-| instances drawn | 120,006 (108,672 succulent, 10,947 shrub, 387 tree, 0 grass) |
-| frame p50, scatter hidden | 1.10 ms |
-| frame p50, scatter drawn | 3.83 ms |
-| **marginal, p50** | **2.74 ms** |
-| `render_cost.json` predicts | 2.14 ms |
-| ratio | **1.28×** |
+| instances drawn | 119,994 (ceiling-bound) |
+| frame p50, scatter hidden | 0.80 ms |
+| frame p50, scatter drawn | 3.70 ms |
+| **marginal, p50** | **2.90 ms** |
+| `render_cost.json` predicts | 2.13 ms |
+| ratio | **1.36×** |
 
-**The empty-stage coefficient under-predicts, consistently.** Four runs gave marginals of 2.94,
-2.83, 2.75 and 2.74 ms against the same 2.14 ms prediction — 1.37×, 1.32×, 1.28× and 1.28×,
-reproducible to 1.07× and never once below the prediction. That is a bias rather than noise, and it is the size of
+**The empty-stage coefficient under-predicts, consistently.** Five runs gave marginals of 2.94,
+2.90, 2.83, 2.75 and 2.74 ms against a ~2.14 ms prediction — 1.28× to 1.37×, reproducible to
+1.07× and never once below the prediction. (The count is ceiling-bound at ~120 k either way, so
+this row survived the cover correction below almost unchanged.) That is a bias rather than noise, and it is the size of
 the conditional on every budget sentence M5 rests on that coefficient. What it does *not* say is
 which of the differences is responsible: this scene draws through a custom shader with culling
 disabled rather than a `StandardMaterial3D`, it overdraws a terrain rather than empty space, and it
@@ -175,15 +176,21 @@ uses three MultiMesh nodes rather than one. Naming the cause needs a sweep this 
 run.
 
 **The horizon question, which is what the coefficient was wanted for.** At this place, the full
-scatter the wire implies inside a 1,500 m horizon is **28,092,359 instances — 501 ms, 15.1× the
-33.3 ms budget**. What is drawn is 0.4% of it, and the binding limit is the build ceiling rather
-than the frame budget: the budget alone would afford 1,865,599 instances at this mix.
+scatter the wire implies inside a 1,500 m horizon is **51,869,460 instances — 922 ms, 27.7× the
+33.3 ms budget**. What is drawn is 0.2% of it, and the binding limit is the build ceiling rather
+than the frame budget.
 
-**That number is a property of a place, not of a horizon.** The same measurement at the centre of
-the `largest_fire` window gives 23,791,551 instances and 426 ms — 12.8×. The implied count is the
-sum of cover and biomass over whatever cells fall inside the disc, so a horizon figure quoted
-without the place it was taken at is not reproducible. The place travels in the artefact, and
-`--at X,Y` pins a re-run to it rather than to the framing.
+**That number is a property of a place, not of a horizon** — the implied count is cover and biomass
+summed over whatever cells fall inside the disc, so a horizon figure quoted without the place it was
+taken at is not reproducible. The place travels in the artefact, and `--at X,Y` pins a re-run to it
+rather than to the framing.
+
+**And it moved by 1.8× when the cover reading was corrected** — 28,092,359 before, 51,869,460 after
+— which is the opposite direction to the one the correction sounds like it should push. Cover fell
+(a life form's ground cover is its composition share × `1 - bare_fraction`, not the share), and
+crown width is derived from cover while count is cover ÷ crown area, so cover enters the count twice
+with opposite signs and the smaller number wins. **That coupling is M5's parameter derivation and is
+not fixed here**; it is recorded because the correction is what made it visible.
 
 ### The verification had to change, and that is a finding about the benchmark's check
 
@@ -250,32 +257,35 @@ scatter** — 1.7 m real, pitched 10° down, looking north — on Apple M5 / `gl
 
 | schedule | instances | build | marginal | coverage | px per 1,000 instances |
 |---|---:|---:|---:|---:|---:|
-| today: uniform over 1,500 m, 120 k ceiling | 120,006 | 0.94 s | 2.35 ms | 20,918 px (2.0%) | 174 |
-| cut at 100 m | 113,728 | 0.90 s | 2.92 ms | 328,995 px (32.1%) | 2,893 |
-| cut at 200 m | 440,696 | 3.44 s | 12.33 ms | 436,094 px (42.6%) | 990 |
-| cut at 300 m | 1,009,336 | 7.87 s | 27.23 ms | 594,856 px (58.1%) | 589 |
-| fade 1 / .75 / .5 / .25 to 300 m | 458,568 | 3.60 s | 12.33 ms | 422,018 px (41.2%) | 920 |
-| fade 1 / .5 / .15 / .05 to 1,500 m | 1,497,948 | 11.65 s | 38.44 ms | 281,648 px (27.5%) | 188 |
+| today: uniform over 1,500 m, 120 k ceiling | 119,994 | 0.91 s | 2.95 ms | 27,250 px (2.7%) | 227 |
+| cut at 100 m | 186,208 | 1.42 s | 6.82 ms | 990,531 px (96.7%) | 5,319 |
+| cut at 200 m | 721,556 | 5.47 s | 24.25 ms | 841,062 px (82.1%) | 1,166 |
+| cut at 300 m | 1,500,088 † | 11.44 s | 43.69 ms | 939,757 px (91.8%) | 626 |
+| fade 1 / .75 / .5 / .25 to 300 m | 750,500 | 5.75 s | 23.49 ms | 861,749 px (84.2%) | 1,148 |
+| fade 1 / .5 / .15 / .05 to 1,500 m | 1,498,616 † | 11.52 s | 39.99 ms | 516,144 px (50.4%) | 344 |
 
-### Coverage saturates, hard
+† ceiling-bound rather than schedule-bound: these two are measurements of the cap, not of the
+schedule, and the cap thins uniformly.
 
-**Going from a 100 m horizon to 200 m costs 3.9× the instances and buys 1.33× the screen. Going to
-300 m costs 8.9× and buys 1.81×.** The last column is the whole story: 2,893 pixels per thousand
-instances at 100 m, 589 at 300 m. Past the first hundred metres the plants are drawing on top of
-each other, and the marginal instance is buying overdraw.
+### These rows no longer support the conclusions they were taken for, and that is the finding
 
-That is the number a fade schedule turns into a design. It says thinning the far bands is cheap to
-look at, and it says so in pixels rather than in principle.
+**The cover correction changed the plants, not just the counts.** Height comes from biomass per
+*covered* area and crown from cover, so halving cover made every family taller and narrower: shrub
+0.23 → 0.51 m, succulent 0.23 → 0.94 m, tree 2.10 → 4.37 m. At the 12× exaggeration those are drawn
+6.1 m, 11.3 m and **52.5 m**.
 
-### A fade beats a cut, measured twice over
+The consequence is that **coverage saturates the frame at every horizon**: 96.7% at a 100 m cut,
+82.1% at 200 m, 91.8% at 300 m — no longer monotonic, and no longer a curve anything can be fitted
+to. From an eye at 1.7 m real (20.4 m drawn) among trees drawn 52.5 m tall, the near field fills the
+picture whatever the far field does.
 
-**Against the same reach:** the fade to 300 m places 45% of the instances that a hard cut at 300 m
-places, costs 45% of the frame time — and covers **71%** of the screen the hard cut covers.
+Read before the correction, these rows said coverage saturates with range and a fade beats a cut.
+**Neither claim survives on this data.** What replaced them is a sharper constraint: *an eye-level
+naturalistic view and a 12× vertical exaggeration are incompatible*, because the exaggeration is
+applied to plants and not to the horizontal distance to them. Any seam distance tuned at eye level
+here is tuned against a stand twelve times too tall.
 
-**Against the same cost:** the fade to 300 m and the hard cut at 200 m cost an identical 12.33 ms,
-and the fade reaches half again as far for 97% of the coverage.
-
-So the sketched shape works, and it works because of saturation rather than in spite of it.
+The cost column is untouched by all of this and still stands: instances cost what they cost.
 
 ### The bottom row is a warning about the ceiling, not about long fades
 

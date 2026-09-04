@@ -35,6 +35,7 @@ var families: Dictionary = {}        ## life_form -> manifest entry
 var why_absent: String = ""
 
 var _meshes: Dictionary = {}         ## life_form -> Mesh
+var _foliage: Dictionary = {}        ## life_form -> area-weighted mask mean
 
 
 static func load_from(dir_path: String = DIR) -> FamilySet:
@@ -103,6 +104,47 @@ func has(life_form: String) -> bool:
 
 func mesh_for(life_form: String) -> Mesh:
     return _meshes.get(life_form, null)
+
+
+## What share of a family's silhouette is foliage rather than permanent
+## structure, area-weighted over its own triangles.
+##
+## THE FAR FIELD NEEDS THE SAME NUMBER THE SHADER USES, ONE STEP UP. Per
+## instance, `vegetation.gdshader` mixes structure toward foliage by the
+## AUTHORED vertex-colour mask; per cell, a tint standing in for a stand needs
+## that mix averaged over the whole plant, or the far field is a different
+## colour from the near field by construction. Read off the mesh rather than
+## declared in the manifest, because the mesh is what renders and a declared
+## number is a second copy free to disagree with it.
+##
+## Area-weighted, not vertex-averaged: a trunk built from four long quads and a
+## canopy from forty small triangles have very different vertex counts and very
+## similar screen areas, and it is screen area the tint is reproducing.
+func foliage_fraction(life_form: String) -> float:
+    if _foliage.has(life_form):
+        return float(_foliage[life_form])
+    var mesh: Mesh = mesh_for(life_form)
+    if mesh == null or mesh.get_surface_count() == 0:
+        return NAN
+    var arrays := mesh.surface_get_arrays(0)
+    var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+    var colours: PackedColorArray = arrays[Mesh.ARRAY_COLOR]
+    var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+    if colours.is_empty():
+        return NAN
+    var area := 0.0
+    var weighted := 0.0
+    var n: int = (indices.size() if not indices.is_empty() else verts.size()) / 3
+    for t in n:
+        var i0 := indices[t * 3] if not indices.is_empty() else t * 3
+        var i1 := indices[t * 3 + 1] if not indices.is_empty() else t * 3 + 1
+        var i2 := indices[t * 3 + 2] if not indices.is_empty() else t * 3 + 2
+        var a := 0.5 * (verts[i1] - verts[i0]).cross(verts[i2] - verts[i0]).length()
+        area += a
+        weighted += a * (colours[i0].r + colours[i1].r + colours[i2].r) / 3.0
+    var f: float = 0.0 if area <= 0.0 else weighted / area
+    _foliage[life_form] = f
+    return f
 
 
 func triangles_of(life_form: String) -> int:

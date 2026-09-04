@@ -1,10 +1,10 @@
 {
   "agreement": {
     "ok": true,
-    "ratio_observed_over_predicted": 1.277396749478,
+    "ratio_observed_over_predicted": 1.36091798503034,
     "tolerance": 0.35,
-    "verdict": "the frame cost 1.28x what the empty-stage coefficient predicts, inside the 35% the benchmark's own reproducibility supports. Every budget sentence resting on that coefficient is conditional on a stage nobody renders, and this is the size of the conditional.",
-    "within_tolerance": true
+    "verdict": "the frame cost 1.36x what the empty-stage coefficient predicts, outside the 35% the benchmark's own reproducibility supports. Every budget sentence resting on that coefficient is conditional on a stage nobody renders, and this is the size of the conditional.",
+    "within_tolerance": false
   },
   "frame_budget_ms": 33.3,
   "host": {
@@ -20,23 +20,23 @@
   },
   "implied_at_this_horizon": {
     "budget_ms": 33.3,
-    "implied_ms": 501.434390661074,
-    "implied_total": 28092359.9726692,
-    "instances": 1865599.17810301,
-    "mean_ns_per_instance": 17.8494932839005,
+    "implied_ms": 921.986977200676,
+    "implied_total": 51869460.1374908,
+    "instances": 1873402.84113633,
+    "mean_ns_per_instance": 17.7751411862926,
     "measured_on": "Apple M5 / gl_compatibility",
     "ok": true
   },
   "marginal": {
     "ok": true,
-    "p50_ms": 2.73625001083873,
-    "p95_ms": 2.77777777777778,
-    "p99_ms": 5.35111111111124,
+    "p50_ms": 2.9027037037037,
+    "p95_ms": 2.8827037037037,
+    "p99_ms": 2.6867037037037,
     "resolved": true,
-    "scene_spread_ms": 0.333666666666667
+    "scene_spread_ms": 0.02
   },
   "measured": true,
-  "measured_at_commit": "5d6b8a9",
+  "measured_at_commit": "528b549",
   "measured_at_commit_means": "the HEAD the run was taken against; the commit that lands this artefact is its child",
   "method": {
     "attempts": 1,
@@ -50,31 +50,31 @@
     {
       "authored_triangles_per_instance": 70,
       "counter_tracked_the_instances": false,
-      "instances": 10947,
+      "instances": 8490,
       "life_form": "shrub",
-      "pixels_drawn": 344,
+      "pixels_drawn": 213,
       "primitives_counted": 20,
-      "primitives_expected": 766290,
+      "primitives_expected": 594300,
       "renders": true
     },
     {
       "authored_triangles_per_instance": 48,
       "counter_tracked_the_instances": true,
-      "instances": 108672,
+      "instances": 110982,
       "life_form": "succulent",
-      "pixels_drawn": 2988,
-      "primitives_counted": 5216256,
-      "primitives_expected": 5216256,
+      "pixels_drawn": 3758,
+      "primitives_counted": 5327136,
+      "primitives_expected": 5327136,
       "renders": true
     },
     {
       "authored_triangles_per_instance": 44,
       "counter_tracked_the_instances": false,
-      "instances": 387,
+      "instances": 522,
       "life_form": "tree",
-      "pixels_drawn": 1312,
+      "pixels_drawn": 627,
       "primitives_counted": 14,
-      "primitives_expected": 17028,
+      "primitives_expected": 22968,
       "renders": true
     }
   ],
@@ -84,17 +84,17 @@
     "succulent": 17.5230121053839,
     "tree": 16.8679764969218
   },
-  "pixels_the_scatter_changed": 4411,
+  "pixels_the_scatter_changed": 4387,
   "placed": {
     "grass": 0,
-    "shrub": 10947,
-    "succulent": 108672,
-    "tree": 387
+    "shrub": 8490,
+    "succulent": 110982,
+    "tree": 522
   },
   "predicted_by_render_cost": {
-    "instances": 120006,
-    "mean_ns_per_instance": 17.8495392177918,
-    "ms": 2.14205180337032,
+    "instances": 119994,
+    "mean_ns_per_instance": 17.7750660343264,
+    "ms": 2.13290127372296,
     "ok": true
   },
   "scene": {
@@ -111,35 +111,35 @@
     "window": "deepest_winter"
   },
   "share_bound_by": "the build ceiling, which is lower here than the frame budget",
-  "share_drawn": 0.00427162403289531,
+  "share_drawn": 0.00231350007657522,
   "suspect": "",
-  "triangles_in_frame": 5999574,
+  "triangles_in_frame": 5944404,
   "what": "what M5's vegetation scatter costs a frame in the viewer that draws it, and whether the empty-stage coefficient in render_cost.json predicts it",
   "with_scatter": {
     "draw_calls_p50": 226.0,
     "frame_ms": {
-      "max": 7.13266666666667,
-      "mean": 3.96871805555555,
+      "max": 3.7037037037037,
+      "mean": 3.7037037037037,
       "min": 3.7037037037037,
       "n": 80,
-      "p50": 3.833,
-      "p95": 4.16666666666667,
-      "p99": 7.13266666666667
+      "p50": 3.7037037037037,
+      "p95": 3.7037037037037,
+      "p99": 3.7037037037037
     },
     "frames_drawn": 80,
     "frames_timed": 80,
-    "primitives_p50": 5426713.0
+    "primitives_p50": 5537593.0
   },
   "without_scatter": {
     "draw_calls_p50": 223.0,
     "frame_ms": {
-      "max": 1.78155555555543,
-      "mean": 1.07420833333333,
-      "min": 0.110624998342246,
+      "max": 1.017,
+      "mean": 0.75916770834881,
+      "min": 0.0999999974737875,
       "n": 80,
-      "p50": 1.09674998916127,
-      "p95": 1.38888888888889,
-      "p99": 1.78155555555543
+      "p50": 0.801,
+      "p95": 0.821,
+      "p99": 1.017
     },
     "frames_drawn": 80,
     "frames_timed": 80,

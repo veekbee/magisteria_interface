@@ -38,6 +38,29 @@ field to scatter them over — is precisely what that rule exists to prevent. Au
 row reaches the wire. The family count is read from `taxon_groups`, so a fifth group arriving
 upstream surfaces as a **missing family named in the report**, not as silence.
 
+## Cover is two rows, not one, and this repo read it as one until the seam work
+
+`band.pft_fractions` is a **composition**, not a cover. Its four groups sum to 1.0000 in 5,593 of
+`deepest_winter`'s 5,612 covered cells and in **none** of them to `1 - band.bare_fraction`, while
+bare itself spans 0.035 to 1.000 and averages 0.475. Both rows cannot be absolute: a cell cannot be
+95% bare and 100% covered.
+
+So a life form's ground cover is **its share × (1 − bare_fraction)**, which is what
+`VegetationScatter.ground_cover` computes and what the tint and the scatter both call rather than
+each deriving. The nineteen cells that sum to neither are all `bare_fraction = 1.0`: fully bare
+ground that still names a mix, which is the model's PFT state persisting at zero cover — and
+exactly the case the old reading scattered a full stand onto.
+
+The contract declares both rows as `fraction` in [0, 1] and says what neither is a fraction *of*,
+so the reading rests on a property of the data. `test_pft_fractions_are_a_composition_of_the_cover`
+asserts that property, including the discriminator: if any appreciable number of cells ever *did*
+track `1 - bare`, that would be what absolute cover looks like and the reading would have to change.
+
+M5 read the share as a cover. Nothing rendered wrong enough to notice — the scatter drew plausible
+plants — until the far-field tint aggregated the same rows and reported **every cell at full
+canopy**. The figures in `measurements/scatter_cost.json` and `scatter_bands.json` predate the
+correction; their headers say so.
+
 ## The convention an instance transform relies on
 
 Each mesh is normalised to **one metre tall and one metre across, standing on the origin plane**, so
@@ -46,8 +69,8 @@ trusting its own authoring numbers, and the headless tests check it.
 
 **The second axis is crown width, not trunk girth, and the wire forces that.** §17.8.2 asks for
 height and girth as separate axes for woody forms; of the two readings of "girth", only one is
-derivable here. `band.pft_fractions` carries the share of ground a life form covers, and cover is
-crown area × count — so crown width is constrained by a carried row. Trunk diameter is constrained
+derivable here. Ground cover is crown area × count — so crown width is constrained by carried
+rows. Trunk diameter is constrained
 by nothing on the wire: no carried row mentions stems, and an authored trunk-to-height ratio would
 be a number invented to look precise. The trunk is drawn as a fixed proportion of the crown and is
 not a parameter.

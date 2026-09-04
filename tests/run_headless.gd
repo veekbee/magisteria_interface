@@ -82,6 +82,7 @@ func _initialize() -> void:
     test_the_cost_model_refuses_outside_its_measured_span()
     test_the_scatter_reports_what_it_could_not_draw()
     test_a_density_schedule_is_finer_than_the_texel_it_thins()
+    test_pft_fractions_are_a_composition_of_the_cover()
     test_the_project_does_not_import_blend_sources()
     test_phenology_is_the_cell_measured_against_itself()
     test_the_tint_moves_with_the_season_it_is_read_from()
@@ -342,22 +343,29 @@ func test_the_main_scene_populated_itself() -> void:
         # material the RUNNING SCENE ends up with, which is what was
         # photographed.
         var mi := _scene_root.get_node_or_null("TerrainView/Terrain") as MeshInstance3D
-        var mat := (mi.material_override if mi != null else null) as StandardMaterial3D
-        check(mat != null, "the terrain in the running scene has no StandardMaterial3D")
+        var mat := (mi.material_override if mi != null else null) as ShaderMaterial
+        check(mat != null, "the terrain in the running scene has no ShaderMaterial")
         if mat != null:
-            check(mat.metallic_specular == 0.0,
-                    "the terrain carries a specular term of %f. It adds WHITE in proportion "
-                    % mat.metallic_specular
-                    + "to nothing in the data, and white washes a viridis colour off the ramp: "
-                    + "measured, 43.5%% of the overlay's pixels lay on the declared ramp with "
-                    + "the default term and 99.8%% with it off.")
-            check(mat.transparency == BaseMaterial3D.TRANSPARENCY_DISABLED,
-                    "the terrain material enables transparency. The overlay's nodata was black "
-                    + "because alpha was ignored here, and turning alpha ON is not the fix: "
+            # THE SOURCE, not a property, because the rulings the visual audit
+            # made now live in the shader text rather than in material flags.
+            # A StandardMaterial3D could be asked whether its specular was
+            # zero; a shader has to be read, and reading it is the check.
+            var src := (mat.shader.code if mat.shader != null else "")
+            check(src.contains("SPECULAR = 0.0"),
+                    "the terrain shader does not zero SPECULAR. A specular term adds WHITE in "
+                    + "proportion to nothing in the data, and white washes a viridis colour off "
+                    + "the ramp: measured, 43.5% of the overlay's pixels lay on the declared "
+                    + "ramp with the default term and 99.8% with it off.")
+            check(src.contains("ROUGHNESS = 1.0"), "the terrain shader does not pin ROUGHNESS")
+            check(not src.contains("render_mode") or not src.contains("blend_mix"),
+                    "the terrain shader enables blending. The overlay's nodata was black "
+                    + "because alpha was ignored, and turning alpha ON is not the fix: "
                     + "photographed both ways it moved 17.89% of the frame -- 183,000 pixels "
-                    + "blended with the sky -- to change a few hundred, and the nodata texels "
-                    + "became holes onto the background rather than bare hillshade. Nodata is "
-                    + "painted with TerrainView.BARE_ALBEDO instead.")
+                    + "blended with the sky -- to change a few hundred. Nodata is painted "
+                    + "with TerrainView.BARE_ALBEDO instead.")
+            check(not src.contains("ALPHA ="),
+                    "the terrain shader writes ALPHA, which reintroduces the depth sorting the "
+                    + "nodata measurement ruled against")
         var amb := _scene_root.get_node_or_null("TerrainView/Ambient") as WorldEnvironment
         check(amb != null and amb.environment != null
                 and amb.environment.ambient_light_energy > 0.0,
@@ -2740,3 +2748,97 @@ func test_a_density_schedule_is_finer_than_the_texel_it_thins() -> void:
     print("bands: 100 m implies %.0f, 200 m %.0f, 300 m %.0f, no schedule %.0f"
             % [seen[0], seen[1], seen[2], float(full["implied_total"])])
     v.queue_free()
+
+
+func test_pft_fractions_are_a_composition_of_the_cover() -> void:
+    """THE PROPERTY THAT LICENSES HOW THIS CLIENT READS TWO ROWS.
+
+    `band.pft_fractions` and `band.bare_fraction` are both declared `fraction`
+    in [0, 1] and the contract says what neither is a fraction OF. The data
+    settles it: the four groups sum to 1.0000 in every cell, while bare runs
+    0.05 to 0.95 and averages 0.475. Both cannot be absolute -- a cell cannot be
+    95% bare and 100% covered -- so the one that always sums to one is the
+    composition, and a life form's ground cover is its share scaled by
+    `1 - bare_fraction`.
+
+    This client read the share as a cover from M5 until the far-field tint made
+    it visible by rendering every cell at full canopy. So the reading rests on a
+    property rather than on a declaration, and the property is asserted here:
+    if a later fixture stops summing to one, this fails and
+    `VegetationScatter.ground_cover` is what has to be revisited.
+    """
+    var fl := FixtureLoader.load_from("res://assets/fixture/")
+    if not fl.is_loaded():
+        return
+    for w in fl.windows:
+        var window := str(w)
+        var groups := fl.taxon_groups(window, "band.pft_fractions")
+        check(groups.size() > 0, "%s names no taxon groups" % window)
+        var bare := fl.day_values(window, "band.bare_fraction", 0)
+        check(not bare.is_empty(), "%s carries no band.bare_fraction" % window)
+        var per_group: Array = []
+        for gi in groups.size():
+            per_group.append(fl.day_values(window, "band.pft_fractions", 0, gi))
+        var cells := 0
+        var empty := 0
+        var sums_to_one := 0
+        var tracks_cover := 0
+        var err_one := 0.0
+        var err_cover := 0.0
+        var bare_lo := INF
+        var bare_hi := -INF
+        for cell in fl.n_cells:
+            var s := 0.0
+            var any := false
+            for gi in groups.size():
+                var v: PackedFloat64Array = per_group[gi]
+                if cell < v.size() and not is_nan(v[cell]):
+                    s += v[cell]
+                    any = true
+            if not any:
+                continue
+            cells += 1
+            var b: float = bare[cell] if cell < bare.size() else NAN
+            if not is_nan(b):
+                bare_lo = minf(bare_lo, b)
+                bare_hi = maxf(bare_hi, b)
+            # A cell with no vegetation at all sums to ZERO, not to one. A
+            # composition is a composition of something.
+            if s < 1e-3:
+                empty += 1
+                continue
+            err_one += absf(s - 1.0)
+            if absf(s - 1.0) < 1e-3:
+                sums_to_one += 1
+            if not is_nan(b):
+                err_cover += absf(s - (1.0 - b))
+                if absf(s - (1.0 - b)) < 1e-3:
+                    tracks_cover += 1
+        var covered := cells - empty
+        check(covered > 1000, "%s: only %d cells carry any cover at all" % [window, covered])
+        # THE DISCRIMINATOR IS THE SECOND CHECK, not the first. "Sums to one"
+        # could be a coincidence of a basin that happens to be fully vegetated;
+        # "does not track 1 - bare anywhere, over a basin where bare spans
+        # 0.04 to 1.00" cannot be. Both are asserted, and the second is the one
+        # that would catch the rows swapping meaning.
+        check(float(sums_to_one) / float(covered) > 0.99,
+                "%s: only %d of %d covered cells have their four pft fractions summing to 1 "
+                % [window, sums_to_one, covered] + "(mean error %s). They are read as a "
+                % String.num(err_one / float(covered), 6) + "COMPOSITION scaled by "
+                + "1 - bare_fraction; if that is no longer what they are, "
+                + "VegetationScatter.ground_cover is wrong and every implied-instance figure "
+                + "in measurements/ with it.")
+        check(float(tracks_cover) / float(covered) < 0.01,
+                "%s: %d of %d covered cells have pft fractions summing to 1 - bare_fraction, "
+                % [window, tracks_cover, covered] + "which is what ABSOLUTE cover would look "
+                + "like. The two readings differ by 1/(1 - bare) -- 1.9x on this basin's mean "
+                + "-- and this client had the wrong one from M5 until the far-field tint "
+                + "rendered every cell at full canopy.")
+        check(bare_hi - bare_lo > 0.5,
+                "%s: bare_fraction spans only %.3f..%.3f. The spread is what makes the two "
+                % [window, bare_lo, bare_hi] + "readings distinguishable at all.")
+        print("cover: %s %d/%d covered cells sum to 1 (mean err %s), %d track 1-bare "
+                % [window, sums_to_one, covered, String.num(err_one / float(covered), 6),
+                   tracks_cover]
+                + "(mean err %s); %d cells carry none, bare spans %.3f..%.3f"
+                % [String.num(err_cover / float(covered), 4), empty, bare_lo, bare_hi])

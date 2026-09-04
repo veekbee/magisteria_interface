@@ -161,6 +161,11 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         return report
     var missing := _fs.missing_for(groups)
 
+    var bare := _fl.day_values(window, "band.bare_fraction", day)
+    if bare.is_empty():
+        report = {"ok": false, "why": ("no band.bare_fraction for %s day %d, and without it "
+                + "pft_fractions is a composition with nothing to scale it") % [window, day]}
+        return report
     var fractions: Array = []
     var biomass: Array = []
     for g in groups.size():
@@ -211,7 +216,11 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 var vals_b: PackedFloat64Array = biomass[gi]
                 if cell >= vals_f.size() or cell >= vals_b.size():
                     continue
-                var frac := vals_f[cell]
+                # The COMPOSITION share scaled by how much ground is vegetated
+                # at all. Reading the share as a cover is what put every cell
+                # at full canopy; see `ground_cover`.
+                var frac := ground_cover(vals_f[cell],
+                        NAN if cell >= bare.size() else bare[cell])
                 var bio := vals_b[cell]
                 if is_nan(frac) or is_nan(bio) or frac <= 0.0:
                     continue
@@ -415,6 +424,33 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
     return report
 
 
+## How much of a cell's ground one life form actually covers.
+##
+## `band.pft_fractions` IS A COMPOSITION, NOT A COVER, and this client read it
+## as a cover from M5 until the far-field tint made the error visible: every
+## cell came back fully vegetated. The evidence is in the data and is not
+## ambiguous -- the four groups sum to 1.0000 in EVERY cell of the fixture,
+## while `band.bare_fraction` runs from 0.05 to 0.95 across the basin and
+## averages 0.475. Both cannot be absolute: a cell cannot be 95% bare and 100%
+## covered. The one that always sums to one is the composition.
+##
+## The contract declares both as `fraction` in [0, 1] and says what neither is
+## a fraction OF, so the reading rests on the property rather than on the
+## declaration -- and `test_pft_fractions_are_a_composition_of_the_cover`
+## asserts that property over the shipped fixture. If a later fixture stops
+## summing to one, that test fails and this reading is what has to be revisited.
+##
+## What it cost while it was wrong: every implied-instance count in
+## `measurements/scatter_cost.json` and `scatter_bands.json` was inflated by
+## 1/(1 - bare), which is 1.9x on the basin mean and about 20x in the sparsest
+## cells. Height too -- biomass per covered area was divided by a share instead
+## of by an area.
+static func ground_cover(share: float, bare: float) -> float:
+    if is_nan(share) or is_nan(bare):
+        return NAN
+    return clampf(share, 0.0, 1.0) * clampf(1.0 - bare, 0.0, 1.0)
+
+
 ## The share of a texel's implied stand a schedule keeps at this distance.
 ##
 ## Bands are read in order and the FIRST whose `to_m` the distance is inside
@@ -501,6 +537,14 @@ func _affordable(groups: PackedStringArray, implied: Dictionary) -> Dictionary:
 ## permanently wintering, and a productive one as permanently at peak -- which
 ## is a statement about where a cell sits in the basin, not about where it sits
 ## in its year. The seasonal signal is the cell against itself.
+## Public, because the far-field tint needs THIS rule and not a copy of it.
+## Candidate #1 replaces instances with a per-cell colour, and the phenology
+## that colour is mixed by has to be the phenology the instances beside it are
+## mixed by, or the seam is a colour step whatever else is right.
+func season_range(window: String, row: String, group: int) -> Dictionary:
+    return _season_range(window, row, group)
+
+
 func _season_range(window: String, row: String, group: int) -> Dictionary:
     var key := "%s|%s|%d" % [window, row, group]
     if _season.has(key):

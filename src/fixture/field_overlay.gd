@@ -123,6 +123,36 @@ func nodata_colour() -> Color:
     return Color8(_nodata[0], _nodata[1], _nodata[2], _nodata[3])
 
 
+## A texture painted from PER-CELL colours rather than from a row of values.
+##
+## THE JOIN IS THE EXPENSIVE HALF AND IT IS ALREADY DONE. Pixel -> residence key
+## -> cell is 1.48 million lookups and depends on neither the row nor the day,
+## so `bind` computes it once. The far-field tint has 5,684 cells to colour and
+## no business recomputing that map; it hands its colours here and this paints
+## them through the join the overlay already holds.
+##
+## Alpha is the caller's -- the tint uses it for coverage -- EXCEPT at nodata,
+## which is written as the bare albedo at alpha zero: no cell, no cover, and the
+## ground shows through for the same reason it does under the ramp.
+func texture_from_cells(colours: PackedColorArray) -> ImageTexture:
+    var buf := PackedByteArray()
+    buf.resize(width * height * 4)
+    for i in _cell_of_px.size():
+        var o := i * 4
+        var c := _cell_of_px[i]
+        if c < 0 or c >= colours.size():
+            _write_nodata(buf, o)
+            buf[o + 3] = 0
+            continue
+        var col := colours[c]
+        buf[o] = int(clampf(col.r, 0.0, 1.0) * 255.0)
+        buf[o + 1] = int(clampf(col.g, 0.0, 1.0) * 255.0)
+        buf[o + 2] = int(clampf(col.b, 0.0, 1.0) * 255.0)
+        buf[o + 3] = int(clampf(col.a, 0.0, 1.0) * 255.0)
+    var img := Image.create_from_data(width, height, false, Image.FORMAT_RGBA8, buf)
+    return ImageTexture.create_from_image(img)
+
+
 #: Viridis, sampled at five stops. Chosen for ONE property: its lightness
 #: rises monotonically from end to end, so equal steps in the value look like
 #: equal steps in the colour.
