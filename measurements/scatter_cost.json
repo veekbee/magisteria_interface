@@ -1,7 +1,7 @@
 {
   "agreement": {
     "ok": true,
-    "ratio_observed_over_predicted": 1.36091798503034,
+    "ratio_observed_over_predicted": 1.36138682998454,
     "tolerance": 0.35,
     "verdict": "the frame cost 1.36x what the empty-stage coefficient predicts, outside the 35% the benchmark's own reproducibility supports. Every budget sentence resting on that coefficient is conditional on a stage nobody renders, and this is the size of the conditional.",
     "within_tolerance": false
@@ -29,14 +29,14 @@
   },
   "marginal": {
     "ok": true,
-    "p50_ms": 2.9027037037037,
-    "p95_ms": 2.8827037037037,
-    "p99_ms": 2.6867037037037,
+    "p50_ms": 2.9037037037037,
+    "p95_ms": 2.8837037037037,
+    "p99_ms": 2.8497037037037,
     "resolved": true,
-    "scene_spread_ms": 0.02
+    "scene_spread_ms": 0.0199999999999999
   },
   "measured": true,
-  "measured_at_commit": "528b549",
+  "measured_at_commit": "850f482",
   "measured_at_commit_means": "the HEAD the run was taken against; the commit that lands this artefact is its child",
   "method": {
     "attempts": 1,
@@ -114,6 +114,7 @@
   "share_drawn": 0.00231350007657522,
   "suspect": "",
   "triangles_in_frame": 5944404,
+  "vertical_exaggeration": 12.0,
   "what": "what M5's vegetation scatter costs a frame in the viewer that draws it, and whether the empty-stage coefficient in render_cost.json predicts it",
   "with_scatter": {
     "draw_calls_p50": 226.0,
@@ -133,13 +134,13 @@
   "without_scatter": {
     "draw_calls_p50": 223.0,
     "frame_ms": {
-      "max": 1.017,
-      "mean": 0.75916770834881,
-      "min": 0.0999999974737875,
+      "max": 0.854,
+      "mean": 0.699945833333333,
+      "min": 0.0989999971352518,
       "n": 80,
-      "p50": 0.801,
-      "p95": 0.821,
-      "p99": 1.017
+      "p50": 0.8,
+      "p95": 0.82,
+      "p99": 0.854
     },
     "frames_drawn": 80,
     "frames_timed": 80,

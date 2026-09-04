@@ -466,6 +466,14 @@ func report() -> Dictionary:
         "generated_by": "scenes/bench_instances.tscn via tools/run_benchmark.sh",
         "generated_at_utc": Time.get_datetime_string_from_system(true),
         "budget_ms": FRAME_BUDGET_MS,
+        # 1.0, and stated rather than omitted. This stage draws no terrain and
+        # no plants, so its metres are true metres -- but its coefficients are
+        # quoted into a scene drawn at 12x vertical relief, and a reader
+        # comparing a 4 m instance height here against a 52 m drawn tree there
+        # needs to be told which is which. Every measurement in this repo
+        # states the exaggeration its distances were taken at, including the
+        # ones that have none.
+        "vertical_exaggeration": 1.0,
         "host": host(),
         "method": method(),
         "results": results,

@@ -83,6 +83,9 @@ func _initialize() -> void:
     test_the_scatter_reports_what_it_could_not_draw()
     test_a_density_schedule_is_finer_than_the_texel_it_thins()
     test_pft_fractions_are_a_composition_of_the_cover()
+    test_the_tint_holds_the_quantity_a_seam_has_to_conserve()
+    test_a_recorded_distance_names_what_it_is_conditional_on()
+    test_the_seam_metric_fails_the_bad_frame()
     test_the_project_does_not_import_blend_sources()
     test_phenology_is_the_cell_measured_against_itself()
     test_the_tint_moves_with_the_season_it_is_read_from()
@@ -2842,3 +2845,223 @@ func test_pft_fractions_are_a_composition_of_the_cover() -> void:
                    tracks_cover]
                 + "(mean err %s); %d cells carry none, bare spans %.3f..%.3f"
                 % [String.num(err_cover / float(covered), 4), empty, bare_lo, bare_hi])
+
+
+func test_a_recorded_distance_names_what_it_is_conditional_on() -> void:
+    """TRAP 3 AS A GUARD RATHER THAN AS A DISCIPLINE.
+
+    Every distance this project measures is conditional on the 12× vertical
+    exaggeration: relief, plant height and eye height are all multiplied by it
+    and horizontal distance is not, so a plant subtends about twelve times the
+    angle it would in the field. "Record any tuned distance as conditional on
+    the factor" is the right rule and it is the kind of rule that has gone
+    stale twice in these repos already — a transcribed caveat outlives the
+    number it qualifies.
+
+    So the factor goes in the artefact and this asserts that it is there: a
+    measurement carrying metres must carry the exaggeration those metres were
+    taken at. Change the factor and every artefact stales together and loudly,
+    rather than one of them silently keeping a distance that no longer means
+    what it says.
+    """
+    var dir := DirAccess.open("res://measurements/")
+    check(dir != null, "no measurements/ directory")
+    if dir == null:
+        return
+    var checked := 0
+    for name in dir.get_files():
+        if not name.ends_with(".json"):
+            continue
+        var f := FileAccess.open("res://measurements/" + name, FileAccess.READ)
+        var parsed = JSON.parse_string(f.get_as_text())
+        if typeof(parsed) != TYPE_DICTIONARY:
+            continue
+        var doc: Dictionary = parsed
+        var metres := _distance_keys(doc, "")
+        if metres.is_empty():
+            continue
+        checked += 1
+        check(doc.has("vertical_exaggeration"),
+                "measurements/%s records distances in metres (%s) and does not record the "
+                % [name, ", ".join(metres.slice(0, 4))]
+                + "vertical exaggeration they were taken at. Plant height and relief carry the "
+                + "factor and horizontal distance does not, so a range here is not a range in "
+                + "the field, and a reader has no way to know by how much.")
+        if doc.has("vertical_exaggeration"):
+            check(float(doc["vertical_exaggeration"]) > 0.0,
+                    "measurements/%s records an exaggeration of %s" % [name,
+                            str(doc["vertical_exaggeration"])])
+    check(checked > 0, "no measurement artefact carries a distance, which is unlikely enough "
+            + "to be a bug in this test rather than a property of the repo")
+    print("distances: %d measurement artefact(s) carry metres and name their exaggeration"
+            % checked)
+
+
+## Keys anywhere in a document whose name says they hold metres.
+static func _distance_keys(node: Variant, prefix: String) -> PackedStringArray:
+    var out := PackedStringArray()
+    if typeof(node) == TYPE_DICTIONARY:
+        for k in (node as Dictionary):
+            var name := str(k)
+            var path := name if prefix.is_empty() else prefix + "." + name
+            if name.ends_with("_m") or name.ends_with("_metres") or name.contains("_m_"):
+                out.append(path)
+            out.append_array(_distance_keys((node as Dictionary)[k], path))
+    elif typeof(node) == TYPE_ARRAY:
+        for i in (node as Array).size():
+            out.append_array(_distance_keys((node as Array)[i], "%s[%d]" % [prefix, i]))
+    return out
+
+
+func test_the_tint_holds_the_quantity_a_seam_has_to_conserve() -> void:
+    """COVERAGE AND MEAN COLOUR PER UNIT GROUND AREA, per family, as functions
+    of range. That is the invariant any future crossfade has to hold, and until
+    now it lived only in a brief — load-bearing prose in a file nothing checks,
+    which is the failure mode this project keeps re-finding.
+
+    Two of the three are pinned here, because they are properties of the tint
+    and not of a render: coverage must be exactly the ground the wire says is
+    vegetated, and mean colour must be the families' colours weighted by the
+    ground each covers. The third, the range dependence, is a property of a
+    frame and belongs to the seam harness.
+    """
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    if not bool(v.bind_families().get("ok", false)):
+        v.queue_free()
+        return
+    var window := "deepest_winter"
+    var day := 22
+    var colours := v.tint.cell_colours(window, day)
+    var r: Dictionary = v.tint.report
+    check(bool(r.get("ok", false)), "the tint did not build: %s" % str(r.get("why", "")))
+    if not bool(r.get("ok", false)):
+        v.queue_free()
+        return
+    check(colours.size() == v.fixture.n_cells, "the tint coloured %d of %d cells"
+            % [colours.size(), v.fixture.n_cells])
+
+    # COVERAGE IS 1 - bare_fraction, exactly, because the composition sums to
+    # one. If this ever drifts, the tint is covering ground the instances do
+    # not and the seam is a density step by construction.
+    var bare := v.fixture.day_values(window, "band.bare_fraction", day)
+    var worst := 0.0
+    var compared := 0
+    var mean_cover := 0.0
+    for cell in colours.size():
+        if cell >= bare.size() or is_nan(bare[cell]):
+            continue
+        var want: float = clampf(1.0 - bare[cell], 0.0, 1.0)
+        # Only where the composition is present; a fully bare cell names a mix
+        # and covers nothing, and both sides agree on zero there.
+        if want <= 0.0:
+            check(colours[cell].a <= 1.0 / 255.0,
+                    "cell %d is fully bare and the tint covers %.3f of it"
+                    % [cell, colours[cell].a])
+            continue
+        if colours[cell].a <= 0.0:
+            continue
+        compared += 1
+        mean_cover += colours[cell].a
+        worst = maxf(worst, absf(colours[cell].a - want))
+    check(compared > 1000, "only %d cells could be compared" % compared)
+    check(worst < 5e-3, "the tint's coverage departs from 1 - bare_fraction by %s at worst"
+            % String.num(worst, 5))
+    # And it is not near one, which is what the bug looked like.
+    var mean := mean_cover / float(maxi(compared, 1))
+    check(mean < 0.9, "the tint covers %s of the mean cell. Full canopy everywhere is what "
+            % String.num(mean, 4) + "reading the composition as a cover looked like.")
+
+    # MEAN COLOUR IS THE PALETTE'S, not something else: every cell's colour has
+    # to be a mix of the three constants both ends of the seam share.
+    var off := 0
+    for cell in colours.size():
+        if colours[cell].a <= 0.0:
+            continue
+        var c := colours[cell]
+        if c.r < 0.0 or c.r > 1.0 or c.g < 0.0 or c.g > 1.0 or c.b < 0.0 or c.b > 1.0:
+            off += 1
+    check(off == 0, "%d cells carry a colour outside [0,1]" % off)
+    check(r["foliage_fraction"].size() > 0,
+            "the tint does not report the authored mask it mixed with, so the one number the "
+            + "far field shares with the instance shader is not in the record")
+    print("tint: coverage matches 1-bare within %s over %d cells, mean cover %s, foliage %s"
+            % [String.num(worst, 5), compared, String.num(mean, 3),
+               str(r["foliage_fraction"])])
+    v.queue_free()
+
+
+func test_the_seam_metric_fails_the_bad_frame() -> void:
+    """The scoring half of the seam harness. Its arithmetic can be checked
+    blind; what it scores cannot, because a candidate is a render.
+
+    THE DISCIPLINE IS `ramp_agreement`'s. A metric is only worth pointing at a
+    subtle candidate if it visibly fails an unsubtle one, so the harness always
+    grades a deliberately-wrong baseline alongside and `rank` reports the margin
+    rather than only the winner. A margin near zero is the finding.
+    """
+    # Bands are a curve around a seam, and the scoring annulus is a slice of it
+    # that excludes the near field -- where a whole-frame metric would be mostly
+    # ground within a hundred metres and would rank a candidate on the half of
+    # the picture the seam is not in.
+    var bands := SeamScore.bands(200.0)
+    check(bands.size() == SeamScore.CURVE_MULTIPLES.size() - 1,
+            "%d bands from %d multiples" % [bands.size(), SeamScore.CURVE_MULTIPLES.size()])
+    check(float(bands[0]["lo_m"]) < float(bands[0]["hi_m"]), "a band runs backwards")
+    var score := SeamScore.scoring_band(200.0)
+    check(float(score["lo_m"]) == 140.0 and float(score["hi_m"]) == 300.0,
+            "the scoring annulus is %s, not 0.7-1.5x the seam" % str(score))
+
+    # A mask and a frame, hand-made so the answer is known: the left half is in
+    # the band, and half of THAT is lit.
+    var mask := Image.create_empty(8, 8, false, Image.FORMAT_RGBA8)
+    var colour := Image.create_empty(8, 8, false, Image.FORMAT_RGBA8)
+    mask.fill(Color.BLACK)
+    colour.fill(Color.BLACK)
+    for y in 8:
+        for x in 4:
+            mask.set_pixel(x, y, Color.WHITE)
+            if y < 4:
+                colour.set_pixel(x, y, Color(0.2, 0.4, 0.1))
+    var w := SeamScore.within(mask, colour)
+    check(bool(w["ok"]), "the mask and the frame did not compare")
+    check(int(w["band_pixels"]) == 32, "%d pixels in the band, not 32" % int(w["band_pixels"]))
+    check(int(w["lit_pixels"]) == 16, "%d lit, not 16" % int(w["lit_pixels"]))
+    var mean: Array = w["mean_colour"]
+    check(absf(float(mean[1]) - 0.4) < 0.01, "the mean colour is of the lit pixels only")
+    check(SeamScore.mask_pixels(mask) == 32, "the mask count disagrees with the band count")
+
+    # Coverage is plant pixels over GROUND pixels in the same band, and it may
+    # exceed one: a tree covers more screen than its own footprint, and a metric
+    # clamped at one would report a closed canopy and a forest as the same.
+    check(absf(SeamScore.coverage(16, 32) - 0.5) < 1e-9, "coverage is not the ratio")
+    check(SeamScore.coverage(64, 32) > 1.0, "coverage was clamped at one")
+    check(is_nan(SeamScore.coverage(16, 0)), "coverage over no ground returned a number")
+
+    # The distribution distance has to see WHERE two histograms differ and not
+    # only that they do -- one bucket apart and opposite ends of the range score
+    # the same under L1, and the whole question is a little too dark or a lot.
+    var a := [1.0, 0.0, 0.0, 0.0]
+    var near := [0.0, 1.0, 0.0, 0.0]
+    var far := [0.0, 0.0, 0.0, 1.0]
+    var d_near := SeamScore.luminance_distance(a, near)
+    var d_far := SeamScore.luminance_distance(a, far)
+    check(d_far > d_near * 2.0,
+            "a distribution three buckets away scores %s against one bucket away at %s, so this "
+            % [String.num(d_far, 4), String.num(d_near, 4)]
+            + "metric cannot tell a little too dark from a lot")
+    check(absf(SeamScore.luminance_distance(a, a)) < 1e-9, "a histogram differs from itself")
+
+    # And the ranking, which is where a metric that cannot separate has to say
+    # so rather than name a winner.
+    var clear := SeamScore.rank({"range_matched": 0.01, "constant": 0.05, "null": 0.4})
+    check(str(clear["order"][0]["candidate"]) == "range_matched", "the ranking is not by error")
+    check(bool(clear["separates"]), "a 5x gap was called inseparable")
+    var muddy := SeamScore.rank({"a": 0.100, "b": 0.105})
+    check(not bool(muddy["separates"]), "a 5% gap was called a result")
+    check(str(muddy["why_not"]).contains("cannot be trusted"),
+            "an inseparable ranking does not say it is one: %s" % str(muddy.get("why_not", "")))
+    print("seam metric: annulus %s, coverage 16/32 = %.2f, %d bands, far/near histogram %.1fx"
+            % [str(score), SeamScore.coverage(16, 32), bands.size(), d_far / maxf(d_near, 1e-9)])

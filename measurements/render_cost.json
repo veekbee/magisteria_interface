@@ -1,5 +1,5 @@
 {
-  "answers": "§19.8.9's one unmeasured coefficient. It is a measurement of THIS engine on THIS machine and is not portable; the host block is part of the result, not provenance decorating it.",
+  "answers": "\u00a719.8.9's one unmeasured coefficient. It is a measurement of THIS engine on THIS machine and is not portable; the host block is part of the result, not provenance decorating it.",
   "artefact": "per-instance frame cost, measured on one machine",
   "budget_ms": 33.3,
   "fits": {
@@ -38,24 +38,24 @@
       "frame_p50": {
         "intercept_ms": 0.387833157664215,
         "max_rel_residual": 0.315885593720974,
-        "ms_per_instance": 0.00000960745703590267,
+        "ms_per_instance": 9.60745703590267e-06,
         "ok": true,
         "points": 9,
         "r2": 0.957891400726884
       },
       "frame_p50_marginals": {
-        "max_ms_per_instance": 0.0000249999999999999,
+        "max_ms_per_instance": 2.49999999999999e-05,
         "min_ms_per_instance": -0.000125,
         "ok": true,
         "per_rung": [
-          0.0000249999999999999,
+          2.49999999999999e-05,
           -0.000125,
-          0.00000775000000000001,
-          0.00000949999999999999,
-          0.0000088125,
-          0.00001059375,
-          0.0000114791666666667,
-          0.00000841750841750841
+          7.75000000000001e-06,
+          9.49999999999999e-06,
+          8.8125e-06,
+          1.059375e-05,
+          1.14791666666667e-05,
+          8.41750841750841e-06
         ],
         "spread_undefined_because": "the cheapest marginal is -0.000125 ms per instance, at or below zero: a rung that cost no more than the one below it, which is the fixed-cost floor rather than a per-instance cost"
       },
@@ -69,7 +69,7 @@
       "frame_p50": {
         "intercept_ms": 1.00344993610191,
         "max_rel_residual": 1.9699814538709,
-        "ms_per_instance": 0.0000538634614761338,
+        "ms_per_instance": 5.38634614761338e-05,
         "ok": true,
         "points": 9,
         "r2": 0.875093356960124
@@ -79,14 +79,14 @@
         "min_ms_per_instance": 0.0,
         "ok": true,
         "per_rung": [
-          0.000096,
-          0.0000705,
-          0.00009425,
+          9.6e-05,
+          7.05e-05,
+          9.425e-05,
           0.000139166666666667,
           0.000101273148148148,
           0.000107473544973545,
           0.0,
-          0.0000572337662337662
+          5.72337662337662e-05
         ],
         "spread_undefined_because": "the cheapest marginal is 0.0 ms per instance, at or below zero: a rung that cost no more than the one below it, which is the fixed-cost floor rather than a per-instance cost"
       },
@@ -210,7 +210,7 @@
   "method": {
     "abandon_rule": "a sweep stops climbing once a rung exceeds 266 ms at p50 or takes over 8 s to build; the rungs above are reported unmeasured with the reason",
     "attempts": "a configuration whose frames were not drawn is re-measured up to 3 times before being recorded as unmeasured",
-    "camera": "directly overhead at the altitude where the footprint fills the frame vertically, 60° vertical FOV. Every instance is in frustum.",
+    "camera": "directly overhead at the altitude where the footprint fills the frame vertically, 60\u00b0 vertical FOV. Every instance is in frustum.",
     "draw_calls": "Performance's per-frame draw-call count, so a flat frame time can be told from instances that stopped being drawn",
     "footprint_m": 1000.0,
     "frame_ms": "elapsed time between frames, vsync disabled and no fps cap",
@@ -2992,10 +2992,12 @@
     }
   ],
   "ruled_by": [
-    "§19.8",
-    "§19.8.4",
-    "§19.8.6",
-    "§19.8.9",
-    "§16.10"
-  ]
+    "\u00a719.8",
+    "\u00a719.8.4",
+    "\u00a719.8.6",
+    "\u00a719.8.9",
+    "\u00a716.10"
+  ],
+  "vertical_exaggeration": 1.0,
+  "_vertical_exaggeration_note": "1.0, and added by hand rather than re-measured. This benchmark draws no terrain and no plants -- a placeholder mesh over a flat square, as its README says -- so its metres are true metres and there is nothing exaggerated to record. The field is here because the rule that every measurement states the exaggeration its distances were taken at is worth more without an exemption than with one: this artefact's coefficients are quoted into a scene drawn at 12x, and a reader comparing its 4 m instance height against a 52 m drawn tree needs to be told which is which. Nothing else in the file was touched; `tools/run_benchmark.sh` now emits it."
 }

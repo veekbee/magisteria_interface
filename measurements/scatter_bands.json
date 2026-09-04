@@ -10,7 +10,7 @@
     ],
     "vsync": "disabled"
   },
-  "measured_at_commit": "528b549",
+  "measured_at_commit": "850f482",
   "measured_at_commit_means": "the HEAD the run was taken against; the commit that lands this artefact is its child",
   "method": {
     "coverage": "counted with the terrain, flowlines, contours and UI hidden, so a coloured pixel is a plant",
@@ -107,13 +107,13 @@
       "frame_ms": {
         "frames_drawn": 60,
         "frames_timed": 60,
-        "max": 3.962,
-        "mean": 3.77604259259259,
+        "max": 3.967,
+        "mean": 3.76319444444445,
         "min": 3.7037037037037,
         "n": 60,
         "p50": 3.7037037037037,
-        "p95": 3.937,
-        "p99": 3.962
+        "p95": 3.932,
+        "p99": 3.967
       },
       "name": "today",
       "scatter": {
@@ -129,7 +129,7 @@
         },
         "build_ceiling": 120000,
         "build_ceiling_used": 120000,
-        "build_ms": 908.001,
+        "build_ms": 901.779,
         "centre_m": [
           -1310792.875,
           1616226.125
@@ -220,13 +220,13 @@
       "frame_ms": {
         "frames_drawn": 60,
         "frames_timed": 60,
-        "max": 7.79821212121213,
-        "mean": 7.58685808080807,
+        "max": 7.57575757575758,
+        "mean": 7.57575757575757,
         "min": 7.57575757575758,
         "n": 60,
         "p50": 7.57575757575758,
-        "p95": 7.64509090909092,
-        "p99": 7.79821212121213
+        "p95": 7.57575757575758,
+        "p99": 7.57575757575758
       },
       "name": "cut at 100 m",
       "scatter": {
@@ -247,7 +247,7 @@
         },
         "build_ceiling": 120000,
         "build_ceiling_used": 1500000,
-        "build_ms": 1418.541,
+        "build_ms": 1413.447,
         "centre_m": [
           -1310792.875,
           1616226.125
@@ -338,13 +338,13 @@
       "frame_ms": {
         "frames_drawn": 60,
         "frames_timed": 60,
-        "max": 25.7575757575758,
-        "mean": 25.0269777777778,
-        "min": 24.976,
+        "max": 28.842757575757,
+        "mean": 25.0878944444444,
+        "min": 25.0,
         "n": 60,
         "p50": 25.0,
-        "p95": 25.144,
-        "p99": 25.7575757575758
+        "p95": 25.0,
+        "p99": 28.842757575757
       },
       "name": "cut at 200 m",
       "scatter": {
@@ -365,7 +365,7 @@
         },
         "build_ceiling": 120000,
         "build_ceiling_used": 1500000,
-        "build_ms": 5474.612,
+        "build_ms": 5458.982,
         "centre_m": [
           -1310792.875,
           1616226.125
@@ -456,13 +456,13 @@
       "frame_ms": {
         "frames_drawn": 60,
         "frames_timed": 60,
-        "max": 45.011,
-        "mean": 44.092206060606,
-        "min": 41.6666666666667,
+        "max": 44.4444444444444,
+        "mean": 44.1566444444445,
+        "min": 43.838,
         "n": 60,
-        "p50": 44.4444444444444,
-        "p95": 44.496,
-        "p99": 45.011
+        "p50": 44.1221111111111,
+        "p95": 44.4444444444444,
+        "p99": 44.4444444444444
       },
       "name": "cut at 300 m",
       "scatter": {
@@ -483,7 +483,7 @@
         },
         "build_ceiling": 120000,
         "build_ceiling_used": 1500000,
-        "build_ms": 11441.002,
+        "build_ms": 11418.323,
         "centre_m": [
           -1310792.875,
           1616226.125
@@ -586,13 +586,13 @@
       "frame_ms": {
         "frames_drawn": 60,
         "frames_timed": 60,
-        "max": 25.596,
-        "mean": 24.4001679012346,
-        "min": 22.53506060606,
+        "max": 25.4641212121226,
+        "mean": 24.277597979798,
+        "min": 23.5183030303044,
         "n": 60,
         "p50": 24.2424242424242,
-        "p95": 25.1018787878794,
-        "p99": 25.596
+        "p95": 24.653,
+        "p99": 25.4641212121226
       },
       "name": "fade 1/.75/.5/.25 to 300 m",
       "scatter": {
@@ -625,7 +625,7 @@
         },
         "build_ceiling": 120000,
         "build_ceiling_used": 1500000,
-        "build_ms": 5747.605,
+        "build_ms": 5794.658,
         "centre_m": [
           -1310792.875,
           1616226.125
@@ -728,13 +728,13 @@
       "frame_ms": {
         "frames_drawn": 60,
         "frames_timed": 60,
-        "max": 41.042666666666,
-        "mean": 40.6498044733044,
-        "min": 40.122,
+        "max": 40.9090909090909,
+        "mean": 40.5182287477954,
+        "min": 40.133,
         "n": 60,
-        "p50": 40.7407407407407,
-        "p95": 40.9090909090909,
-        "p99": 41.042666666666
+        "p50": 40.4761904761905,
+        "p95": 40.7407407407407,
+        "p99": 40.9090909090909
       },
       "name": "fade 1/.5/.15/.05 to 1500 m",
       "scatter": {
@@ -767,7 +767,7 @@
         },
         "build_ceiling": 120000,
         "build_ceiling_used": 1500000,
-        "build_ms": 11515.676,
+        "build_ms": 11538.805,
         "centre_m": [
           -1310792.875,
           1616226.125
@@ -839,16 +839,17 @@
       }
     }
   ],
+  "vertical_exaggeration": 12.0,
   "what": "what a distance-banded density schedule costs and covers, for choosing where individual instances stop and a collective representation starts",
   "without_scatter": {
     "frames_drawn": 60,
     "frames_timed": 60,
-    "max": 1.61,
-    "mean": 0.698627777777778,
-    "min": 0.0933749979594722,
+    "max": 0.926626262626264,
+    "mean": 0.761610437710438,
+    "min": 0.743,
     "n": 60,
-    "p50": 0.753,
-    "p95": 1.51515151515152,
-    "p99": 1.61
+    "p50": 0.757,
+    "p95": 0.781,
+    "p99": 0.926626262626264
   }
 }
