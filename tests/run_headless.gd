@@ -81,6 +81,7 @@ func _initialize() -> void:
     test_the_families_hold_the_unit_convention_the_transform_relies_on()
     test_the_cost_model_refuses_outside_its_measured_span()
     test_the_scatter_reports_what_it_could_not_draw()
+    test_a_density_schedule_is_finer_than_the_texel_it_thins()
     test_the_project_does_not_import_blend_sources()
     test_phenology_is_the_cell_measured_against_itself()
     test_the_tint_moves_with_the_season_it_is_read_from()
@@ -2579,3 +2580,77 @@ func test_the_scatter_measurement_verifies_in_pixels_not_primitives() -> void:
     check(short != "", "80 frames were timed while 12 were drawn and the run was accepted")
     check(short.contains("cadence"),
             "the refusal does not name what it is refusing: %s" % short)
+
+
+func test_a_density_schedule_is_finer_than_the_texel_it_thins() -> void:
+    """A REGRESSION FOR A BUG THAT LOOKED LIKE A WORKING MEASUREMENT.
+
+    The residence and height rasters are the 1,000 m overview -- the export
+    declares a tile pyramid and does not emit it -- so a 1,500 m horizon is
+    nine texels. Applied per texel, schedules cutting at 100 m, 200 m and 300 m
+    all keep exactly the centre texel and nothing else, and the first run of
+    `tools/measure_bands.sh` duly reported three byte-identical instance counts
+    under three different names. Nothing errored; the artefact was simply an
+    answer to a question nobody asked.
+
+    So a schedule subdivides the texel it is thinning, and what is checked here
+    is that three different radii produce three different scatters.
+    """
+    check(absf(VegetationScatter.keep_at(9999.0, []) - 1.0) < 1e-9,
+            "an empty schedule thinned something")
+    var sched: Array = [{"to_m": 100.0, "keep": 1.0}, {"to_m": 300.0, "keep": 0.25}]
+    check(absf(VegetationScatter.keep_at(50.0, sched) - 1.0) < 1e-9, "inside the first band")
+    check(absf(VegetationScatter.keep_at(100.0, sched) - 1.0) < 1e-9, "on the first boundary")
+    check(absf(VegetationScatter.keep_at(200.0, sched) - 0.25) < 1e-9, "inside the second band")
+    check(absf(VegetationScatter.keep_at(301.0, sched)) < 1e-9,
+            "past the last band, which keeps nothing")
+
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    if not bool(v.bind_families().get("ok", false)):
+        v.queue_free()
+        return
+    v.show_field("deepest_winter", "band.pft_fractions", 45)
+    var verts: PackedVector3Array = v.terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var centre := v.terrain.mesh_to_world(verts[5000], v.heightfield)
+    # A tiny ceiling: what is compared is `implied_after_bands`, which the
+    # schedule decides and the ceiling never touches, so there is no reason to
+    # spend seconds filling MultiMeshes to find it out.
+    var seen: Array = []
+    var implications: Array = []
+    for radius in [100.0, 200.0, 300.0]:
+        var r := v.scatter_at(centre, TerrainView.SCATTER_HORIZON_M,
+                [{"to_m": radius, "keep": 1.0}], 2000)
+        check(bool(r.get("ok", false)), "the scatter refused a schedule: %s"
+                % str(r.get("why", "")))
+        seen.append(float(r.get("implied_after_bands", 0.0)))
+        implications.append(float(r.get("implied_total", 0.0)))
+    check(seen[0] < seen[1] and seen[1] < seen[2],
+            "cutting at 100, 200 and 300 m implied %s instances -- a schedule finer than the "
+            % str(seen) + "1,000 m texel it thins is being applied at the texel's resolution, "
+            + "so every radius under a kilometre is the same radius")
+    # Roughly as the area grows, which is what says the subdivision is radial
+    # and not merely different. Loose, because the density is per cell and the
+    # disc crosses more than one.
+    var ratio: float = seen[2] / maxf(seen[0], 1.0)
+    check(ratio > 3.0 and ratio < 30.0,
+            "300 m implies %.1fx what 100 m does; the areas differ by 9x" % ratio)
+
+    var full := v.scatter_at(centre, TerrainView.SCATTER_HORIZON_M, [], 2000)
+    check(float(full["implied_after_bands"]) > seen[2],
+            "the unbanded scatter implied no more than a 300 m cut of it")
+    # THE SCHEDULE MUST NOT TOUCH THE IMPLICATION. `implied` is what the wire
+    # says is on the ground and `implied_after_bands` is what this frame chose
+    # to draw; a schedule that moved the first would turn a drawing decision
+    # into data, which is the failure this whole layer is arranged against.
+    implications.append(float(full["implied_total"]))
+    for i in implications.size():
+        check(absf(float(implications[i]) - float(implications[0])) < 1.0,
+                "schedule %d reports %.0f implied where the first reports %.0f: a drawing "
+                % [i, float(implications[i]), float(implications[0])]
+                + "decision is changing what the wire is said to imply")
+    print("bands: 100 m implies %.0f, 200 m %.0f, 300 m %.0f, no schedule %.0f"
+            % [seen[0], seen[1], seen[2], float(full["implied_total"])])
+    v.queue_free()

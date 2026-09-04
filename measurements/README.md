@@ -11,6 +11,9 @@ claims a `PIN` does: what was measured, how, on what, and what it does not cover
 - `scatter_cost.json` — what M5's scatter costs a frame in the viewer that draws it, and whether
   `render_cost.json`'s empty-stage coefficient predicts it. Re-take it with
   `bash tools/measure_scatter.sh`.
+- `scatter_bands.json` — what distance-banded density schedules cost and cover, for deciding where
+  individual instances should stop and a collective representation start. Re-take it with
+  `bash tools/measure_bands.sh`.
 - `visual_audit.md` — what each milestone's claim looks like when photographed, and the five
   defects that came out of looking. Re-take it with `bash tools/audit.sh`.
 
@@ -230,3 +233,135 @@ is checked against is itself not portable, and neither is this. It measures the 
 *drawn*, which is the build ceiling's 120,006 instances and not the 28 million the wire implies —
 the 501 ms figure remains a prediction, now made from a coefficient known to under-predict by about
 a third in this scene.
+
+
+## `scatter_bands.json` — where individuals should stop
+
+Beyond a few hundred metres an individual plant is a fraction of a pixel and there are tens of
+millions of it, so the far field has to become some collective representation. Where that starts,
+and whether the two ends can be faded into each other rather than cut, is a design question. These
+are the measurements it needs: for a set of density schedules, what each costs a frame, how long it
+takes to build, and how much of the screen the vegetation still covers.
+
+`deepest_winter`, day 22, standing at EPSG:5070 `(-1310793, 1616226)`, **eye level inside the
+scatter** — 1.7 m real, pitched 10° down, looking north — on Apple M5 / `gl_compatibility` at
+1280 × 800, vsync off. The marginal is against the same scene with the scatter hidden (p50
+1.56 ms).
+
+| schedule | instances | build | marginal | coverage | px per 1,000 instances |
+|---|---:|---:|---:|---:|---:|
+| today: uniform over 1,500 m, 120 k ceiling | 120,006 | 0.94 s | 2.35 ms | 20,918 px (2.0%) | 174 |
+| cut at 100 m | 113,728 | 0.90 s | 2.92 ms | 328,995 px (32.1%) | 2,893 |
+| cut at 200 m | 440,696 | 3.44 s | 12.33 ms | 436,094 px (42.6%) | 990 |
+| cut at 300 m | 1,009,336 | 7.87 s | 27.23 ms | 594,856 px (58.1%) | 589 |
+| fade 1 / .75 / .5 / .25 to 300 m | 458,568 | 3.60 s | 12.33 ms | 422,018 px (41.2%) | 920 |
+| fade 1 / .5 / .15 / .05 to 1,500 m | 1,497,948 | 11.65 s | 38.44 ms | 281,648 px (27.5%) | 188 |
+
+### Coverage saturates, hard
+
+**Going from a 100 m horizon to 200 m costs 3.9× the instances and buys 1.33× the screen. Going to
+300 m costs 8.9× and buys 1.81×.** The last column is the whole story: 2,893 pixels per thousand
+instances at 100 m, 589 at 300 m. Past the first hundred metres the plants are drawing on top of
+each other, and the marginal instance is buying overdraw.
+
+That is the number a fade schedule turns into a design. It says thinning the far bands is cheap to
+look at, and it says so in pixels rather than in principle.
+
+### A fade beats a cut, measured twice over
+
+**Against the same reach:** the fade to 300 m places 45% of the instances that a hard cut at 300 m
+places, costs 45% of the frame time — and covers **71%** of the screen the hard cut covers.
+
+**Against the same cost:** the fade to 300 m and the hard cut at 200 m cost an identical 12.33 ms,
+and the fade reaches half again as far for 97% of the coverage.
+
+So the sketched shape works, and it works because of saturation rather than in spite of it.
+
+### The bottom row is a warning about the ceiling, not about long fades
+
+The 1,500 m fade is the only schedule the build ceiling bound rather than the schedule, and it
+covers **less** screen than the 300 m cut while costing more. When the ceiling binds it thins
+**uniformly**, including the near field, which is exactly where the pixels are. A band system and a
+global instance cap interact badly: the cap has to be spent near the camera or it undoes the
+schedule.
+
+### Build time, not frame time, is what stops this being dynamic
+
+GDScript fills MultiMeshes at about **128,000 instances per second** here: 0.94 s for 120 k, 3.4 s
+for 441 k, 7.9 s for 1.0 M, 11.6 s for 1.5 M — linear, and slower than the frame it feeds by three
+orders of magnitude. **Nothing above about 30,000 instances can be rebuilt inside a frame**, so a
+scheme that re-scatters as the camera moves is not available at these counts without moving the
+build off GDScript or keeping bands resident and only swapping visibility.
+
+### The resolution wall, which is the real constraint on band distances
+
+| | |
+|---|---:|
+| heightfield texel | **1,000 m** |
+| terrain mesh triangle (`stride` 4) | **4,000 m** |
+| cell (one set of wire values) | ~126 km² |
+
+A 1,500 m horizon is **nine texels**, sitting inside one or two cells. Three consequences:
+
+- **A band boundary under a kilometre has no grid to hang on.** The first run of this measurement
+  reported byte-identical instance counts for cuts at 100 m, 200 m and 300 m, because each kept
+  exactly the centre texel. Schedules now subdivide the texel they thin, at 32 per side — a 31 m
+  grid — and `test_a_density_schedule_is_finer_than_the_texel_it_thins` holds it there.
+- **The density variation inside a band is invented.** Height, crown and phenology all come from
+  the *cell*, so every plant within a kilometre is the same plant and only its position differs.
+  A fade varies density at a resolution the wire does not have. That is defensible for a drawing
+  decision and it must not leak into anything reported as data — which is why `implied` stays the
+  unthinned implication and `implied_after_bands` is a separate number.
+- **The near field has no ground.** At 4 km per terrain triangle, a viewer standing in the scatter
+  is in the middle of one flat triangle. Near-field vegetation would stand on a plane. Tuning a
+  200 m boundary by eye is not really possible until the tile pyramid lands.
+
+### One plant on screen, and the 12× problem
+
+Drawn height, not real height: M1 draws the basin at 12× vertical relief and the scatter scales
+plants by the same factor so the two agree, while horizontal distance is **not** exaggerated. A
+plant therefore subtends about twelve times the angle it would in the field.
+
+| family | real | drawn | 100 m | 200 m | 300 m | 500 m | 1,000 m | 1,500 m |
+|---|---:|---:|---:|---:|---:|---:|---:|---:|
+| shrub | 0.23 m | 2.7 m | 14.1 px | 7.0 px | 4.7 px | 2.8 px | 1.4 px | 0.9 px |
+| succulent | 0.23 m | 2.8 m | 14.7 px | 7.3 px | 4.9 px | 2.9 px | 1.5 px | 1.0 px |
+| tree | 2.10 m | 25.2 m | 131 px | 65.6 px | 43.7 px | 26.2 px | 13.1 px | 8.7 px |
+
+At true scale every one of these numbers is twelve times smaller: a real shrub is **sub-pixel past
+about 85 m** and a real tree past about 780 m. **Any band distance tuned by eye on this render is
+tuned against a 12× distortion, and the families do not fade together** — a tree is still 44 pixels
+at 300 m where a shrub is 4.7.
+
+### What a far-field texture would have to match
+
+If the far bands become a shaded surface, these are the targets it has to hit at the seam — the
+mean colour of the plants themselves, measured with everything else hidden:
+
+| schedule | mean colour of the vegetation | green − red |
+|---|---|---:|
+| cut at 100 m | (0.171, 0.340, 0.128) | +0.170 |
+| cut at 200 m | (0.110, 0.250, 0.081) | +0.141 |
+| cut at 300 m | (0.096, 0.230, 0.070) | +0.134 |
+| fade to 300 m | (0.085, 0.210, 0.061) | +0.125 |
+
+They fall with distance because more of what is drawn is far, small and in shadow. A texture that
+reproduced the near colour everywhere would be visibly brighter than the stand it replaces, so the
+target is a function of range and not a constant. Coverage is the other half of the target: a
+texture standing in for the band from 200 m to 300 m has to read as the difference between those
+two rows, which is 158,762 pixels of a 1,024,000-pixel frame.
+
+### A trap worth writing down
+
+The eye-level camera rendered **completely empty frames** at every height tried, which looks exactly
+like a scatter that failed to build. The cause was the projection: `near` pulled to 0.1 against the
+rig's basin-scale `far` of 5,888,000 is a ratio of 6 × 10⁷, and the compatibility renderer draws
+nothing at all through it. Anything that puts a camera on the ground in this scene has to bring the
+far plane down with it.
+
+### What it does not cover
+
+One machine, one place, one day, one camera, one FOV. Density is a property of the place — see
+`scatter_cost.json` — so the instance counts here do not transfer to another part of the basin;
+the *ratios* between schedules should. No far-field representation exists yet, so nothing here
+measures a seam: it measures what a seam would have to match.

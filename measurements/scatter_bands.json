@@ -1,0 +1,854 @@
+{
+  "host": {
+    "fov_degrees": 75.0,
+    "godot": "4.7.2-stable (official)",
+    "gpu": "Apple M5",
+    "rendering_method": "gl_compatibility",
+    "viewport": [
+      1280,
+      800
+    ],
+    "vsync": "disabled"
+  },
+  "measured_at_commit": "d70c491",
+  "measured_at_commit_means": "the HEAD the run was taken against; the commit that lands this artefact is its child",
+  "method": {
+    "coverage": "counted with the terrain, flowlines, contours and UI hidden, so a coloured pixel is a plant",
+    "marginal": "each schedule's frame time minus the same scene with the scatter hidden, which is the only way to get the scatter's own cost out of a frame that also draws a terrain",
+    "measured_frames": 60,
+    "warmup_frames": 20
+  },
+  "not_covered": "one machine, one place, one day, one camera distance and one FOV. Density is a property of the place -- see scatter_cost.json -- so the instance counts here do not transfer to another part of the basin.",
+  "one_plant_on_screen": [
+    {
+      "crown_m": 0.940064699240089,
+      "drawn_height_m": 2.70289116978767,
+      "height_m": 0.225240930815639,
+      "life_form": "shrub",
+      "pixels_at": {
+        "100": 14.0899054099829,
+        "1000": 1.40899054099829,
+        "150": 9.39327027332196,
+        "1500": 0.939327027332196,
+        "200": 7.04495270499147,
+        "25": 56.3596216399318,
+        "300": 4.69663513666098,
+        "50": 28.1798108199659,
+        "500": 2.81798108199659
+      }
+    },
+    {
+      "crown_m": 0.567284157841731,
+      "drawn_height_m": 2.81693367510413,
+      "height_m": 0.234744472925344,
+      "life_form": "succulent",
+      "pixels_at": {
+        "100": 14.6843977560261,
+        "1000": 1.46843977560261,
+        "150": 9.78959850401742,
+        "1500": 0.978959850401742,
+        "200": 7.34219887801306,
+        "25": 58.7375910241045,
+        "300": 4.89479925200871,
+        "50": 29.3687955120523,
+        "500": 2.93687955120523
+      }
+    },
+    {
+      "crown_m": 9.52944425794244,
+      "drawn_height_m": 25.1558567279768,
+      "height_m": 2.09632139399806,
+      "life_form": "tree",
+      "pixels_at": {
+        "100": 131.13500305383,
+        "1000": 13.113500305383,
+        "150": 87.4233353692199,
+        "1500": 8.742333536922,
+        "200": 65.567501526915,
+        "25": 524.54001221532,
+        "300": 43.71166768461,
+        "50": 262.27000610766,
+        "500": 26.227000610766
+      }
+    }
+  ],
+  "scene": {
+    "at_world_epsg5070": [
+      -1310792.875,
+      1616226.125
+    ],
+    "camera": "eye",
+    "camera_note": "eye = standing in the scatter at 1.7 m real (x12 exaggeration) looking level to the north; overview = the app's focus_on_scatter, which frames the whole horizon from above",
+    "day": 22,
+    "eye_height_m": 1.7,
+    "eye_lift_m": 0.0,
+    "eye_pitch_degrees": 10.0,
+    "heightfield_texel_m": 1000.0,
+    "horizon_m": 1500.0,
+    "measurement_ceiling": 1500000,
+    "row": "band.pft.biomass",
+    "shipped_ceiling": 120000,
+    "terrain_mesh_triangle_m": 4000.0,
+    "window": "deepest_winter"
+  },
+  "schedules": [
+    {
+      "bands": [],
+      "coverage": {
+        "fraction_of_frame": 0.020427734375,
+        "green_minus_red": 0.0358505368290428,
+        "mean_colour": [
+          0.180600633661122,
+          0.216451170490165,
+          0.109969276472006
+        ],
+        "pixels": 20918
+      },
+      "frame_ms": {
+        "frames_drawn": 60,
+        "frames_timed": 60,
+        "max": 4.021,
+        "mean": 3.84119444444445,
+        "min": 3.7037037037037,
+        "n": 60,
+        "p50": 3.913,
+        "p95": 4.006,
+        "p99": 4.021
+      },
+      "name": "today",
+      "scatter": {
+        "bands": [],
+        "budget": {
+          "budget_ms": 33.3,
+          "implied_ms": 501.434390661074,
+          "implied_total": 28092359.9726692,
+          "instances": 1865599.17810301,
+          "mean_ns_per_instance": 17.8494932839005,
+          "measured_on": "Apple M5 / gl_compatibility",
+          "ok": true
+        },
+        "build_ceiling": 120000,
+        "build_ceiling_used": 120000,
+        "build_ms": 940.057,
+        "centre_m": [
+          -1310792.875,
+          1616226.125
+        ],
+        "day": 22,
+        "families_missing": [],
+        "focus_key": "G",
+        "form": {
+          "shrub": {
+            "crown_max_m": 0.940064699240089,
+            "crown_min_m": 0.885732596819971,
+            "height_max_m": 0.225240930815639,
+            "height_min_m": 0.217668696093354
+          },
+          "succulent": {
+            "crown_max_m": 0.567284157841731,
+            "crown_min_m": 0.269071016571551,
+            "height_max_m": 0.234744472925344,
+            "height_min_m": 0.216208698012077
+          },
+          "tree": {
+            "crown_max_m": 9.52944425794244,
+            "crown_min_m": 6.05019074068422,
+            "height_max_m": 2.09632139399806,
+            "height_min_m": 2.03547255468428
+          }
+        },
+        "groups": [
+          "grass",
+          "shrub",
+          "succulent",
+          "tree"
+        ],
+        "implied": {
+          "grass": 0.0,
+          "shrub": 2562185.45150219,
+          "succulent": 25439876.9980344,
+          "tree": 90297.5231326178
+        },
+        "implied_after_bands": 28092359.9726692,
+        "implied_total": 28092359.9726692,
+        "ok": true,
+        "on_screen_px": 76658.8481640629,
+        "phenology": {
+          "cells_with_no_seasonal_signal": 18,
+          "days_sampled": 10,
+          "from": "this cell's biomass today against its own trough and peak across the window, not against the row's range: the row's range says where a cell sits in the basin, not where it sits in its year",
+          "range_drawn": [
+            0.0,
+            1.0
+          ]
+        },
+        "placed": {
+          "grass": 0,
+          "shrub": 10947,
+          "succulent": 108672,
+          "tree": 387
+        },
+        "radius_m": 1500.0,
+        "refused_parameters": 0,
+        "seed": 20260903,
+        "share_bound_by": "the build ceiling, which is lower here than the frame budget",
+        "share_drawn": 0.00427162403289531,
+        "texels": 9,
+        "triangles_in_frame": 5999574,
+        "vertical_exaggeration": 12.0,
+        "what_share_means": "one share across every family, so the mix between them is what the wire says. A share below 1 is a sample of the stand, not a thinner stand.",
+        "window": "deepest_winter"
+      }
+    },
+    {
+      "bands": [
+        {
+          "keep": 1.0,
+          "to_m": 100.0
+        }
+      ],
+      "coverage": {
+        "fraction_of_frame": 0.3212841796875,
+        "green_minus_red": 0.169727071108751,
+        "mean_colour": [
+          0.170738484730576,
+          0.340465555839327,
+          0.128050951956937
+        ],
+        "pixels": 328995
+      },
+      "frame_ms": {
+        "frames_drawn": 60,
+        "frames_timed": 60,
+        "max": 4.54545454545454,
+        "mean": 4.47805,
+        "min": 4.371,
+        "n": 60,
+        "p50": 4.479,
+        "p95": 4.54545454545454,
+        "p99": 4.54545454545454
+      },
+      "name": "cut at 100 m",
+      "scatter": {
+        "bands": [
+          {
+            "keep": 1.0,
+            "to_m": 100.0
+          }
+        ],
+        "budget": {
+          "budget_ms": 33.3,
+          "implied_ms": 501.434390661074,
+          "implied_total": 28092359.9726692,
+          "instances": 1865599.17810301,
+          "mean_ns_per_instance": 17.8494932839005,
+          "measured_on": "Apple M5 / gl_compatibility",
+          "ok": true
+        },
+        "build_ceiling": 120000,
+        "build_ceiling_used": 1500000,
+        "build_ms": 894.865,
+        "centre_m": [
+          -1310792.875,
+          1616226.125
+        ],
+        "day": 22,
+        "families_missing": [],
+        "focus_key": "G",
+        "form": {
+          "shrub": {
+            "crown_max_m": 0.940064699240089,
+            "crown_min_m": 0.940064699240089,
+            "height_max_m": 0.225240930815639,
+            "height_min_m": 0.225240930815639
+          },
+          "succulent": {
+            "crown_max_m": 0.269071016571551,
+            "crown_min_m": 0.269071016571551,
+            "height_max_m": 0.234744472925344,
+            "height_min_m": 0.234744472925344
+          },
+          "tree": {
+            "crown_max_m": 9.52944425794244,
+            "crown_min_m": 9.52944425794244,
+            "height_max_m": 2.09632139399806,
+            "height_min_m": 2.09632139399806
+          }
+        },
+        "groups": [
+          "grass",
+          "shrub",
+          "succulent",
+          "tree"
+        ],
+        "implied": {
+          "grass": 0.0,
+          "shrub": 2562185.45150219,
+          "succulent": 25439876.9980344,
+          "tree": 90297.5231326178
+        },
+        "implied_after_bands": 113729.936648596,
+        "implied_total": 28092359.9726692,
+        "ok": true,
+        "on_screen_px": 76658.8481640629,
+        "phenology": {
+          "cells_with_no_seasonal_signal": 18,
+          "days_sampled": 10,
+          "from": "this cell's biomass today against its own trough and peak across the window, not against the row's range: the row's range says where a cell sits in the basin, not where it sits in its year",
+          "range_drawn": [
+            0.0,
+            1.0
+          ]
+        },
+        "placed": {
+          "grass": 0,
+          "shrub": 8768,
+          "succulent": 104704,
+          "tree": 256
+        },
+        "radius_m": 1500.0,
+        "refused_parameters": 0,
+        "seed": 20260903,
+        "share_bound_by": "the density schedule alone",
+        "share_drawn": 1.0,
+        "texels": 9,
+        "triangles_in_frame": 5650816,
+        "vertical_exaggeration": 12.0,
+        "what_share_means": "one share across every family, so the mix between them is what the wire says. A share below 1 is a sample of the stand, not a thinner stand.",
+        "window": "deepest_winter"
+      }
+    },
+    {
+      "bands": [
+        {
+          "keep": 1.0,
+          "to_m": 200.0
+        }
+      ],
+      "coverage": {
+        "fraction_of_frame": 0.425873046875,
+        "green_minus_red": 0.140742955938765,
+        "mean_colour": [
+          0.109526667633075,
+          0.25026962357184,
+          0.0807835664804468
+        ],
+        "pixels": 436094
+      },
+      "frame_ms": {
+        "frames_drawn": 60,
+        "frames_timed": 60,
+        "max": 13.8888888888889,
+        "mean": 13.8503954545455,
+        "min": 13.566,
+        "n": 60,
+        "p50": 13.8888888888889,
+        "p95": 13.8888888888889,
+        "p99": 13.8888888888889
+      },
+      "name": "cut at 200 m",
+      "scatter": {
+        "bands": [
+          {
+            "keep": 1.0,
+            "to_m": 200.0
+          }
+        ],
+        "budget": {
+          "budget_ms": 33.3,
+          "implied_ms": 501.434390661074,
+          "implied_total": 28092359.9726692,
+          "instances": 1865599.17810301,
+          "mean_ns_per_instance": 17.8494932839005,
+          "measured_on": "Apple M5 / gl_compatibility",
+          "ok": true
+        },
+        "build_ceiling": 120000,
+        "build_ceiling_used": 1500000,
+        "build_ms": 3436.375,
+        "centre_m": [
+          -1310792.875,
+          1616226.125
+        ],
+        "day": 22,
+        "families_missing": [],
+        "focus_key": "G",
+        "form": {
+          "shrub": {
+            "crown_max_m": 0.940064699240089,
+            "crown_min_m": 0.940064699240089,
+            "height_max_m": 0.225240930815639,
+            "height_min_m": 0.225240930815639
+          },
+          "succulent": {
+            "crown_max_m": 0.269071016571551,
+            "crown_min_m": 0.269071016571551,
+            "height_max_m": 0.234744472925344,
+            "height_min_m": 0.234744472925344
+          },
+          "tree": {
+            "crown_max_m": 9.52944425794244,
+            "crown_min_m": 9.52944425794244,
+            "height_max_m": 2.09632139399806,
+            "height_min_m": 2.09632139399806
+          }
+        },
+        "groups": [
+          "grass",
+          "shrub",
+          "succulent",
+          "tree"
+        ],
+        "implied": {
+          "grass": 0.0,
+          "shrub": 2562185.45150219,
+          "succulent": 25439876.9980344,
+          "tree": 90297.5231326178
+        },
+        "implied_after_bands": 440703.504513309,
+        "implied_total": 28092359.9726692,
+        "ok": true,
+        "on_screen_px": 76658.8481640629,
+        "phenology": {
+          "cells_with_no_seasonal_signal": 18,
+          "days_sampled": 10,
+          "from": "this cell's biomass today against its own trough and peak across the window, not against the row's range: the row's range says where a cell sits in the basin, not where it sits in its year",
+          "range_drawn": [
+            0.0,
+            1.0
+          ]
+        },
+        "placed": {
+          "grass": 0,
+          "shrub": 33976,
+          "succulent": 405728,
+          "tree": 992
+        },
+        "radius_m": 1500.0,
+        "refused_parameters": 0,
+        "seed": 20260903,
+        "share_bound_by": "the density schedule alone",
+        "share_drawn": 1.0,
+        "texels": 9,
+        "triangles_in_frame": 21896912,
+        "vertical_exaggeration": 12.0,
+        "what_share_means": "one share across every family, so the mix between them is what the wire says. A share below 1 is a sample of the stand, not a thinner stand.",
+        "window": "deepest_winter"
+      }
+    },
+    {
+      "bands": [
+        {
+          "keep": 1.0,
+          "to_m": 300.0
+        }
+      ],
+      "coverage": {
+        "fraction_of_frame": 0.5809140625,
+        "green_minus_red": 0.134178623758061,
+        "mean_colour": [
+          0.0960352653476018,
+          0.230213889105663,
+          0.0703419104314249
+        ],
+        "pixels": 594856
+      },
+      "frame_ms": {
+        "frames_drawn": 60,
+        "frames_timed": 60,
+        "max": 29.1666666666667,
+        "mean": 28.8710095959596,
+        "min": 28.7878787878788,
+        "n": 60,
+        "p50": 28.7878787878788,
+        "p95": 29.1666666666667,
+        "p99": 29.1666666666667
+      },
+      "name": "cut at 300 m",
+      "scatter": {
+        "bands": [
+          {
+            "keep": 1.0,
+            "to_m": 300.0
+          }
+        ],
+        "budget": {
+          "budget_ms": 33.3,
+          "implied_ms": 501.434390661074,
+          "implied_total": 28092359.9726692,
+          "instances": 1865599.17810301,
+          "mean_ns_per_instance": 17.8494932839005,
+          "measured_on": "Apple M5 / gl_compatibility",
+          "ok": true
+        },
+        "build_ceiling": 120000,
+        "build_ceiling_used": 1500000,
+        "build_ms": 7864.937,
+        "centre_m": [
+          -1310792.875,
+          1616226.125
+        ],
+        "day": 22,
+        "families_missing": [],
+        "focus_key": "G",
+        "form": {
+          "shrub": {
+            "crown_max_m": 0.940064699240089,
+            "crown_min_m": 0.940064699240089,
+            "height_max_m": 0.225240930815639,
+            "height_min_m": 0.225240930815639
+          },
+          "succulent": {
+            "crown_max_m": 0.269071016571551,
+            "crown_min_m": 0.269071016571551,
+            "height_max_m": 0.234744472925344,
+            "height_min_m": 0.234744472925344
+          },
+          "tree": {
+            "crown_max_m": 9.52944425794244,
+            "crown_min_m": 9.52944425794244,
+            "height_max_m": 2.09632139399806,
+            "height_min_m": 2.09632139399806
+          }
+        },
+        "groups": [
+          "grass",
+          "shrub",
+          "succulent",
+          "tree"
+        ],
+        "implied": {
+          "grass": 0.0,
+          "shrub": 2562185.45150219,
+          "succulent": 25439876.9980344,
+          "tree": 90297.5231326178
+        },
+        "implied_after_bands": 1009353.18775631,
+        "implied_total": 28092359.9726692,
+        "ok": true,
+        "on_screen_px": 76658.8481640629,
+        "phenology": {
+          "cells_with_no_seasonal_signal": 18,
+          "days_sampled": 10,
+          "from": "this cell's biomass today against its own trough and peak across the window, not against the row's range: the row's range says where a cell sits in the basin, not where it sits in its year",
+          "range_drawn": [
+            0.0,
+            1.0
+          ]
+        },
+        "placed": {
+          "grass": 0,
+          "shrub": 77816,
+          "succulent": 929248,
+          "tree": 2272
+        },
+        "radius_m": 1500.0,
+        "refused_parameters": 0,
+        "seed": 20260903,
+        "share_bound_by": "the density schedule alone",
+        "share_drawn": 1.0,
+        "texels": 9,
+        "triangles_in_frame": 50150992,
+        "vertical_exaggeration": 12.0,
+        "what_share_means": "one share across every family, so the mix between them is what the wire says. A share below 1 is a sample of the stand, not a thinner stand.",
+        "window": "deepest_winter"
+      }
+    },
+    {
+      "bands": [
+        {
+          "keep": 1.0,
+          "to_m": 100.0
+        },
+        {
+          "keep": 0.75,
+          "to_m": 150.0
+        },
+        {
+          "keep": 0.5,
+          "to_m": 200.0
+        },
+        {
+          "keep": 0.25,
+          "to_m": 300.0
+        }
+      ],
+      "coverage": {
+        "fraction_of_frame": 0.412126953125,
+        "green_minus_red": 0.124973393470538,
+        "mean_colour": [
+          0.0849993495589126,
+          0.209972743029451,
+          0.0612352026208414
+        ],
+        "pixels": 422018
+      },
+      "frame_ms": {
+        "frames_drawn": 60,
+        "frames_timed": 60,
+        "max": 13.8888888888889,
+        "mean": 13.8888888888889,
+        "min": 13.8888888888889,
+        "n": 60,
+        "p50": 13.8888888888889,
+        "p95": 13.8888888888889,
+        "p99": 13.8888888888889
+      },
+      "name": "fade 1/.75/.5/.25 to 300 m",
+      "scatter": {
+        "bands": [
+          {
+            "keep": 1.0,
+            "to_m": 100.0
+          },
+          {
+            "keep": 0.75,
+            "to_m": 150.0
+          },
+          {
+            "keep": 0.5,
+            "to_m": 200.0
+          },
+          {
+            "keep": 0.25,
+            "to_m": 300.0
+          }
+        ],
+        "budget": {
+          "budget_ms": 33.3,
+          "implied_ms": 501.434390661074,
+          "implied_total": 28092359.9726692,
+          "instances": 1865599.17810301,
+          "mean_ns_per_instance": 17.8494932839005,
+          "measured_on": "Apple M5 / gl_compatibility",
+          "ok": true
+        },
+        "build_ceiling": 120000,
+        "build_ceiling_used": 1500000,
+        "build_ms": 3600.829,
+        "centre_m": [
+          -1310792.875,
+          1616226.125
+        ],
+        "day": 22,
+        "families_missing": [],
+        "focus_key": "G",
+        "form": {
+          "shrub": {
+            "crown_max_m": 0.940064699240089,
+            "crown_min_m": 0.940064699240089,
+            "height_max_m": 0.225240930815639,
+            "height_min_m": 0.225240930815639
+          },
+          "succulent": {
+            "crown_max_m": 0.269071016571551,
+            "crown_min_m": 0.269071016571551,
+            "height_max_m": 0.234744472925344,
+            "height_min_m": 0.234744472925344
+          },
+          "tree": {
+            "crown_max_m": 9.52944425794244,
+            "crown_min_m": 9.52944425794244,
+            "height_max_m": 2.09632139399806,
+            "height_min_m": 2.09632139399806
+          }
+        },
+        "groups": [
+          "grass",
+          "shrub",
+          "succulent",
+          "tree"
+        ],
+        "implied": {
+          "grass": 0.0,
+          "shrub": 2562185.45150219,
+          "succulent": 25439876.9980344,
+          "tree": 90297.5231326178
+        },
+        "implied_after_bands": 458473.807114655,
+        "implied_total": 28092359.9726692,
+        "ok": true,
+        "on_screen_px": 76658.8481640629,
+        "phenology": {
+          "cells_with_no_seasonal_signal": 18,
+          "days_sampled": 10,
+          "from": "this cell's biomass today against its own trough and peak across the window, not against the row's range: the row's range says where a cell sits in the basin, not where it sits in its year",
+          "range_drawn": [
+            0.0,
+            1.0
+          ]
+        },
+        "placed": {
+          "grass": 0,
+          "shrub": 35448,
+          "succulent": 422088,
+          "tree": 1032
+        },
+        "radius_m": 1500.0,
+        "refused_parameters": 0,
+        "seed": 20260903,
+        "share_bound_by": "the density schedule alone",
+        "share_drawn": 1.0,
+        "texels": 9,
+        "triangles_in_frame": 22786992,
+        "vertical_exaggeration": 12.0,
+        "what_share_means": "one share across every family, so the mix between them is what the wire says. A share below 1 is a sample of the stand, not a thinner stand.",
+        "window": "deepest_winter"
+      }
+    },
+    {
+      "bands": [
+        {
+          "keep": 1.0,
+          "to_m": 150.0
+        },
+        {
+          "keep": 0.5,
+          "to_m": 400.0
+        },
+        {
+          "keep": 0.15,
+          "to_m": 800.0
+        },
+        {
+          "keep": 0.05,
+          "to_m": 1500.0
+        }
+      ],
+      "coverage": {
+        "fraction_of_frame": 0.275046875,
+        "green_minus_red": 0.154069383880041,
+        "mean_colour": [
+          0.176265108806491,
+          0.330334492686532,
+          0.128896858260224
+        ],
+        "pixels": 281648
+      },
+      "frame_ms": {
+        "frames_drawn": 60,
+        "frames_timed": 60,
+        "max": 40.0,
+        "mean": 40.0,
+        "min": 40.0,
+        "n": 60,
+        "p50": 40.0,
+        "p95": 40.0,
+        "p99": 40.0
+      },
+      "name": "fade 1/.5/.15/.05 to 1500 m",
+      "scatter": {
+        "bands": [
+          {
+            "keep": 1.0,
+            "to_m": 150.0
+          },
+          {
+            "keep": 0.5,
+            "to_m": 400.0
+          },
+          {
+            "keep": 0.15,
+            "to_m": 800.0
+          },
+          {
+            "keep": 0.05,
+            "to_m": 1500.0
+          }
+        ],
+        "budget": {
+          "budget_ms": 33.3,
+          "implied_ms": 501.434390661074,
+          "implied_total": 28092359.9726692,
+          "instances": 1865599.17810301,
+          "mean_ns_per_instance": 17.8494932839005,
+          "measured_on": "Apple M5 / gl_compatibility",
+          "ok": true
+        },
+        "build_ceiling": 120000,
+        "build_ceiling_used": 1500000,
+        "build_ms": 11649.439,
+        "centre_m": [
+          -1310792.875,
+          1616226.125
+        ],
+        "day": 22,
+        "families_missing": [],
+        "focus_key": "G",
+        "form": {
+          "shrub": {
+            "crown_max_m": 0.940064699240089,
+            "crown_min_m": 0.885732596819971,
+            "height_max_m": 0.225240930815639,
+            "height_min_m": 0.217668696093354
+          },
+          "succulent": {
+            "crown_max_m": 0.567284157841731,
+            "crown_min_m": 0.269071016571551,
+            "height_max_m": 0.234744472925344,
+            "height_min_m": 0.216208698012077
+          },
+          "tree": {
+            "crown_max_m": 9.52944425794244,
+            "crown_min_m": 6.05019074068422,
+            "height_max_m": 2.09632139399806,
+            "height_min_m": 2.03547255468428
+          }
+        },
+        "groups": [
+          "grass",
+          "shrub",
+          "succulent",
+          "tree"
+        ],
+        "implied": {
+          "grass": 0.0,
+          "shrub": 2562185.45150219,
+          "succulent": 25439876.9980344,
+          "tree": 90297.5231326178
+        },
+        "implied_after_bands": 2602114.24620666,
+        "implied_total": 28092359.9726692,
+        "ok": true,
+        "on_screen_px": 76658.8481640629,
+        "phenology": {
+          "cells_with_no_seasonal_signal": 18,
+          "days_sampled": 10,
+          "from": "this cell's biomass today against its own trough and peak across the window, not against the row's range: the row's range says where a cell sits in the basin, not where it sits in its year",
+          "range_drawn": [
+            0.0,
+            1.0
+          ]
+        },
+        "placed": {
+          "grass": 0,
+          "shrub": 125844,
+          "succulent": 1369296,
+          "tree": 2808
+        },
+        "radius_m": 1500.0,
+        "refused_parameters": 0,
+        "seed": 20260903,
+        "share_bound_by": "the build ceiling, which is lower here than the frame budget",
+        "share_drawn": 0.576454320630498,
+        "texels": 9,
+        "triangles_in_frame": 74658840,
+        "vertical_exaggeration": 12.0,
+        "what_share_means": "one share across every family, so the mix between them is what the wire says. A share below 1 is a sample of the stand, not a thinner stand.",
+        "window": "deepest_winter"
+      }
+    }
+  ],
+  "what": "what a distance-banded density schedule costs and covers, for choosing where individual instances stop and a collective representation starts",
+  "without_scatter": {
+    "frames_drawn": 60,
+    "frames_timed": 60,
+    "max": 1.85185185185185,
+    "mean": 1.65181026936027,
+    "min": 1.479,
+    "n": 60,
+    "p50": 1.559,
+    "p95": 1.85185185185185,
+    "p99": 1.85185185185185
+  }
+}

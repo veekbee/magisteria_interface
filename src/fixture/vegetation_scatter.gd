@@ -63,6 +63,43 @@ const SCATTER_SEED := 20260903
 ## spend a minute building it".
 const MAX_BUILT_INSTANCES := 120000
 
+## A DENSITY SCHEDULE, which is the thing a band system is made of.
+##
+## `[{"to_m": 100.0, "keep": 1.0}, {"to_m": 300.0, "keep": 0.25}]` places every
+## implied individual within 100 m of the centre, a quarter of them out to
+## 300 m, and none beyond. An empty schedule is today's behaviour exactly: one
+## keep of 1.0 everywhere, thinned only by whatever ceiling binds.
+##
+## THINNING IS SAMPLING, NOT SHRINKING, and the distinction is the same one
+## `share_drawn` already makes. A band at 0.25 draws a quarter of the stand at
+## full size; it does not draw the whole stand at quarter density, and it does
+## not make the plants smaller. What the wire says is on the ground is
+## unchanged and the report still carries it -- `implied` is the unthinned
+## implication and stays that way, because the schedule is a drawing decision
+## and the implication is a measurement.
+const NO_SCHEDULE: Array = []
+
+## A TEXEL IS A KILOMETRE, AND A BAND BOUNDARY IS A HUNDRED METRES. The
+## residence and height rasters this scatter places against are the 1,000 m
+## overview -- the export declares a tile pyramid and does not emit it -- so a
+## 1,500 m horizon is NINE texels, and applying a schedule per texel gives a
+## fade with three steps in it, all of them a kilometre wide. Measured before
+## this existed: schedules cutting at 100 m, 200 m and 300 m produced byte-
+## identical instance counts, because each kept exactly the centre texel and
+## nothing else.
+##
+## So a schedule subdivides the texel it is thinning. Each texel is split into
+## this many sub-cells per side and the keep is evaluated at each sub-cell's
+## own centre, which puts the fade on a 31 m grid instead of a 1,000 m one.
+## The DATA is still per cell -- every plant in a texel has the same height,
+## crown and phenology, because those come from the cell -- and only the
+## density varies within it. That asymmetry is honest and worth stating: the
+## fade is a drawing decision applied at a resolution the wire does not have.
+##
+## It costs nothing when no schedule is given, which is the shipped path: with
+## an empty schedule the texel is not subdivided at all.
+const BAND_SUBDIVISION := 32
+
 ## Days sampled to find a cell's own yearly trough and peak for phenology.
 ##
 ## Ten of the window's ninety, because the alternative is reading every day of
@@ -103,7 +140,9 @@ func is_bound() -> bool:
 ## A radius rather than the basin: a cell here is about 126 km2 and the whole
 ## basin is 5,684 of them, so "scatter the fixture" is not a thing any frame
 ## can contain. The horizon is the caller's and the cost of it is reported.
-func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictionary:
+func build(window: String, day: int, centre: Vector2, radius_m: float,
+           bands: Array = NO_SCHEDULE, ceiling: int = MAX_BUILT_INSTANCES) -> Dictionary:
+    var t_build := Time.get_ticks_usec()
     meshes = {}
     if not is_bound():
         report = {"ok": false, "why": "the scatter is not bound to its artefacts"}
@@ -193,28 +232,63 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
                     continue
                 if float(seasons[gi]["hi"][cell]) - float(seasons[gi]["lo"][cell]) <= 0.0:
                     flat_cells += 1
-                wanted.append({"texel": Vector2i(tx, ty), "life_form": life_form,
-                               "count": count, "height_m": float(params["height_m"]),
-                               "crown_m": crown, "phenology": phen})
+                var half := 0.5 * _hf.pixel_size_m
+                if bands.is_empty():
+                    wanted.append({"origin": w, "half_m": half, "life_form": life_form,
+                                   "count": count, "banded": count,
+                                   "distance_m": Vector2(w.x - centre.x,
+                                           w.y - centre.y).length(), "keep": 1.0,
+                                   "height_m": float(params["height_m"]),
+                                   "crown_m": crown, "phenology": phen})
+                    continue
+                # Subdivided, because the schedule works at a finer scale than
+                # the raster this is placed on. Sub-cells the schedule keeps
+                # nothing in are not emitted at all, so a tight band over a
+                # wide horizon costs a loop and not a scatter.
+                var sub_half := half / float(BAND_SUBDIVISION)
+                var per_sub := count / float(BAND_SUBDIVISION * BAND_SUBDIVISION)
+                for sy in BAND_SUBDIVISION:
+                    for sx in BAND_SUBDIVISION:
+                        var o := Vector2(
+                                w.x - half + sub_half * (2.0 * float(sx) + 1.0),
+                                w.y - half + sub_half * (2.0 * float(sy) + 1.0))
+                        var d_m := Vector2(o.x - centre.x, o.y - centre.y).length()
+                        var keep := keep_at(d_m, bands)
+                        if keep <= 0.0:
+                            continue
+                        wanted.append({"origin": o, "half_m": sub_half,
+                                       "life_form": life_form, "count": per_sub,
+                                       "banded": per_sub * keep,
+                                       "distance_m": d_m, "keep": keep,
+                                       "height_m": float(params["height_m"]),
+                                       "crown_m": crown, "phenology": phen})
 
     # What one frame can hold, from the measurement rather than from a guess.
     var total_implied := 0.0
     for g in implied:
         total_implied += float(implied[g])
+    # After the schedule, which is what actually has to be built and drawn. The
+    # unthinned total stays reported beside it: one is what the wire says is
+    # there and the other is what this frame chose to draw, and collapsing them
+    # into one number is how a drawing decision comes to look like data.
+    var total_banded := 0.0
+    for item in wanted:
+        total_banded += float(item["banded"])
     var afford := _affordable(groups, implied)
-    var ceiling := float(afford.get("instances", 0.0)) if bool(afford.get("ok", false)) else 0.0
+    var head: float = float(afford.get("instances", 0.0)) if bool(afford.get("ok", false)) else 0.0
     var bound_by := "the frame budget"
     if not bool(afford.get("ok", false)):
-        ceiling = float(MAX_BUILT_INSTANCES)
+        head = float(ceiling)
         bound_by = "the build ceiling, with no frame-cost measurement to price against"
-    elif ceiling > float(MAX_BUILT_INSTANCES):
-        ceiling = float(MAX_BUILT_INSTANCES)
+    elif head > float(ceiling):
+        head = float(ceiling)
         bound_by = "the build ceiling, which is lower here than the frame budget"
     var share: float = 1.0
-    if total_implied > ceiling and total_implied > 0.0:
-        share = ceiling / total_implied
+    if total_banded > head and total_banded > 0.0:
+        share = head / total_banded
     else:
-        bound_by = "nothing: the whole implied scatter is drawn"
+        bound_by = ("the density schedule alone" if not bands.is_empty()
+                else "nothing: the whole implied scatter is drawn")
 
     # PASS TWO: place the share, preserving the mix between families.
     var rng := RandomNumberGenerator.new()
@@ -228,13 +302,12 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
         by_family[g] = []
         phen_of[g] = PackedFloat32Array()
     for item in wanted:
-        var n := int(round(float(item["count"]) * share))
+        var n := int(round(float(item["banded"]) * share))
         if n <= 0:
             continue
         var life_form: String = item["life_form"]
-        var t: Vector2i = item["texel"]
-        var origin := _hf.texel_to_world(float(t.x), float(t.y))
-        var half := 0.5 * _hf.pixel_size_m
+        var origin: Vector2 = item["origin"]
+        var half: float = item["half_m"]
         for i in n:
             var wx := origin.x + rng.randf_range(-half, half)
             var wy := origin.y + rng.randf_range(-half, half)
@@ -255,6 +328,24 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
             phen_lo = minf(phen_lo, float(item["phenology"]))
             phen_hi = maxf(phen_hi, float(item["phenology"]))
             placed[life_form] = int(placed[life_form]) + 1
+
+    # The size the wire implied, per family, over the cells this horizon
+    # touched. A band scheme needs it to know when an individual stops being
+    # worth drawing individually, and it is not recoverable from `placed`.
+    var form: Dictionary = {}
+    for item in wanted:
+        var lf: String = item["life_form"]
+        var h := float(item["height_m"])
+        var c := float(item["crown_m"])
+        if not form.has(lf):
+            form[lf] = {"height_min_m": h, "height_max_m": h,
+                        "crown_min_m": c, "crown_max_m": c}
+        else:
+            var f: Dictionary = form[lf]
+            f["height_min_m"] = minf(float(f["height_min_m"]), h)
+            f["height_max_m"] = maxf(float(f["height_max_m"]), h)
+            f["crown_min_m"] = minf(float(f["crown_min_m"]), c)
+            f["crown_max_m"] = maxf(float(f["crown_max_m"]), c)
 
     var triangles := 0
     for life_form in by_family:
@@ -296,7 +387,12 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
         "groups": Array(groups),
         "families_missing": Array(missing),
         "implied": implied,
+        "implied_total": total_implied,
+        "bands": bands,
+        "implied_after_bands": total_banded,
+        "build_ceiling_used": ceiling,
         "placed": placed,
+        "form": form,
         "share_drawn": share,
         "share_bound_by": bound_by,
         "build_ceiling": MAX_BUILT_INSTANCES,
@@ -310,12 +406,28 @@ func build(window: String, day: int, centre: Vector2, radius_m: float) -> Dictio
             "cells_with_no_seasonal_signal": flat_cells,
         },
         "triangles_in_frame": triangles,
+        "build_ms": float(Time.get_ticks_usec() - t_build) / 1000.0,
         "budget": afford,
         "what_share_means": ("one share across every family, so the mix between them is what "
                 + "the wire says. A share below 1 is a sample of the stand, not a thinner "
                 + "stand."),
     }
     return report
+
+
+## The share of a texel's implied stand a schedule keeps at this distance.
+##
+## Bands are read in order and the FIRST whose `to_m` the distance is inside
+## wins, so a schedule is written near-to-far and a distance past the last band
+## keeps nothing. An empty schedule keeps everything, which is what makes the
+## default identical to having no schedule at all rather than merely similar.
+static func keep_at(distance_m: float, bands: Array) -> float:
+    if bands.is_empty():
+        return 1.0
+    for b in bands:
+        if distance_m <= float((b as Dictionary).get("to_m", 0.0)):
+            return clampf(float((b as Dictionary).get("keep", 0.0)), 0.0, 1.0)
+    return 0.0
 
 
 ## Height and crown for one cell's worth of one life form, both inside the

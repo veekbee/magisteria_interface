@@ -472,12 +472,15 @@ func bind_families() -> Dictionary:
 ##
 ## THE DAY IS THE SCRUBBER'S, through `shown`. A scatter holding its own day
 ## would put winter's canopy over summer's ground.
-func scatter_at(centre: Vector2, radius_m: float = SCATTER_HORIZON_M) -> Dictionary:
+func scatter_at(centre: Vector2, radius_m: float = SCATTER_HORIZON_M,
+                bands: Array = VegetationScatter.NO_SCHEDULE,
+                ceiling: int = VegetationScatter.MAX_BUILT_INSTANCES) -> Dictionary:
     if scatter == null or not scatter.is_bound():
         return {"ok": false, "why": "no vegetation scatter is bound"}
     if shown.is_empty():
         return {"ok": false, "why": "no row is painted, so there is no day to scatter"}
-    var r := scatter.build(str(shown["window"]), int(shown["day"]), centre, radius_m)
+    var r := scatter.build(str(shown["window"]), int(shown["day"]), centre, radius_m,
+            bands, ceiling)
     if not bool(r.get("ok", false)):
         return r
     for life_form in scatter.meshes:

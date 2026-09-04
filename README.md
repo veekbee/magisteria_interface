@@ -15,7 +15,8 @@ tools/        the contract check, the vendoring tools, and the Blender, benchmar
               screenshot machinery — see tools/screenshot.sh, which photographs the running
               app because the headless suite cannot see the screen, tools/audit.sh,
               which takes one named shot per milestone claim, and
-              tools/measure_scatter.sh, which prices M5's scatter in the scene that draws it
+              tools/measure_scatter.sh, which prices M5's scatter in the scene that draws
+              it, and tools/measure_bands.sh, which prices distance-banded density schedules
 tests/        headless GDScript tests, no framework
 ```
 
