@@ -11,7 +11,9 @@ src/          GDScript — contract loader, UI
 scenes/       Godot scenes
 assets/       the vendored artefacts and M5's families; see assets/README.md for what commits
 measurements/ numbers measured here rather than vendored — see measurements/README.md
-tools/        the contract check, the vendoring tools, and the Blender and benchmark machinery
+tools/        the contract check, the vendoring tools, and the Blender, benchmark and
+              screenshot machinery — see tools/screenshot.sh, which photographs the running
+              app because the headless suite cannot see the screen
 tests/        headless GDScript tests, no framework
 ```
 

@@ -44,3 +44,7 @@
 # Blender writes a .blend1 backup beside every save. The source is the .blend;
 # the backup is the previous save of the same file and belongs to nobody.
 *.blend1
+
+# Screenshots from tools/screenshot.sh. Regenerable, and a frame is large;
+# quote the measurement in a commit message rather than committing the picture.
+shots/

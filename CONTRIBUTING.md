@@ -48,6 +48,34 @@ simulation's `sim/` or run directories, no internal-rung debug path. See `README
 No third-party terrain plugins and no test framework. `godot --headless --script` with hand-rolled
 asserts covers the loader and the inspector. CI enforces the absence of an `addons/` directory.
 
+## The tests cannot see the screen, so look at it
+
+`tests/run_headless.gd` verifies data end to end and is blind to rendering: under `--headless` the
+display server draws nothing, and every per-instance value in a MultiMesh reads back as zero. Three
+defects reached `main` past a suite of 1,800 passing checks — the terrain wound inside-out and never
+drawn since M1, a phenology mask that never reached its shader, nodata rendering as black. Each was
+found by rendering something and looking at it.
+
+**`bash tools/screenshot.sh` is the instrument for that.** It drives the application's own paths — a
+day change goes through `main._on_field_changed`, a scatter through `probe_at_screen` and
+`_on_probed` — photographs the result, and prints a colour census beside it so a finding can be
+quoted instead of gestured at.
+
+```
+bash tools/screenshot.sh --row band.pft.biomass --days 22,89 --scatter --hide ui,terrain
+```
+
+Two habits it enforces, both learned by getting them wrong:
+
+- **It reports the state it achieved, not the state you asked for.** A capture that prints only
+  pixels invites you to assume the scene reached the state you named. When it quietly did not, the
+  pixels are a picture of something else and nothing says so.
+- **It refuses to report a difference between identical frames.** "+0.000 → +0.000" across two
+  byte-identical images reads as a measured absence of change; it is the absence of a measurement.
+
+Screenshots go to `shots/`, which is ignored: a frame is large and regenerable, so quote the
+measurement in the commit message rather than committing the picture.
+
 ## `project.godot` is minimal by intent, and cannot hold its own rule
 
 Renderer and main scene only. Anything else added there is a decision someone should have to argue

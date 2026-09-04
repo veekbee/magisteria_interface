@@ -67,6 +67,7 @@ func _initialize() -> void:
     test_the_fit_reports_what_it_costs_to_believe_it()
     test_the_benchmark_refuses_to_measure_frame_cost_headless()
     test_the_fit_survives_a_renderer_with_no_gpu_timer()
+    test_the_frame_probe_measures_what_a_look_would_report()
     test_every_wire_life_form_resolves_to_a_family()
     test_no_family_is_keyed_below_life_form()
     test_a_parameter_outside_its_range_is_refused_not_clamped()
@@ -2197,3 +2198,57 @@ func test_multimesh_custom_data_does_not_read_back_headless() -> void:
     check(mm.buffer.size() == 0,
             "the MultiMesh buffer is %d long headless, so the instances can be checked "
             % mm.buffer.size() + "directly now")
+
+
+func test_the_frame_probe_measures_what_a_look_would_report() -> void:
+    """`tools/screenshot.sh` photographs the running app; this is the half of it
+    that can be checked without a screen. The census exists so "that looks
+    wrong" becomes a number a commit message can carry -- three defects this
+    project shipped were invisible to every data check and obvious in a frame.
+
+    The interesting case is the last one: two frames that differ nowhere. A
+    comparison that reported +0.000 -> +0.000 across identical images would look
+    like a measured absence of change, and it is not -- it is the absence of a
+    measurement. The tool has to say which."""
+    var green := Image.create_empty(8, 8, false, Image.FORMAT_RGBA8)
+    green.fill(Color(0.2, 0.5, 0.2))
+    var brown := Image.create_empty(8, 8, false, Image.FORMAT_RGBA8)
+    brown.fill(Color(0.5, 0.35, 0.2))
+    var grey := Image.create_empty(8, 8, false, Image.FORMAT_RGBA8)
+    grey.fill(Color(0.3, 0.3, 0.3))
+    var black := Image.create_empty(8, 8, false, Image.FORMAT_RGBA8)
+    black.fill(Color(0.01, 0.01, 0.01))
+
+    var g := FrameProbe.summarise(green)
+    check(int(g["pixels"]) == 64, "the census counted %d of 64 pixels" % int(g["pixels"]))
+    check(int(g["coloured"]) == 64, "a green frame reports %d coloured" % int(g["coloured"]))
+    check(float(g["green_minus_red"]) > 0.2, "green does not read as green: %f"
+            % float(g["green_minus_red"]))
+    var b := FrameProbe.summarise(brown)
+    check(float(b["green_minus_red"]) < 0.0, "brown does not read as red-dominant")
+    # the axis a seasonal tint moves along has to change SIGN between the two
+    check(sign(float(g["green_minus_red"])) != sign(float(b["green_minus_red"])),
+            "senescent and growing do not separate on green-minus-red, so the one axis "
+            + "this tool uses to see a season does not see it")
+
+    var n := FrameProbe.summarise(grey)
+    check(int(n["neutral"]) == 64, "a grey frame reports %d neutral" % int(n["neutral"]))
+    check(int(n["coloured"]) == 0, "grey was counted as colour")
+    var k := FrameProbe.summarise(black)
+    check(int(k["near_black"]) == 64, "a black frame reports %d near-black" % int(k["near_black"]))
+    check(int(k["neutral"]) == 0, "near-black was also counted as neutral, double-counting it")
+
+    var diff := FrameProbe.compare(green, brown)
+    check(bool(diff["ok"]), "comparing two frames failed")
+    check(int(diff["differing"]) == 64, "%d of 64 pixels differ" % int(diff["differing"]))
+    check(float(diff["green_minus_red_a"]) > 0.0 and float(diff["green_minus_red_b"]) < 0.0,
+            "the comparison does not carry each side's own colour")
+
+    var same := FrameProbe.compare(green, green)
+    check(int(same["differing"]) == 0, "a frame differs from itself")
+    var sized := FrameProbe.compare(green, Image.create_empty(4, 4, false, Image.FORMAT_RGBA8))
+    check(not bool(sized["ok"]), "two differently sized frames were compared anyway")
+
+    print("frame probe: green g-r %+.2f, brown g-r %+.2f, grey %d neutral, black %d near-black"
+            % [float(g["green_minus_red"]), float(b["green_minus_red"]),
+               int(n["neutral"]), int(k["near_black"])])
