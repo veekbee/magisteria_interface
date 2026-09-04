@@ -194,12 +194,20 @@ instances × triangles. Over M5's families that check is **wrong**:
 | tree | 387 | 44 | **14** | 1,312 |
 
 The 20 does not move when `visible_instance_count` is set to 100 and then to 1, so it is not
-counting instances at all; it follows the *multimesh* rather than the node, and it rises to 70 with
-the camera 40 m from the scatter. All three families are drawing — the pixel counts scale with
-instance count exactly as the counter fails to. **This artefact does not say what the counter is
-doing.** A coarser level of detail at range would explain the 20 and the 70 and does not explain
-why forcing `lod_bias` to 0.001 changed neither, so the mechanism is unresolved and the observation
-stands on its own.
+counting instances at all; it follows the *multimesh* rather than the node. All three families are
+drawing — the pixel counts scale with instance count exactly as the counter fails to.
+
+**The 20 and the 14 are generated LODs**, read out of the meshes rather than inferred:
+`meshes/generate_lods=true` on all four `.import` files, and `RenderingServer.mesh_get_surface`
+reports one generated level for shrub (70 → **20** triangles, edge 0.279) and one for tree (44 →
+**14**, edge 0.344) and **none at all** for grass and succulent, whose base meshes the simplifier
+declined to reduce. So the counter reports the last entry of a mesh's LOD chain, once, for a mesh
+that has one, and instances × triangles for a mesh that does not.
+
+What that does *not* settle is which level was being drawn at the measured camera, because forcing
+`lod_bias` to 0.001 moved neither the counter nor the pixels. The difference is below this
+instrument anyway: 10,947 shrubs at 70 triangles rather than 20 is 547,000 triangles, about 0.09 ms
+by the coefficient, against a scene spread of 0.24 ms.
 
 Two consequences. The check here is the one the screenshot harness already makes — **showing the
 scatter must change the frame in pixels** — which is weaker, cannot say how many instances arrived,
@@ -209,6 +217,13 @@ procedural mesh and the counter tracked it exactly there; but anyone reusing tha
 meshes should confirm the counter tracks them first.
 
 ### What it does not cover
+
+**Frustum culling is all-or-nothing, and it works.** Timed at the same place: 1.04 ms with the
+scatter hidden, 3.70 ms with the camera on it, and **0.85 ms with the camera turned 180°** — the
+three vegetation draw calls disappear and the primitive count returns to the baseline's. A
+MultiMesh is culled as one node against one AABB, so looking away from the scatter is free and
+looking at any part of it costs all 120,006 instances. Nothing between those two is available
+without splitting the scatter into more than one MultiMesh.
 
 One machine, one renderer, one place, one window, one day, one camera distance. The coefficient it
 is checked against is itself not portable, and neither is this. It measures the scatter that was

@@ -102,3 +102,11 @@ transform, which is visibly wrong if a caller ignores the refusal.
 cost. These are authored well below that: 12 (grass), 44 (tree), 48 (succulent), 70 (shrub). Twelve
 is a floor rather than a taste — the benchmark measured complexities from twelve triangles up, and a
 family below that span could only be priced by extrapolating the cost model past its own evidence.
+
+**The authored count is not always the drawn count.** `meshes/generate_lods=true` on every family's
+`.import`, and the importer produced one simplified level for two of the four — shrub 70 → **20**
+triangles, tree 44 → **14** — while declining to reduce grass and succulent at all. Nobody asked for
+that and nothing declares it, which is why it is written here: an LOD scheme designed on top of this
+one would be the second, and the first would still be running. `measurements/scatter_cost.json`
+records how it was found, and the difference it makes at the horizon the scatter is drawn at is
+about 0.09 ms — under that measurement's own noise.
