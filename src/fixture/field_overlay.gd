@@ -16,9 +16,25 @@ extends RefCounted
 ## schema declares bounds for exactly this.
 ##
 ## NO DATA IS NOT A COLOUR. The 4,973 overview pixels that carry terrain and no
-## residence key, and any cell whose value is NAN, render transparent so the
-## bare hillshade shows through. Painting them at the ramp's low end would
-## invent a measurement.
+## residence key, and any cell whose value is NAN, are written as fully
+## transparent black rather than at the ramp's low end, which would invent a
+## measurement.
+##
+## THAT ALPHA IS CURRENTLY INERT, AND SAYING SO IS BETTER THAN IMPLYING
+## OTHERWISE. The terrain material leaves `transparency` at DISABLED, so the
+## engine ignores the alpha channel and those texels reach the screen as BLACK
+## rather than letting the bare hillshade through. Measured on the running app:
+## 105 pixels of a 157,000-pixel frame, because almost every texel with ground
+## also has a key and a cell -- so the intent above is unrealised and the cost
+## of it is currently negligible.
+##
+## It stops being negligible the moment a carried row is NAN over an area
+## rather than a scatter, because black sits next to this ramp's low end
+## (0.267, 0.005, 0.329) and would read as a low value rather than as no value.
+## Enabling alpha on the terrain is not a free fix: a transparent material is
+## depth-sorted and stops writing depth by default, which changes how the
+## vegetation and the flowlines resolve against the ground. That is a decision
+## with a picture attached, and it is not made here.
 
 const NODATA := Color(0, 0, 0, 0)
 
