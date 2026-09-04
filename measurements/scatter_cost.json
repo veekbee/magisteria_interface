@@ -1,0 +1,148 @@
+{
+  "agreement": {
+    "ok": true,
+    "ratio_observed_over_predicted": 1.277396749478,
+    "tolerance": 0.35,
+    "verdict": "the frame cost 1.28x what the empty-stage coefficient predicts, inside the 35% the benchmark's own reproducibility supports. Every budget sentence resting on that coefficient is conditional on a stage nobody renders, and this is the size of the conditional.",
+    "within_tolerance": true
+  },
+  "frame_budget_ms": 33.3,
+  "host": {
+    "godot": "4.7.2-stable (official)",
+    "gpu": "Apple M5",
+    "os": "macOS 26.6.2",
+    "rendering_method": "gl_compatibility",
+    "viewport": [
+      1280,
+      800
+    ],
+    "vsync": "disabled"
+  },
+  "implied_at_this_horizon": {
+    "budget_ms": 33.3,
+    "implied_ms": 501.434390661074,
+    "implied_total": 28092359.9726692,
+    "instances": 1865599.17810301,
+    "mean_ns_per_instance": 17.8494932839005,
+    "measured_on": "Apple M5 / gl_compatibility",
+    "ok": true
+  },
+  "marginal": {
+    "ok": true,
+    "p50_ms": 2.73625001083873,
+    "p95_ms": 2.77777777777778,
+    "p99_ms": 5.35111111111124,
+    "resolved": true,
+    "scene_spread_ms": 0.333666666666667
+  },
+  "measured": true,
+  "measured_at_commit": "5d6b8a9",
+  "measured_at_commit_means": "the HEAD the run was taken against; the commit that lands this artefact is its child",
+  "method": {
+    "attempts": 1,
+    "measured_frames": 80,
+    "quoted_as": "nearest-rank quantiles over the measured frames, the same form render_cost.json uses",
+    "verified_by": "showing the scatter must change the frame in pixels, and the renderer must have drawn at least as many frames as were timed. NOT by the primitive counter, which is what the benchmark uses and which is wrong for two of these three multimeshes -- see per_family",
+    "warmup_frames": 20
+  },
+  "not_covered": "one machine, one renderer, one place in one window on one day. The per-instance coefficient this is checked against is itself not portable (see render_cost.json), and neither is this.",
+  "per_family": [
+    {
+      "authored_triangles_per_instance": 70,
+      "counter_tracked_the_instances": false,
+      "instances": 10947,
+      "life_form": "shrub",
+      "pixels_drawn": 344,
+      "primitives_counted": 20,
+      "primitives_expected": 766290,
+      "renders": true
+    },
+    {
+      "authored_triangles_per_instance": 48,
+      "counter_tracked_the_instances": true,
+      "instances": 108672,
+      "life_form": "succulent",
+      "pixels_drawn": 2988,
+      "primitives_counted": 5216256,
+      "primitives_expected": 5216256,
+      "renders": true
+    },
+    {
+      "authored_triangles_per_instance": 44,
+      "counter_tracked_the_instances": false,
+      "instances": 387,
+      "life_form": "tree",
+      "pixels_drawn": 1312,
+      "primitives_counted": 14,
+      "primitives_expected": 17028,
+      "renders": true
+    }
+  ],
+  "per_instance_ns": {
+    "grass": 11.6276916292247,
+    "shrub": 21.1257079519257,
+    "succulent": 17.5230121053839,
+    "tree": 16.8679764969218
+  },
+  "pixels_the_scatter_changed": 4411,
+  "placed": {
+    "grass": 0,
+    "shrub": 10947,
+    "succulent": 108672,
+    "tree": 387
+  },
+  "predicted_by_render_cost": {
+    "instances": 120006,
+    "mean_ns_per_instance": 17.8495392177918,
+    "ms": 2.14205180337032,
+    "ok": true
+  },
+  "scene": {
+    "also_drawn": "the terrain with its overlay, the flowlines, the contours and the UI -- all of them in BOTH timings, which is why the difference between the two is the scatter and a single timing would not be",
+    "at_world_epsg5070": [
+      -1310792.875,
+      1616226.125
+    ],
+    "camera": "the fly camera framed on the scatter, which is what the G key gives",
+    "day": 22,
+    "horizon_m": 1500.0,
+    "probe_state": "resolved",
+    "row": "band.pft.biomass",
+    "window": "deepest_winter"
+  },
+  "share_bound_by": "the build ceiling, which is lower here than the frame budget",
+  "share_drawn": 0.00427162403289531,
+  "suspect": "",
+  "triangles_in_frame": 5999574,
+  "what": "what M5's vegetation scatter costs a frame in the viewer that draws it, and whether the empty-stage coefficient in render_cost.json predicts it",
+  "with_scatter": {
+    "draw_calls_p50": 226.0,
+    "frame_ms": {
+      "max": 7.13266666666667,
+      "mean": 3.96871805555555,
+      "min": 3.7037037037037,
+      "n": 80,
+      "p50": 3.833,
+      "p95": 4.16666666666667,
+      "p99": 7.13266666666667
+    },
+    "frames_drawn": 80,
+    "frames_timed": 80,
+    "primitives_p50": 5426713.0
+  },
+  "without_scatter": {
+    "draw_calls_p50": 223.0,
+    "frame_ms": {
+      "max": 1.78155555555543,
+      "mean": 1.07420833333333,
+      "min": 0.110624998342246,
+      "n": 80,
+      "p50": 1.09674998916127,
+      "p95": 1.38888888888889,
+      "p99": 1.78155555555543
+    },
+    "frames_drawn": 80,
+    "frames_timed": 80,
+    "primitives_p50": 210423.0
+  }
+}

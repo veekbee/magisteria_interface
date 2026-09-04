@@ -72,6 +72,8 @@ func _initialize() -> void:
     test_ramp_agreement_survives_a_light_and_not_a_highlight()
     test_the_hillshade_arrives_from_the_north_west()
     test_the_verdict_is_read_and_never_supplied()
+    test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one()
+    test_the_scatter_measurement_verifies_in_pixels_not_primitives()
     test_every_wire_life_form_resolves_to_a_family()
     test_no_family_is_keyed_below_life_form()
     test_a_parameter_outside_its_range_is_refused_not_clamped()
@@ -2488,3 +2490,92 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     var shipped := AncestorVerdict.read_from(
             FixtureLoader.load_from("res://assets/fixture/").manifest)
     print("verdict: the shipped fixture reads %s -- %s" % [shipped.state, shipped.headline()])
+
+
+func test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one() -> void:
+    """`measurements/scatter_cost.json` is the scatter's frame cost measured in
+    the viewer that draws it. Its whole method is subtraction -- one timing of
+    the viewer is the terrain, the flowlines, the contours, the overlay and the
+    scatter added together, and no arithmetic recovers one term of that sum --
+    so the arithmetic is what is checked here. The timing itself cannot be:
+    headless draws nothing.
+    """
+    var busy := {"p50": 4.0, "p95": 4.4, "p99": 4.6}
+    var quiet := {"p50": 1.0, "p95": 1.2, "p99": 1.3}
+    var m := ScatterCost.marginal(busy, quiet)
+    check(bool(m["ok"]) and absf(float(m["p50_ms"]) - 3.0) < 1e-9,
+            "the marginal is not the difference of the two p50s")
+    check(bool(m["resolved"]), "a 3 ms difference over a 0.4 ms spread read as unresolved")
+
+    # A difference inside the scene's own frame-to-frame spread is not a small
+    # cost. It is the absence of a measurement, and the two must not read alike.
+    var noisy := {"p50": 1.1, "p95": 3.0, "p99": 3.4}
+    var n := ScatterCost.marginal(noisy, quiet)
+    check(not bool(n["resolved"]),
+            "a 0.1 ms difference under a 1.9 ms spread was reported as a measurement")
+    check(n.has("why_unresolved"), "an unresolved marginal did not say why")
+
+    # One stalled frame in the quieter timing lifts its p99 above its own p95;
+    # subtracting that yields a p99 "marginal" near zero, which reads as the
+    # scatter being free at the tail.
+    var stalled := {"p50": 1.0, "p95": 1.2, "p99": 3.4}
+    var st := ScatterCost.marginal(busy, stalled)
+    check(st.has("p99_note"), "a baseline p99 nearly triple its own p95 passed without a word, "
+            + "so the p99 difference reads as the scatter's tail when it is one stalled frame")
+    check(not ScatterCost.marginal(busy, {"p50": 1.0, "p95": 1.2, "p99": 1.3}).has("p99_note"),
+            "a well-behaved tail was flagged as an outlier")
+
+    # The model's side of the comparison. A family with no priced cost must
+    # refuse rather than be counted at zero, which would make the prediction
+    # look better the more of it was missing.
+    var ns := {"shrub": 20.0, "succulent": 10.0}
+    var p := ScatterCost.predicted_ms({"shrub": 1000, "succulent": 2000}, ns)
+    check(bool(p["ok"]) and absf(float(p["ms"]) - 0.04) < 1e-9,
+            "1,000 x 20 ns + 2,000 x 10 ns is 0.04 ms, not %f" % float(p.get("ms", NAN)))
+    check(int(p["instances"]) == 3000, "the instance total did not survive")
+    check(not bool(ScatterCost.predicted_ms({"tree": 5}, ns)["ok"]),
+            "a family with no priced per-instance cost was silently counted as free")
+    check(not bool(ScatterCost.predicted_ms({"shrub": 0}, ns)["ok"]),
+            "an empty scatter was priced instead of refused")
+    # A family placed zero times is not missing: it has no cost because it has
+    # no instances, and refusing there would refuse every real scatter, since
+    # `placed` always carries every family the wire names.
+    check(bool(ScatterCost.predicted_ms({"shrub": 10, "grass": 0}, ns)["ok"]),
+            "a family with no instances was treated as a family with no price")
+
+    var a := ScatterCost.agreement(2.0, 3.0)
+    check(absf(float(a["ratio_observed_over_predicted"]) - 1.5) < 1e-9, "the ratio is wrong")
+    check(not bool(a["within_tolerance"]), "1.5x read as agreement")
+    check(bool(ScatterCost.agreement(2.0, 2.2)["within_tolerance"]), "1.1x read as disagreement")
+
+    print("scatter cost: marginal %.2f ms resolved=%s, 1.5x agreement=%s"
+            % [float(m["p50_ms"]), str(m["resolved"]), str(a["within_tolerance"])])
+
+
+func test_the_scatter_measurement_verifies_in_pixels_not_primitives() -> void:
+    """A CORRECTION TO THE BENCHMARK'S CHECK, and the reason it is worth a test.
+
+    `InstanceBench` verifies a configuration by comparing the primitive counter
+    against instances x triangles, and there that check is sound. It is not
+    sound over M5's families: measured on the running viewer, the counter
+    reported 5,216,256 primitives for a 108,672-instance MultiMesh -- exactly
+    108,672 x 48 -- and a constant 20 for a 10,947-instance one beside it. The
+    20 did not move when `visible_instance_count` was set to 100 and then to 1,
+    so it was not counting instances at all; and all three families were
+    drawing, because the pixels they put on screen scaled with instance count
+    while the counter did not.
+
+    So the check that survives is the weaker one: showing the scatter has to
+    change the frame. It cannot say how many instances arrived, and it does not
+    pass a frame the scatter is missing from, which is the property that
+    matters.
+    """
+    check(ScatterCost.drew_the_scatter(4411, 80, 80) == "",
+            "a frame that changed 4,411 pixels over 80 drawn frames was called suspect")
+    check(ScatterCost.drew_the_scatter(0, 80, 80) != "",
+            "showing the scatter changed nothing and the run was accepted, so the two "
+            + "timings are of one scene and their difference is the cost of nothing")
+    var short := ScatterCost.drew_the_scatter(4411, 12, 80)
+    check(short != "", "80 frames were timed while 12 were drawn and the run was accepted")
+    check(short.contains("cadence"),
+            "the refusal does not name what it is refusing: %s" % short)

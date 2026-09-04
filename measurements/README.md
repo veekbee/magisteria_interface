@@ -8,6 +8,9 @@ claims a `PIN` does: what was measured, how, on what, and what it does not cover
 ## What is here
 
 - `render_cost.json` — per-instance frame cost, and the ladder it was fitted from.
+- `scatter_cost.json` — what M5's scatter costs a frame in the viewer that draws it, and whether
+  `render_cost.json`'s empty-stage coefficient predicts it. Re-take it with
+  `bash tools/measure_scatter.sh`.
 - `visual_audit.md` — what each milestone's claim looks like when photographed, and the five
   defects that came out of looking. Re-take it with `bash tools/audit.sh`.
 
@@ -127,3 +130,88 @@ python3 tools/render_budget_answer.py --quantile p99 2000 15000 50000
 
 The per-cell instance counts those N come from are the simulation's measurement and live in that
 repo. They are arguments here, not data committed here.
+
+
+## `scatter_cost.json` — what the scatter costs in the scene that draws it
+
+`render_cost.json` prices instancing on an empty stage: a placeholder mesh over a flat square, no
+terrain, no culling, no LOD. That is the right shape for a coefficient — a basin underneath would
+make it a joint measurement of two things and let neither be recovered — but it means every
+sentence M5 writes about a frame is a *prediction* from that coefficient rather than an observation
+of one. The 1,500 m horizon figure in particular was reported by the scatter at runtime and
+committed nowhere, which makes it a number with a derivation and no artefact. This is that
+artefact, and it checks the derivation against the frame it describes.
+
+**The method is subtraction.** The same scene is timed twice, once with the scatter drawn and once
+with it hidden, and the cost is the difference. A single timing of the viewer is the terrain, its
+overlay, the flowlines, the contours, the UI and the scatter added together, and no arithmetic
+recovers one term of that sum.
+
+### What it found
+
+`deepest_winter`, `band.pft.biomass`, day 22, standing at EPSG:5070 `(-1310793, 1616226)` — the
+centre of the opening view — with the fly camera framed on the scatter, which is what the `G` key
+gives. Apple M5 / `gl_compatibility` / Godot 4.7.2, windowed at 1280 × 800, vsync off.
+
+| | |
+|---|---:|
+| instances drawn | 120,006 (108,672 succulent, 10,947 shrub, 387 tree, 0 grass) |
+| frame p50, scatter hidden | 1.10 ms |
+| frame p50, scatter drawn | 3.83 ms |
+| **marginal, p50** | **2.74 ms** |
+| `render_cost.json` predicts | 2.14 ms |
+| ratio | **1.28×** |
+
+**The empty-stage coefficient under-predicts, consistently.** Four runs gave marginals of 2.94,
+2.83, 2.75 and 2.74 ms against the same 2.14 ms prediction — 1.37×, 1.32×, 1.28× and 1.28×,
+reproducible to 1.07× and never once below the prediction. That is a bias rather than noise, and it is the size of
+the conditional on every budget sentence M5 rests on that coefficient. What it does *not* say is
+which of the differences is responsible: this scene draws through a custom shader with culling
+disabled rather than a `StandardMaterial3D`, it overdraws a terrain rather than empty space, and it
+uses three MultiMesh nodes rather than one. Naming the cause needs a sweep this artefact does not
+run.
+
+**The horizon question, which is what the coefficient was wanted for.** At this place, the full
+scatter the wire implies inside a 1,500 m horizon is **28,092,359 instances — 501 ms, 15.1× the
+33.3 ms budget**. What is drawn is 0.4% of it, and the binding limit is the build ceiling rather
+than the frame budget: the budget alone would afford 1,865,599 instances at this mix.
+
+**That number is a property of a place, not of a horizon.** The same measurement at the centre of
+the `largest_fire` window gives 23,791,551 instances and 426 ms — 12.8×. The implied count is the
+sum of cover and biomass over whatever cells fall inside the disc, so a horizon figure quoted
+without the place it was taken at is not reproducible. The place travels in the artefact, and
+`--at X,Y` pins a re-run to it rather than to the framing.
+
+### The verification had to change, and that is a finding about the benchmark's check
+
+`InstanceBench` verifies a configuration by comparing `RENDER_TOTAL_PRIMITIVES_IN_FRAME` against
+instances × triangles. Over M5's families that check is **wrong**:
+
+| family | instances | authored tri | counter reported | pixels drawn |
+|---|---:|---:|---:|---:|
+| succulent | 108,672 | 48 | 5,216,256 — exactly n × 48 | 2,988 |
+| shrub | 10,947 | 70 | **20** | 344 |
+| tree | 387 | 44 | **14** | 1,312 |
+
+The 20 does not move when `visible_instance_count` is set to 100 and then to 1, so it is not
+counting instances at all; it follows the *multimesh* rather than the node, and it rises to 70 with
+the camera 40 m from the scatter. All three families are drawing — the pixel counts scale with
+instance count exactly as the counter fails to. **This artefact does not say what the counter is
+doing.** A coarser level of detail at range would explain the 20 and the 70 and does not explain
+why forcing `lod_bias` to 0.001 changed neither, so the mechanism is unresolved and the observation
+stands on its own.
+
+Two consequences. The check here is the one the screenshot harness already makes — **showing the
+scatter must change the frame in pixels** — which is weaker, cannot say how many instances arrived,
+and has the property that matters: it does not pass a frame the scatter is missing from. And
+`render_cost.json`'s own verification is *not* invalidated, because it swept one MultiMesh of a
+procedural mesh and the counter tracked it exactly there; but anyone reusing that check on other
+meshes should confirm the counter tracks them first.
+
+### What it does not cover
+
+One machine, one renderer, one place, one window, one day, one camera distance. The coefficient it
+is checked against is itself not portable, and neither is this. It measures the scatter that was
+*drawn*, which is the build ceiling's 120,006 instances and not the 28 million the wire implies —
+the 501 ms figure remains a prediction, now made from a coefficient known to under-predict by about
+a third in this scene.
