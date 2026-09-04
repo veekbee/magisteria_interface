@@ -83,7 +83,14 @@ func build(hf: Heightfield, stride_: int = 2, exaggeration_: float = 1.0) -> Arr
             if a < 0 or b < 0 or c < 0 or d < 0:
                 skipped_quads += 1
                 continue
-            indices.append_array([a, c, b, b, c, d])
+            # WINDING IS CLOCKWISE-FRONT IN GODOT, and this had it backwards.
+            # Wound the other way the surface renders only from BELOW: the
+            # overview camera looks down at a basin whose every triangle faces
+            # away from it, and the terrain is invisible while the flowlines
+            # over it -- LINES, which are never culled -- still draw. The basin
+            # then reads as a river network floating on the background, which is
+            # exactly how it looked and how long it lasted.
+            indices.append_array([a, b, c, b, d, c])
             quad_count += 1
 
     vertex_count = verts.size()

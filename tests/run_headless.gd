@@ -35,6 +35,7 @@ func _initialize() -> void:
     test_bicubic_does_not_terrace()
     test_a_nodata_neighbourhood_returns_nan_not_a_height()
     test_the_terrain_mesh_holes_rather_than_walls_at_nodata()
+    test_the_terrain_faces_the_camera_that_looks_at_it()
     test_a_mesh_position_recovers_the_texel_it_was_sampled_from()
     test_flowlines_drape_and_keep_their_orders()
     test_no_lattice_geometry_reaches_the_scene()
@@ -592,6 +593,72 @@ func test_a_mesh_position_recovers_the_texel_it_was_sampled_from() -> void:
     check(not_inverse == 0,
             "%d of %d positions do not survive world -> mesh -> world" % [not_inverse, sampled])
     print("mesh<->world: %d vertices round-trip onto their own texel" % sampled)
+
+
+func test_the_terrain_faces_the_camera_that_looks_at_it() -> void:
+    """The mesh was wound inside-out and nothing noticed for five milestones.
+    Godot culls back faces by default, so the whole basin was invisible from
+    above -- while the flowlines over it, LINES and never culled, still drew.
+    The viewer showed a river network floating on the background, and every
+    test passed: they counted vertices, quads, holes and reaches, and not one
+    of them asked whether the surface could be seen.
+
+    THE CONVENTION IS TAKEN FROM THE ENGINE, NOT FROM THIS FILE. Which winding
+    Godot treats as front-facing is the engine's business and I had it
+    backwards; asserting my own belief about it would pin the bug rather than
+    the rule. So a PlaneMesh -- which Godot builds itself, facing +Y -- supplies
+    the reference relationship between a triangle's right-hand normal and its
+    shading normal, and the terrain has to match it."""
+    var reference := _winding_sign(PlaneMesh.new())
+    check(reference != 0,
+            "the reference PlaneMesh gave no winding sign; the convention cannot be read")
+
+    var hf := heightfield()
+    var tm := TerrainMesh.new()
+    var mesh := tm.build(hf, 8, 1.0)
+    var terrain_sign := _winding_sign(mesh)
+    check(terrain_sign != 0, "the terrain mesh gave no consistent winding sign")
+    check(terrain_sign == reference,
+            "the terrain is wound opposite to a PlaneMesh, so back-face culling hides it "
+            + "from every camera above it -- the basin renders only from underneath")
+    print("winding: terrain matches PlaneMesh (sign %d)" % terrain_sign)
+
+
+## +1 or -1 for how a mesh's triangle winding relates to its shading normals,
+## or 0 if the mesh does not answer consistently.
+##
+## The sign itself means nothing; only agreement between two meshes does. That
+## is the point: it makes the test independent of which convention the engine
+## happens to use.
+func _winding_sign(mesh: Mesh) -> int:
+    var arrays := mesh.surface_get_arrays(0)
+    var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+    var normals: PackedVector3Array = arrays[Mesh.ARRAY_NORMAL]
+    var indices: PackedInt32Array = arrays[Mesh.ARRAY_INDEX]
+    if verts.is_empty() or normals.is_empty() or indices.size() < 3:
+        return 0
+    var positive := 0
+    var negative := 0
+    for t in range(0, indices.size(), 3):
+        if t > 3000:
+            break
+        var i0 := indices[t]
+        var i1 := indices[t + 1]
+        var i2 := indices[t + 2]
+        var rhn := (verts[i1] - verts[i0]).cross(verts[i2] - verts[i0])
+        if rhn.length() < 1e-9:
+            continue
+        var shading := (normals[i0] + normals[i1] + normals[i2]).normalized()
+        var d := rhn.normalized().dot(shading)
+        if d > 0.2:
+            positive += 1
+        elif d < -0.2:
+            negative += 1
+    if positive > 0 and negative == 0:
+        return 1
+    if negative > 0 and positive == 0:
+        return -1
+    return 0
 
 
 func test_flowlines_drape_and_keep_their_orders() -> void:
