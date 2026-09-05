@@ -146,6 +146,10 @@ def main(argv=None) -> int:
     fetched = {n: (DEST / n).stat().st_size for n in vendored
                if (DEST / n).stat().st_size >= FETCH_THRESHOLD_BYTES}
     if fetched:
+        # Hosts SURVIVE a re-vendor. They are the one field here the producing
+        # side does not know and the vendoring does not derive, so re-deriving
+        # the block must carry them forward or every re-vendor would silently
+        # un-publish the artefact.
         hosts = (pin.get("fetched") or {}).get("files", {})
         pin["fetched"] = {
             "_what": "files over decision 948's threshold. NOT committed: they arrive "

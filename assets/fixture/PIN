@@ -108,7 +108,7 @@
     "files": {
       "fixture_client.bin": {
         "bytes": 28262880,
-        "host": null
+        "host": "https://github.com/veekbee/magisteria_interface/releases/download/fixture-v1/fixture_client.bin"
       }
     }
   },
