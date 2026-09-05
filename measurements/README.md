@@ -1,5 +1,18 @@
 # `measurements/` — numbers this repo measured, not artefacts it was given
 
+## Before quoting a number from a new capture path, open one frame
+
+Not "when the numbers look odd" — unconditionally, the first time any harness photographs anything.
+Three artefacts in this project have come back complete, plausible and wrong, and **not one of them
+was caught by reading numbers**: a per-family reference that was three copies of the same frame, two
+motion runs that scored one frozen image against every position, and a scatter that was drawing the
+previous build's instances. Each was found by opening a PNG, and each had a numeric tell that was on
+screen and unread at the time.
+
+`HarnessGuard` now refuses all three shapes — an identical capture across a move, two signatures that
+must differ coming out equal, a stage that stops advancing — and those refusals are worth more than
+this paragraph. But they are the shapes that have already happened. Looking is what finds the next one.
+
 Everything in `assets/` was made somewhere else, vendored and pinned. This directory is the
 opposite: a measurement that can only be taken *here*, because the thing being measured is the
 engine. It has no `PIN` and no upstream, and it is not vendored — but it carries the same four

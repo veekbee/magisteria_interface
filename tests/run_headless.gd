@@ -99,6 +99,7 @@ func _initialize() -> void:
     test_the_seam_metric_fails_the_bad_frame()
     test_plants_stand_on_the_surface_that_is_drawn()
     test_the_shading_is_exaggerated_and_the_geometry_is_not()
+    test_the_harness_guards_refuse_what_they_were_written_for()
     test_the_motion_metric_does_not_yet_detect_popping()
     test_a_per_family_reference_holds_only_that_family()
     test_a_family_is_scored_in_its_own_annulus_or_not_at_all()
@@ -3797,6 +3798,76 @@ func test_plants_stand_on_the_surface_that_is_drawn() -> void:
             % [String.num(worst_at_node, 3), String.num(total / float(maxi(n, 1)), 1)]
             + "between them (worst %s)" % String.num(worst, 1))
     v.queue_free()
+
+
+func test_the_harness_guards_refuse_what_they_were_written_for() -> void:
+    """THREE FAILURES THAT EACH PRODUCED A COMPLETE, PLAUSIBLE, WRONG ARTEFACT,
+    made refusable after the fact. None of them was caught by reading numbers.
+
+    A FROZEN CAPTURE. A window that loses focus here stops being drawn while
+    the main loop ticks on, so `get_image()` returns the last frame rendered.
+    Two whole `measure_motion` runs scored one frozen image against each
+    position's own mask -- different numbers per position, identical between
+    candidates. Found by noticing three saved PNGs were byte-identical.
+
+    TWO THINGS THAT MUST DIFFER, COMING OUT THE SAME. `measure_seam`'s
+    per-family oracles were each built with `only` set and then photographed
+    with every vegetation node shown, so each was the previous build's
+    instances. The tell was three DIFFERENT references reporting one mean
+    colour to three decimals.
+
+    A STAGE MACHINE THAT STOPS. A null reference inside a stage transition
+    leaves the harness ticking at 1% CPU forever, which looks like a slow
+    render. Twenty minutes twice here; thirteen hours for a throwaway probe,
+    beside every measurement being taken at the time.
+    """
+    # A frozen capture, and the two cases that are NOT one.
+    var a := PackedByteArray([1, 2, 3])
+    var b := PackedByteArray([1, 2, 4])
+    check(HarnessGuard.capture_note(a, a, "step 3") != "",
+            "an identical capture across a camera move passed as a measurement")
+    check(HarnessGuard.capture_note(a, b, "step 3") == "",
+            "a capture that changed was refused")
+    check(HarnessGuard.capture_note(a, a, "step 3", false) == "",
+            "two identical frames were refused where nothing was supposed to move, which "
+            + "would refuse every legitimate still")
+    check(HarnessGuard.capture_note(PackedByteArray(), a, "step 0") == "",
+            "the first capture of a run has nothing to compare against and was refused")
+
+    # Distinctness, and that the message names BOTH sides of the collision.
+    var seen := {}
+    check(HarnessGuard.distinctness_note(seen, "0.320|0.266|0.119", "oracle_grass", "x") == "",
+            "the first claim on a signature was refused")
+    var clash := HarnessGuard.distinctness_note(seen, "0.320|0.266|0.119", "oracle_shrub", "x")
+    check(clash != "", "two references reporting one mean colour to three decimals passed")
+    check(clash.contains("oracle_grass") and clash.contains("oracle_shrub"),
+            "the collision does not name both sides, so it says a duplicate exists and not "
+            + "which two: %s" % clash)
+    check(HarnessGuard.distinctness_note(seen, "0.1|0.2|0.3", "oracle_tree", "x") == "",
+            "a distinct signature was refused")
+    check(HarnessGuard.distinctness_note(seen, "", "unscored", "x") == "",
+            "a candidate with no signature at all was reported as a collision rather than "
+            + "as having nothing to compare")
+
+    # Three decimals, because two renders of different things do not agree that
+    # far by chance and two renders of one thing agree exactly.
+    check(HarnessGuard.colour_key([0.32001, 0.26599, 0.11902])
+                    == HarnessGuard.colour_key([0.32004, 0.26601, 0.11898]),
+            "the colour signature splits two roundings of one frame")
+    check(HarnessGuard.colour_key([0.320, 0.266, 0.119])
+                    != HarnessGuard.colour_key([0.330, 0.266, 0.119]),
+            "the colour signature collapses two genuinely different frames")
+    check(HarnessGuard.colour_key([]) == "", "an absent colour produced a signature")
+
+    # And the stall.
+    check(HarnessGuard.stall_note("mask 3/14", 10) == "",
+            "a stage ten frames in was called stalled")
+    check(HarnessGuard.stall_note("mask 3/14", HarnessGuard.STALL_FRAMES) != "",
+            "a stage that has not advanced in %d frames passed as progress"
+            % HarnessGuard.STALL_FRAMES)
+    check(HarnessGuard.stall_note("mask 3/14", HarnessGuard.STALL_FRAMES).contains("mask 3/14"),
+            "the stall does not say WHERE it stalled, which is the whole of the diagnosis")
+    print("guards: frozen capture, colliding signature and stalled stage all refuse")
 
 
 func test_the_motion_metric_does_not_yet_detect_popping() -> void:

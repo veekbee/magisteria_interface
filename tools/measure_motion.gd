@@ -85,6 +85,7 @@ var mask_at := 0
 ## moment. Both are checked before a capture is believed.
 var _last_bytes := PackedByteArray()
 var _last_drawn := 0
+var _stage_frames := 0
 ## Every candidate's frame at every position, kept so two candidates can be
 ## compared AT THE SAME CAMERA POSITION -- which is the only comparison here
 ## with no camera motion in it.
@@ -134,6 +135,12 @@ func _initialize() -> void:
 
 func _process(delta: float) -> bool:
     frames += 1
+    _stage_frames += 1
+    var stall := HarnessGuard.stall_note(_stage_name(), _stage_frames)
+    if stall != "":
+        printerr("measure_motion: REFUSED. %s" % stall)
+        quit(4)
+        return true
     # NOT IN `_initialize`. `TerrainView` is an `@onready` member of the main
     # scene, so it is null until the node has entered the tree and run `_ready`
     # -- and reading it too early leaves `view` at Nil, after which every call
@@ -160,6 +167,17 @@ func _process(delta: float) -> bool:
         DONE:
             return true
     return false
+
+
+func _stage_name() -> String:
+    match stage:
+        SETTLE: return "settle"
+        PLACE: return "place"
+        MASKS: return "mask %d/%d" % [mask_at + 1, positions.size()]
+        RUN: return "frame %s %d/%d" % [str(CANDIDATES[cand_at]["name"]) if cand_at
+                < CANDIDATES.size() else "?", pos_at + 1, positions.size()]
+        WRITE: return "write"
+    return "done"
 
 
 func _place() -> void:
@@ -238,6 +256,7 @@ func _begin_mask() -> void:
     var band := SeamScore.scoring_band(seam_m)
     _override_terrain(_annulus_material(float(band["lo_m"]), float(band["hi_m"])))
     frames = 0
+    _stage_frames = 0
     stage = MASKS
 
 
@@ -259,6 +278,7 @@ func _begin_frame() -> void:
         _restore_terrain()
         stage = WRITE
         frames = 0
+        _stage_frames = 0
         return
     var cand: Dictionary = CANDIDATES[cand_at]
     var pos: Dictionary = positions[pos_at]
@@ -279,6 +299,7 @@ func _begin_frame() -> void:
     _aim(eye)
     _isolate(true, bool(cand["veg"]))
     frames = 0
+    _stage_frames = 0
     stage = RUN
 
 
@@ -335,38 +356,20 @@ func _aim(eye: Vector3) -> void:
             Vector3.UP)
 
 
-## A CAPTURE THAT DID NOT MOVE IS NOT A CAPTURE.
-##
-## On this platform a window that loses focus or is occluded STOPS BEING DRAWN
-## while the main loop keeps ticking, so `get_image()` goes on returning the
-## last frame that was rendered. It cost this harness a complete run: every
-## candidate after the freeze scored the same frozen frame against each
-## position's own mask, which produced DIFFERENT numbers per position and
-## IDENTICAL ones between candidates -- a table that looked like a result and
-## was one image. Three saved PNGs from three different candidates and
-## positions came out byte-identical, which is how it was found.
-##
-## `measure_scatter` has checked its drawn-frame count since M5 for the same
-## reason. This checks that, and the stronger thing available here: the camera
-## moved between every capture, so two identical frames in a row cannot happen.
+## Both refusals live in `HarnessGuard`, because this harness is not the only
+## one that can be handed a frozen frame.
 func _refuse_if_stale(img: Image, what: String) -> void:
-    var drawn := Engine.get_frames_drawn()
     var bytes := img.get_data()
-    if not _last_bytes.is_empty() and bytes == _last_bytes:
-        printerr("measure_motion: REFUSED at %s. The frame is byte-identical to the previous "
-                % what + "capture, and the camera moved between them, so the window has "
-                + "stopped being drawn -- every number after this point would be one frozen "
-                + "image scored against a moving mask. Keep the window on screen and in front "
-                + "for the whole run.")
-        quit(3)
-        return
-    if drawn <= _last_drawn:
-        printerr("measure_motion: REFUSED at %s. The renderer drew no frames since the last "
-                % what + "capture (%d), so this is the previous frame." % drawn)
+    var note := HarnessGuard.capture_note(_last_bytes, bytes, what)
+    if note == "":
+        note = ("" if Engine.get_frames_drawn() > _last_drawn
+                else "the renderer drew no frames since the last capture, at %s" % what)
+    if note != "":
+        printerr("measure_motion: REFUSED. %s" % note)
         quit(3)
         return
     _last_bytes = bytes
-    _last_drawn = drawn
+    _last_drawn = Engine.get_frames_drawn()
 
 
 func _annulus_material(lo: float, hi: float) -> ShaderMaterial:

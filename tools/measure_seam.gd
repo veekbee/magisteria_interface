@@ -96,6 +96,10 @@ var fam_names: Array = []
 ## shallow reach rather than losing its rows entirely.
 var oracle_reach: Dictionary = {}
 var fam_at := 0
+var _stage_frames := 0
+## signature -> the reference that claimed it, so two references of DIFFERENT
+## families cannot quietly be one frame.
+var _ref_seen: Dictionary = {}
 ## Runs accumulate into one artefact: sufficiency is a claim about places and
 ## days, and one row of it is not evidence for the claim.
 var append_to_existing := false
@@ -152,6 +156,13 @@ func _initialize() -> void:
 
 func _process(delta: float) -> bool:
     frames += 1
+    _stage_frames += 1
+    var stall := HarnessGuard.stall_note(
+            "stage %d, job %d/%d" % [stage, job_at + 1, jobs.size()], _stage_frames)
+    if stall != "":
+        printerr("measure_seam: REFUSED. %s" % stall)
+        quit(4)
+        return true
     if view == null:
         view = scene.get_node("TerrainView")
     match stage:
@@ -347,12 +358,14 @@ func _next_mask() -> void:
         job_at = 0
         job_step = 0
         frames = 0
+        _stage_frames = 0
         stage = CANDIDATE
         return
     _hide_everything_but_terrain()
     var b: Dictionary = bands[mask_at]
     _override_all(_annulus_material(float(b["lo_m"]), float(b["hi_m"])))
     frames = 0
+    _stage_frames = 0
     stage = MASK
 
 
@@ -446,6 +459,21 @@ func _run_candidate(delta: float) -> void:
                 if job.has("oracle_is_a_sample"):
                     job["reach_used_m"] = float(oracle_reach.get(lf, _oracle_cut_m()))
                 else:
+                    # TWO REFERENCES OF DIFFERENT FAMILIES CANNOT BE ONE FRAME.
+                    # They were, once: the harness showed every vegetation node
+                    # before photographing, so each per-family oracle came back
+                    # with the previous build's instances still in it. Every
+                    # score finite, every row in the right annulus, and all of
+                    # it one photograph. Refused here rather than found later.
+                    var sig := HarnessGuard.colour_key(
+                            (job["bands"][_scoring_index()] as Dictionary).get(
+                                    "isolated_mean_colour", []))
+                    var clash := HarnessGuard.distinctness_note(_ref_seen, sig, str(job["name"]),
+                            "a per-family reference holds one family and no other")
+                    if clash != "":
+                        printerr("measure_seam: REFUSED. %s" % clash)
+                        quit(5)
+                        return
                     oracle_family[lf] = iso
                     oracle_reach[lf] = float(job["reach_m"])
                     job["reach_used_m"] = float(job["reach_m"])
@@ -461,6 +489,7 @@ func _run_candidate(delta: float) -> void:
                 fam_at = 0
                 _begin_family(job)
                 job_step = 4
+                _stage_frames = 0
                 return
             _finish_candidate(job)
         4:
@@ -591,6 +620,7 @@ func _finish_candidate(job: Dictionary) -> void:
     job_at += 1
     job_step = 0
     frames = 0
+    _stage_frames = 0
 
 
 func _apply_candidate(job: Dictionary) -> void:

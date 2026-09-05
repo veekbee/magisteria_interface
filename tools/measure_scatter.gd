@@ -87,6 +87,16 @@ func _process(delta: float) -> bool:
     frames += 1
     if view == null:
         view = scene.get_node("TerrainView")
+    # A STAGE THAT STOPS ADVANCING DOES NOT ERROR AND DOES NOT EXIT. It ticks
+    # at 1% of a core and looks like a slow render, which is how one harness ran
+    # for twenty minutes twice, and a throwaway probe for thirteen hours beside
+    # every measurement being taken. `frames` resets on every stage change, so
+    # it already IS the stall counter.
+    var _stall := HarnessGuard.stall_note("stage %d" % stage, frames)
+    if _stall != "":
+        printerr("measure_scatter: REFUSED. %s" % _stall)
+        quit(4)
+        return true
     match stage:
         SETTLE:
             if frames >= SETTLE_FRAMES:
