@@ -693,9 +693,51 @@ height:crown ratio. A columnar family drawn as a clump of columns rather than on
 its aspect factor toward the woody families and the imbalance with it. That is a family-authoring
 change and is not made here.
 
-**One thing the sweep could not be allowed to find.** Grass draws **zero instances** at this
-place and day (the brief's own trap 1), so the family whose horizon the rule pulls in hardest is
-absent from every row above. Nothing here says anything about grass.
+### Grass: it is the place, not the day — and the two pinned places are complementary
+
+The first sweep drew **zero grass**, and the obvious reading — the brief's trap 1, that
+`deepest_winter` day 22 is a winter day with no grass on it — is **wrong**, checked rather than
+assumed. Grass is abundant on the wire: peak ground cover **0.76** in `largest_fire` (day 16) and
+**0.74** in `deepest_winter` (day 89), over ~196,000 and ~210,000 cell-days respectively. And at the
+seam place, grass reads **zero on every day sampled of both windows** — 0, 15, 30, 45, 60, 75, 89 —
+in the *implied* pass, which is the unthinned wire implication before any drawing decision. A day
+cannot explain a number that does not move with the day.
+
+**It is the place.** The two places already pinned in this file are near mirror images:
+
+| at EPSG:5070, `deepest_winter` day 22 | grass | shrub | succulent | tree |
+|---|---:|---:|---:|---:|
+| A `(-1310793, 1616226)` — implied | **0** | 3.7 M | **48.0 M** | 226 k |
+| B `(-1212793, 1376226)` — implied | **101.4 M** | 3.0 M | **0** | 85 k |
+
+A has no grass; B has no succulent. So the sweep was run again at B, and grass has rows after all:
+
+| k/k_res | k | grass | shrub | tree | total | ×prev | k² predicts | grass horizon |
+|---:|---:|---:|---:|---:|---:|---:|---:|---|
+| 0.05 | 26 | **0** | 1,308 | 2,304 | 3,612 | | | 16 m = 0.5 sub-cells, **dropped** |
+| 0.10 | 52 | 44,016 | 5,232 | 9,297 | 58,545 | 16.21 | 4.00 | 33 m = 1.1 sub-cells |
+| 0.20 | 104 | 132,048 | 19,620 | 37,152 | 188,820 | 3.23 | 4.00 | 66 m = 2.1 sub-cells |
+| **0.35** | **183** | **484,176** | 61,476 | 82,188 | **627,840** | 3.33 | 3.06 | 115 m = 3.7 sub-cells |
+| 0.50 | 261 | 968,352 | 128,184 | 82,944 | 1,179,480 | **1.88** | **2.04** | 165 m = 5.3 sub-cells |
+| 0.75 | 391 | 2,112,768 | 285,144 | 82,944 | 2,480,856 | **2.10** | **2.25** | 247 m = 7.9 sub-cells |
+
+**Grass is the family the grid hurts most, and the numbers say where it stops mattering.** At
+k/k_res = 0.05 grass is *dropped entirely* — its 16 m horizon is half a sub-cell — and the report
+names it rather than letting the zero read as a measurement. Between 0.1 and 0.2 the horizon is one
+to two sub-cells and the counts overshoot the k² law badly (16.2× and 3.2× against 4.0). From
+**0.35 upward the law is clean** — 1.88 against 2.04, 2.10 against 2.25 — which is where the horizon
+first exceeds about four sub-cells. That is the same lower bound the first sweep found, arrived at
+from the opposite direction.
+
+**And it generalises the imbalance rather than being an exception to it.** Grass at this place has a
+realised height of 0.63 m against a 0.086 m crown, so its `height²/crown_area` is **68.5** — higher
+even than the succulent's 51. It takes **77–87% of the drawn population** here, exactly as succulent
+took 87–91% at place A. So the rule's composition is not a quirk of one family: **whichever family a
+place carries with the highest height-to-crown ratio dominates what gets drawn**, and one `k` sets
+the total without saying anything about the split.
+
+The remaining gap is a scan-radius one: tree count flattens at 82,944 from k/k_res = 0.35 because
+every tree the wire implies inside 1,500 m is already drawn, not because the rule stopped.
 
 ### Cost
 

@@ -9,7 +9,7 @@
       800.0
     ]
   },
-  "measured_at_commit": "d96f995",
+  "measured_at_commit": "dcea359",
   "measured_at_commit_means": "the HEAD the run was taken against; the commit that lands this artefact is its child",
   "method": {
     "annulus": "one binary mask render per band through annulus.gdshader; a depth image does not survive this renderer's sRGB output",
@@ -7123,7 +7123,7 @@
           "bands": [
             {
               "coverage": 0.9999568109182,
-              "ground_pixels": 23154,
+              "ground_pixels": 23154.0,
               "hi_m": 60.0,
               "in_situ_luminance": [
                 0.0,
@@ -7148,7 +7148,7 @@
                 0.241277082130497,
                 0.131022805809477
               ],
-              "isolated_lit": 23153,
+              "isolated_lit": 23153.0,
               "isolated_luminance": [
                 0.0,
                 0.171468060294562,
@@ -7176,7 +7176,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 6588,
+              "ground_pixels": 6588.0,
               "hi_m": 84.0,
               "in_situ_luminance": [
                 0.0,
@@ -7201,7 +7201,7 @@
                 0.260260492055459,
                 0.133354171092153
               ],
-              "isolated_lit": 6588,
+              "isolated_lit": 6588.0,
               "isolated_luminance": [
                 0.0,
                 0.112780813600486,
@@ -7229,7 +7229,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 5104,
+              "ground_pixels": 5104.0,
               "hi_m": 120.0,
               "in_situ_luminance": [
                 0.0,
@@ -7254,7 +7254,7 @@
                 0.26973462538782,
                 0.130495117004336
               ],
-              "isolated_lit": 5104,
+              "isolated_lit": 5104.0,
               "isolated_luminance": [
                 0.0,
                 0.0932601880877743,
@@ -7282,7 +7282,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 3867,
+              "ground_pixels": 3867.0,
               "hi_m": 180.0,
               "in_situ_luminance": [
                 0.0,
@@ -7307,7 +7307,7 @@
                 0.284979497674272,
                 0.124749898267965
               ],
-              "isolated_lit": 3867,
+              "isolated_lit": 3867.0,
               "isolated_luminance": [
                 0.0,
                 0.0907680372381691,
@@ -7335,7 +7335,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 1906,
+              "ground_pixels": 1906.0,
               "hi_m": 240.0,
               "in_situ_luminance": [
                 0.0,
@@ -7360,7 +7360,7 @@
                 0.28410181288626,
                 0.115715082523736
               ],
-              "isolated_lit": 1906,
+              "isolated_lit": 1906.0,
               "isolated_luminance": [
                 0.0,
                 0.0897166841552991,
@@ -7388,7 +7388,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 2003,
+              "ground_pixels": 2003.0,
               "hi_m": 360.0,
               "in_situ_luminance": [
                 0.0,
@@ -7413,7 +7413,7 @@
                 0.301414554022695,
                 0.111840086400925
               ],
-              "isolated_lit": 2003,
+              "isolated_lit": 2003.0,
               "isolated_luminance": [
                 0.0,
                 0.055416874687968,
@@ -7441,7 +7441,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 965,
+              "ground_pixels": 965.0,
               "hi_m": 480.0,
               "in_situ_luminance": [
                 0.0,
@@ -7466,7 +7466,7 @@
                 0.3078817526834,
                 0.110576047350706
               ],
-              "isolated_lit": 965,
+              "isolated_lit": 965.0,
               "isolated_luminance": [
                 0.0,
                 0.0103626943005181,
@@ -7499,7 +7499,7 @@
             "max": 45.5555555555556,
             "mean": 43.5201638888889,
             "min": 43.3333333333333,
-            "n": 40,
+            "n": 40.0,
             "p50": 43.3333333333333,
             "p95": 44.4444444444444,
             "p99": 45.5555555555556
@@ -7512,10 +7512,10 @@
             "individuation_k": 0.0,
             "ok": true,
             "placed": {
-              "grass": 0,
-              "shrub": 114168,
-              "succulent": 1531896,
-              "tree": 6532
+              "grass": 0.0,
+              "shrub": 114168.0,
+              "succulent": 1531896.0,
+              "tree": 6532.0
             },
             "share_bound_by": "the density schedule alone",
             "share_drawn": 1.0
@@ -7529,12 +7529,12 @@
           "bands": [
             {
               "coverage": 0.0270363652068757,
-              "ground_pixels": 23154,
+              "ground_pixels": 23154.0,
               "hi_m": 60.0,
               "in_situ_luminance": [
                 0.0,
                 0.989893754858772,
-                0.000129567245400363,
+                0.00012956724540036,
                 0.00621922777921741,
                 0.00375745011661052,
                 0.0,
@@ -7554,7 +7554,7 @@
                 0.00395324069887871,
                 0.317316969066802
               ],
-              "isolated_lit": 626,
+              "isolated_lit": 626.0,
               "isolated_luminance": [
                 0.0,
                 0.626198083067093,
@@ -7582,7 +7582,7 @@
             },
             {
               "coverage": 0.0415907710989678,
-              "ground_pixels": 6588,
+              "ground_pixels": 6588.0,
               "hi_m": 84.0,
               "in_situ_luminance": [
                 0.0,
@@ -7590,7 +7590,7 @@
                 0.00106253794778385,
                 0.00850030358227079,
                 0.00485731633272617,
-                0.000607164541590771,
+                0.00060716454159077,
                 0.0,
                 0.0,
                 0.0,
@@ -7607,7 +7607,7 @@
                 0.00603950153708313,
                 0.313382631045629
               ],
-              "isolated_lit": 274,
+              "isolated_lit": 274.0,
               "isolated_luminance": [
                 0.0,
                 0.638686131386861,
@@ -7635,7 +7635,7 @@
             },
             {
               "coverage": 0.0617163009404389,
-              "ground_pixels": 5104,
+              "ground_pixels": 5104.0,
               "hi_m": 120.0,
               "in_situ_luminance": [
                 0.0,
@@ -7643,7 +7643,7 @@
                 0.00411442006269592,
                 0.00920846394984326,
                 0.00940438871473354,
-                0.000195924764890282,
+                0.00019592476489028,
                 0.0,
                 0.0,
                 0.0,
@@ -7660,7 +7660,7 @@
                 0.00885118956919935,
                 0.308263425164211
               ],
-              "isolated_lit": 315,
+              "isolated_lit": 315.0,
               "isolated_luminance": [
                 0.0,
                 0.628571428571429,
@@ -7688,7 +7688,7 @@
             },
             {
               "coverage": 0.0899922420480993,
-              "ground_pixels": 3867,
+              "ground_pixels": 3867.0,
               "hi_m": 180.0,
               "in_situ_luminance": [
                 0.0,
@@ -7713,7 +7713,7 @@
                 0.0128406783079867,
                 0.30139086360436
               ],
-              "isolated_lit": 348,
+              "isolated_lit": 348.0,
               "isolated_luminance": [
                 0.0,
                 0.640804597701149,
@@ -7741,7 +7741,7 @@
             },
             {
               "coverage": 0.133263378803778,
-              "ground_pixels": 1906,
+              "ground_pixels": 1906.0,
               "hi_m": 240.0,
               "in_situ_luminance": [
                 0.0,
@@ -7766,7 +7766,7 @@
                 0.0190811270783418,
                 0.291218658594526
               ],
-              "isolated_lit": 254,
+              "isolated_lit": 254.0,
               "isolated_luminance": [
                 0.0,
                 0.669291338582677,
@@ -7794,7 +7794,7 @@
             },
             {
               "coverage": 0.17773339990015,
-              "ground_pixels": 2003,
+              "ground_pixels": 2003.0,
               "hi_m": 360.0,
               "in_situ_luminance": [
                 0.0,
@@ -7802,7 +7802,7 @@
                 0.00798801797304044,
                 0.0249625561657514,
                 0.0219670494258612,
-                0.000998502246630055,
+                0.00099850224663005,
                 0.0,
                 0.0,
                 0.0,
@@ -7819,7 +7819,7 @@
                 0.0246042706038853,
                 0.280050521672769
               ],
-              "isolated_lit": 356,
+              "isolated_lit": 356.0,
               "isolated_luminance": [
                 0.0,
                 0.685393258426966,
@@ -7847,7 +7847,7 @@
             },
             {
               "coverage": 0.238341968911917,
-              "ground_pixels": 965,
+              "ground_pixels": 965.0,
               "hi_m": 480.0,
               "in_situ_luminance": [
                 0.0,
@@ -7872,7 +7872,7 @@
                 0.0345748255058274,
                 0.265536938599972
               ],
-              "isolated_lit": 230,
+              "isolated_lit": 230.0,
               "isolated_luminance": [
                 0.0,
                 0.643478260869565,
@@ -7905,7 +7905,7 @@
             "max": 4.049,
             "mean": 3.35546666666666,
             "min": 3.33333333333333,
-            "n": 40,
+            "n": 40.0,
             "p50": 3.33333333333333,
             "p95": 3.33333333333333,
             "p99": 4.049
@@ -7918,10 +7918,10 @@
             "individuation_k": 0.0,
             "ok": true,
             "placed": {
-              "grass": 0,
-              "shrub": 8490,
-              "succulent": 110982,
-              "tree": 522
+              "grass": 0.0,
+              "shrub": 8490.0,
+              "succulent": 110982.0,
+              "tree": 522.0
             },
             "share_bound_by": "the build ceiling, which is lower here than the frame budget",
             "share_drawn": 0.00231350007657522
@@ -7935,7 +7935,7 @@
           "bands": [
             {
               "coverage": 1.0,
-              "ground_pixels": 23154,
+              "ground_pixels": 23154.0,
               "hi_m": 60.0,
               "in_situ_luminance": [
                 0.0,
@@ -7960,7 +7960,7 @@
                 0.233979483231499,
                 0.126527922984492
               ],
-              "isolated_lit": 23154,
+              "isolated_lit": 23154.0,
               "isolated_luminance": [
                 0.0,
                 0.135009069707178,
@@ -7988,7 +7988,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 6588,
+              "ground_pixels": 6588.0,
               "hi_m": 84.0,
               "in_situ_luminance": [
                 0.0,
@@ -8013,7 +8013,7 @@
                 0.242340806579872,
                 0.122081744036189
               ],
-              "isolated_lit": 6588,
+              "isolated_lit": 6588.0,
               "isolated_luminance": [
                 0.0,
                 0.0595021250758956,
@@ -8041,7 +8041,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 5104,
+              "ground_pixels": 5104.0,
               "hi_m": 120.0,
               "in_situ_luminance": [
                 0.0,
@@ -8066,7 +8066,7 @@
                 0.25372257943595,
                 0.121043091110716
               ],
-              "isolated_lit": 5104,
+              "isolated_lit": 5104.0,
               "isolated_luminance": [
                 0.0,
                 0.0452586206896552,
@@ -8094,7 +8094,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 3867,
+              "ground_pixels": 3867.0,
               "hi_m": 180.0,
               "in_situ_luminance": [
                 0.0,
@@ -8119,7 +8119,7 @@
                 0.264987306941502,
                 0.11731037679787
               ],
-              "isolated_lit": 3867,
+              "isolated_lit": 3867.0,
               "isolated_luminance": [
                 0.0,
                 0.0571502456684769,
@@ -8147,7 +8147,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 1906,
+              "ground_pixels": 1906.0,
               "hi_m": 240.0,
               "in_situ_luminance": [
                 0.0,
@@ -8172,7 +8172,7 @@
                 0.282256248650402,
                 0.110663953472754
               ],
-              "isolated_lit": 1906,
+              "isolated_lit": 1906.0,
               "isolated_luminance": [
                 0.0,
                 0.0377754459601259,
@@ -8200,7 +8200,7 @@
             },
             {
               "coverage": 0.972041937094358,
-              "ground_pixels": 2003,
+              "ground_pixels": 2003.0,
               "hi_m": 360.0,
               "in_situ_luminance": [
                 0.0,
@@ -8225,7 +8225,7 @@
                 0.305283261975436,
                 0.118342097917468
               ],
-              "isolated_lit": 1947,
+              "isolated_lit": 1947.0,
               "isolated_luminance": [
                 0.0,
                 0.0169491525423729,
@@ -8253,7 +8253,7 @@
             },
             {
               "coverage": 0.984455958549223,
-              "ground_pixels": 965,
+              "ground_pixels": 965.0,
               "hi_m": 480.0,
               "in_situ_luminance": [
                 0.0,
@@ -8278,7 +8278,7 @@
                 0.304740435085766,
                 0.112156865599087
               ],
-              "isolated_lit": 950,
+              "isolated_lit": 950.0,
               "isolated_luminance": [
                 0.0,
                 0.00842105263157895,
@@ -8307,7 +8307,7 @@
           ],
           "build_ms": 2643.04,
           "curve": {
-            "bands_fitted": 7,
+            "bands_fitted": 7.0,
             "fitted": true,
             "from": "the oracle's own binned isolated brightness, relative to its nearest band",
             "k0": 1.0,
@@ -8319,7 +8319,7 @@
             "max": 9.09090909090909,
             "mean": 8.92045454545454,
             "min": 8.33333333333333,
-            "n": 40,
+            "n": 40.0,
             "p50": 9.09090909090909,
             "p95": 9.09090909090909,
             "p99": 9.09090909090909
@@ -8333,10 +8333,10 @@
             "individuation_k": 0.0,
             "ok": true,
             "placed": {
-              "grass": 0,
-              "shrub": 20904,
-              "succulent": 280488,
-              "tree": 1196
+              "grass": 0.0,
+              "shrub": 20904.0,
+              "succulent": 280488.0,
+              "tree": 1196.0
             },
             "share_bound_by": "the density schedule alone",
             "share_drawn": 1.0
@@ -8346,10 +8346,10 @@
             "lo_m": 84.0
           },
           "tint": {
-            "cells": 5684,
+            "cells": 5684.0,
             "cells_ms": 16.639,
-            "cells_with_cover": 5564,
-            "day": 22,
+            "cells_with_cover": 5564.0,
+            "day": 22.0,
             "foliage_fraction": {
               "grass": 1.0,
               "shrub": 0.898938715457916,
@@ -8373,7 +8373,7 @@
           "bands": [
             {
               "coverage": 1.0,
-              "ground_pixels": 23154,
+              "ground_pixels": 23154.0,
               "hi_m": 60.0,
               "in_situ_luminance": [
                 0.0,
@@ -8398,7 +8398,7 @@
                 0.233979483231499,
                 0.126527922984492
               ],
-              "isolated_lit": 23154,
+              "isolated_lit": 23154.0,
               "isolated_luminance": [
                 0.0,
                 0.135009069707178,
@@ -8426,7 +8426,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 6588,
+              "ground_pixels": 6588.0,
               "hi_m": 84.0,
               "in_situ_luminance": [
                 0.0,
@@ -8451,7 +8451,7 @@
                 0.242340806579872,
                 0.122081744036189
               ],
-              "isolated_lit": 6588,
+              "isolated_lit": 6588.0,
               "isolated_luminance": [
                 0.0,
                 0.0595021250758956,
@@ -8479,7 +8479,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 5104,
+              "ground_pixels": 5104.0,
               "hi_m": 120.0,
               "in_situ_luminance": [
                 0.0,
@@ -8504,7 +8504,7 @@
                 0.25372257943595,
                 0.121043091110716
               ],
-              "isolated_lit": 5104,
+              "isolated_lit": 5104.0,
               "isolated_luminance": [
                 0.0,
                 0.0452586206896552,
@@ -8532,7 +8532,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 3867,
+              "ground_pixels": 3867.0,
               "hi_m": 180.0,
               "in_situ_luminance": [
                 0.0,
@@ -8557,7 +8557,7 @@
                 0.264987306941502,
                 0.11731037679787
               ],
-              "isolated_lit": 3867,
+              "isolated_lit": 3867.0,
               "isolated_luminance": [
                 0.0,
                 0.0571502456684769,
@@ -8585,7 +8585,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 1906,
+              "ground_pixels": 1906.0,
               "hi_m": 240.0,
               "in_situ_luminance": [
                 0.0,
@@ -8610,7 +8610,7 @@
                 0.282256248650402,
                 0.110663953472754
               ],
-              "isolated_lit": 1906,
+              "isolated_lit": 1906.0,
               "isolated_luminance": [
                 0.0,
                 0.0377754459601259,
@@ -8638,7 +8638,7 @@
             },
             {
               "coverage": 0.972041937094358,
-              "ground_pixels": 2003,
+              "ground_pixels": 2003.0,
               "hi_m": 360.0,
               "in_situ_luminance": [
                 0.0,
@@ -8663,7 +8663,7 @@
                 0.305283261975436,
                 0.118342097917468
               ],
-              "isolated_lit": 1947,
+              "isolated_lit": 1947.0,
               "isolated_luminance": [
                 0.0,
                 0.0169491525423729,
@@ -8691,7 +8691,7 @@
             },
             {
               "coverage": 0.984455958549223,
-              "ground_pixels": 965,
+              "ground_pixels": 965.0,
               "hi_m": 480.0,
               "in_situ_luminance": [
                 0.0,
@@ -8716,7 +8716,7 @@
                 0.304740435085766,
                 0.112156865599087
               ],
-              "isolated_lit": 950,
+              "isolated_lit": 950.0,
               "isolated_luminance": [
                 0.0,
                 0.00842105263157895,
@@ -8745,7 +8745,7 @@
           ],
           "build_ms": 2642.137,
           "curve": {
-            "bands_fitted": 7,
+            "bands_fitted": 7.0,
             "fitted": true,
             "from": "the oracle's own binned isolated brightness, relative to its nearest band",
             "k0": 1.0,
@@ -8757,7 +8757,7 @@
             "max": 8.946,
             "mean": 8.67109166666667,
             "min": 8.33333333333333,
-            "n": 40,
+            "n": 40.0,
             "p50": 8.847,
             "p95": 8.917,
             "p99": 8.946
@@ -8771,10 +8771,10 @@
             "individuation_k": 0.0,
             "ok": true,
             "placed": {
-              "grass": 0,
-              "shrub": 20904,
-              "succulent": 280488,
-              "tree": 1196
+              "grass": 0.0,
+              "shrub": 20904.0,
+              "succulent": 280488.0,
+              "tree": 1196.0
             },
             "share_bound_by": "the density schedule alone",
             "share_drawn": 1.0
@@ -8784,10 +8784,10 @@
             "lo_m": 84.0
           },
           "tint": {
-            "cells": 5684,
+            "cells": 5684.0,
             "cells_ms": 15.102,
-            "cells_with_cover": 5564,
-            "day": 22,
+            "cells_with_cover": 5564.0,
+            "day": 22.0,
             "foliage_fraction": {
               "grass": 1.0,
               "shrub": 0.898938715457916,
@@ -8811,7 +8811,7 @@
           "bands": [
             {
               "coverage": 0.998402003973396,
-              "ground_pixels": 23154,
+              "ground_pixels": 23154.0,
               "hi_m": 60.0,
               "in_situ_luminance": [
                 0.0,
@@ -8836,7 +8836,7 @@
                 0.219700493990997,
                 0.14370735445852
               ],
-              "isolated_lit": 23117,
+              "isolated_lit": 23117.0,
               "isolated_luminance": [
                 0.0,
                 0.218367435220833,
@@ -8864,7 +8864,7 @@
             },
             {
               "coverage": 0.965239829993928,
-              "ground_pixels": 6588,
+              "ground_pixels": 6588.0,
               "hi_m": 84.0,
               "in_situ_luminance": [
                 0.0,
@@ -8889,7 +8889,7 @@
                 0.229393913949493,
                 0.139699040665549
               ],
-              "isolated_lit": 6359,
+              "isolated_lit": 6359.0,
               "isolated_luminance": [
                 0.0,
                 0.140116370498506,
@@ -8917,7 +8917,7 @@
             },
             {
               "coverage": 0.946512539184953,
-              "ground_pixels": 5104,
+              "ground_pixels": 5104.0,
               "hi_m": 120.0,
               "in_situ_luminance": [
                 0.0,
@@ -8926,7 +8926,7 @@
                 0.143808777429467,
                 0.278213166144201,
                 0.0769984326018809,
-                0.000195924764890282,
+                0.00019592476489028,
                 0.0,
                 0.0,
                 0.0,
@@ -8942,7 +8942,7 @@
                 0.224137169269547,
                 0.100762957314374
               ],
-              "isolated_lit": 4831,
+              "isolated_lit": 4831.0,
               "isolated_luminance": [
                 0.0,
                 0.217760298074933,
@@ -8950,7 +8950,7 @@
                 0.151935417097909,
                 0.293935003104947,
                 0.08134961705651,
-                0.000206996481059822,
+                0.00020699648105982,
                 0.0,
                 0.0,
                 0.0,
@@ -8970,7 +8970,7 @@
             },
             {
               "coverage": 0.941815360744763,
-              "ground_pixels": 3867,
+              "ground_pixels": 3867.0,
               "hi_m": 180.0,
               "in_situ_luminance": [
                 0.0,
@@ -8995,7 +8995,7 @@
                 0.2607452781962,
                 0.112850315530717
               ],
-              "isolated_lit": 3642,
+              "isolated_lit": 3642.0,
               "isolated_luminance": [
                 0.0,
                 0.160900604063701,
@@ -9023,7 +9023,7 @@
             },
             {
               "coverage": 0.799580272822665,
-              "ground_pixels": 1906,
+              "ground_pixels": 1906.0,
               "hi_m": 240.0,
               "in_situ_luminance": [
                 0.0,
@@ -9048,7 +9048,7 @@
                 0.233890919220035,
                 0.149143061642647
               ],
-              "isolated_lit": 1524,
+              "isolated_lit": 1524.0,
               "isolated_luminance": [
                 0.0,
                 0.152887139107612,
@@ -9076,7 +9076,7 @@
             },
             {
               "coverage": 0.897653519720419,
-              "ground_pixels": 2003,
+              "ground_pixels": 2003.0,
               "hi_m": 360.0,
               "in_situ_luminance": [
                 0.0,
@@ -9101,7 +9101,7 @@
                 0.279809706218083,
                 0.133016165894565
               ],
-              "isolated_lit": 1798,
+              "isolated_lit": 1798.0,
               "isolated_luminance": [
                 0.0,
                 0.0645161290322581,
@@ -9129,7 +9129,7 @@
             },
             {
               "coverage": 0.96580310880829,
-              "ground_pixels": 965,
+              "ground_pixels": 965.0,
               "hi_m": 480.0,
               "in_situ_luminance": [
                 0.0,
@@ -9154,7 +9154,7 @@
                 0.320751812822461,
                 0.126973487699279
               ],
-              "isolated_lit": 932,
+              "isolated_lit": 932.0,
               "isolated_luminance": [
                 0.0,
                 0.00643776824034335,
@@ -9187,7 +9187,7 @@
             "max": 2.08333333333333,
             "mean": 2.08333333333333,
             "min": 2.08333333333333,
-            "n": 40,
+            "n": 40.0,
             "p50": 2.08333333333333,
             "p95": 2.08333333333333,
             "p99": 2.08333333333333
@@ -9224,10 +9224,10 @@
             "individuation_k": 26.0645074568241,
             "ok": true,
             "placed": {
-              "grass": 0,
-              "shrub": 0,
-              "succulent": 21576,
-              "tree": 1012
+              "grass": 0.0,
+              "shrub": 0.0,
+              "succulent": 21576.0,
+              "tree": 1012.0
             },
             "share_bound_by": "nothing: the whole implied scatter is drawn",
             "share_drawn": 1.0
@@ -9241,7 +9241,7 @@
           "bands": [
             {
               "coverage": 0.998056491318995,
-              "ground_pixels": 23154,
+              "ground_pixels": 23154.0,
               "hi_m": 60.0,
               "in_situ_luminance": [
                 0.0,
@@ -9266,7 +9266,7 @@
                 0.217335764605414,
                 0.142986689305591
               ],
-              "isolated_lit": 23109,
+              "isolated_lit": 23109.0,
               "isolated_luminance": [
                 0.0,
                 0.237137046172487,
@@ -9294,7 +9294,7 @@
             },
             {
               "coverage": 0.87765634486946,
-              "ground_pixels": 6588,
+              "ground_pixels": 6588.0,
               "hi_m": 84.0,
               "in_situ_luminance": [
                 0.0,
@@ -9319,7 +9319,7 @@
                 0.220487643477722,
                 0.162759388315208
               ],
-              "isolated_lit": 5782,
+              "isolated_lit": 5782.0,
               "isolated_luminance": [
                 0.0,
                 0.111207194742304,
@@ -9347,7 +9347,7 @@
             },
             {
               "coverage": 0.653213166144201,
-              "ground_pixels": 5104,
+              "ground_pixels": 5104.0,
               "hi_m": 120.0,
               "in_situ_luminance": [
                 0.0,
@@ -9372,7 +9372,7 @@
                 0.161021733977671,
                 0.17763384854783
               ],
-              "isolated_lit": 3334,
+              "isolated_lit": 3334.0,
               "isolated_luminance": [
                 0.0,
                 0.225254949010198,
@@ -9400,7 +9400,7 @@
             },
             {
               "coverage": 0.818722523920352,
-              "ground_pixels": 3867,
+              "ground_pixels": 3867.0,
               "hi_m": 180.0,
               "in_situ_luminance": [
                 0.0,
@@ -9425,7 +9425,7 @@
                 0.225185462895262,
                 0.14286395579669
               ],
-              "isolated_lit": 3166,
+              "isolated_lit": 3166.0,
               "isolated_luminance": [
                 0.0,
                 0.160454832596336,
@@ -9453,7 +9453,7 @@
             },
             {
               "coverage": 0.915529905561385,
-              "ground_pixels": 1906,
+              "ground_pixels": 1906.0,
               "hi_m": 240.0,
               "in_situ_luminance": [
                 0.0,
@@ -9478,7 +9478,7 @@
                 0.262660749827327,
                 0.123591139533431
               ],
-              "isolated_lit": 1745,
+              "isolated_lit": 1745.0,
               "isolated_luminance": [
                 0.0,
                 0.11919770773639,
@@ -9506,7 +9506,7 @@
             },
             {
               "coverage": 0.966550174737893,
-              "ground_pixels": 2003,
+              "ground_pixels": 2003.0,
               "hi_m": 360.0,
               "in_situ_luminance": [
                 0.0,
@@ -9531,7 +9531,7 @@
                 0.29443287016583,
                 0.11809149328145
               ],
-              "isolated_lit": 1936,
+              "isolated_lit": 1936.0,
               "isolated_luminance": [
                 0.0,
                 0.053202479338843,
@@ -9559,7 +9559,7 @@
             },
             {
               "coverage": 0.993782383419689,
-              "ground_pixels": 965,
+              "ground_pixels": 965.0,
               "hi_m": 480.0,
               "in_situ_luminance": [
                 0.0,
@@ -9584,7 +9584,7 @@
                 0.319199441303861,
                 0.116753025410861
               ],
-              "isolated_lit": 959,
+              "isolated_lit": 959.0,
               "isolated_luminance": [
                 0.0,
                 0.0114702815432742,
@@ -9617,7 +9617,7 @@
             "max": 4.16666666666667,
             "mean": 1.65043611111111,
             "min": 1.367,
-            "n": 40,
+            "n": 40.0,
             "p50": 1.393,
             "p95": 3.45533333333333,
             "p99": 4.16666666666667
@@ -9653,10 +9653,10 @@
             "individuation_k": 52.1290149136482,
             "ok": true,
             "placed": {
-              "grass": 0,
-              "shrub": 1608,
-              "succulent": 21576,
-              "tree": 3772
+              "grass": 0.0,
+              "shrub": 1608.0,
+              "succulent": 21576.0,
+              "tree": 3772.0
             },
             "share_bound_by": "nothing: the whole implied scatter is drawn",
             "share_drawn": 1.0
@@ -9670,7 +9670,7 @@
           "bands": [
             {
               "coverage": 1.0,
-              "ground_pixels": 23154,
+              "ground_pixels": 23154.0,
               "hi_m": 60.0,
               "in_situ_luminance": [
                 0.0,
@@ -9678,7 +9678,7 @@
                 0.00699663125161959,
                 0.463332469551697,
                 0.395439232961907,
-                0.000647836227001814,
+                0.00064783622700181,
                 0.0,
                 0.0,
                 0.0,
@@ -9695,14 +9695,14 @@
                 0.237077242044229,
                 0.131260091315485
               ],
-              "isolated_lit": 23154,
+              "isolated_lit": 23154.0,
               "isolated_luminance": [
                 0.0,
                 0.133583830007774,
                 0.00699663125161959,
                 0.463332469551697,
                 0.395439232961907,
-                0.000647836227001814,
+                0.00064783622700181,
                 0.0,
                 0.0,
                 0.0,
@@ -9723,7 +9723,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 6588,
+              "ground_pixels": 6588.0,
               "hi_m": 84.0,
               "in_situ_luminance": [
                 0.0,
@@ -9748,7 +9748,7 @@
                 0.25399717575128,
                 0.132048767013673
               ],
-              "isolated_lit": 6588,
+              "isolated_lit": 6588.0,
               "isolated_luminance": [
                 0.0,
                 0.0666363084395871,
@@ -9776,7 +9776,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 5104,
+              "ground_pixels": 5104.0,
               "hi_m": 120.0,
               "in_situ_luminance": [
                 0.0,
@@ -9801,7 +9801,7 @@
                 0.25521391297495,
                 0.13060114657737
               ],
-              "isolated_lit": 5104,
+              "isolated_lit": 5104.0,
               "isolated_luminance": [
                 0.0,
                 0.0640673981191223,
@@ -9829,7 +9829,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 3867,
+              "ground_pixels": 3867.0,
               "hi_m": 180.0,
               "in_situ_luminance": [
                 0.0,
@@ -9838,7 +9838,7 @@
                 0.502973881561934,
                 0.400051719679338,
                 0.034910783553142,
-                0.000775795190069822,
+                0.00077579519006982,
                 0.0,
                 0.0,
                 0.0,
@@ -9854,7 +9854,7 @@
                 0.269010287804184,
                 0.123740856953106
               ],
-              "isolated_lit": 3867,
+              "isolated_lit": 3867.0,
               "isolated_luminance": [
                 0.0,
                 0.0462891130074994,
@@ -9862,7 +9862,7 @@
                 0.502973881561934,
                 0.400051719679338,
                 0.034910783553142,
-                0.000775795190069822,
+                0.00077579519006982,
                 0.0,
                 0.0,
                 0.0,
@@ -9882,7 +9882,7 @@
             },
             {
               "coverage": 0.962224554039874,
-              "ground_pixels": 1906,
+              "ground_pixels": 1906.0,
               "hi_m": 240.0,
               "in_situ_luminance": [
                 0.0,
@@ -9907,7 +9907,7 @@
                 0.282542240312411,
                 0.117424853179303
               ],
-              "isolated_lit": 1834,
+              "isolated_lit": 1834.0,
               "isolated_luminance": [
                 0.0,
                 0.039803707742639,
@@ -9935,7 +9935,7 @@
             },
             {
               "coverage": 0.969545681477783,
-              "ground_pixels": 2003,
+              "ground_pixels": 2003.0,
               "hi_m": 360.0,
               "in_situ_luminance": [
                 0.0,
@@ -9960,7 +9960,7 @@
                 0.287498175026593,
                 0.113161632758614
               ],
-              "isolated_lit": 1942,
+              "isolated_lit": 1942.0,
               "isolated_luminance": [
                 0.0,
                 0.0370751802265705,
@@ -9988,7 +9988,7 @@
             },
             {
               "coverage": 0.992746113989637,
-              "ground_pixels": 965,
+              "ground_pixels": 965.0,
               "hi_m": 480.0,
               "in_situ_luminance": [
                 0.0,
@@ -10013,7 +10013,7 @@
                 0.314847109864413,
                 0.115111249492267
               ],
-              "isolated_lit": 958,
+              "isolated_lit": 958.0,
               "isolated_luminance": [
                 0.0,
                 0.0167014613778706,
@@ -10046,7 +10046,7 @@
             "max": 5.966,
             "mean": 5.65564166666666,
             "min": 5.55555555555555,
-            "n": 40,
+            "n": 40.0,
             "p50": 5.55555555555555,
             "p95": 5.944,
             "p99": 5.966
@@ -10081,10 +10081,10 @@
             "individuation_k": 104.258029827296,
             "ok": true,
             "placed": {
-              "grass": 0,
-              "shrub": 4824,
-              "succulent": 172608,
-              "tree": 15640
+              "grass": 0.0,
+              "shrub": 4824.0,
+              "succulent": 172608.0,
+              "tree": 15640.0
             },
             "share_bound_by": "nothing: the whole implied scatter is drawn",
             "share_drawn": 1.0
@@ -10098,7 +10098,7 @@
           "bands": [
             {
               "coverage": 0.9999568109182,
-              "ground_pixels": 23154,
+              "ground_pixels": 23154.0,
               "hi_m": 60.0,
               "in_situ_luminance": [
                 0.0,
@@ -10106,7 +10106,7 @@
                 0.0063919841064179,
                 0.151982378854626,
                 0.597607324868273,
-                0.000647836227001814,
+                0.00064783622700181,
                 0.0,
                 0.0,
                 0.0,
@@ -10123,14 +10123,14 @@
                 0.211359072761726,
                 0.146667076726537
               ],
-              "isolated_lit": 23153,
+              "isolated_lit": 23153.0,
               "isolated_luminance": [
                 0.0,
                 0.243337796397875,
                 0.0063922601822658,
                 0.151988943117523,
                 0.597633136094675,
-                0.000647864207662074,
+                0.00064786420766207,
                 0.0,
                 0.0,
                 0.0,
@@ -10151,7 +10151,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 6588,
+              "ground_pixels": 6588.0,
               "hi_m": 84.0,
               "in_situ_luminance": [
                 0.0,
@@ -10176,7 +10176,7 @@
                 0.253213813219674,
                 0.142469377336095
               ],
-              "isolated_lit": 6588,
+              "isolated_lit": 6588.0,
               "isolated_luminance": [
                 0.0,
                 0.107316332726169,
@@ -10204,7 +10204,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 5104,
+              "ground_pixels": 5104.0,
               "hi_m": 120.0,
               "in_situ_luminance": [
                 0.0,
@@ -10229,7 +10229,7 @@
                 0.27708680036866,
                 0.128717963766966
               ],
-              "isolated_lit": 5104,
+              "isolated_lit": 5104.0,
               "isolated_luminance": [
                 0.0,
                 0.0540752351097179,
@@ -10257,7 +10257,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 3867,
+              "ground_pixels": 3867.0,
               "hi_m": 180.0,
               "in_situ_luminance": [
                 0.0,
@@ -10282,7 +10282,7 @@
                 0.278805589422349,
                 0.12419112252598
               ],
-              "isolated_lit": 3867,
+              "isolated_lit": 3867.0,
               "isolated_luminance": [
                 0.0,
                 0.0628394103956555,
@@ -10310,7 +10310,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 1906,
+              "ground_pixels": 1906.0,
               "hi_m": 240.0,
               "in_situ_luminance": [
                 0.0,
@@ -10335,7 +10335,7 @@
                 0.292021078642962,
                 0.118182008237757
               ],
-              "isolated_lit": 1906,
+              "isolated_lit": 1906.0,
               "isolated_luminance": [
                 0.0,
                 0.0634837355718783,
@@ -10363,7 +10363,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 2003,
+              "ground_pixels": 2003.0,
               "hi_m": 360.0,
               "in_situ_luminance": [
                 0.0,
@@ -10388,7 +10388,7 @@
                 0.304711570679636,
                 0.114524295007697
               ],
-              "isolated_lit": 2003,
+              "isolated_lit": 2003.0,
               "isolated_luminance": [
                 0.0,
                 0.0304543185222167,
@@ -10416,7 +10416,7 @@
             },
             {
               "coverage": 0.998963730569948,
-              "ground_pixels": 965,
+              "ground_pixels": 965.0,
               "hi_m": 480.0,
               "in_situ_luminance": [
                 0.0,
@@ -10441,7 +10441,7 @@
                 0.316785543639734,
                 0.113818960347324
               ],
-              "isolated_lit": 964,
+              "isolated_lit": 964.0,
               "isolated_luminance": [
                 0.0,
                 0.004149377593361,
@@ -10474,7 +10474,7 @@
             "max": 14.568,
             "mean": 14.3262142857143,
             "min": 14.246,
-            "n": 40,
+            "n": 40.0,
             "p50": 14.2857142857143,
             "p95": 14.49,
             "p99": 14.568
@@ -10509,10 +10509,10 @@
             "individuation_k": 182.451552197769,
             "ok": true,
             "placed": {
-              "grass": 0,
-              "shrub": 12864,
-              "succulent": 474672,
-              "tree": 47590
+              "grass": 0.0,
+              "shrub": 12864.0,
+              "succulent": 474672.0,
+              "tree": 47590.0
             },
             "share_bound_by": "nothing: the whole implied scatter is drawn",
             "share_drawn": 1.0
@@ -10526,7 +10526,7 @@
           "bands": [
             {
               "coverage": 0.9999136218364,
-              "ground_pixels": 23154,
+              "ground_pixels": 23154.0,
               "hi_m": 60.0,
               "in_situ_luminance": [
                 0.0,
@@ -10551,7 +10551,7 @@
                 0.212981796605353,
                 0.146786651199439
               ],
-              "isolated_lit": 23152,
+              "isolated_lit": 23152.0,
               "isolated_luminance": [
                 0.0,
                 0.239892881824464,
@@ -10579,7 +10579,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 6588,
+              "ground_pixels": 6588.0,
               "hi_m": 84.0,
               "in_situ_luminance": [
                 0.0,
@@ -10604,7 +10604,7 @@
                 0.25873543832476,
                 0.148320776810185
               ],
-              "isolated_lit": 6588,
+              "isolated_lit": 6588.0,
               "isolated_luminance": [
                 0.0,
                 0.0989678202792957,
@@ -10632,7 +10632,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 5104,
+              "ground_pixels": 5104.0,
               "hi_m": 120.0,
               "in_situ_luminance": [
                 0.0,
@@ -10657,7 +10657,7 @@
                 0.27608412475585,
                 0.147330816714735
               ],
-              "isolated_lit": 5104,
+              "isolated_lit": 5104.0,
               "isolated_luminance": [
                 0.0,
                 0.0813087774294671,
@@ -10685,7 +10685,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 3867,
+              "ground_pixels": 3867.0,
               "hi_m": 180.0,
               "in_situ_luminance": [
                 0.0,
@@ -10710,7 +10710,7 @@
                 0.278350251713078,
                 0.143439970534841
               ],
-              "isolated_lit": 3867,
+              "isolated_lit": 3867.0,
               "isolated_luminance": [
                 0.0,
                 0.102146366692527,
@@ -10738,7 +10738,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 1906,
+              "ground_pixels": 1906.0,
               "hi_m": 240.0,
               "in_situ_luminance": [
                 0.0,
@@ -10763,7 +10763,7 @@
                 0.288058359168102,
                 0.13300619616612
               ],
-              "isolated_lit": 1906,
+              "isolated_lit": 1906.0,
               "isolated_luminance": [
                 0.0,
                 0.108604407135362,
@@ -10791,7 +10791,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 2003,
+              "ground_pixels": 2003.0,
               "hi_m": 360.0,
               "in_situ_luminance": [
                 0.0,
@@ -10816,7 +10816,7 @@
                 0.292326226034464,
                 0.123526477969577
               ],
-              "isolated_lit": 2003,
+              "isolated_lit": 2003.0,
               "isolated_luminance": [
                 0.0,
                 0.114328507239141,
@@ -10844,7 +10844,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 965,
+              "ground_pixels": 965.0,
               "hi_m": 480.0,
               "in_situ_luminance": [
                 0.0,
@@ -10869,7 +10869,7 @@
                 0.313522309921875,
                 0.117074065728818
               ],
-              "isolated_lit": 965,
+              "isolated_lit": 965.0,
               "isolated_luminance": [
                 0.0,
                 0.0683937823834197,
@@ -10902,7 +10902,7 @@
             "max": 29.801,
             "mean": 29.592075,
             "min": 29.204,
-            "n": 40,
+            "n": 40.0,
             "p50": 29.6296296296296,
             "p95": 29.731,
             "p99": 29.801
@@ -10937,10 +10937,10 @@
             "individuation_k": 260.645074568241,
             "ok": true,
             "placed": {
-              "grass": 0,
-              "shrub": 20904,
-              "succulent": 1035648,
-              "tree": 98478
+              "grass": 0.0,
+              "shrub": 20904.0,
+              "succulent": 1035648.0,
+              "tree": 98478.0
             },
             "share_bound_by": "nothing: the whole implied scatter is drawn",
             "share_drawn": 1.0
@@ -10954,7 +10954,7 @@
           "bands": [
             {
               "coverage": 1.0,
-              "ground_pixels": 23154,
+              "ground_pixels": 23154.0,
               "hi_m": 60.0,
               "in_situ_luminance": [
                 0.0,
@@ -10979,7 +10979,7 @@
                 0.23155547407754,
                 0.110796595697308
               ],
-              "isolated_lit": 23154,
+              "isolated_lit": 23154.0,
               "isolated_luminance": [
                 0.0,
                 0.201217932106763,
@@ -11007,7 +11007,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 6588,
+              "ground_pixels": 6588.0,
               "hi_m": 84.0,
               "in_situ_luminance": [
                 0.0,
@@ -11032,7 +11032,7 @@
                 0.252551884941743,
                 0.113265357653169
               ],
-              "isolated_lit": 6588,
+              "isolated_lit": 6588.0,
               "isolated_luminance": [
                 0.0,
                 0.0672434729811779,
@@ -11060,7 +11060,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 5104,
+              "ground_pixels": 5104.0,
               "hi_m": 120.0,
               "in_situ_luminance": [
                 0.0,
@@ -11085,7 +11085,7 @@
                 0.263763147543497,
                 0.10918080689733
               ],
-              "isolated_lit": 5104,
+              "isolated_lit": 5104.0,
               "isolated_luminance": [
                 0.0,
                 0.0286050156739812,
@@ -11113,7 +11113,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 3867,
+              "ground_pixels": 3867.0,
               "hi_m": 180.0,
               "in_situ_luminance": [
                 0.0,
@@ -11122,7 +11122,7 @@
                 0.324023791052495,
                 0.377036462373933,
                 0.0744763382467029,
-                0.000258598396689941,
+                0.00025859839668994,
                 0.0,
                 0.0,
                 0.0,
@@ -11138,7 +11138,7 @@
                 0.264310895030601,
                 0.110145680060143
               ],
-              "isolated_lit": 3867,
+              "isolated_lit": 3867.0,
               "isolated_luminance": [
                 0.0,
                 0.0253426428756142,
@@ -11146,7 +11146,7 @@
                 0.324023791052495,
                 0.377036462373933,
                 0.0744763382467029,
-                0.000258598396689941,
+                0.00025859839668994,
                 0.0,
                 0.0,
                 0.0,
@@ -11166,7 +11166,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 1906,
+              "ground_pixels": 1906.0,
               "hi_m": 240.0,
               "in_situ_luminance": [
                 0.0,
@@ -11191,7 +11191,7 @@
                 0.266530881738456,
                 0.107495424958241
               ],
-              "isolated_lit": 1906,
+              "isolated_lit": 1906.0,
               "isolated_luminance": [
                 0.0,
                 0.0309548793284365,
@@ -11219,7 +11219,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 2003,
+              "ground_pixels": 2003.0,
               "hi_m": 360.0,
               "in_situ_luminance": [
                 0.0,
@@ -11244,7 +11244,7 @@
                 0.268084157583747,
                 0.104321951328354
               ],
-              "isolated_lit": 2003,
+              "isolated_lit": 2003.0,
               "isolated_luminance": [
                 0.0,
                 0.0289565651522716,
@@ -11272,7 +11272,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 965,
+              "ground_pixels": 965.0,
               "hi_m": 480.0,
               "in_situ_luminance": [
                 0.0,
@@ -11297,7 +11297,7 @@
                 0.292187351165967,
                 0.105008638599994
               ],
-              "isolated_lit": 965,
+              "isolated_lit": 965.0,
               "isolated_luminance": [
                 0.0,
                 0.00725388601036269,
@@ -11330,7 +11330,7 @@
             "max": 47.2222222222222,
             "mean": 46.8781166666667,
             "min": 46.506,
-            "n": 40,
+            "n": 40.0,
             "p50": 46.969696969697,
             "p95": 47.064,
             "p99": 47.2222222222222
@@ -11365,10 +11365,10 @@
             "individuation_k": 390.967611852362,
             "ok": true,
             "placed": {
-              "grass": 0,
-              "shrub": 36084,
-              "succulent": 1688688,
-              "tree": 150754
+              "grass": 0.0,
+              "shrub": 36084.0,
+              "succulent": 1688688.0,
+              "tree": 150754.0
             },
             "share_bound_by": "the frame budget",
             "share_drawn": 0.724615265134986
@@ -11382,7 +11382,7 @@
           "bands": [
             {
               "coverage": 0.99645849529239,
-              "ground_pixels": 23154,
+              "ground_pixels": 23154.0,
               "hi_m": 60.0,
               "in_situ_luminance": [
                 0.0,
@@ -11407,7 +11407,7 @@
                 0.175692004066611,
                 0.0861444370233059
               ],
-              "isolated_lit": 23072,
+              "isolated_lit": 23072.0,
               "isolated_luminance": [
                 0.0,
                 0.21996359223301,
@@ -11435,7 +11435,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 6588,
+              "ground_pixels": 6588.0,
               "hi_m": 84.0,
               "in_situ_luminance": [
                 0.0,
@@ -11460,7 +11460,7 @@
                 0.195637349896563,
                 0.0913735038782377
               ],
-              "isolated_lit": 6588,
+              "isolated_lit": 6588.0,
               "isolated_luminance": [
                 0.0,
                 0.147540983606557,
@@ -11488,7 +11488,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 5104,
+              "ground_pixels": 5104.0,
               "hi_m": 120.0,
               "in_situ_luminance": [
                 0.0,
@@ -11513,7 +11513,7 @@
                 0.200665381843615,
                 0.0941007461765238
               ],
-              "isolated_lit": 5104,
+              "isolated_lit": 5104.0,
               "isolated_luminance": [
                 0.0,
                 0.113244514106583,
@@ -11541,7 +11541,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 3867,
+              "ground_pixels": 3867.0,
               "hi_m": 180.0,
               "in_situ_luminance": [
                 0.0,
@@ -11566,7 +11566,7 @@
                 0.205768271614052,
                 0.0960556163667153
               ],
-              "isolated_lit": 3867,
+              "isolated_lit": 3867.0,
               "isolated_luminance": [
                 0.0,
                 0.103180760279286,
@@ -11594,7 +11594,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 1906,
+              "ground_pixels": 1906.0,
               "hi_m": 240.0,
               "in_situ_luminance": [
                 0.0,
@@ -11619,7 +11619,7 @@
                 0.21580767261738,
                 0.096703909593561
               ],
-              "isolated_lit": 1906,
+              "isolated_lit": 1906.0,
               "isolated_luminance": [
                 0.0,
                 0.0729275970619098,
@@ -11647,7 +11647,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 2003,
+              "ground_pixels": 2003.0,
               "hi_m": 360.0,
               "in_situ_luminance": [
                 0.0,
@@ -11672,7 +11672,7 @@
                 0.228794070474963,
                 0.089050739910593
               ],
-              "isolated_lit": 2003,
+              "isolated_lit": 2003.0,
               "isolated_luminance": [
                 0.0,
                 0.0559161258112831,
@@ -11700,7 +11700,7 @@
             },
             {
               "coverage": 1.0,
-              "ground_pixels": 965,
+              "ground_pixels": 965.0,
               "hi_m": 480.0,
               "in_situ_luminance": [
                 0.0,
@@ -11725,7 +11725,7 @@
                 0.242377330625304,
                 0.0906512265378329
               ],
-              "isolated_lit": 965,
+              "isolated_lit": 965.0,
               "isolated_luminance": [
                 0.0,
                 0.0911917098445596,
@@ -11758,7 +11758,7 @@
             "max": 46.5,
             "mean": 46.1297268518519,
             "min": 45.8333333333333,
-            "n": 40,
+            "n": 40.0,
             "p50": 46.2962962962963,
             "p95": 46.416,
             "p99": 46.5
@@ -11793,10 +11793,10 @@
             "individuation_k": 521.290149136482,
             "ok": true,
             "placed": {
-              "grass": 0,
-              "shrub": 38976,
-              "succulent": 1740088,
-              "tree": 95232
+              "grass": 0.0,
+              "shrub": 38976.0,
+              "succulent": 1740088.0,
+              "tree": 95232.0
             },
             "share_bound_by": "the frame budget",
             "share_drawn": 0.417862724271909
@@ -11847,7 +11847,7 @@
       },
       "measured": true,
       "range_curve": {
-        "bands_fitted": 7,
+        "bands_fitted": 7.0,
         "fitted": true,
         "from": "the oracle's own binned isolated brightness, relative to its nearest band",
         "k0": 1.0,
@@ -11956,6 +11956,4862 @@
         "at_world_epsg5070": [
           -1310792.875,
           1616226.125
+        ],
+        "camera": "eye level on the DRAWN surface, looking north, pitched down",
+        "day": 22.0,
+        "eye_height_m": 1.7,
+        "eye_pitch_degrees": 10.0,
+        "oracle_m": 300.0,
+        "row": "band.pft.biomass",
+        "seam_m": 120.0,
+        "window": "deepest_winter"
+      },
+      "scoring_band": {
+        "hi_m": 180.0,
+        "lo_m": 84.0
+      },
+      "shading_exaggeration": 12.0,
+      "vertical_exaggeration": 1.0,
+      "why_not": ""
+    },
+    {
+      "candidates": [
+        {
+          "bands": [
+            {
+              "coverage": 0.999700214132762,
+              "ground_pixels": 23350,
+              "hi_m": 60.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0562740899357602,
+                0.485010706638116,
+                0.0139186295503212,
+                0.132890792291221,
+                0.249678800856531,
+                0.0622269807280514,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.262729148567042,
+                0.216993584190944,
+                0.0906972364599495
+              ],
+              "isolated_lit": 23343,
+              "isolated_luminance": [
+                0.0,
+                0.0559910894058176,
+                0.485156149595168,
+                0.0139228034100159,
+                0.132930643019321,
+                0.24975367347813,
+                0.0622456410915478,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.26273384771771,
+                0.217058655308167,
+                0.0906268277382711
+              ],
+              "lo_m": 30.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 6616,
+              "hi_m": 84.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0799576783555018,
+                0.345979443772672,
+                0.00937122128174123,
+                0.151753325272068,
+                0.306529625151149,
+                0.106408706166868,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.289825621318914,
+                0.239456347210114,
+                0.10410828569886
+              ],
+              "isolated_lit": 6616,
+              "isolated_luminance": [
+                0.0,
+                0.0799576783555018,
+                0.345979443772672,
+                0.00937122128174123,
+                0.151753325272068,
+                0.306529625151149,
+                0.106408706166868,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.289825621318914,
+                0.239456347210114,
+                0.10410828569886
+              ],
+              "lo_m": 60.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 5134,
+              "hi_m": 120.0,
+              "in_situ_luminance": [
+                0.0,
+                0.113556680950526,
+                0.259252045188937,
+                0.00350603817686015,
+                0.17802882742501,
+                0.335605765485002,
+                0.110050642773666,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.299628014083811,
+                0.247973915697433,
+                0.11069074720449
+              ],
+              "isolated_lit": 5134,
+              "isolated_luminance": [
+                0.0,
+                0.113556680950526,
+                0.259252045188937,
+                0.00350603817686015,
+                0.17802882742501,
+                0.335605765485002,
+                0.110050642773666,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.299628014083811,
+                0.247973915697433,
+                0.11069074720449
+              ],
+              "lo_m": 84.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 3865,
+              "hi_m": 180.0,
+              "in_situ_luminance": [
+                0.0,
+                0.142302716688228,
+                0.173091849935317,
+                0.00155239327296248,
+                0.206985769728331,
+                0.357050452781371,
+                0.11901681759379,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.309631438998633,
+                0.256778031695552,
+                0.116769403096814
+              ],
+              "isolated_lit": 3865,
+              "isolated_luminance": [
+                0.0,
+                0.142302716688228,
+                0.173091849935317,
+                0.00155239327296248,
+                0.206985769728331,
+                0.357050452781371,
+                0.11901681759379,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.309631438998633,
+                0.256778031695552,
+                0.116769403096814
+              ],
+              "lo_m": 120.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 1994,
+              "hi_m": 240.0,
+              "in_situ_luminance": [
+                0.0,
+                0.200100300902708,
+                0.149448345035105,
+                0.00100300902708124,
+                0.196088264794383,
+                0.339518555667001,
+                0.113841524573721,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.300668677858777,
+                0.248933081981262,
+                0.115698078938703
+              ],
+              "isolated_lit": 1994,
+              "isolated_luminance": [
+                0.0,
+                0.200100300902708,
+                0.149448345035105,
+                0.00100300902708124,
+                0.196088264794383,
+                0.339518555667001,
+                0.113841524573721,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.300668677858777,
+                0.248933081981262,
+                0.115698078938703
+              ],
+              "lo_m": 180.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 2034,
+              "hi_m": 360.0,
+              "in_situ_luminance": [
+                0.0,
+                0.275811209439528,
+                0.120452310717797,
+                0.000491642084562439,
+                0.196165191740413,
+                0.308259587020649,
+                0.0988200589970502,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.287063069963936,
+                0.237362878105897,
+                0.113177939950907
+              ],
+              "isolated_lit": 2034,
+              "isolated_luminance": [
+                0.0,
+                0.275811209439528,
+                0.120452310717797,
+                0.000491642084562439,
+                0.196165191740413,
+                0.308259587020649,
+                0.0988200589970502,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.287063069963936,
+                0.237362878105897,
+                0.113177939950907
+              ],
+              "lo_m": 240.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 970,
+              "hi_m": 480.0,
+              "in_situ_luminance": [
+                0.0,
+                0.319587628865979,
+                0.128865979381443,
+                0.0,
+                0.179381443298969,
+                0.272164948453608,
+                0.1,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.275492221892802,
+                0.227180116354805,
+                0.110268853581751
+              ],
+              "isolated_lit": 970,
+              "isolated_luminance": [
+                0.0,
+                0.319587628865979,
+                0.128865979381443,
+                0.0,
+                0.179381443298969,
+                0.272164948453608,
+                0.1,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.275492221892802,
+                0.227180116354805,
+                0.110268853581751
+              ],
+              "lo_m": 360.0
+            }
+          ],
+          "build_ms": 24868.013,
+          "cut_m": 300.0,
+          "frame_ms": {
+            "max": 21.4285714285714,
+            "mean": 21.0533848484849,
+            "min": 20.8333333333333,
+            "n": 40,
+            "p50": 21.0416666666667,
+            "p95": 21.2121212121212,
+            "p99": 21.4285714285714
+          },
+          "kind": "instances",
+          "name": "oracle",
+          "scatter": {
+            "horizon": {},
+            "implied_after_bands": 3220568.57003576,
+            "individuation_k": 0.0,
+            "ok": true,
+            "placed": {
+              "grass": 2714188,
+              "shrub": 80656,
+              "succulent": 0,
+              "tree": 2272
+            },
+            "share_bound_by": "the frame budget",
+            "share_drawn": 0.868479597610719
+          },
+          "scoring_band": {
+            "hi_m": 180.0,
+            "lo_m": 84.0
+          }
+        },
+        {
+          "bands": [
+            {
+              "coverage": 0.0133190578158458,
+              "ground_pixels": 23350,
+              "hi_m": 60.0,
+              "in_situ_luminance": [
+                0.0,
+                0.986809421841542,
+                0.00980728051391863,
+                0.00158458244111349,
+                0.00141327623126338,
+                0.000385438972162741,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.246358819577755,
+                0.00228727388401103,
+                0.321974902173756
+              ],
+              "isolated_lit": 311,
+              "isolated_luminance": [
+                0.0,
+                0.00964630225080386,
+                0.736334405144695,
+                0.118971061093248,
+                0.106109324758842,
+                0.0289389067524116,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.194502243754181,
+                0.171729405760957,
+                0.0615598027777059
+              ],
+              "lo_m": 30.0
+            },
+            {
+              "coverage": 0.026602176541717,
+              "ground_pixels": 6616,
+              "hi_m": 84.0,
+              "in_situ_luminance": [
+                0.0,
+                0.975513905683192,
+                0.0194981862152358,
+                0.00196493349455865,
+                0.00211608222490931,
+                0.00090689238210399,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.24544538524646,
+                0.00431929741554782,
+                0.318374953862784
+              ],
+              "isolated_lit": 176,
+              "isolated_luminance": [
+                0.0,
+                0.0795454545454545,
+                0.732954545454545,
+                0.0738636363636364,
+                0.0795454545454545,
+                0.0340909090909091,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.186408205296506,
+                0.162366316484457,
+                0.0580213921864263
+              ],
+              "lo_m": 60.0
+            },
+            {
+              "coverage": 0.0414881184261784,
+              "ground_pixels": 5134,
+              "hi_m": 120.0,
+              "in_situ_luminance": [
+                0.0,
+                0.962991819244254,
+                0.0299961044020257,
+                0.00311647837943124,
+                0.00292169848071679,
+                0.000973899493572263,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.244348709886936,
+                0.00643461149869422,
+                0.314329699843536
+              ],
+              "isolated_lit": 213,
+              "isolated_luminance": [
+                0.0,
+                0.107981220657277,
+                0.723004694835681,
+                0.0751173708920188,
+                0.0704225352112676,
+                0.0234741784037559,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.181736174218811,
+                0.15509528372909,
+                0.0564853188192621
+              ],
+              "lo_m": 84.0
+            },
+            {
+              "coverage": 0.073738680465718,
+              "ground_pixels": 3865,
+              "hi_m": 180.0,
+              "in_situ_luminance": [
+                0.0,
+                0.930401034928849,
+                0.0540750323415265,
+                0.00672703751617076,
+                0.00543337645536869,
+                0.00284605433376455,
+                0.000517464424320828,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.243183928720393,
+                0.0120528630227969,
+                0.30589047980243
+              ],
+              "isolated_lit": 285,
+              "isolated_luminance": [
+                0.0,
+                0.056140350877193,
+                0.733333333333333,
+                0.0912280701754386,
+                0.0736842105263158,
+                0.0385964912280702,
+                0.00701754385964912,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.194509809268148,
+                0.163453738888105,
+                0.0596904043435005
+              ],
+              "lo_m": 120.0
+            },
+            {
+              "coverage": 0.0957873620862588,
+              "ground_pixels": 1994,
+              "hi_m": 240.0,
+              "in_situ_luminance": [
+                0.0,
+                0.909729187562688,
+                0.0631895687061184,
+                0.00752256770310933,
+                0.00952858575727182,
+                0.00902708124373119,
+                0.00100300902708124,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.243569926118689,
+                0.0171396549129737,
+                0.300796516790777
+              ],
+              "isolated_lit": 191,
+              "isolated_luminance": [
+                0.0,
+                0.0575916230366492,
+                0.659685863874346,
+                0.0785340314136126,
+                0.0994764397905759,
+                0.0942408376963351,
+                0.0104712041884817,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.210635463565744,
+                0.178934407834919,
+                0.0676932575776003
+              ],
+              "lo_m": 180.0
+            },
+            {
+              "coverage": 0.115044247787611,
+              "ground_pixels": 2034,
+              "hi_m": 360.0,
+              "in_situ_luminance": [
+                0.0,
+                0.889872173058014,
+                0.0791543756145526,
+                0.0063913470993117,
+                0.0117994100294985,
+                0.0103244837758112,
+                0.00245821042281219,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.242873118587769,
+                0.0206007681633167,
+                0.295881784005473
+              ],
+              "isolated_lit": 234,
+              "isolated_luminance": [
+                0.0,
+                0.0427350427350427,
+                0.688034188034188,
+                0.0555555555555556,
+                0.102564102564103,
+                0.0897435897435897,
+                0.0213675213675214,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.210675386918916,
+                0.179068215573445,
+                0.0681246880473744
+              ],
+              "lo_m": 240.0
+            },
+            {
+              "coverage": 0.162886597938144,
+              "ground_pixels": 970,
+              "hi_m": 480.0,
+              "in_situ_luminance": [
+                0.0,
+                0.847422680412371,
+                0.109278350515464,
+                0.00618556701030928,
+                0.0185567010309278,
+                0.0164948453608247,
+                0.00206185567010309,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.241164343097468,
+                0.0293268659219299,
+                0.283788163529843
+              ],
+              "isolated_lit": 158,
+              "isolated_luminance": [
+                0.0,
+                0.0632911392405063,
+                0.670886075949367,
+                0.0379746835443038,
+                0.113924050632911,
+                0.10126582278481,
+                0.0126582278481013,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.21087118959691,
+                0.180044683191595,
+                0.0694713352035873
+              ],
+              "lo_m": 360.0
+            }
+          ],
+          "build_ms": 1654.12,
+          "cut_m": 0.0,
+          "frame_ms": {
+            "max": 3.91733333333333,
+            "mean": 1.80741666666667,
+            "min": 1.306,
+            "n": 40,
+            "p50": 1.756,
+            "p95": 2.493,
+            "p99": 3.91733333333333
+          },
+          "kind": "instances",
+          "name": "null",
+          "scatter": {
+            "horizon": {},
+            "implied_after_bands": 104509718.103697,
+            "individuation_k": 0.0,
+            "ok": true,
+            "placed": {
+              "grass": 116442,
+              "shrub": 3456,
+              "succulent": 0,
+              "tree": 99
+            },
+            "share_bound_by": "the build ceiling, which is lower here than the frame budget",
+            "share_drawn": 0.00114821857887831
+          },
+          "scoring_band": {
+            "hi_m": 180.0,
+            "lo_m": 84.0
+          }
+        },
+        {
+          "bands": [
+            {
+              "coverage": 1.0,
+              "ground_pixels": 23350,
+              "hi_m": 60.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0102355460385439,
+                0.449036402569593,
+                0.0110492505353319,
+                0.169764453961456,
+                0.289464668094218,
+                0.0704496788008565,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.282758875615592,
+                0.23388118608765,
+                0.0983519373403371
+              ],
+              "isolated_lit": 23350,
+              "isolated_luminance": [
+                0.0,
+                0.0102355460385439,
+                0.449036402569593,
+                0.0110492505353319,
+                0.169764453961456,
+                0.289464668094218,
+                0.0704496788008565,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.282758875615592,
+                0.23388118608765,
+                0.0983519373403371
+              ],
+              "lo_m": 30.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 6616,
+              "hi_m": 84.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0164752116082225,
+                0.332376058041112,
+                0.00801088270858525,
+                0.195133010882709,
+                0.346130592503023,
+                0.101874244256348,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.307701478412706,
+                0.25503770743205,
+                0.111449372535177
+              ],
+              "isolated_lit": 6616,
+              "isolated_luminance": [
+                0.0,
+                0.0164752116082225,
+                0.332376058041112,
+                0.00801088270858525,
+                0.195133010882709,
+                0.346130592503023,
+                0.101874244256348,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.307701478412706,
+                0.25503770743205,
+                0.111449372535177
+              ],
+              "lo_m": 60.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 5134,
+              "hi_m": 120.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0617452278924815,
+                0.256135566809505,
+                0.00311647837943124,
+                0.215037008180756,
+                0.37008180755746,
+                0.0938839111803662,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.311116973271236,
+                0.257978728523585,
+                0.11576113568341
+              ],
+              "isolated_lit": 5134,
+              "isolated_luminance": [
+                0.0,
+                0.0617452278924815,
+                0.256135566809505,
+                0.00311647837943124,
+                0.215037008180756,
+                0.37008180755746,
+                0.0938839111803662,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.311116973271236,
+                0.257978728523585,
+                0.11576113568341
+              ],
+              "lo_m": 84.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 3865,
+              "hi_m": 180.0,
+              "in_situ_luminance": [
+                0.0,
+                0.147218628719276,
+                0.152652005174644,
+                0.000776196636481242,
+                0.22509702457956,
+                0.375420439844761,
+                0.0988357050452781,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.311245725185334,
+                0.258264473737983,
+                0.118775338838588
+              ],
+              "isolated_lit": 3865,
+              "isolated_luminance": [
+                0.0,
+                0.147218628719276,
+                0.152652005174644,
+                0.000776196636481242,
+                0.22509702457956,
+                0.375420439844761,
+                0.0988357050452781,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.311245725185334,
+                0.258264473737983,
+                0.118775338838588
+              ],
+              "lo_m": 120.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 1994,
+              "hi_m": 240.0,
+              "in_situ_luminance": [
+                0.0,
+                0.225175526579739,
+                0.105315947843531,
+                0.000501504513540622,
+                0.198595787362086,
+                0.357572718154463,
+                0.11283851554664,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.303842906334784,
+                0.251798541037555,
+                0.118370803093599
+              ],
+              "isolated_lit": 1994,
+              "isolated_luminance": [
+                0.0,
+                0.225175526579739,
+                0.105315947843531,
+                0.000501504513540622,
+                0.198595787362086,
+                0.357572718154463,
+                0.11283851554664,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.303842906334784,
+                0.251798541037555,
+                0.118370803093599
+              ],
+              "lo_m": 180.0
+            },
+            {
+              "coverage": 0.999016715830875,
+              "ground_pixels": 2034,
+              "hi_m": 360.0,
+              "in_situ_luminance": [
+                0.0,
+                0.280727630285152,
+                0.112094395280236,
+                0.0,
+                0.216322517207473,
+                0.300884955752212,
+                0.0889872173058014,
+                0.0,
+                0.0,
+                0.000983284169124877,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.286301506740007,
+                0.236838459964904,
+                0.1136869341831
+              ],
+              "isolated_lit": 2032,
+              "isolated_luminance": [
+                0.0,
+                0.281003937007874,
+                0.112204724409449,
+                0.0,
+                0.216535433070866,
+                0.301181102362205,
+                0.0890748031496063,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.286000467979855,
+                0.236508036160651,
+                0.113281615984105
+              ],
+              "lo_m": 240.0
+            },
+            {
+              "coverage": 0.968041237113402,
+              "ground_pixels": 970,
+              "hi_m": 480.0,
+              "in_situ_luminance": [
+                0.0,
+                0.371134020618557,
+                0.132989690721649,
+                0.0,
+                0.134020618556701,
+                0.270103092783505,
+                0.0597938144329897,
+                0.0,
+                0.0,
+                0.0319587628865979,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.27013139713978,
+                0.224519918152352,
+                0.117946234199497
+              ],
+              "isolated_lit": 939,
+              "isolated_luminance": [
+                0.0,
+                0.383386581469649,
+                0.137380191693291,
+                0.0,
+                0.138445154419595,
+                0.2790202342918,
+                0.0617678381256656,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.259500097685729,
+                0.213030138668923,
+                0.104491640275088
+              ],
+              "lo_m": 360.0
+            }
+          ],
+          "build_ms": 5239.623,
+          "curve": {
+            "bands_fitted": 7,
+            "fitted": true,
+            "from": "the oracle's own binned isolated brightness, relative to its nearest band",
+            "k0": 1.0,
+            "r0": 40.0,
+            "residual": 0.120022247499519
+          },
+          "cut_m": 120.0,
+          "frame_ms": {
+            "max": 6.006,
+            "mean": 5.681125,
+            "min": 5.55555555555555,
+            "n": 40,
+            "p50": 5.55555555555555,
+            "p95": 5.996,
+            "p99": 6.006
+          },
+          "kind": "tint",
+          "matched": false,
+          "name": "constant",
+          "scatter": {
+            "horizon": {},
+            "implied_after_bands": 589681.569161482,
+            "individuation_k": 0.0,
+            "ok": true,
+            "placed": {
+              "grass": 572208,
+              "shrub": 17004,
+              "succulent": 0,
+              "tree": 468
+            },
+            "share_bound_by": "the density schedule alone",
+            "share_drawn": 1.0
+          },
+          "scoring_band": {
+            "hi_m": 180.0,
+            "lo_m": 84.0
+          },
+          "tint": {
+            "cells": 5684,
+            "cells_ms": 14.534,
+            "cells_with_cover": 5564,
+            "day": 22,
+            "foliage_fraction": {
+              "grass": 1.0,
+              "shrub": 0.898938715457916,
+              "succulent": 0.149019613862038,
+              "tree": 0.974923849105835
+            },
+            "mean_cover_per_family": {
+              "grass": 0.0486236296646846,
+              "shrub": 0.0568797874745627,
+              "succulent": 0.074645730439378,
+              "tree": 0.355923833150171
+            },
+            "mean_cover_where_covered": 0.536072980728798,
+            "ok": true,
+            "rebuild_ms": 221.205,
+            "what": "mean vegetation colour weighted by cover, and coverage as the sum of the families' cover fractions -- the two conserved quantities any seam has to hold",
+            "window": "deepest_winter"
+          }
+        },
+        {
+          "bands": [
+            {
+              "coverage": 1.0,
+              "ground_pixels": 23350,
+              "hi_m": 60.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0102355460385439,
+                0.449036402569593,
+                0.0110492505353319,
+                0.169764453961456,
+                0.289464668094218,
+                0.0704496788008565,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.282758875615592,
+                0.23388118608765,
+                0.0983519373403371
+              ],
+              "isolated_lit": 23350,
+              "isolated_luminance": [
+                0.0,
+                0.0102355460385439,
+                0.449036402569593,
+                0.0110492505353319,
+                0.169764453961456,
+                0.289464668094218,
+                0.0704496788008565,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.282758875615592,
+                0.23388118608765,
+                0.0983519373403371
+              ],
+              "lo_m": 30.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 6616,
+              "hi_m": 84.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0164752116082225,
+                0.332376058041112,
+                0.00801088270858525,
+                0.195133010882709,
+                0.346130592503023,
+                0.101874244256348,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.307701478412706,
+                0.25503770743205,
+                0.111449372535177
+              ],
+              "isolated_lit": 6616,
+              "isolated_luminance": [
+                0.0,
+                0.0164752116082225,
+                0.332376058041112,
+                0.00801088270858525,
+                0.195133010882709,
+                0.346130592503023,
+                0.101874244256348,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.307701478412706,
+                0.25503770743205,
+                0.111449372535177
+              ],
+              "lo_m": 60.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 5134,
+              "hi_m": 120.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0617452278924815,
+                0.256135566809505,
+                0.00311647837943124,
+                0.215037008180756,
+                0.37008180755746,
+                0.0938839111803662,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.311116973271236,
+                0.257978728523585,
+                0.11576113568341
+              ],
+              "isolated_lit": 5134,
+              "isolated_luminance": [
+                0.0,
+                0.0617452278924815,
+                0.256135566809505,
+                0.00311647837943124,
+                0.215037008180756,
+                0.37008180755746,
+                0.0938839111803662,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.311116973271236,
+                0.257978728523585,
+                0.11576113568341
+              ],
+              "lo_m": 84.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 3865,
+              "hi_m": 180.0,
+              "in_situ_luminance": [
+                0.0,
+                0.147218628719276,
+                0.152652005174644,
+                0.000776196636481242,
+                0.22509702457956,
+                0.375420439844761,
+                0.0988357050452781,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.311245725185334,
+                0.258264473737983,
+                0.118775338838588
+              ],
+              "isolated_lit": 3865,
+              "isolated_luminance": [
+                0.0,
+                0.147218628719276,
+                0.152652005174644,
+                0.000776196636481242,
+                0.22509702457956,
+                0.375420439844761,
+                0.0988357050452781,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.311245725185334,
+                0.258264473737983,
+                0.118775338838588
+              ],
+              "lo_m": 120.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 1994,
+              "hi_m": 240.0,
+              "in_situ_luminance": [
+                0.0,
+                0.225175526579739,
+                0.105315947843531,
+                0.000501504513540622,
+                0.198595787362086,
+                0.357572718154463,
+                0.11283851554664,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.303842906334784,
+                0.251798541037555,
+                0.118370803093599
+              ],
+              "isolated_lit": 1994,
+              "isolated_luminance": [
+                0.0,
+                0.225175526579739,
+                0.105315947843531,
+                0.000501504513540622,
+                0.198595787362086,
+                0.357572718154463,
+                0.11283851554664,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.303842906334784,
+                0.251798541037555,
+                0.118370803093599
+              ],
+              "lo_m": 180.0
+            },
+            {
+              "coverage": 0.999016715830875,
+              "ground_pixels": 2034,
+              "hi_m": 360.0,
+              "in_situ_luminance": [
+                0.0,
+                0.280727630285152,
+                0.112094395280236,
+                0.0,
+                0.216322517207473,
+                0.300884955752212,
+                0.0889872173058014,
+                0.0,
+                0.0,
+                0.000983284169124877,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.286301506740007,
+                0.236838459964904,
+                0.1136869341831
+              ],
+              "isolated_lit": 2032,
+              "isolated_luminance": [
+                0.0,
+                0.281003937007874,
+                0.112204724409449,
+                0.0,
+                0.216535433070866,
+                0.301181102362205,
+                0.0890748031496063,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.286000467979855,
+                0.236508036160651,
+                0.113281615984105
+              ],
+              "lo_m": 240.0
+            },
+            {
+              "coverage": 0.968041237113402,
+              "ground_pixels": 970,
+              "hi_m": 480.0,
+              "in_situ_luminance": [
+                0.0,
+                0.371134020618557,
+                0.132989690721649,
+                0.0,
+                0.134020618556701,
+                0.270103092783505,
+                0.0597938144329897,
+                0.0,
+                0.0,
+                0.0319587628865979,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.27013139713978,
+                0.224519918152352,
+                0.117946234199497
+              ],
+              "isolated_lit": 939,
+              "isolated_luminance": [
+                0.0,
+                0.383386581469649,
+                0.137380191693291,
+                0.0,
+                0.138445154419595,
+                0.2790202342918,
+                0.0617678381256656,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.259500097685729,
+                0.213030138668923,
+                0.104491640275088
+              ],
+              "lo_m": 360.0
+            }
+          ],
+          "build_ms": 5269.326,
+          "curve": {
+            "bands_fitted": 7,
+            "fitted": true,
+            "from": "the oracle's own binned isolated brightness, relative to its nearest band",
+            "k0": 1.0,
+            "r0": 40.0,
+            "residual": 0.120022247499519
+          },
+          "cut_m": 120.0,
+          "frame_ms": {
+            "max": 6.30771340884626,
+            "mean": 5.70028298673622,
+            "min": 5.55555555555555,
+            "n": 40,
+            "p50": 5.55555555555555,
+            "p95": 6.06060606060606,
+            "p99": 6.30771340884626
+          },
+          "kind": "tint",
+          "matched": true,
+          "name": "range_matched",
+          "scatter": {
+            "horizon": {},
+            "implied_after_bands": 589681.569161482,
+            "individuation_k": 0.0,
+            "ok": true,
+            "placed": {
+              "grass": 572208,
+              "shrub": 17004,
+              "succulent": 0,
+              "tree": 468
+            },
+            "share_bound_by": "the density schedule alone",
+            "share_drawn": 1.0
+          },
+          "scoring_band": {
+            "hi_m": 180.0,
+            "lo_m": 84.0
+          },
+          "tint": {
+            "cells": 5684,
+            "cells_ms": 15.206,
+            "cells_with_cover": 5564,
+            "day": 22,
+            "foliage_fraction": {
+              "grass": 1.0,
+              "shrub": 0.898938715457916,
+              "succulent": 0.149019613862038,
+              "tree": 0.974923849105835
+            },
+            "mean_cover_per_family": {
+              "grass": 0.0486236296646846,
+              "shrub": 0.0568797874745627,
+              "succulent": 0.074645730439378,
+              "tree": 0.355923833150171
+            },
+            "mean_cover_where_covered": 0.536072980728798,
+            "ok": true,
+            "rebuild_ms": 220.645,
+            "what": "mean vegetation colour weighted by cover, and coverage as the sum of the families' cover fractions -- the two conserved quantities any seam has to hold",
+            "window": "deepest_winter"
+          }
+        },
+        {
+          "bands": [
+            {
+              "coverage": 1.0,
+              "ground_pixels": 23350,
+              "hi_m": 60.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0766167023554604,
+                0.390920770877944,
+                0.00972162740899358,
+                0.148522483940043,
+                0.289379014989293,
+                0.0848394004282655,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.279148344949558,
+                0.230660293041958,
+                0.0990107943693563
+              ],
+              "isolated_lit": 23350,
+              "isolated_luminance": [
+                0.0,
+                0.0766167023554604,
+                0.390920770877944,
+                0.00972162740899358,
+                0.148522483940043,
+                0.289379014989293,
+                0.0848394004282655,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.279148344949558,
+                0.230660293041958,
+                0.0990107943693563
+              ],
+              "lo_m": 30.0
+            },
+            {
+              "coverage": 0.999697702539299,
+              "ground_pixels": 6616,
+              "hi_m": 84.0,
+              "in_situ_luminance": [
+                0.0,
+                0.126209189842805,
+                0.309552599758162,
+                0.0126964933494559,
+                0.162333736396614,
+                0.305320435308343,
+                0.0838875453446191,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.282032866917208,
+                0.233672981670728,
+                0.102903837758705
+              ],
+              "isolated_lit": 6614,
+              "isolated_luminance": [
+                0.0,
+                0.12594496522528,
+                0.309646205019655,
+                0.0127003326277593,
+                0.162382824312065,
+                0.305412760810402,
+                0.0839129120048382,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.282043442678688,
+                0.233743641780093,
+                0.102836530117725
+              ],
+              "lo_m": 60.0
+            },
+            {
+              "coverage": 0.999805220101286,
+              "ground_pixels": 5134,
+              "hi_m": 120.0,
+              "in_situ_luminance": [
+                0.0,
+                0.200233735878457,
+                0.25282430853136,
+                0.030970003895598,
+                0.160888196338138,
+                0.263731982859369,
+                0.0913517724970783,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.27152165613073,
+                0.226952198643221,
+                0.102349583964387
+              ],
+              "isolated_lit": 5133,
+              "isolated_luminance": [
+                0.0,
+                0.200077927138126,
+                0.252873563218391,
+                0.0309760374050263,
+                0.160919540229885,
+                0.26378336255601,
+                0.0913695694525619,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.271526421927033,
+                0.22699641298155,
+                0.102306112189106
+              ],
+              "lo_m": 84.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 3865,
+              "hi_m": 180.0,
+              "in_situ_luminance": [
+                0.0,
+                0.357050452781371,
+                0.393272962483829,
+                0.055627425614489,
+                0.0866752910737387,
+                0.0799482535575679,
+                0.0274256144890039,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.194980598752897,
+                0.163619212434178,
+                0.074858840767964
+              ],
+              "isolated_lit": 3865,
+              "isolated_luminance": [
+                0.0,
+                0.357050452781371,
+                0.393272962483829,
+                0.055627425614489,
+                0.0866752910737387,
+                0.0799482535575679,
+                0.0274256144890039,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.194980598752897,
+                0.163619212434178,
+                0.074858840767964
+              ],
+              "lo_m": 120.0
+            },
+            {
+              "coverage": 0.890170511534604,
+              "ground_pixels": 1994,
+              "hi_m": 240.0,
+              "in_situ_luminance": [
+                0.0,
+                0.652457372116349,
+                0.297893681043129,
+                0.0170511534603811,
+                0.0295887662988967,
+                0.00300902708124373,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.160300511265231,
+                0.10741243662393,
+                0.0953055265169953
+              ],
+              "isolated_lit": 1775,
+              "isolated_luminance": [
+                0.0,
+                0.609577464788732,
+                0.334647887323944,
+                0.0191549295774648,
+                0.0332394366197183,
+                0.00338028169014085,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.149596246237486,
+                0.120665013311614,
+                0.0669052758624016
+              ],
+              "lo_m": 180.0
+            },
+            {
+              "coverage": 0.879547689282203,
+              "ground_pixels": 2034,
+              "hi_m": 360.0,
+              "in_situ_luminance": [
+                0.0,
+                0.755162241887906,
+                0.213864306784661,
+                0.00245821042281219,
+                0.0285152409046214,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.156293984235154,
+                0.0996760974071312,
+                0.0994890799128699
+              ],
+              "isolated_lit": 1789,
+              "isolated_luminance": [
+                0.0,
+                0.721632196757965,
+                0.24315259921744,
+                0.00279485746226942,
+                0.0324203465623253,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.143863919578897,
+                0.113326541154894,
+                0.0685386740945617
+              ],
+              "lo_m": 240.0
+            },
+            {
+              "coverage": 0.881443298969072,
+              "ground_pixels": 970,
+              "hi_m": 480.0,
+              "in_situ_luminance": [
+                0.0,
+                0.743298969072165,
+                0.222680412371134,
+                0.0,
+                0.034020618556701,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.15983020173981,
+                0.102854257944933,
+                0.0993612311319592
+              ],
+              "isolated_lit": 855,
+              "isolated_luminance": [
+                0.0,
+                0.708771929824561,
+                0.252631578947368,
+                0.0,
+                0.0385964912280702,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.14809769703108,
+                0.116688456381971,
+                0.0689462227518098
+              ],
+              "lo_m": 360.0
+            }
+          ],
+          "build_ms": 38.027,
+          "cut_m": 0.0,
+          "frame_ms": {
+            "max": 5.238,
+            "mean": 4.79666904761905,
+            "min": 4.76190476190476,
+            "n": 40,
+            "p50": 4.76190476190476,
+            "p95": 5.122,
+            "p99": 5.238
+          },
+          "k": 26.0645074568241,
+          "k_fraction": 0.05,
+          "k_resolution": 521.290149136482,
+          "kind": "horizon",
+          "name": "k_0.05",
+          "scatter": {
+            "horizon": {
+              "grass": {
+                "below_the_grid": "grass's smallest horizon is 16.5 m against a 31.2 m sub-cell, so the rule cuts it below the resolution the cut is evaluated at and this family is dropped rather than thinned. Raise k, raise BAND_SUBDIVISION, or read this family's count as absent-by-grid.",
+                "cut_in_sub_cells": 0.526423050259097,
+                "max_m": 16.4507203205968,
+                "min_m": 16.4507203205968,
+                "sub_cell_m": 31.25
+              },
+              "shrub": {
+                "cut_in_sub_cells": 1.10945022460938,
+                "max_m": 34.6703195190433,
+                "min_m": 34.6703195190433,
+                "sub_cell_m": 31.25
+              },
+              "tree": {
+                "cut_in_sub_cells": 9.06421224661111,
+                "max_m": 283.256632706597,
+                "min_m": 283.256632706597,
+                "sub_cell_m": 31.25
+              }
+            },
+            "implied_after_bands": 3657.28813276462,
+            "individuation_k": 26.0645074568241,
+            "ok": true,
+            "placed": {
+              "grass": 0,
+              "shrub": 1308,
+              "succulent": 0,
+              "tree": 2304
+            },
+            "share_bound_by": "nothing: the whole implied scatter is drawn",
+            "share_drawn": 1.0
+          },
+          "scoring_band": {
+            "hi_m": 180.0,
+            "lo_m": 84.0
+          }
+        },
+        {
+          "bands": [
+            {
+              "coverage": 0.999571734475375,
+              "ground_pixels": 23350,
+              "hi_m": 60.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0878800856531049,
+                0.471006423982869,
+                0.0116916488222698,
+                0.125781584582441,
+                0.249850107066381,
+                0.0537901498929336,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.25717630802915,
+                0.211711306675343,
+                0.0883110416506674
+              ],
+              "isolated_lit": 23340,
+              "isolated_luminance": [
+                0.0,
+                0.0874892887746358,
+                0.47120822622108,
+                0.0116966580976864,
+                0.125835475578406,
+                0.249957155098543,
+                0.0538131962296487,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.257180642855338,
+                0.211802014176061,
+                0.0882094224712204
+              ],
+              "lo_m": 30.0
+            },
+            {
+              "coverage": 0.998941958887545,
+              "ground_pixels": 6616,
+              "hi_m": 84.0,
+              "in_situ_luminance": [
+                0.0,
+                0.117593712212817,
+                0.274334945586457,
+                0.00272067714631197,
+                0.163996372430472,
+                0.337968561064087,
+                0.103385731559855,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.295116419641542,
+                0.24376734615638,
+                0.108023334400978
+              ],
+              "isolated_lit": 6609,
+              "isolated_luminance": [
+                0.0,
+                0.116659101225601,
+                0.274625510667272,
+                0.00272355878347708,
+                0.164170071115146,
+                0.338326524436375,
+                0.103495233772129,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.295167320408913,
+                0.244025535205116,
+                0.107793001808369
+              ],
+              "lo_m": 60.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 5134,
+              "hi_m": 120.0,
+              "in_situ_luminance": [
+                0.0,
+                0.139072847682119,
+                0.225165562913907,
+                0.00116867939228672,
+                0.198480716790027,
+                0.333463186599143,
+                0.102649006622517,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.298611339426918,
+                0.24709473273136,
+                0.111521808183845
+              ],
+              "isolated_lit": 5134,
+              "isolated_luminance": [
+                0.0,
+                0.139072847682119,
+                0.225165562913907,
+                0.00116867939228672,
+                0.198480716790027,
+                0.333463186599143,
+                0.102649006622517,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.298611339426918,
+                0.24709473273136,
+                0.111521808183845
+              ],
+              "lo_m": 84.0
+            },
+            {
+              "coverage": 0.995601552393273,
+              "ground_pixels": 3865,
+              "hi_m": 180.0,
+              "in_situ_luminance": [
+                0.0,
+                0.176714100905563,
+                0.146442432082794,
+                0.0036222509702458,
+                0.20620957309185,
+                0.355239327296248,
+                0.111772315653299,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.306762047848371,
+                0.253385088256383,
+                0.118345132978081
+              ],
+              "isolated_lit": 3848,
+              "isolated_luminance": [
+                0.0,
+                0.173076923076923,
+                0.147089397089397,
+                0.00363825363825364,
+                0.207120582120582,
+                0.356808731808732,
+                0.112266112266112,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.307025809493497,
+                0.254504513022589,
+                0.117429991021342
+              ],
+              "lo_m": 120.0
+            },
+            {
+              "coverage": 0.966399197592778,
+              "ground_pixels": 1994,
+              "hi_m": 240.0,
+              "in_situ_luminance": [
+                0.0,
+                0.319458375125376,
+                0.110330992978937,
+                0.0,
+                0.184052156469408,
+                0.28234704112337,
+                0.103811434302909,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.281900608480545,
+                0.225924840624796,
+                0.120011017619517
+              ],
+              "isolated_lit": 1927,
+              "isolated_luminance": [
+                0.0,
+                0.295796574987026,
+                0.1141670991178,
+                0.0,
+                0.190451478982875,
+                0.292163985469642,
+                0.107420861442657,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.283112024972491,
+                0.233780037470599,
+                0.11286669709349
+              ],
+              "lo_m": 180.0
+            },
+            {
+              "coverage": 0.931170108161259,
+              "ground_pixels": 2034,
+              "hi_m": 360.0,
+              "in_situ_luminance": [
+                0.0,
+                0.615044247787611,
+                0.173549655850541,
+                0.00196656833824975,
+                0.0585054080629302,
+                0.0983284169124877,
+                0.0526057030481809,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.197364415486243,
+                0.145822974495157,
+                0.10064974128504
+              ],
+              "isolated_lit": 1894,
+              "isolated_luminance": [
+                0.0,
+                0.586589229144667,
+                0.186378035902851,
+                0.00211193241816262,
+                0.0628299894403379,
+                0.105596620908131,
+                0.0564941921858501,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.193691122376113,
+                0.15660186384538,
+                0.0840300659274381
+              ],
+              "lo_m": 240.0
+            },
+            {
+              "coverage": 0.941237113402062,
+              "ground_pixels": 970,
+              "hi_m": 480.0,
+              "in_situ_luminance": [
+                0.0,
+                0.716494845360825,
+                0.245360824742268,
+                0.00309278350515464,
+                0.034020618556701,
+                0.00103092783505155,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.153191835525417,
+                0.109557310545567,
+                0.0848999408947438
+              ],
+              "isolated_lit": 913,
+              "isolated_luminance": [
+                0.0,
+                0.698795180722892,
+                0.260679079956188,
+                0.00328587075575027,
+                0.036144578313253,
+                0.00109529025191676,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.147331574489031,
+                0.116397142638774,
+                0.0698795190564513
+              ],
+              "lo_m": 360.0
+            }
+          ],
+          "build_ms": 543.486,
+          "cut_m": 0.0,
+          "frame_ms": {
+            "max": 2.77777777777778,
+            "mean": 1.94884166666667,
+            "min": 1.585,
+            "n": 40,
+            "p50": 1.85185185185185,
+            "p95": 2.407,
+            "p99": 2.77777777777778
+          },
+          "k": 52.1290149136482,
+          "k_fraction": 0.1,
+          "k_resolution": 521.290149136482,
+          "kind": "horizon",
+          "name": "k_0.1",
+          "scatter": {
+            "horizon": {
+              "grass": {
+                "cut_in_sub_cells": 1.05284610051819,
+                "max_m": 32.9014406411936,
+                "min_m": 32.9014406411936,
+                "sub_cell_m": 31.25
+              },
+              "shrub": {
+                "cut_in_sub_cells": 2.21890044921877,
+                "max_m": 69.3406390380865,
+                "min_m": 69.3406390380865,
+                "sub_cell_m": 31.25
+              },
+              "tree": {
+                "cut_in_sub_cells": 18.1284244932222,
+                "max_m": 566.513265413195,
+                "min_m": 566.513265413195,
+                "sub_cell_m": 31.25
+              }
+            },
+            "implied_after_bands": 58728.1151433259,
+            "individuation_k": 52.1290149136482,
+            "ok": true,
+            "placed": {
+              "grass": 44016,
+              "shrub": 5232,
+              "succulent": 0,
+              "tree": 9297
+            },
+            "share_bound_by": "nothing: the whole implied scatter is drawn",
+            "share_drawn": 1.0
+          },
+          "scoring_band": {
+            "hi_m": 180.0,
+            "lo_m": 84.0
+          }
+        },
+        {
+          "bands": [
+            {
+              "coverage": 1.0,
+              "ground_pixels": 23350,
+              "hi_m": 60.0,
+              "in_situ_luminance": [
+                0.0,
+                0.034389721627409,
+                0.490535331905782,
+                0.0161456102783726,
+                0.138800856531049,
+                0.250107066381156,
+                0.0700214132762313,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.267785368968256,
+                0.220841424111955,
+                0.0924783172863645
+              ],
+              "isolated_lit": 23350,
+              "isolated_luminance": [
+                0.0,
+                0.034389721627409,
+                0.490535331905782,
+                0.0161456102783726,
+                0.138800856531049,
+                0.250107066381156,
+                0.0700214132762313,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.267785368968256,
+                0.220841424111955,
+                0.0924783172863645
+              ],
+              "lo_m": 30.0
+            },
+            {
+              "coverage": 0.999697702539299,
+              "ground_pixels": 6616,
+              "hi_m": 84.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0453446191051995,
+                0.301844014510278,
+                0.00513905683192261,
+                0.222188633615478,
+                0.33418984280532,
+                0.0912938331318017,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.305380900848788,
+                0.252995124949365,
+                0.11131304236942
+              ],
+              "isolated_lit": 6614,
+              "isolated_luminance": [
+                0.0,
+                0.0450559419413366,
+                0.301935288781373,
+                0.00514061082552162,
+                0.222255820985788,
+                0.33429089809495,
+                0.0913214393710311,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.305398536795913,
+                0.253071627859843,
+                0.111248277578337
+              ],
+              "lo_m": 60.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 5134,
+              "hi_m": 120.0,
+              "in_situ_luminance": [
+                0.0,
+                0.088624853915076,
+                0.25983638488508,
+                0.00428515777171796,
+                0.210167510712894,
+                0.348071679002727,
+                0.0890144137125049,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.303376190751837,
+                0.251281355104595,
+                0.112358979951194
+              ],
+              "isolated_lit": 5134,
+              "isolated_luminance": [
+                0.0,
+                0.088624853915076,
+                0.25983638488508,
+                0.00428515777171796,
+                0.210167510712894,
+                0.348071679002727,
+                0.0890144137125049,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.303376190751837,
+                0.251281355104595,
+                0.112358979951194
+              ],
+              "lo_m": 84.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 3865,
+              "hi_m": 180.0,
+              "in_situ_luminance": [
+                0.0,
+                0.13117723156533,
+                0.159379042690815,
+                0.00310478654592497,
+                0.231565329883571,
+                0.365847347994825,
+                0.108926261319534,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.3140106087071,
+                0.260649883351921,
+                0.119177134788052
+              ],
+              "isolated_lit": 3865,
+              "isolated_luminance": [
+                0.0,
+                0.13117723156533,
+                0.159379042690815,
+                0.00310478654592497,
+                0.231565329883571,
+                0.365847347994825,
+                0.108926261319534,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.3140106087071,
+                0.260649883351921,
+                0.119177134788052
+              ],
+              "lo_m": 120.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 1994,
+              "hi_m": 240.0,
+              "in_situ_luminance": [
+                0.0,
+                0.212136409227683,
+                0.124373119358074,
+                0.00200601805416249,
+                0.206619859578736,
+                0.340020060180542,
+                0.114844533600802,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.302674696159548,
+                0.250657864157839,
+                0.116950856973842
+              ],
+              "isolated_lit": 1994,
+              "isolated_luminance": [
+                0.0,
+                0.212136409227683,
+                0.124373119358074,
+                0.00200601805416249,
+                0.206619859578736,
+                0.340020060180542,
+                0.114844533600802,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.302674696159548,
+                0.250657864157839,
+                0.116950856973842
+              ],
+              "lo_m": 180.0
+            },
+            {
+              "coverage": 0.999508357915438,
+              "ground_pixels": 2034,
+              "hi_m": 360.0,
+              "in_situ_luminance": [
+                0.0,
+                0.238446411012783,
+                0.106194690265487,
+                0.00147492625368732,
+                0.215830875122911,
+                0.334316617502458,
+                0.103736479842675,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.299078417273427,
+                0.247783762698621,
+                0.117579582906461
+              ],
+              "isolated_lit": 2033,
+              "isolated_luminance": [
+                0.0,
+                0.238071815051648,
+                0.106246925725529,
+                0.0014756517461879,
+                0.215937038858829,
+                0.334481062469257,
+                0.103787506148549,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.299104004874789,
+                0.247905643545989,
+                0.117477315014885
+              ],
+              "lo_m": 240.0
+            },
+            {
+              "coverage": 0.993814432989691,
+              "ground_pixels": 970,
+              "hi_m": 480.0,
+              "in_situ_luminance": [
+                0.0,
+                0.385567010309278,
+                0.132989690721649,
+                0.0,
+                0.148453608247423,
+                0.245360824742268,
+                0.0876288659793814,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.258977161954666,
+                0.211667683920295,
+                0.105874270684633
+              ],
+              "isolated_lit": 964,
+              "isolated_luminance": [
+                0.0,
+                0.381742738589212,
+                0.133817427385892,
+                0.0,
+                0.149377593360996,
+                0.246887966804979,
+                0.0881742738589212,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.259051342483193,
+                0.212985117637641,
+                0.104507366519931
+              ],
+              "lo_m": 360.0
+            }
+          ],
+          "build_ms": 1703.3,
+          "cut_m": 0.0,
+          "frame_ms": {
+            "max": 4.16666666666667,
+            "mean": 3.7919,
+            "min": 3.33333333333333,
+            "n": 40,
+            "p50": 3.886,
+            "p95": 4.16666666666667,
+            "p99": 4.16666666666667
+          },
+          "k": 104.258029827296,
+          "k_fraction": 0.2,
+          "k_resolution": 521.290149136482,
+          "kind": "horizon",
+          "name": "k_0.2",
+          "scatter": {
+            "horizon": {
+              "grass": {
+                "cut_in_sub_cells": 2.10569220103639,
+                "max_m": 65.8028812823871,
+                "min_m": 65.8028812823871,
+                "sub_cell_m": 31.25
+              },
+              "shrub": {
+                "cut_in_sub_cells": 4.43780089843754,
+                "max_m": 138.681278076173,
+                "min_m": 138.681278076173,
+                "sub_cell_m": 31.25
+              },
+              "tree": {
+                "cut_in_sub_cells": 36.2568489864445,
+                "max_m": 1133.02653082639,
+                "min_m": 1133.02653082639,
+                "sub_cell_m": 31.25
+              }
+            },
+            "implied_after_bands": 189552.339868574,
+            "individuation_k": 104.258029827296,
+            "ok": true,
+            "placed": {
+              "grass": 132048,
+              "shrub": 19620,
+              "succulent": 0,
+              "tree": 37152
+            },
+            "share_bound_by": "nothing: the whole implied scatter is drawn",
+            "share_drawn": 1.0
+          },
+          "scoring_band": {
+            "hi_m": 180.0,
+            "lo_m": 84.0
+          }
+        },
+        {
+          "bands": [
+            {
+              "coverage": 1.0,
+              "ground_pixels": 23350,
+              "hi_m": 60.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0365310492505353,
+                0.423854389721627,
+                0.01203426124197,
+                0.156745182012848,
+                0.293661670235546,
+                0.0771734475374732,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.28127506139415,
+                0.232502506847874,
+                0.0982768648897938
+              ],
+              "isolated_lit": 23350,
+              "isolated_luminance": [
+                0.0,
+                0.0365310492505353,
+                0.423854389721627,
+                0.01203426124197,
+                0.156745182012848,
+                0.293661670235546,
+                0.0771734475374732,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.28127506139415,
+                0.232502506847874,
+                0.0982768648897938
+              ],
+              "lo_m": 30.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 6616,
+              "hi_m": 84.0,
+              "in_situ_luminance": [
+                0.0,
+                0.061819830713422,
+                0.300937122128174,
+                0.00513905683192261,
+                0.176541717049577,
+                0.354141475211608,
+                0.101420798065296,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.304048420758884,
+                0.251780600169901,
+                0.110064731508791
+              ],
+              "isolated_lit": 6616,
+              "isolated_luminance": [
+                0.0,
+                0.061819830713422,
+                0.300937122128174,
+                0.00513905683192261,
+                0.176541717049577,
+                0.354141475211608,
+                0.101420798065296,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.304048420758884,
+                0.251780600169901,
+                0.110064731508791
+              ],
+              "lo_m": 60.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 5134,
+              "hi_m": 120.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0952473704713674,
+                0.205103233346319,
+                0.00584339696143358,
+                0.206856252434749,
+                0.366186209583171,
+                0.120763537202961,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.315140132705583,
+                0.261466434237775,
+                0.11786246706449
+              ],
+              "isolated_lit": 5134,
+              "isolated_luminance": [
+                0.0,
+                0.0952473704713674,
+                0.205103233346319,
+                0.00584339696143358,
+                0.206856252434749,
+                0.366186209583171,
+                0.120763537202961,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.315140132705583,
+                0.261466434237775,
+                0.11786246706449
+              ],
+              "lo_m": 84.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 3865,
+              "hi_m": 180.0,
+              "in_situ_luminance": [
+                0.0,
+                0.138680465717982,
+                0.146183699870634,
+                0.00258732212160414,
+                0.221992238033635,
+                0.369469598965071,
+                0.121086675291074,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.316269188602714,
+                0.262575662641137,
+                0.120654444956494
+              ],
+              "isolated_lit": 3865,
+              "isolated_luminance": [
+                0.0,
+                0.138680465717982,
+                0.146183699870634,
+                0.00258732212160414,
+                0.221992238033635,
+                0.369469598965071,
+                0.121086675291074,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.316269188602714,
+                0.262575662641137,
+                0.120654444956494
+              ],
+              "lo_m": 120.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 1994,
+              "hi_m": 240.0,
+              "in_situ_luminance": [
+                0.0,
+                0.170010030090271,
+                0.116850551654965,
+                0.00200601805416249,
+                0.231193580742227,
+                0.370110330992979,
+                0.109829488465396,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.313448193248589,
+                0.260119583136369,
+                0.121310996482057
+              ],
+              "isolated_lit": 1994,
+              "isolated_luminance": [
+                0.0,
+                0.170010030090271,
+                0.116850551654965,
+                0.00200601805416249,
+                0.231193580742227,
+                0.370110330992979,
+                0.109829488465396,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.313448193248589,
+                0.260119583136369,
+                0.121310996482057
+              ],
+              "lo_m": 180.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 2034,
+              "hi_m": 360.0,
+              "in_situ_luminance": [
+                0.0,
+                0.258603736479843,
+                0.107177974434612,
+                0.000491642084562439,
+                0.214847590953786,
+                0.315142576204523,
+                0.103736479842675,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.293587449736593,
+                0.243089062626031,
+                0.116056456306588
+              ],
+              "isolated_lit": 2034,
+              "isolated_luminance": [
+                0.0,
+                0.258603736479843,
+                0.107177974434612,
+                0.000491642084562439,
+                0.214847590953786,
+                0.315142576204523,
+                0.103736479842675,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.293587449736593,
+                0.243089062626031,
+                0.116056456306588
+              ],
+              "lo_m": 240.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 970,
+              "hi_m": 480.0,
+              "in_situ_luminance": [
+                0.0,
+                0.365979381443299,
+                0.14020618556701,
+                0.0,
+                0.160824742268041,
+                0.254639175257732,
+                0.0783505154639175,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.260857089340072,
+                0.214420867880288,
+                0.105405299611313
+              ],
+              "isolated_lit": 970,
+              "isolated_luminance": [
+                0.0,
+                0.365979381443299,
+                0.14020618556701,
+                0.0,
+                0.160824742268041,
+                0.254639175257732,
+                0.0783505154639175,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.260857089340072,
+                0.214420867880288,
+                0.105405299611313
+              ],
+              "lo_m": 360.0
+            }
+          ],
+          "build_ms": 5624.769,
+          "cut_m": 0.0,
+          "frame_ms": {
+            "max": 9.91,
+            "mean": 9.50302976190476,
+            "min": 9.27,
+            "n": 40,
+            "p50": 9.52380952380952,
+            "p95": 9.639,
+            "p99": 9.91
+          },
+          "k": 182.451552197769,
+          "k_fraction": 0.35,
+          "k_resolution": 521.290149136482,
+          "kind": "horizon",
+          "name": "k_0.35",
+          "scatter": {
+            "horizon": {
+              "grass": {
+                "cut_in_sub_cells": 3.68496135181368,
+                "max_m": 115.155042244177,
+                "min_m": 115.155042244177,
+                "sub_cell_m": 31.25
+              },
+              "shrub": {
+                "cut_in_sub_cells": 7.76615157226569,
+                "max_m": 242.692236633303,
+                "min_m": 242.692236633303,
+                "sub_cell_m": 31.25
+              },
+              "tree": {
+                "cut_in_sub_cells": 63.4494857262778,
+                "max_m": 1982.79642894618,
+                "min_m": 1982.79642894618,
+                "sub_cell_m": 31.25
+              }
+            },
+            "implied_after_bands": 629448.586948558,
+            "individuation_k": 182.451552197769,
+            "ok": true,
+            "placed": {
+              "grass": 484176,
+              "shrub": 61476,
+              "succulent": 0,
+              "tree": 82188
+            },
+            "share_bound_by": "nothing: the whole implied scatter is drawn",
+            "share_drawn": 1.0
+          },
+          "scoring_band": {
+            "hi_m": 180.0,
+            "lo_m": 84.0
+          }
+        },
+        {
+          "bands": [
+            {
+              "coverage": 1.0,
+              "ground_pixels": 23350,
+              "hi_m": 60.0,
+              "in_situ_luminance": [
+                0.0,
+                0.125053533190578,
+                0.477773019271949,
+                0.00985010706638116,
+                0.136745182012848,
+                0.201456102783726,
+                0.0491220556745182,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.24705916448598,
+                0.203077641259679,
+                0.0884655529024514
+              ],
+              "isolated_lit": 23350,
+              "isolated_luminance": [
+                0.0,
+                0.125053533190578,
+                0.477773019271949,
+                0.00985010706638116,
+                0.136745182012848,
+                0.201456102783726,
+                0.0491220556745182,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.24705916448598,
+                0.203077641259679,
+                0.0884655529024514
+              ],
+              "lo_m": 30.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 6616,
+              "hi_m": 84.0,
+              "in_situ_luminance": [
+                0.0,
+                0.152962515114873,
+                0.333282950423216,
+                0.00710399032648126,
+                0.174274486094317,
+                0.264359129383313,
+                0.0680169286577993,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.271930796775557,
+                0.224003611819451,
+                0.10137634623307
+              ],
+              "isolated_lit": 6616,
+              "isolated_luminance": [
+                0.0,
+                0.152962515114873,
+                0.333282950423216,
+                0.00710399032648126,
+                0.174274486094317,
+                0.264359129383313,
+                0.0680169286577993,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.271930796775557,
+                0.224003611819451,
+                0.10137634623307
+              ],
+              "lo_m": 60.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 5134,
+              "hi_m": 120.0,
+              "in_situ_luminance": [
+                0.0,
+                0.174328009349435,
+                0.228282041293339,
+                0.00175301908843007,
+                0.227308141799766,
+                0.294701986754967,
+                0.0736268017140631,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.287853378094341,
+                0.237979797014396,
+                0.110914553045054
+              ],
+              "isolated_lit": 5134,
+              "isolated_luminance": [
+                0.0,
+                0.174328009349435,
+                0.228282041293339,
+                0.00175301908843007,
+                0.227308141799766,
+                0.294701986754967,
+                0.0736268017140631,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.287853378094341,
+                0.237979797014396,
+                0.110914553045054
+              ],
+              "lo_m": 84.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 3865,
+              "hi_m": 180.0,
+              "in_situ_luminance": [
+                0.0,
+                0.245278137128072,
+                0.179042690815006,
+                0.000517464424320828,
+                0.214230271668823,
+                0.294178525226391,
+                0.0667529107373868,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.280317586301832,
+                0.231354293423822,
+                0.109691300957354
+              ],
+              "isolated_lit": 3865,
+              "isolated_luminance": [
+                0.0,
+                0.245278137128072,
+                0.179042690815006,
+                0.000517464424320828,
+                0.214230271668823,
+                0.294178525226391,
+                0.0667529107373868,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.280317586301832,
+                0.231354293423822,
+                0.109691300957354
+              ],
+              "lo_m": 120.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 1994,
+              "hi_m": 240.0,
+              "in_situ_luminance": [
+                0.0,
+                0.301404212637914,
+                0.168505516549649,
+                0.0,
+                0.197091273821464,
+                0.267803410230692,
+                0.0651955867602808,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.269726832523389,
+                0.222201907127318,
+                0.107410470427293
+              ],
+              "isolated_lit": 1994,
+              "isolated_luminance": [
+                0.0,
+                0.301404212637914,
+                0.168505516549649,
+                0.0,
+                0.197091273821464,
+                0.267803410230692,
+                0.0651955867602808,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.269726832523389,
+                0.222201907127318,
+                0.107410470427293
+              ],
+              "lo_m": 180.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 2034,
+              "hi_m": 360.0,
+              "in_situ_luminance": [
+                0.0,
+                0.372173058013766,
+                0.155850540806293,
+                0.000491642084562439,
+                0.165191740412979,
+                0.250245821042281,
+                0.056047197640118,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.254998365818223,
+                0.209310358153947,
+                0.102949855898598
+              ],
+              "isolated_lit": 2034,
+              "isolated_luminance": [
+                0.0,
+                0.372173058013766,
+                0.155850540806293,
+                0.000491642084562439,
+                0.165191740412979,
+                0.250245821042281,
+                0.056047197640118,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.254998365818223,
+                0.209310358153947,
+                0.102949855898598
+              ],
+              "lo_m": 240.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 970,
+              "hi_m": 480.0,
+              "in_situ_luminance": [
+                0.0,
+                0.424742268041237,
+                0.17319587628866,
+                0.0,
+                0.14020618556701,
+                0.193814432989691,
+                0.0680412371134021,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.240695375442198,
+                0.19702042239843,
+                0.0984475469466337
+              ],
+              "isolated_lit": 970,
+              "isolated_luminance": [
+                0.0,
+                0.424742268041237,
+                0.17319587628866,
+                0.0,
+                0.14020618556701,
+                0.193814432989691,
+                0.0680412371134021,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.240695375442198,
+                0.19702042239843,
+                0.0984475469466337
+              ],
+              "lo_m": 360.0
+            }
+          ],
+          "build_ms": 10672.337,
+          "cut_m": 0.0,
+          "frame_ms": {
+            "max": 16.321,
+            "mean": 15.3724416666667,
+            "min": 12.9505555555586,
+            "n": 40,
+            "p50": 15.2777777777778,
+            "p95": 15.922,
+            "p99": 16.321
+          },
+          "k": 260.645074568241,
+          "k_fraction": 0.5,
+          "k_resolution": 521.290149136482,
+          "kind": "horizon",
+          "name": "k_0.5",
+          "scatter": {
+            "horizon": {
+              "grass": {
+                "cut_in_sub_cells": 5.26423050259097,
+                "max_m": 164.507203205968,
+                "min_m": 164.507203205968,
+                "sub_cell_m": 31.25
+              },
+              "shrub": {
+                "cut_in_sub_cells": 11.0945022460938,
+                "max_m": 346.703195190432,
+                "min_m": 346.703195190432,
+                "sub_cell_m": 31.25
+              },
+              "tree": {
+                "cut_in_sub_cells": 90.6421224661111,
+                "max_m": 2832.56632706597,
+                "min_m": 2832.56632706597,
+                "sub_cell_m": 31.25
+              }
+            },
+            "implied_after_bands": 1181059.57636775,
+            "individuation_k": 260.645074568241,
+            "ok": true,
+            "placed": {
+              "grass": 968352,
+              "shrub": 128184,
+              "succulent": 0,
+              "tree": 82944
+            },
+            "share_bound_by": "nothing: the whole implied scatter is drawn",
+            "share_drawn": 1.0
+          },
+          "scoring_band": {
+            "hi_m": 180.0,
+            "lo_m": 84.0
+          }
+        },
+        {
+          "bands": [
+            {
+              "coverage": 1.0,
+              "ground_pixels": 23350,
+              "hi_m": 60.0,
+              "in_situ_luminance": [
+                0.0,
+                0.217173447537473,
+                0.395117773019272,
+                0.00989293361884368,
+                0.10796573875803,
+                0.210706638115632,
+                0.0591434689507495,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.243118785227583,
+                0.19928555937121,
+                0.0875287429584745
+              ],
+              "isolated_lit": 23350,
+              "isolated_luminance": [
+                0.0,
+                0.217173447537473,
+                0.395117773019272,
+                0.00989293361884368,
+                0.10796573875803,
+                0.210706638115632,
+                0.0591434689507495,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.243118785227583,
+                0.19928555937121,
+                0.0875287429584745
+              ],
+              "lo_m": 30.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 6616,
+              "hi_m": 84.0,
+              "in_situ_luminance": [
+                0.0,
+                0.248639661426844,
+                0.248337363966143,
+                0.00287182587666264,
+                0.15447400241838,
+                0.268440145102781,
+                0.0772370012091898,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.267067364549902,
+                0.219498193633609,
+                0.100401881400343
+              ],
+              "isolated_lit": 6616,
+              "isolated_luminance": [
+                0.0,
+                0.248639661426844,
+                0.248337363966143,
+                0.00287182587666264,
+                0.15447400241838,
+                0.268440145102781,
+                0.0772370012091898,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.267067364549902,
+                0.219498193633609,
+                0.100401881400343
+              ],
+              "lo_m": 60.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 5134,
+              "hi_m": 120.0,
+              "in_situ_luminance": [
+                0.0,
+                0.272302298402805,
+                0.218543046357616,
+                0.00272691858200234,
+                0.163809894818855,
+                0.272497078301519,
+                0.070120763537203,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.267062343017027,
+                0.219571949859677,
+                0.101887459040594
+              ],
+              "isolated_lit": 5134,
+              "isolated_luminance": [
+                0.0,
+                0.272302298402805,
+                0.218543046357616,
+                0.00272691858200234,
+                0.163809894818855,
+                0.272497078301519,
+                0.070120763537203,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.267062343017027,
+                0.219571949859677,
+                0.101887459040594
+              ],
+              "lo_m": 84.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 3865,
+              "hi_m": 180.0,
+              "in_situ_luminance": [
+                0.0,
+                0.316429495472186,
+                0.161448900388098,
+                0.000517464424320828,
+                0.170245795601552,
+                0.277878395860285,
+                0.0734799482535576,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.268067885110249,
+                0.22067017432442,
+                0.104003250524691
+              ],
+              "isolated_lit": 3865,
+              "isolated_luminance": [
+                0.0,
+                0.316429495472186,
+                0.161448900388098,
+                0.000517464424320828,
+                0.170245795601552,
+                0.277878395860285,
+                0.0734799482535576,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.268067885110249,
+                0.22067017432442,
+                0.104003250524691
+              ],
+              "lo_m": 120.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 1994,
+              "hi_m": 240.0,
+              "in_situ_luminance": [
+                0.0,
+                0.329488465396189,
+                0.156970912738215,
+                0.000501504513540622,
+                0.15346038114343,
+                0.283350050150451,
+                0.0762286860581745,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.267624447464106,
+                0.220388623785859,
+                0.105927590295717
+              ],
+              "isolated_lit": 1994,
+              "isolated_luminance": [
+                0.0,
+                0.329488465396189,
+                0.156970912738215,
+                0.000501504513540622,
+                0.15346038114343,
+                0.283350050150451,
+                0.0762286860581745,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.267624447464106,
+                0.220388623785859,
+                0.105927590295717
+              ],
+              "lo_m": 180.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 2034,
+              "hi_m": 360.0,
+              "in_situ_luminance": [
+                0.0,
+                0.449852507374631,
+                0.140117994100295,
+                0.0,
+                0.13913470993117,
+                0.211406096361849,
+                0.0594886922320551,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.239175203140008,
+                0.19593576474835,
+                0.096269307222177
+              ],
+              "isolated_lit": 2034,
+              "isolated_luminance": [
+                0.0,
+                0.449852507374631,
+                0.140117994100295,
+                0.0,
+                0.13913470993117,
+                0.211406096361849,
+                0.0594886922320551,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.239175203140008,
+                0.19593576474835,
+                0.096269307222177
+              ],
+              "lo_m": 240.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 970,
+              "hi_m": 480.0,
+              "in_situ_luminance": [
+                0.0,
+                0.487628865979381,
+                0.174226804123711,
+                0.0,
+                0.110309278350515,
+                0.158762886597938,
+                0.0690721649484536,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.226011729079116,
+                0.184285430832929,
+                0.0928603219924514
+              ],
+              "isolated_lit": 970,
+              "isolated_luminance": [
+                0.0,
+                0.487628865979381,
+                0.174226804123711,
+                0.0,
+                0.110309278350515,
+                0.158762886597938,
+                0.0690721649484536,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.226011729079116,
+                0.184285430832929,
+                0.0928603219924514
+              ],
+              "lo_m": 360.0
+            }
+          ],
+          "build_ms": 22375.872,
+          "cut_m": 0.0,
+          "frame_ms": {
+            "max": 29.1666666666667,
+            "mean": 28.8644083333333,
+            "min": 28.5481212121212,
+            "n": 40,
+            "p50": 28.7878787878788,
+            "p95": 29.1666666666667,
+            "p99": 29.1666666666667
+          },
+          "k": 390.967611852362,
+          "k_fraction": 0.75,
+          "k_resolution": 521.290149136482,
+          "kind": "horizon",
+          "name": "k_0.75",
+          "scatter": {
+            "horizon": {
+              "grass": {
+                "cut_in_sub_cells": 7.89634575388645,
+                "max_m": 246.760804808952,
+                "min_m": 246.760804808952,
+                "sub_cell_m": 31.25
+              },
+              "shrub": {
+                "cut_in_sub_cells": 16.6417533691408,
+                "max_m": 520.054792785649,
+                "min_m": 520.054792785649,
+                "sub_cell_m": 31.25
+              },
+              "tree": {
+                "cut_in_sub_cells": 135.963183699167,
+                "max_m": 4248.84949059896,
+                "min_m": 4248.84949059896,
+                "sub_cell_m": 31.25
+              }
+            },
+            "implied_after_bands": 2482331.66578229,
+            "individuation_k": 390.967611852362,
+            "ok": true,
+            "placed": {
+              "grass": 2112768,
+              "shrub": 285144,
+              "succulent": 0,
+              "tree": 82944
+            },
+            "share_bound_by": "nothing: the whole implied scatter is drawn",
+            "share_drawn": 1.0
+          },
+          "scoring_band": {
+            "hi_m": 180.0,
+            "lo_m": 84.0
+          }
+        },
+        {
+          "bands": [
+            {
+              "coverage": 0.9996573875803,
+              "ground_pixels": 23350,
+              "hi_m": 60.0,
+              "in_situ_luminance": [
+                0.0,
+                0.0874518201284797,
+                0.530364025695931,
+                0.0176017130620985,
+                0.120256959314775,
+                0.196916488222698,
+                0.0474089935760171,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.244864933612005,
+                0.201695771187991,
+                0.0846603716459979
+              ],
+              "isolated_lit": 23342,
+              "isolated_luminance": [
+                0.0,
+                0.0871390626338788,
+                0.530545797275298,
+                0.0176077456944563,
+                0.120298174963585,
+                0.19698397737983,
+                0.0474252420529518,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.244864181700397,
+                0.201764898348024,
+                0.0845778320744671
+              ],
+              "lo_m": 30.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 6616,
+              "hi_m": 84.0,
+              "in_situ_luminance": [
+                0.0,
+                0.141172914147521,
+                0.393893591293833,
+                0.0104292623941959,
+                0.13406892382104,
+                0.249093107617896,
+                0.0713422007255139,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.262462958748685,
+                0.216118982536977,
+                0.0945349394995832
+              ],
+              "isolated_lit": 6616,
+              "isolated_luminance": [
+                0.0,
+                0.141172914147521,
+                0.393893591293833,
+                0.0104292623941959,
+                0.13406892382104,
+                0.249093107617896,
+                0.0713422007255139,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.262462958748685,
+                0.216118982536977,
+                0.0945349394995832
+              ],
+              "lo_m": 60.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 5134,
+              "hi_m": 120.0,
+              "in_situ_luminance": [
+                0.0,
+                0.18679392286716,
+                0.302493182703545,
+                0.00233735878457343,
+                0.154655239579275,
+                0.273081417997663,
+                0.0806388780677834,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.270986966449183,
+                0.223027574875834,
+                0.0999557007609184
+              ],
+              "isolated_lit": 5134,
+              "isolated_luminance": [
+                0.0,
+                0.18679392286716,
+                0.302493182703545,
+                0.00233735878457343,
+                0.154655239579275,
+                0.273081417997663,
+                0.0806388780677834,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.270986966449183,
+                0.223027574875834,
+                0.0999557007609184
+              ],
+              "lo_m": 84.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 3865,
+              "hi_m": 180.0,
+              "in_situ_luminance": [
+                0.0,
+                0.2248382923674,
+                0.23104786545925,
+                0.00388098318240621,
+                0.15601552393273,
+                0.291073738680466,
+                0.093143596377749,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.277873327805725,
+                0.229089625357116,
+                0.104985418372136
+              ],
+              "isolated_lit": 3865,
+              "isolated_luminance": [
+                0.0,
+                0.2248382923674,
+                0.23104786545925,
+                0.00388098318240621,
+                0.15601552393273,
+                0.291073738680466,
+                0.093143596377749,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.277873327805725,
+                0.229089625357116,
+                0.104985418372136
+              ],
+              "lo_m": 120.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 1994,
+              "hi_m": 240.0,
+              "in_situ_luminance": [
+                0.0,
+                0.262788365095286,
+                0.183049147442327,
+                0.00150451354062187,
+                0.16950852557673,
+                0.297893681043129,
+                0.0852557673019057,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.277674204188818,
+                0.228914201095207,
+                0.106647397018782
+              ],
+              "isolated_lit": 1994,
+              "isolated_luminance": [
+                0.0,
+                0.262788365095286,
+                0.183049147442327,
+                0.00150451354062187,
+                0.16950852557673,
+                0.297893681043129,
+                0.0852557673019057,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.277674204188818,
+                0.228914201095207,
+                0.106647397018782
+              ],
+              "lo_m": 180.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 2034,
+              "hi_m": 360.0,
+              "in_situ_luminance": [
+                0.0,
+                0.289577187807276,
+                0.138151425762045,
+                0.000491642084562439,
+                0.166666666666667,
+                0.312192723697148,
+                0.0929203539823009,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.280530978283582,
+                0.231574997338837,
+                0.109131050621221
+              ],
+              "isolated_lit": 2034,
+              "isolated_luminance": [
+                0.0,
+                0.289577187807276,
+                0.138151425762045,
+                0.000491642084562439,
+                0.166666666666667,
+                0.312192723697148,
+                0.0929203539823009,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.280530978283582,
+                0.231574997338837,
+                0.109131050621221
+              ],
+              "lo_m": 240.0
+            },
+            {
+              "coverage": 1.0,
+              "ground_pixels": 970,
+              "hi_m": 480.0,
+              "in_situ_luminance": [
+                0.0,
+                0.354639175257732,
+                0.136082474226804,
+                0.00103092783505155,
+                0.160824742268041,
+                0.25360824742268,
+                0.0938144329896907,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "in_situ_mean_colour": [
+                0.26538912927367,
+                0.218362650843625,
+                0.105263799805309
+              ],
+              "isolated_lit": 970,
+              "isolated_luminance": [
+                0.0,
+                0.354639175257732,
+                0.136082474226804,
+                0.00103092783505155,
+                0.160824742268041,
+                0.25360824742268,
+                0.0938144329896907,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0,
+                0.0
+              ],
+              "isolated_mean_colour": [
+                0.26538912927367,
+                0.218362650843625,
+                0.105263799805309
+              ],
+              "lo_m": 360.0
+            }
+          ],
+          "build_ms": 25603.901,
+          "cut_m": 0.0,
+          "frame_ms": {
+            "max": 30.986,
+            "mean": 30.5669111111111,
+            "min": 30.243,
+            "n": 40,
+            "p50": 30.5555555555556,
+            "p95": 30.624,
+            "p99": 30.986
+          },
+          "k": 521.290149136482,
+          "k_fraction": 1.0,
+          "k_resolution": 521.290149136482,
+          "kind": "horizon",
+          "name": "k_1.0",
+          "scatter": {
+            "horizon": {
+              "grass": {
+                "cut_in_sub_cells": 10.5284610051819,
+                "max_m": 329.014406411936,
+                "min_m": 329.014406411936,
+                "sub_cell_m": 31.25
+              },
+              "shrub": {
+                "cut_in_sub_cells": 22.1890044921877,
+                "max_m": 693.406390380865,
+                "min_m": 693.406390380865,
+                "sub_cell_m": 31.25
+              },
+              "tree": {
+                "cut_in_sub_cells": 181.284244932222,
+                "max_m": 5665.13265413195,
+                "min_m": 5665.13265413195,
+                "sub_cell_m": 31.25
+              }
+            },
+            "implied_after_bands": 4420515.65975452,
+            "individuation_k": 521.290149136482,
+            "ok": true,
+            "placed": {
+              "grass": 2423124,
+              "shrub": 320850,
+              "succulent": 0,
+              "tree": 55296
+            },
+            "share_bound_by": "the frame budget",
+            "share_drawn": 0.632731181397446
+          },
+          "scoring_band": {
+            "hi_m": 180.0,
+            "lo_m": 84.0
+          }
+        }
+      ],
+      "errors_against_oracle": {
+        "coverage": {
+          "constant": 0.0,
+          "k_0.05": 0.0,
+          "k_0.1": 0.00439844760672703,
+          "k_0.2": 0.0,
+          "k_0.35": 0.0,
+          "k_0.5": 0.0,
+          "k_0.75": 0.0,
+          "k_1.0": 0.0,
+          "null": 0.926261319534282,
+          "range_matched": 0.0
+        },
+        "in_situ_luminance": {
+          "constant": 0.00367076326002587,
+          "k_0.05": 0.0999353169469599,
+          "k_0.1": 0.00426908150064684,
+          "k_0.2": 0.00441461836998707,
+          "k_0.35": 0.00501293661060802,
+          "k_0.5": 0.0304495472186287,
+          "k_0.75": 0.0417690815006468,
+          "k_1.0": 0.0302231565329884,
+          "null": 0.170164941785252,
+          "range_matched": 0.00367076326002587
+        },
+        "isolated_colour": {
+          "constant": 0.00297309271991253,
+          "k_0.05": 0.153557404875755,
+          "k_0.1": 0.00352059071883559,
+          "k_0.2": 0.0063218423165381,
+          "k_0.35": 0.00963149685412645,
+          "k_0.5": 0.0394432321190834,
+          "k_0.75": 0.0565179586410522,
+          "k_1.0": 0.0437502786517143,
+          "null": 0.158809393644333,
+          "range_matched": 0.00297309271991253
+        }
+      },
+      "measured": true,
+      "range_curve": {
+        "bands_fitted": 7,
+        "fitted": true,
+        "from": "the oracle's own binned isolated brightness, relative to its nearest band",
+        "k0": 1.0,
+        "r0": 40.0,
+        "residual": 0.120022247499519
+      },
+      "range_curve_note": "the fit returned k0 = 1.000, so there is no range darkening to match here and `range_matched` IS `constant` -- identical uniforms, identical frames. The two tying is arithmetic, not a metric that cannot separate them.",
+      "ranking": {
+        "by_colour": {
+          "margin": 0.0,
+          "margin_ratio": 1.0,
+          "order": [
+            {
+              "candidate": "constant",
+              "error": 0.00297309271991253
+            },
+            {
+              "candidate": "range_matched",
+              "error": 0.00297309271991253
+            },
+            {
+              "candidate": "k_0.1",
+              "error": 0.00352059071883559
+            },
+            {
+              "candidate": "k_0.2",
+              "error": 0.0063218423165381
+            },
+            {
+              "candidate": "k_0.35",
+              "error": 0.00963149685412645
+            },
+            {
+              "candidate": "k_0.5",
+              "error": 0.0394432321190834
+            },
+            {
+              "candidate": "k_1.0",
+              "error": 0.0437502786517143
+            },
+            {
+              "candidate": "k_0.75",
+              "error": 0.0565179586410522
+            },
+            {
+              "candidate": "k_0.05",
+              "error": 0.153557404875755
+            },
+            {
+              "candidate": "null",
+              "error": 0.158809393644333
+            }
+          ],
+          "separates": false,
+          "why_not": "constant and range_matched are within 20% of each other (0.0030 against 0.0030), so this metric does not tell them apart and cannot be trusted to rank anything subtler"
+        },
+        "by_coverage": {
+          "margin": 0.0,
+          "margin_ratio": 1e99999,
+          "order": [
+            {
+              "candidate": "constant",
+              "error": 0.0
+            },
+            {
+              "candidate": "range_matched",
+              "error": 0.0
+            },
+            {
+              "candidate": "k_0.05",
+              "error": 0.0
+            },
+            {
+              "candidate": "k_0.2",
+              "error": 0.0
+            },
+            {
+              "candidate": "k_0.35",
+              "error": 0.0
+            },
+            {
+              "candidate": "k_0.5",
+              "error": 0.0
+            },
+            {
+              "candidate": "k_0.75",
+              "error": 0.0
+            },
+            {
+              "candidate": "k_1.0",
+              "error": 0.0
+            },
+            {
+              "candidate": "k_0.1",
+              "error": 0.00439844760672703
+            },
+            {
+              "candidate": "null",
+              "error": 0.926261319534282
+            }
+          ],
+          "separates": false,
+          "why_not": "constant and range_matched are within 20% of each other (0.0000 against 0.0000), so this metric does not tell them apart and cannot be trusted to rank anything subtler"
+        }
+      },
+      "scene": {
+        "at_world_epsg5070": [
+          -1212793.0,
+          1376226.0
         ],
         "camera": "eye level on the DRAWN surface, looking north, pitched down",
         "day": 22,
