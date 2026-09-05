@@ -80,7 +80,17 @@ var at_world := Vector2.ZERO
 var out_path := "measurements/scatter_seam.json"
 var shots_dir := "shots/seam"
 var oracle_check := false
+## How deep the instances-only reference is drawn. Default `2.5 x seam`; the
+## per-family annuli need more than that and the ceiling is what stops it.
+var oracle_cut := -1.0
 var sweep_k := false
+## life_form -> the drawn height at this place, which is what sets its horizon.
+var family_h: Dictionary = {}
+## life_form -> the oracle rendered with only that family visible, kept so every
+## k can be scored against the same reference in the same annulus.
+var oracle_family: Dictionary = {}
+var fam_names: Array = []
+var fam_at := 0
 ## Runs accumulate into one artefact: sufficiency is a claim about places and
 ## days, and one row of it is not evidence for the claim.
 var append_to_existing := false
@@ -114,6 +124,10 @@ func _initialize() -> void:
     oracle_check = _has("--oracle-check")
     append_to_existing = _has("--append")
     sweep_k = _has("--sweep-k")
+    # `String.to_float("nan")` is 0.0, not NAN -- which silently gave the oracle
+    # a cut of zero, no schedule, the default ceiling, and a reference that was
+    # 1% of its own stand. A sentinel that cannot be confused with a depth.
+    oracle_cut = float(_arg("--oracle-cut", "-1"))
     var a := _arg("--at", "")
     if a != "":
         var p := a.split(",")
@@ -186,8 +200,34 @@ func _place() -> void:
     var env = view.get_node_or_null("Ambient")
     if env != null and env.environment != null:
         env.environment.background_color = Color(0, 0, 0, 1)
+    family_h = _probe_family_heights()
     jobs = _plan()
     _begin_masks()
+
+
+## THE DRAWN HEIGHT PER FAMILY AT THIS PLACE, which is what `d_f = k x height`
+## needs and what makes the per-family annuli computable before any candidate is
+## built. A ceiling of one instance: `form` is filled during the implication
+## pass, so this costs a loop over the texels and no scatter at all.
+##
+## The mean of the family's min and max. They are within a few per cent of each
+## other at both pinned places -- a cell's height comes from biomass per covered
+## area and that varies little inside one horizon -- and the spread is recorded
+## beside the number rather than being averaged away silently.
+func _probe_family_heights() -> Dictionary:
+    var r: Dictionary = view.scatter_at(at_world, TerrainView.SCATTER_HORIZON_M, [], 1)
+    var out := {}
+    if not bool(r.get("ok", false)):
+        return out
+    var form: Dictionary = r.get("form", {})
+    for lf in form:
+        var f: Dictionary = form[lf]
+        out[lf] = {
+            "height_m": 0.5 * (float(f["height_min_m"]) + float(f["height_max_m"])),
+            "height_min_m": f["height_min_m"],
+            "height_max_m": f["height_max_m"],
+        }
+    return out
 
 
 ## The candidates, in the order they have to run: the oracle first, because the
@@ -195,7 +235,7 @@ func _place() -> void:
 ## chosen before the thing it describes was measured is a constant.
 func _plan() -> Array:
     var out: Array = [
-        {"name": "oracle", "kind": "instances", "cut_m": seam_m * ORACLE_MULTIPLE},
+        {"name": "oracle", "kind": "instances", "cut_m": _oracle_cut_m()},
         {"name": "null", "kind": "instances", "cut_m": 0.0},
         {"name": "constant", "kind": "tint", "cut_m": seam_m, "matched": false},
         {"name": "range_matched", "kind": "tint", "cut_m": seam_m, "matched": true},
@@ -214,6 +254,13 @@ func _plan() -> Array:
                         "cut_m": 0.0, "k": float(q) * k_res, "k_fraction": float(q),
                         "k_resolution": k_res})
     return out
+
+
+## The reference's depth. `2.5 x seam` was chosen when the seam was one ring;
+## per-family horizons span two orders of magnitude, so the operator can deepen
+## it and pay for it in instances.
+func _oracle_cut_m() -> float:
+    return seam_m * ORACLE_MULTIPLE if oracle_cut <= 0.0 else oracle_cut
 
 
 func _aim_camera() -> void:
@@ -240,6 +287,29 @@ func _aim_camera() -> void:
 # --------------------------------------------------------------------------
 
 func _begin_masks() -> void:
+    # PER-FAMILY ANNULI, APPENDED TO THE SAME LADDER. Each family is scored
+    # around ITS OWN horizon -- `[0.7, 1.5] x k x height_f` -- so the seam is a
+    # set of annuli rather than one ring, and one family's score is never taken
+    # in another family's band. The masks are built here because a mask is a
+    # render and the candidates are already renders; a mask taken mid-candidate
+    # would need the candidate hidden and put back.
+    for job in jobs:
+        if str(job.get("kind", "")) != "horizon":
+            continue
+        var k: float = float(job["k"])
+        for lf in family_h:
+            var h := float((family_h[lf] as Dictionary)["height_m"])
+            var d := k * h
+            if d <= 0.0:
+                continue
+            bands.append({
+                "lo_m": d * SeamScore.SCORE_LO_MULTIPLE,
+                "hi_m": d * SeamScore.SCORE_HI_MULTIPLE,
+                "family": lf, "for_job": str(job["name"]),
+                "k": k, "horizon_m": d, "height_m": h,
+            })
+    fam_names = family_h.keys()
+    fam_names.sort()
     mask_at = 0
     _next_mask()
 
@@ -269,8 +339,10 @@ func _take_mask() -> void:
     img.save_png("res://%s/mask_%03d_%03d.png" % [shots_dir,
             int(float(b["lo_m"])), int(float(b["hi_m"]))])
     var su := FrameProbe.summarise(img)
-    print("mask   %4.0f-%4.0f m: %8d px in band | frame %d neutral %d near-black %d coloured"
-            % [float(b["lo_m"]), float(b["hi_m"]), n, int(su["neutral"]),
+    var who: String = ("%s @ %s" % [str(b["family"]), str(b["for_job"])]
+            if b.has("family") else "ladder")
+    print("mask   %4.0f-%4.0f m: %8d px in band | %-22s frame %d neutral %d near-black %d coloured"
+            % [float(b["lo_m"]), float(b["hi_m"]), n, who, int(su["neutral"]),
                int(su["near_black"]), int(su["coloured"])])
     mask_at += 1
     _next_mask()
@@ -337,15 +409,148 @@ func _run_candidate(delta: float) -> void:
             if frames < HOLD_FRAMES:
                 return
             job["isolated"] = _capture(job, "isolated")
-            _isolate(false)
             _score(job)
-            results.append(job)
-            _say(job)
-            if str(job["name"]) == "oracle":
-                _fit_curve(job)
-            job_at += 1
-            job_step = 0
-            frames = 0
+            # PER FAMILY, and only where it means something: an instance
+            # candidate decomposes into families and a tint does not. A tint is
+            # one ground colour standing in for whatever is past the horizon, so
+            # asking what IT drew for grass alone has no answer, and inventing
+            # one would be the harness reporting a number it did not measure.
+            if _wants_family_rows(job):
+                job["per_family"] = []
+                fam_at = 0
+                _begin_family(job)
+                job_step = 4
+                return
+            _finish_candidate(job)
+        4:
+            if frames < HOLD_FRAMES:
+                return
+            _take_family(job)
+            fam_at += 1
+            if fam_at < fam_names.size():
+                _begin_family(job)
+                return
+            _only_family("")
+            _isolate(false)
+            _finish_candidate(job)
+
+
+## Instance candidates decompose per family; the tints do not. A tint is one
+## ground colour standing in for whatever is past the horizon, so asking what it
+## drew for grass alone has no answer and inventing one would be the harness
+## reporting a number it did not measure.
+##
+## The ORACLE passes so its per-family images can be kept as the reference; it
+## has no annulus of its own and gets no rows. The null is left out: it has no
+## `k`, so there is no "its own annulus" to score it in, and scoring it in
+## someone else's is the exact confusion these rows exist to avoid.
+func _wants_family_rows(job: Dictionary) -> bool:
+    if fam_names.is_empty():
+        return false
+    return str(job.get("kind", "")) == "horizon" or str(job["name"]) == "oracle"
+
+
+func _begin_family(job: Dictionary) -> void:
+    _isolate(true)
+    _only_family(str(fam_names[fam_at]))
+    frames = 0
+
+
+func _take_family(job: Dictionary) -> void:
+    var lf := str(fam_names[fam_at])
+    var img := get_root().get_texture().get_image()
+    img.save_png("res://%s/%s_%s_%s_d%d_%s.png" % [shots_dir, window_name,
+            str(job["name"]), row_name.replace(".", "_"), day, lf])
+    if str(job["name"]) == "oracle":
+        # The reference, kept whole: every k is scored against the same oracle
+        # family image, in that k's own annulus for that family.
+        oracle_family[lf] = img
+    var idx := _family_band(str(job["name"]), lf)
+    if idx < 0:
+        return
+    var b: Dictionary = bands[idx]
+    # THE REFERENCE HAS A DEPTH AND MOST OF THESE ANNULI ARE PAST IT.
+    #
+    # The oracle draws instances out to `2.5 x seam` and the scatter draws
+    # nothing at all past `SCATTER_HORIZON_M`, so an annulus beyond the shallower
+    # of those two has no instances in it -- not the candidate's and not the
+    # oracle's. What a score taken there would actually measure is NEAR
+    # vegetation painted over FAR ground: the mask marks pixels by the range of
+    # the terrain behind them, and a tree at 800 m covers pixels whose ground is
+    # two kilometres away. That comes back as coverage near 1.0 and a tiny
+    # colour error, which reads as agreement and is two empty annuli agreeing.
+    #
+    # Per-family horizons span 16 m to 8.5 km here, and one oracle cut chosen
+    # for a single 120 m seam cannot cover that. So the row is REFUSED with its
+    # reason rather than scored, which is the whole point of these rows existing.
+    var reach: float = minf(_oracle_cut_m(), TerrainView.SCATTER_HORIZON_M)
+    if float(b["hi_m"]) > reach:
+        (job["per_family"] as Array).append({
+            "family": lf,
+            "height_m": b["height_m"],
+            "horizon_m": b["horizon_m"],
+            "annulus_lo_m": b["lo_m"],
+            "annulus_hi_m": b["hi_m"],
+            "measurable": false,
+            "why": ("the annulus reaches %s m and the reference only reaches %s m -- the "
+                    % [String.num(float(b["hi_m"]), 0), String.num(reach, 0)]
+                    + "oracle is cut at %s m and the scatter draws nothing "
+                            % String.num(_oracle_cut_m(), 0)
+                    + "past %s m. Scoring here would compare near vegetation drawn over far "
+                            % String.num(TerrainView.SCATTER_HORIZON_M, 0)
+                    + "ground against the same, and report the agreement as the candidate's."),
+        })
+        return
+    var cand := SeamScore.within(masks[idx], img)
+    var cov: Variant = SeamScore.coverage(int(cand["lit_pixels"]), ground_px[idx])
+    if is_nan(float(cov)):
+        cov = null
+    var row := {
+        "family": lf,
+        "height_m": b["height_m"],
+        "horizon_m": b["horizon_m"],
+        "annulus_lo_m": b["lo_m"],
+        "annulus_hi_m": b["hi_m"],
+        "measurable": true,
+        "reference_reach_m": reach,
+        "ground_pixels": ground_px[idx],
+        "lit_pixels": cand["lit_pixels"],
+        "coverage": cov,
+        "mean_colour": cand["mean_colour"],
+    }
+    if oracle_family.has(lf):
+        var orc := SeamScore.within(masks[idx], oracle_family[lf])
+        var ocov: Variant = SeamScore.coverage(int(orc["lit_pixels"]), ground_px[idx])
+        if is_nan(float(ocov)):
+            ocov = null
+        row["oracle_mean_colour"] = orc["mean_colour"]
+        row["oracle_lit_pixels"] = orc["lit_pixels"]
+        row["oracle_coverage"] = ocov
+        row["colour_error"] = SeamScore.colour_error(cand["mean_colour"], orc["mean_colour"])
+        row["luminance_distance"] = SeamScore.luminance_distance(
+                cand["luminance_histogram"], orc["luminance_histogram"])
+    (job["per_family"] as Array).append(row)
+
+
+## The mask index for one family under one job, or -1 where the pair has none.
+func _family_band(job_name: String, life_form: String) -> int:
+    for i in bands.size():
+        var b: Dictionary = bands[i]
+        if b.has("family") and str(b["family"]) == life_form and str(b["for_job"]) == job_name:
+            return i
+    return -1
+
+
+func _finish_candidate(job: Dictionary) -> void:
+    _isolate(false)
+    _only_family("")
+    results.append(job)
+    _say(job)
+    if str(job["name"]) == "oracle":
+        _fit_curve(job)
+    job_at += 1
+    job_step = 0
+    frames = 0
 
 
 func _apply_candidate(job: Dictionary) -> void:
@@ -380,7 +585,33 @@ func _apply_candidate(job: Dictionary) -> void:
     }
     if kind == "tint":
         job["tint"] = view.tint_report.duplicate()
+    # AN ORACLE THAT WAS THINNED IS NOT A REFERENCE. The build ceiling samples
+    # the stand when the implied population will not fit, and a sample is
+    # exactly what the oracle exists NOT to be: every candidate would then be
+    # graded against a thinner stand than the wire says is there, and the
+    # thinner the oracle the better every candidate would score.
+    if str(job["name"]) == "oracle":
+        var share := float(r.get("share_drawn", NAN))
+        if not is_nan(share) and share < 0.999:
+            job["oracle_is_a_sample"] = ("the oracle drew %s of the stand its cut implies, "
+                    % String.num(share, 4)
+                    + "bound by %s. It is a SAMPLE, not a reference, and every score against "
+                            % str(r.get("share_bound_by", "?"))
+                    + "it flatters the candidate by the same factor. Cut it shallower with "
+                    + "--oracle-cut, or raise the build ceiling.")
+            printerr("measure_seam: %s" % str(job["oracle_is_a_sample"]))
     _show_all()
+
+
+## Show ONE family's instances and no other. The ground is already hidden by
+## `_isolate`; this hides the other families' MultiMesh nodes on top of that, so
+## what is captured is the family alone against black and its lit pixels are its
+## own. Passing "" puts them all back.
+func _only_family(life_form: String) -> void:
+    for c in view.get_children():
+        var n := String(c.name)
+        if n.begins_with("Vegetation_"):
+            c.visible = life_form == "" or n == "Vegetation_" + life_form
 
 
 func _isolate(on: bool) -> void:
@@ -523,6 +754,22 @@ func _say(job: Dictionary) -> void:
             % ["--" if b["coverage"] == null else String.num(float(b["coverage"]), 3),
                float(c[0]), float(c[1]), float(c[2]),
                int(b["ground_pixels"])])
+    for row in (job.get("per_family", []) as Array):
+        var r: Dictionary = row
+        if not bool(r.get("measurable", false)):
+            print("               %-10s d_f %6.0f m  annulus %5.0f-%5.0f m  NOT MEASURABLE: %s"
+                    % [str(r["family"]), float(r["horizon_m"]), float(r["annulus_lo_m"]),
+                            float(r["annulus_hi_m"]), str(r["why"]).split(" -- ")[0]])
+            continue
+        print("               %-10s d_f %6.0f m  annulus %5.0f-%5.0f m  cover %-6s "
+                % [str(r["family"]), float(r["horizon_m"]), float(r["annulus_lo_m"]),
+                        float(r["annulus_hi_m"]),
+                        "--" if r["coverage"] == null else String.num(float(r["coverage"]), 3)]
+                + "vs oracle: dE %s  cover %s  over %d ground px"
+                % [String.num(float(r.get("colour_error", NAN)), 4),
+                        "--" if r.get("oracle_coverage", null) == null
+                                else String.num(float(r["oracle_coverage"]), 3),
+                        int(r["ground_pixels"])])
 
 
 func _write() -> void:
@@ -587,6 +834,13 @@ func _write() -> void:
             "by_colour": SeamScore.rank(colour_err),
             "by_coverage": SeamScore.rank(cover_err),
         },
+        # AT THE RUN LEVEL, because it invalidates every row and not only the
+        # oracle's. A thinned oracle is a sample, and a candidate graded against
+        # a sample is flattered by exactly the sampling: this belongs where a
+        # reader lands before any score, not on one job three screens down.
+        "reference_is_a_sample": _oracle_sample_note(),
+        "oracle_cut_m": _oracle_cut_m(),
+        "reference_reach_m": minf(_oracle_cut_m(), TerrainView.SCATTER_HORIZON_M),
         "candidates": results,
     }
     var doc := {
@@ -651,6 +905,14 @@ func _write() -> void:
     print("-> %s   shots: %s" % [out_path, shots_dir])
     stage = DONE
     quit(0)
+
+
+## The run-level invalidity note, or null where the reference held.
+func _oracle_sample_note() -> Variant:
+    for j in results:
+        if str((j as Dictionary).get("name", "")) == "oracle":
+            return (j as Dictionary).get("oracle_is_a_sample", null)
+    return null
 
 
 func _git_head() -> String:

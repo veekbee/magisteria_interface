@@ -528,10 +528,21 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
 ## `band.pft_fractions` IS A COMPOSITION, NOT A COVER, and this client read it
 ## as a cover from M5 until the far-field tint made the error visible: every
 ## cell came back fully vegetated. The evidence is in the data and is not
-## ambiguous -- the four groups sum to 1.0000 in EVERY cell of the fixture,
-## while `band.bare_fraction` runs from 0.05 to 0.95 across the basin and
+## ambiguous -- the four groups sum to 1.0000 in 99.7% of the fixture's covered
+## cells, while `band.bare_fraction` runs from 0.05 to 0.95 across the basin and
 ## averages 0.475. Both cannot be absolute: a cell cannot be 95% bare and 100%
-## covered. The one that always sums to one is the composition.
+## covered. The one that sums to one is the composition.
+##
+## NOT *EVERY* CELL, AND THAT IS AN UPSTREAM DEFECT RATHER THAN A LIMIT ON THE
+## READING. The simulation divides by `tot + EPS_V` inside a branch already
+## gated on `tot > EPS_V`, so the epsilon is redundant where it is applied and
+## acts as a mass sink: the sum is exactly `tot / (tot + EPS_V)`, and a cell
+## whose biomass sits near the gate loses part of its composition. 16 of
+## `deepest_winter`'s 5,612 covered cells sum below 0.99 at day 22 and the worst
+## sums 0.696. It is a known defect with a known fix that has to wait -- it
+## moves 19 of 33 state arrays, so it breaks M0 bit-comparability and lands with
+## M1. The population grows with run length, so the guard below WILL eventually
+## fail for a real reason, and the threshold is not what to change when it does.
 ##
 ## The contract declares both as `fraction` in [0, 1] and says what neither is
 ## a fraction OF, so the reading rests on the property rather than on the

@@ -98,6 +98,7 @@ func _initialize() -> void:
     test_the_seam_metric_fails_the_bad_frame()
     test_plants_stand_on_the_surface_that_is_drawn()
     test_the_shading_is_exaggerated_and_the_geometry_is_not()
+    test_a_family_is_scored_in_its_own_annulus_or_not_at_all()
     test_the_seam_measurement_ranks_the_null_baseline_worst()
     test_the_project_does_not_import_blend_sources()
     test_phenology_is_the_cell_measured_against_itself()
@@ -3188,11 +3189,23 @@ func test_pft_fractions_are_a_composition_of_the_cover() -> void:
 
     `band.pft_fractions` and `band.bare_fraction` are both declared `fraction`
     in [0, 1] and the contract says what neither is a fraction OF. The data
-    settles it: the four groups sum to 1.0000 in every cell, while bare runs
-    0.05 to 0.95 and averages 0.475. Both cannot be absolute -- a cell cannot be
-    95% bare and 100% covered -- so the one that always sums to one is the
+    settles it: the four groups sum to 1.0000 in 99.7% of covered cells, while
+    bare runs 0.05 to 0.95 and averages 0.475. Both cannot be absolute -- a cell
+    cannot be 95% bare and 100% covered -- so the one that sums to one is the
     composition, and a life form's ground cover is its share scaled by
     `1 - bare_fraction`.
+
+    NOT EVERY CELL, AND THE THRESHOLD IS NOT WHAT TO CHANGE WHEN THIS FAILS.
+    Upstream divides by `tot + EPS_V` inside a branch already gated on
+    `tot > EPS_V`, so the epsilon is redundant where it is applied and acts as a
+    mass sink; the sum is exactly `tot / (tot + EPS_V)` and a cell near the gate
+    loses part of its composition. Measured here: 16 of `deepest_winter`'s 5,612
+    covered cells sum below 0.99 at day 22, worst 0.696. The 99% below is
+    headroom over a known defect, not a tolerance for sloppiness -- its
+    population grows with run length (12 cells at year 25, 182 at year 1000 of
+    the M0 trace), so this WILL fail for a real reason. When it does, the fix is
+    upstream; loosening the threshold would convert a working alarm into a
+    permanently silent one.
 
     This client read the share as a cover from M5 until the far-field tint made
     it visible by rendering every cell at full canopy. So the reading rests on a
@@ -3447,11 +3460,27 @@ func test_the_tint_takes_wire_shares_unfloored_and_the_drawn_unit_can_change() -
         return
     var groups := v.fixture.taxon_groups(window, "band.pft_fractions")
     var bare := v.fixture.day_values(window, "band.bare_fraction", day)
+    # Which cells the upstream epsilon defect has eaten, so this can say whether
+    # it is pinning REACHABILITY (its job) over numbers that are also RIGHT
+    # (not its job, and not currently true everywhere).
+    var per: Array = []
+    for gi in groups.size():
+        per.append(v.fixture.day_values(window, "band.pft_fractions", day, gi))
+    var broken_cell := {}
+    for cell in v.fixture.n_cells:
+        var sum := 0.0
+        for gi in groups.size():
+            var vv: PackedFloat64Array = per[gi]
+            if cell < vv.size() and not is_nan(vv[cell]):
+                sum += vv[cell]
+        if sum >= 1e-3 and sum < 0.99:
+            broken_cell[cell] = sum
     var trace := 0
     var trace_tinted := 0
+    var trace_in_broken := 0
     var smallest := INF
     for gi in groups.size():
-        var fr := v.fixture.day_values(window, "band.pft_fractions", day, gi)
+        var fr: PackedFloat64Array = per[gi]
         for cell in fr.size():
             var cov := VegetationScatter.ground_cover(fr[cell],
                     NAN if cell >= bare.size() else bare[cell])
@@ -3459,6 +3488,8 @@ func test_the_tint_takes_wire_shares_unfloored_and_the_drawn_unit_can_change() -
                 continue
             trace += 1
             smallest = minf(smallest, cov)
+            if broken_cell.has(cell):
+                trace_in_broken += 1
             if cell < colours.size() and colours[cell].a > 0.0:
                 trace_tinted += 1
     check(trace > 0, "no cell in the shipped fixture carries a trace share under 1%, so this "
@@ -3467,8 +3498,17 @@ func test_the_tint_takes_wire_shares_unfloored_and_the_drawn_unit_can_change() -
             % [trace_tinted, trace]
             + "being floored away, and a floor here deletes grass from most of the basin -- "
             + "which renders as a basin with little grass in it rather than as a bug.")
-    print("tint: %d trace cell-groups under 1%% cover, smallest %s, all tinted"
-            % [trace, String.num(smallest, 9)])
+    # THIS PINS REACHABILITY, NOT CORRECTNESS. That a trace share reaches the
+    # tint says nothing about whether the share is right, and upstream's epsilon
+    # defect means some of them are not: a cell whose composition sums to 0.70
+    # has lost mass, and its trace groups are wrong in a direction this cannot
+    # see. The overlap is zero today and grows with run length, so it is printed
+    # rather than asserted -- an assert would either be vacuous now or start
+    # failing for something this test is not about.
+    print("tint: %d trace cell-groups under 1%% cover, smallest %s, all tinted; "
+            % [trace, String.num(smallest, 9)]
+            + "%d of them in a cell the upstream epsilon defect has eaten (%d such cells)"
+            % [trace_in_broken, broken_cell.size()])
     v.queue_free()
 
 
@@ -3717,6 +3757,88 @@ func test_plants_stand_on_the_surface_that_is_drawn() -> void:
             % [String.num(worst_at_node, 3), String.num(total / float(maxi(n, 1)), 1)]
             + "between them (worst %s)" % String.num(worst, 1))
     v.queue_free()
+
+
+func test_a_family_is_scored_in_its_own_annulus_or_not_at_all() -> void:
+    """THE POLARITY THIS FEATURE EXISTS TO KEEP. A per-family score that
+    silently graded every family in ONE family's annulus is the plausible
+    artefact this harness has produced four times: it would come back as a
+    tidy table of numbers, all of them measured, none of them of the thing the
+    column says. So the artefact carries each row's own annulus and its own
+    horizon, and this asserts the two agree.
+
+    AND THAT A ROW THE REFERENCE CANNOT REACH IS REFUSED RATHER THAN SCORED.
+    Per-family horizons span 16 m to 8.5 km at the pinned place; the oracle is
+    cut at 2.5x the seam and the scatter draws nothing past its radius. An
+    annulus beyond the shallower of those has no instances in it -- not the
+    candidate's and not the oracle's -- and what a score there measures is NEAR
+    vegetation painted over FAR ground, because the mask marks a pixel by the
+    range of the terrain behind it. That comes back as coverage near 1.0 and a
+    tiny colour error, which reads as agreement and is two empty annuli
+    agreeing. Measured: 13 of 21 rows at the pinned place are refused.
+    """
+    var f := FileAccess.open("res://measurements/scatter_seam.json", FileAccess.READ)
+    check(f != null, "no measurements/scatter_seam.json")
+    if f == null:
+        return
+    var parsed = JSON.parse_string(f.get_as_text())
+    if typeof(parsed) != TYPE_DICTIONARY:
+        check(false, "scatter_seam.json is not an object")
+        return
+    var runs: Array = (parsed as Dictionary).get("runs", [])
+    var rows := 0
+    var scored := 0
+    var refused := 0
+    for run_v in runs:
+        var run: Dictionary = run_v
+        var reach := float(run.get("reference_reach_m", NAN))
+        # A run whose reference was thinned has to say so where a reader lands,
+        # not on one job three screens down: every score in it is flattered by
+        # the sampling and none of them is safe to quote.
+        var sampled: Variant = run.get("reference_is_a_sample", null)
+        for cand_v in (run.get("candidates", []) as Array):
+            var cand: Dictionary = cand_v
+            if str(cand.get("name", "")) == "oracle" and cand.has("oracle_is_a_sample"):
+                check(sampled != null, "a run's oracle drew a sample of its own stand and the "
+                        + "run does not say so at the top. Every per-family score in it is "
+                        + "flattered by exactly the sampling.")
+            for row_v in (cand.get("per_family", []) as Array):
+                var row: Dictionary = row_v
+                rows += 1
+                if not bool(row.get("measurable", false)):
+                    refused += 1
+                    check(str(row.get("why", "")) != "",
+                            "a refused per-family row does not say why, which makes it "
+                            + "indistinguishable from one nobody took")
+                    continue
+                scored += 1
+                # ITS OWN ANNULUS: [0.7, 1.5] x this family's own horizon.
+                var d := float(row["horizon_m"])
+                var lo := float(row["annulus_lo_m"])
+                var hi := float(row["annulus_hi_m"])
+                check(absf(lo - d * SeamScore.SCORE_LO_MULTIPLE) < 0.5
+                                and absf(hi - d * SeamScore.SCORE_HI_MULTIPLE) < 0.5,
+                        "%s was scored in %s-%s m against its own horizon of %s m. The annulus "
+                                % [str(row["family"]), String.num(lo, 0), String.num(hi, 0),
+                                        String.num(d, 0)]
+                        + "has to be [%s, %s] x that horizon, or the row is one family's score "
+                                % [String.num(SeamScore.SCORE_LO_MULTIPLE, 2),
+                                        String.num(SeamScore.SCORE_HI_MULTIPLE, 2)]
+                        + "taken in another family's band and every column in the table is a "
+                        + "measurement of something the header does not name.")
+                check(row.has("colour_error"),
+                        "%s claims to be measurable and carries no error against the oracle"
+                        % str(row["family"]))
+                if not is_nan(reach):
+                    check(hi <= reach + 0.5, "%s was SCORED out to %s m against a reference "
+                            % [str(row["family"]), String.num(hi, 0)]
+                            + "that only reaches %s m. Past that there are no instances to "
+                                    % String.num(reach, 0)
+                            + "compare, and the agreement is two empty annuli agreeing.")
+    check(rows > 0, "no per-family rows in scatter_seam.json, so nothing here is checked -- "
+            + "run `bash tools/measure_seam.sh --sweep-k` or drop this test")
+    print("annuli: %d per-family row(s), %d scored in their own annulus, %d refused for reach"
+            % [rows, scored, refused])
 
 
 func test_the_seam_measurement_ranks_the_null_baseline_worst() -> void:

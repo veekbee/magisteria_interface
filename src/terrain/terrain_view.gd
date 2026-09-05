@@ -55,11 +55,12 @@ const BARE_ALBEDO := Color(0.62, 0.60, 0.55)
 const SUN_AZIMUTH_DEGREES := 225.0
 const SUN_ALTITUDE_DEGREES := -45.0
 
-## THE SCALE IS 1:1, IN EVERY VIEW. Vertical exaggeration is out of this
-## project's geometry: terrain, plants and the distances between them are true
-## scale, so `cover = count x crown area` -- the identity every far-field metric
-## is derived through -- holds by construction, and no tuned distance carries a
-## factor it is conditional on.
+## THE SCALE IS 1:1, IN EVERY VIEW -- decision 947, citing §3.1c, §17.8.2,
+## §19.8.3, §19.8.4 and decisions 184 and 890. Vertical exaggeration is out of
+## this project's geometry: terrain, plants and the distances between them are
+## true scale, so `cover = count x crown area` -- the identity every far-field
+## metric is derived through -- holds by construction, and no tuned distance
+## carries a factor it is conditional on.
 ##
 ## IT WAS 12x, AND BRIEFLY PER VIEW. The 12x was for basin-scale relief
 ## legibility and it was applied to plant HEIGHT and not to the horizontal

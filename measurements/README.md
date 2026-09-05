@@ -661,6 +661,86 @@ and this radius, not of the rule.
 **Trees carry about 8.5× further than shrubs**, which is the brief's "roughly an order of
 magnitude", arriving by arithmetic rather than by tuning.
 
+### Per-family annulus scoring, and the reference's own depth
+
+Each family is now scored in **its own annulus** — `[0.7, 1.5] × d_f`, around its own horizon — with
+only that family's instances drawn, against the oracle rendered the same way. `bash
+tools/measure_seam.sh --sweep-k` emits one row per (family, k). The polarity that matters:
+`test_a_family_is_scored_in_its_own_annulus_or_not_at_all` fails if a row's annulus is not
+`[0.7, 1.5]` times that row's own horizon, because a table of numbers all measured in one family's
+band would read as a per-family result and be nothing of the kind.
+
+**Most rows are refused, and that is the finding.** 23 of 42 at the two pinned places. Per-family
+horizons span **16 m to 8.5 km**; the oracle is cut at `2.5 × seam` = 300 m and the scatter draws
+nothing past its 1,500 m radius. An annulus beyond the shallower of those contains no instances at
+all — not the candidate's, not the oracle's — and a score there measures **near vegetation painted
+over far ground**, because the mask marks a pixel by the range of the terrain *behind* it. It comes
+back as coverage near 1.0 and a tiny colour error, which reads as agreement and is two empty annuli
+agreeing. Refused with the reason rather than scored.
+
+**Deepening the oracle does not fix it, and the harness now says so.** At a 700 m cut the oracle
+drew **51.6% of its own stand** — the build ceiling sampled it — and a sampled oracle is not a
+reference: every candidate is flattered by exactly the sampling. The distortion was immediate and
+measurable, shrub's colour error going from 0.002–0.009 against the valid 300 m oracle to
+**0.030–0.053** against the sampled one, while its apparent coverage advantage grew. `--oracle-cut`
+exists so the depth can be raised, and `reference_is_a_sample` is recorded **at the run level**,
+because a thinned oracle invalidates every row and not only the oracle's own.
+
+**What the 19 measurable rows say**, `deepest_winter` day 22, both places, coverage quoted as the
+candidate's over the oracle's in the same annulus:
+
+| k/k_res | succulent (A) | shrub (A) | grass (B) | shrub (B) |
+|---:|---|---|---|---|
+| 0.05 | ΔE 0.005, 1.00 | ΔE 0.005, 0.93 | ΔE 0.002, 0.96 | ΔE 0.009, 1.04 |
+| 0.10 | ΔE 0.001, 0.95 | ΔE 0.006, 1.06 | ΔE 0.001, 0.91 | ΔE 0.006, 1.00 |
+| 0.20 | ΔE 0.000, 1.00 | ΔE 0.003, 0.82 | ΔE 0.004, 0.67 | ΔE 0.002, 1.00 |
+| **0.35** | **ΔE 0.001, 1.00** | **ΔE 0.004, 0.88** | **ΔE 0.000, 0.94** | — |
+| 0.50 | — | ΔE 0.002, 0.78 | ΔE 0.003, 0.96 | — |
+
+**Read the coverage column as a shortfall the tint has to fill, not as an error.** The annulus
+straddles the horizon by design: the candidate draws instances in `[0.7, 1.0] × d_f` and *nothing*
+in `[1.0, 1.5]`, which is exactly the range the tint exists to cover. An instances-only candidate is
+therefore expected to under-cover its own annulus, and does — except where coverage saturates,
+which is why the dense succulent reads 1.00 throughout and says less than it appears to.
+
+**No tree row is measurable at either place.** Trees are tall, so their horizons are the deepest —
+283 m to 5.7 km — and every one of them is past the oracle. The next increment is a **per-family
+oracle**, cut to each family's own deepest annulus rather than one cut for all: the families that
+need depth are the sparse ones (84,608 trees inside 1,500 m at place B against 7.65 M grass), so
+depth is cheap exactly where it is needed. Not built here.
+
+### Recommended `k`, for the corpus to rule on
+
+The horizon rule is §19.8.4's; `k_res` is a pinhole identity and that half is measurement. What
+follows is a **recommendation with its evidence**, not a setting — the shipped viewer runs with the
+rule off (`k = 0`).
+
+> **Recommended: `k / k_res = 0.35`** — `k ≈ 182` at 1280 × 800 and 75°.
+> **Usable range: `k / k_res ∈ [0.35, 0.6]`.**
+
+**Bounded below at 0.35 by the placement raster, measured from both directions.** The horizon is cut
+on a 31.25 m sub-cell grid, and a family whose horizon is under about four sub-cells is drawn as a
+handful of squares or dropped outright. At place A the count law breaks below 0.2 (16.2× and 7.16×
+against a predicted 4.0) and is clean from 0.2 to 0.5. At place B grass is **dropped entirely** at
+0.05 — a 16 m horizon is half a sub-cell — erratic through 0.2, and clean from 0.35 (1.88 against
+2.04, 2.10 against 2.25). Two independent routes to the same floor.
+
+**Bounded above at about 0.6 by two things that arrive together.** The frame budget: at place A,
+which carries the denser family, k/k_res = 0.5 costs **29.6 ms** and 0.75 costs **46.6 ms** against
+a 33.3 ms budget. And the 1,500 m scan radius, which tree horizons pass at roughly the same point
+(1,131 m at 0.5, 1,697 m at 0.75) — past it the outer loop binds instead of the rule.
+
+**0.35 sits at the cheap edge of that window and the fidelity is already there**: 535,126 instances
+and 14.3 ms at place A, 180,184 and 9.1 ms at place B, with succulent at ΔE 0.001 and full coverage,
+grass at ΔE 0.000 and 94%, shrub at ΔE 0.004 and 88%.
+
+**What this recommendation does not rest on.** No tree evidence at all — the oracle cannot reach a
+tree's annulus. One day, `deepest_winter` day 22; the growing-season day the brief asks for is not
+pinned yet. Place A's per-family rows predate the grass proxy-unit change and its costs above are
+from the run that still carried the old unit. And `k_res` is a property of the rig: 521.3 at this
+viewport and field of view, and a different one at any other, which is why the recommendation is a
+ratio and not a number.
+
 ### Where "size cancels" does not hold, and what it costs
 
 The brief's arithmetic is that per-family drawn count is `π k² × cover_f` — size cancels, so every
@@ -721,9 +801,18 @@ the reason it did not fall with the instance count is that the triangles moved i
 grass contributes 5.81 M triangles before and 7.01 M after. What changed is that the frame is no
 longer three-quarters one family.
 
-**The succulent is untouched and is now the remaining outlier** (127.3 declared, 51.0 realised). The
-brief required the grass unit and permitted the rest; a columnar cactus drawn as one column is
-arguably the honest unit for that form, where a single grass blade never was.
+**The succulent keeps its unit, and that is a ruling rather than an omission.** Its factor stays high
+(127.3 declared, 51.0 realised) and it is *not* the same case as grass. A columnar cactus **is** one
+column: tall, narrow, and individually resolvable at range, so one column is the honest drawn unit
+and widening it would be drawing a thing that is not there. A single grass blade never was the unit
+in the same sense -- a sward is read as a surface and the blade was an arbitrary slice of it, which
+is why the patch is truer as well as cheaper.
+
+So the remaining aspect-factor spread is **expected, not unfinished**. What follows from it is a
+budgeting fact rather than a defect: at a place carrying columnar succulents, that family takes most
+of the drawn population under the horizon rule, and no proxy-unit change should be made to hide it.
+If the count becomes unaffordable there, the lever is `k` or a per-family split of it -- both
+measurements -- not a re-authored cactus.
 
 **And the tint must keep taking trace shares un-floored**, which is the constraint that pulls the
 other way. Trace shares are grass's main mode of existence — median 0.88% across the reference
