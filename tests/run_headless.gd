@@ -2645,6 +2645,28 @@ func test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one() -> void
     check(bool(ScatterCost.predicted_ms({"shrub": 10, "grass": 0}, ns)["ok"]),
             "a family with no instances was treated as a family with no price")
 
+    # THE INSTRUMENT'S OWN CEILING, which a spread of zero hides rather than
+    # reports. `delta` here is paced: past about 2 ms frames land on rungs of a
+    # ladder (1/720, 1/360, 1/330, 1/300, 1/270, 1/240, 1/220, 1/210, 1/200,
+    # 1/180 s all observed), so a scene sitting inside one rung reports every
+    # frame identically. That reads as a perfectly steady measurement and is
+    # the absence of one. The 12x run did it: 80 busy frames all at 3.7037 ms,
+    # spread 0.020, `resolved` true, and nothing saying the number was a rung.
+    var railed := ScatterCost.marginal(
+            {"min": 3.7037, "p50": 3.7037, "p95": 3.7037, "p99": 3.7037, "max": 3.7037, "n": 80},
+            {"min": 0.099, "p50": 0.800, "p95": 0.820, "p99": 0.854, "max": 0.854, "n": 80})
+    check(bool(railed.get("instrument_limited", false)),
+            "a timing whose 80 frames were all the same number passed as a measurement of a "
+            + "scene, when it is the paced-delta ladder reporting one rung")
+    check(str(railed.get("instrument_note", "")).contains("one value"),
+            "an instrument-limited marginal did not say what was wrong with it")
+    # And the ordinary case must not be flagged, or the note means nothing.
+    check(not bool(ScatterCost.marginal(
+            {"min": 3.341, "p50": 3.491, "p95": 3.704, "p99": 3.704, "max": 3.704, "n": 80},
+            {"min": 0.069, "p50": 0.566, "p95": 1.389, "p99": 1.389, "max": 1.389, "n": 80}
+            ).get("instrument_limited", false)),
+            "a timing that moved across rungs was called instrument-limited")
+
     var a := ScatterCost.agreement(2.0, 3.0)
     check(absf(float(a["ratio_observed_over_predicted"]) - 1.5) < 1e-9, "the ratio is wrong")
     check(not bool(a["within_tolerance"]), "1.5x read as agreement")

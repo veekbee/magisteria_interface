@@ -163,7 +163,8 @@ recovers one term of that sum.
 
 `deepest_winter`, `band.pft.biomass`, day 22, standing at EPSG:5070 `(-1310793, 1616226)` — the
 centre of the opening view — with the fly camera framed on the scatter, which is what the `G` key
-gives. Apple M5 / `gl_compatibility` / Godot 4.7.2, windowed at 1280 × 800, vsync off. **Re-taken
+gives. Apple M5 / `gl_compatibility` / Godot 4.7.2, windowed at 1280 × 800, vsync
+*requested* off — see the instrument section, which is why that qualifier is there. **Re-taken
 at 1:1**; the 12× column below is the same scene at the old scale, kept for the one comparison it
 makes possible and quoted nowhere else.
 
@@ -171,16 +172,21 @@ makes possible and quoted nowhere else.
 |---|---:|---:|
 | instances drawn | 119,994 | **119,994** (ceiling-bound) |
 | triangles in frame | 5,944,404 | **5,944,404** |
-| frame p50, scatter hidden | 0.80 ms | **0.57 ms** |
-| frame p50, scatter drawn | 3.70 ms | **3.49 ms** |
-| **marginal, p50** | 2.90 ms | **2.93 ms** |
+| frame p50, scatter hidden | 0.80 ms | **0.55 ms** |
+| frame p50, scatter drawn | 3.70 ms (all 80 frames) | **3.40 ms** (3.33–3.70) |
+| **marginal, p50** | 2.90 ms | **2.85 ms** |
 | `render_cost.json` predicts | 2.13 ms | **2.13 ms** |
-| ratio | 1.36× | **1.37×** |
+| ratio | 1.36× | **1.33×** |
 | pixels the scatter changed | 4,387 | **778** |
 
-**The empty-stage coefficient under-predicts, consistently.** Five runs at 1:1 gave marginals of
-2.93, 3.12, 2.88, 2.85 and 2.86 ms against a 2.13 ms prediction — **1.34× to 1.46×, reproducible
-to 1.09×**. Five runs at 12× gave 2.94, 2.90, 2.83, 2.75 and 2.74 — 1.28× to 1.37×. Across all ten,
+**The empty-stage coefficient under-predicts, consistently.** Six runs at 1:1 gave marginals of
+2.93, 3.12, 2.88, 2.85, 2.86 and 2.85 ms against a 2.13 ms prediction — **1.33× to 1.46×**. Five of
+the six sit within 0.08 ms of each other, which is inside the instrument's step and so is not
+reproducibility that has been demonstrated, only agreement that has not been contradicted; the 3.12
+outlier came with a busy-frame p99 of **5.64 ms against 3.70 for every other run**, which is the
+signature of something else on the machine during that run rather than of the scene. That is the
+one place run-to-run contention is visible in this data, and it is visible in the tail rather than
+in the median — which is the right place to look for it. Five runs at 12× gave 2.94, 2.90, 2.83, 2.75 and 2.74 — 1.28× to 1.37×. Across all ten,
 **never once below the prediction.** That is a bias rather than noise, and it is the size of the
 conditional on every budget sentence M5 rests on that coefficient. What it does *not* say is which
 of the differences is responsible: this scene draws through a custom shader with culling disabled
@@ -189,8 +195,11 @@ three MultiMesh nodes rather than one. Naming the cause needs a sweep this artef
 
 **The scatter's cost is per-instance, not per-pixel, and the scale change is what showed it.**
 Going to 1:1 shortened every plant by twelve and the scatter's drawn pixels fell **5.6×**, from
-4,387 to 778 — shrub 213 → 38, succulent 3,758 → 595, tree 627 → 161. The frame cost did not move:
-2.90 ms then, 2.93 ms now, both inside a spread that covers the difference several times over. The
+4,387 to 778 — shrub 213 → 38, succulent 3,758 → 595, tree 627 → 161. The frame cost did not follow
+it down: 2.90 ms then, 2.85 ms now. **Read that to about half a millisecond, not to the digits** —
+see the instrument section below — but the conclusion does not need the digits. An 82% reduction in
+fill that cost fill-bound work anything like its share would have moved the marginal by more than a
+millisecond, which this instrument resolves easily; it moved by less than its own step size. The
 same instance count over the same triangle count costs the same time whether it covers 4,000 pixels
 or 800. This was not measured on purpose; it fell out of re-taking a stale artefact, and it is the
 strongest thing the file says.
@@ -199,6 +208,36 @@ strongest thing the file says.
 1.37× across a 5.6× change in fill, so the gap between the empty stage and this scene is not fill —
 it is per-instance overhead the empty stage does not have. A coefficient re-measured with a basin
 under it would fold the two together and let neither be recovered. See the ruling below.
+
+### The instrument: `delta` is paced, and a spread of zero is the proof
+
+**Frame time here is not free-running, and asking for no vsync does not make it so.** The harness
+calls `window_set_vsync_mode(VSYNC_DISABLED)` and sets `Engine.max_fps = 0`, and the artefact used
+to record `"vsync": "disabled"` as a flat fact. It was recording the *request*. Probed directly:
+
+- An **idle** window gives a continuum — 125 distinct `delta` values over 300 frames, around
+  0.29–0.34 ms — so the timer itself is fine and fine-grained.
+- A frame held **busy** lands on rungs. Observed rung values: 1/720, 1/360, 1/330, 1/300, 1/270,
+  1/240, 1/220, 1/210, 1/200 and 1/180 s. Near 3.5 ms that is a **step of 0.3–0.5 ms**.
+- A busy-wait held at **3.4 ms** reported **four distinct values over 140 frames, 97 of them the
+  same one**, with a floor of 4.167 ms — 0.77 ms above the work actually done.
+
+**So a scene whose cost sits inside one rung reports every frame at that rung, and a spread of
+zero.** That reads as an exceptionally steady measurement and is the opposite of one. The 12×
+run did exactly this: all 80 busy frames at 3.7037 ms, `scene_spread_ms` **0.020**, `resolved`
+true — and nothing in the file said the number was the rung's rather than the scene's. Its
+apparent stability was the instrument having one value available, and it was quoted here as
+reproducibility.
+
+`ScatterCost.marginal` now detects it: a timing whose `min` equals its `max` sets
+`instrument_limited` and a note saying the cost is censored inside one rung. The 1:1 runs are not
+pinned — they cross rungs, 3.33 to 3.70 — so their p50s are real samples, but the **marginal is
+still a difference of two rung-quantised numbers and its resolution is roughly ±0.5 ms.** Every
+sub-0.1 ms comparison in this file should be read as "not resolved", including the 2.90-vs-2.93
+above and most of the run-to-run scatter.
+
+This does not touch the ratio to `render_cost.json`, which is 1.36× — far outside the step — nor
+the floor ruling, which rests on a sign and not on a magnitude.
 
 ### One thing changed that this file cannot explain
 

@@ -320,7 +320,15 @@ func _end() -> void:
             "godot": Engine.get_version_info()["string"],
             "os": OS.get_name() + " " + OS.get_version(),
             "viewport": [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y],
-            "vsync": "disabled",
+            # WHAT WAS ASKED FOR, not what happened. `VSYNC_DISABLED` is set
+            # and `max_fps` is 0, and frames past about 2 ms are still reported
+            # on a coarse ladder of paced values -- see `ScatterCost.marginal`
+            # and the instrument section of measurements/README.md. Recording
+            # this as a flat "disabled" was a claim about the frames that the
+            # frames do not support.
+            "vsync_requested": "disabled",
+            "vsync_observed": ("frames past ~2 ms land on a paced ladder anyway; read the "
+                    + "marginal to about half a millisecond"),
         },
         "scene": {
             "window": window_name, "row": row_name, "day": day,

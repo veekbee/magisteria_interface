@@ -63,6 +63,37 @@ static func marginal(with_scatter: Dictionary, without: Dictionary) -> Dictionar
         "scene_spread_ms": spread,
         "resolved": absf(d50) > spread,
     }
+    # A TIMING WITH ONE VALUE IN IT IS THE INSTRUMENT, NOT A STEADY SCENE.
+    #
+    # `delta` on this platform is PACED. Below about 2 ms it is a continuum --
+    # an idle window gives 125 distinct values over 300 frames -- but above
+    # that, frames are reported at rungs of a coarse ladder: 1/720, 1/360,
+    # 1/330, 1/300, 1/270, 1/240, 1/220, 1/210, 1/200 and 1/180 s were all
+    # observed, which near 3.5 ms is a step of 0.3 to 0.5 ms. A busy-wait held
+    # at 3.4 ms reported four distinct values over 140 frames, 97 of them the
+    # same one. `window_set_vsync_mode(VSYNC_DISABLED)` does not prevent this;
+    # it is asked for and the frames show it happening anyway.
+    #
+    # So a scene whose true cost sits inside one rung reports EVERY frame at
+    # that rung, min == max, and a spread of zero -- which reads as a
+    # beautifully steady scene and is the opposite. The 12x measurement did
+    # exactly this: all 80 busy frames at 3.7037 ms, `scene_spread_ms` 0.020,
+    # `resolved` true. Nothing in the artefact said the number was the rung's.
+    var pinned := PackedStringArray()
+    if _is_pinned(with_scatter):
+        pinned.append("the busier")
+    if _is_pinned(without):
+        pinned.append("the quieter")
+    if not pinned.is_empty():
+        out["instrument_limited"] = true
+        out["instrument_note"] = ("%s timing reported every frame at one value, "
+                % " and ".join(pinned)
+                + "so its cost sits somewhere inside one rung of a paced-delta ladder whose "
+                + "steps near this frame time are 0.3-0.5 ms, and this run does not say where. "
+                + "`scene_spread_ms` is then the rung's width and not the scene's, and the "
+                + "marginal below is a difference of censored quantities: read it to about half "
+                + "a millisecond, not to the digits printed.")
+
     if not out["resolved"]:
         out["why_unresolved"] = ("the difference between the two timings (%.2f ms) is inside "
                 + "the scene's own frame-to-frame spread (%.2f ms), so this run did not "
@@ -81,6 +112,12 @@ static func marginal(with_scatter: Dictionary, without: Dictionary) -> Dictionar
                 + "subtracted from the other side, and p50 is the number this run supports."
                 ) % [quiet_p99, quiet_p95]
     return out
+
+## Every frame reported the same number, which no real scene does.
+static func _is_pinned(t: Dictionary) -> bool:
+    if not (t.has("min") and t.has("max")) or int(t.get("n", 0)) < 2:
+        return false
+    return is_equal_approx(float(t["min"]), float(t["max"]))
 
 
 ## The cost model's prediction for the instances that were actually drawn.

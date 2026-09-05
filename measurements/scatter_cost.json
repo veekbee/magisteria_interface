@@ -1,10 +1,10 @@
 {
   "agreement": {
     "ok": true,
-    "ratio_observed_over_predicted": 1.37137149104629,
+    "ratio_observed_over_predicted": 1.33417645801279,
     "tolerance": 0.35,
-    "verdict": "the frame cost 1.37x what the empty-stage coefficient predicts, outside the 35% the benchmark's own reproducibility supports. Every budget sentence resting on that coefficient is conditional on a stage nobody renders, and this is the size of the conditional.",
-    "within_tolerance": false
+    "verdict": "the frame cost 1.33x what the empty-stage coefficient predicts, inside the 35% the benchmark's own reproducibility supports. Every budget sentence resting on that coefficient is conditional on a stage nobody renders, and this is the size of the conditional.",
+    "within_tolerance": true
   },
   "frame_budget_ms": 33.3,
   "host": {
@@ -16,7 +16,8 @@
       1280,
       800
     ],
-    "vsync": "disabled"
+    "vsync_observed": "frames past ~2 ms land on a paced ladder anyway; read the marginal to about half a millisecond",
+    "vsync_requested": "disabled"
   },
   "implied_at_this_horizon": {
     "budget_ms": 33.3,
@@ -29,14 +30,14 @@
   },
   "marginal": {
     "ok": true,
-    "p50_ms": 2.925,
-    "p95_ms": 2.31481481481481,
+    "p50_ms": 2.84566666666667,
+    "p95_ms": 2.3267037037037,
     "p99_ms": 2.31481481481481,
     "resolved": true,
-    "scene_spread_ms": 0.822888888888889
+    "scene_spread_ms": 0.824
   },
   "measured": true,
-  "measured_at_commit": "6e431d1",
+  "measured_at_commit": "6fa3767",
   "measured_at_commit_means": "the HEAD the run was taken against; the commit that lands this artefact is its child",
   "method": {
     "attempts": 1,
@@ -121,10 +122,10 @@
     "draw_calls_p50": 32.0,
     "frame_ms": {
       "max": 3.7037037037037,
-      "mean": 3.54987916666667,
-      "min": 3.341,
+      "mean": 3.47709583333333,
+      "min": 3.33333333333333,
       "n": 80,
-      "p50": 3.491,
+      "p50": 3.39866666666667,
       "p95": 3.7037037037037,
       "p99": 3.7037037037037
     },
@@ -136,11 +137,11 @@
     "draw_calls_p50": 29.0,
     "frame_ms": {
       "max": 1.38888888888889,
-      "mean": 0.585550520845336,
-      "min": 0.0688750005792826,
+      "mean": 0.587872222126209,
+      "min": 0.0664999970467761,
       "n": 80,
-      "p50": 0.566,
-      "p95": 1.38888888888889,
+      "p50": 0.553,
+      "p95": 1.377,
       "p99": 1.38888888888889
     },
     "frames_drawn": 80,
