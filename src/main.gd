@@ -72,6 +72,16 @@ func _ready() -> void:
         verdict_banner = VerdictBanner.new()
         verdict_banner.setup()
         _controls.add_child(verdict_banner)
+        # SECOND IN THE COLUMN, ABOVE THE FOLD. The controls hold more than an
+        # 800 px window shows, so something is always cut, and the order is
+        # what decides WHICH. Built third, the banner ran off the bottom: the
+        # fifth named fail stopped mid-sentence and the probe panel below it
+        # was displaced off screen entirely -- photographed at the default size
+        # every other shot in `shots/` was taken at. The disclaimer is the one
+        # panel whose whole job is to survive into a screenshot, so it goes
+        # where truncation cannot reach it and the interactive panels, which a
+        # reader can always scroll or resize to, take the cut instead.
+        _controls.move_child(verdict_banner, 1)
         verdict_banner.show_verdict(verdict)
         print("verdict: %s" % verdict.headline())
         for f in verdict.named_fails():

@@ -19,7 +19,7 @@ measurement that found them.
 
 ---
 
-## Five findings
+## Eight findings
 
 Four of them are in one place: the terrain's surface. None was visible to the 1,827 checks that were passing before it,
 because in each case the data was right and the picture was wrong.
@@ -97,6 +97,86 @@ failure the harness exists to prevent, committed by the harness.
 
 `FieldScrubber.select()` now sets the controls and emits once, and the capture drives that. The
 application's own path runs all the way out to the controls, because the controls are in the frame.
+
+---
+
+## Three more, from photographing the verdict banner
+
+The banner is the one UI element whose entire job is to appear on other people's screenshots, and
+it had **twenty-six headless asserts and no picture**. All three findings below are failures the
+asserts could not see, because every one of them reads the string and the string was perfect.
+
+Shot over a scene rather than alone, at the two sizes that matter: `1280 × 800`, which is what
+`tools/screenshot.sh` and every shot in `shots/` default to, and `900 × 1400`, which puts the basin
+under the controls instead of beside them. Neither defect was visible in the other's shot, so both
+are now in `tools/audit.sh` and come back on every re-take.
+
+### 6. The disclaimer ran off the bottom of the window, and looked complete doing it
+
+At 1280 × 800 the banner demanded **677 px starting at y = 186**, so its last 63 px were outside
+the window. What that cut, in order: the second half of criterion 8 — *"stem density pinned at its
+floor — occupancy 0.9994, so a vegetation field drawn per-stem is showing an absorbing state, not a
+stand"*, which is the one bearing on the vegetation this session spent the week drawing — then the
+equivalence exclusions **in their entirety**, and then the probe panel below it, displaced off
+screen completely.
+
+**It did not render as a broken disclaimer. It rendered as a disclaimer that stops.** A reader has
+no way to tell four named fails from five, or an unqualified equivalence proof from one that
+stepped around three fields.
+
+Two fixes, and the second is the one that mattered: the banner moved to second in the control
+column, where truncation cannot reach it — the column holds more than 800 px shows, so *something*
+is always cut and the order decides which, and the interactive panels can be scrolled to while a
+photograph cannot. And the exclusions are now grouped by reason (finding 8). Demanded height fell
+**677 → 551 px**, bottom at 737 of 800.
+
+Pinned by an assert on the banner's own laid-out height against a 800 px budget — the headless root
+is a 64 px stub but the control column still lays out for real, so the number that overflowed is
+measurable in the gate. Blinded by ungrouping the reasons: 863 of 800, fails.
+
+### 7. The amber headline all but vanished against the bright end of the ramp
+
+Photographed at 900 × 1400 over `band.bare_fraction`, where the basin sits under the controls, the
+headline was drawn straight onto the scene and **disappeared into it**. Amber `(0.95, 0.78, 0.30)`
+against the ramp's brightest stop `(0.993, 0.906, 0.144)` is a contrast ratio of **1.28 : 1** —
+barely a colour difference, on the one element that exists to be read.
+
+The banner now draws its own plate, `(0.07, 0.07, 0.09, 0.92)`, so contrast is a property of the
+banner rather than of wherever the camera happens to point. Over the worst the ramp can put behind
+it, amber goes **1.28 : 1 → 9.81 : 1**, and the two other states clear 4.5 : 1 as well (stale red
+5.68, absent grey 7.55).
+
+The assert is a pair, and the second half is what gives it teeth: each state must clear 4.5 : 1
+**with** the plate *and fail it without*. Without that second check the test would pass on any
+dark-ish default and never notice the plate had gone.
+
+### 8. Three excluded fields, one reason, printed three times
+
+The shipped fixture excludes `outlet_min_daily_q_m3_s`, `outlet_peak_q_m3_s` and `outlet_peak_doy`
+for one gauge change, and the banner printed the same forty words once per field — about a third of
+its height, two thirds of it repetition. That is what pushed finding 6 over the edge.
+
+Fields sharing a reason are named together now. It is shorter, and it says the truer thing: **one
+instrument change moved all three**, and a reader counting distinct reasons is counting what
+actually happened to the proof. Two fields excluded for two reasons still render as two lines,
+asserted, because grouping that hid a second cause would be a worse defect than the one it fixed.
+
+### What the banner establishes, now that it has been photographed
+
+`--window deepest_winter --row band.pft.biomass --day 22`, 1280 × 800, default view.
+
+- The headline renders **EQUIVALENT** on real data: *"ancestor trace — acceptance 7 pass / 5 fail,
+  scored at 5317027b6543 on runs/m0-instrumented-001: a different run, proven identical to this one
+  (18/18 fields, 3650 ticks, 3 fields excluded)"* — legible in amber over its plate.
+- **All five named fails are legible**, ending with criterion 8 complete.
+- The exclusion line is legible and complete, naming all three fields and their one reason.
+
+**EQUIVALENT and SCORED render in the same amber, by design** — the brief asked for both photographed
+if they differ, and they deliberately do not. A proven-equivalent verdict is a valid verdict of this
+basin, so it gets a valid verdict's colour; what separates them is the sentence, which names the
+other run and the size of the proof. A second amber would say "unlike the one beside it" and stop
+there. Only EQUIVALENT is photographable from the shipped fixture — the other three states are
+reachable only by supplying a verdict, and this repo reads verdicts and never supplies them.
 
 ---
 

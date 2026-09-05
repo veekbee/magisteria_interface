@@ -106,7 +106,11 @@ static func fit_linear(xs: PackedFloat64Array, ys: PackedFloat64Array) -> Dictio
 ## over. Reported separately because a straight line through a curve has a
 ## slope, and the slope is not a coefficient anyone should carry away: the
 ## spread between the cheapest and dearest marginal instance is the fact.
-static func marginals(xs: PackedFloat64Array, ys: PackedFloat64Array) -> Dictionary:
+## `unpaced`, when given, is a second reading of the SAME rungs from an
+## instrument the frame pacer does not quantise -- the wall-clock mean over the
+## measured frames. It is what tells a censored marginal from a real one.
+static func marginals(xs: PackedFloat64Array, ys: PackedFloat64Array,
+        unpaced := PackedFloat64Array()) -> Dictionary:
     var n := mini(xs.size(), ys.size())
     if n < 2:
         return {"ok": false, "why": "a marginal needs two rungs; %d given" % n}
@@ -137,8 +141,64 @@ static func marginals(xs: PackedFloat64Array, ys: PackedFloat64Array) -> Diction
     }
     if lo > 0.0:
         result["spread"] = hi / lo
+        return result
+
+    # A NON-POSITIVE MARGINAL HAS MORE THAN ONE CAUSE, AND THIS USED TO ASSERT
+    # THE WRONG ONE. It said "the fixed-cost floor" for every case. There are
+    # three, and the difference decides whether a coefficient can be quoted:
+    #
+    #   CENSORED -- both rungs reported the same frame time because both sat
+    #     inside one rung of the paced-delta ladder. Real on this platform:
+    #     multimesh|mid measured 64,000 and 128,000 instances at exactly
+    #     7.1429 ms each and recorded a marginal of ZERO, which no amount of
+    #     288-triangle instances is. The unpaced reading separates them
+    #     (6.76 vs 7.27 ms), so it is the discriminator.
+    #   NOT THE TIMER -- negative on the unpaced reading too, so something
+    #     about the run is non-monotonic. multimesh|low is this: its first two
+    #     rungs report DEARER than the rung above them on every instrument and
+    #     `cpu_ms` falls across them, which is a process still settling and not
+    #     a cost.
+    #   THE FLOOR -- what this always claimed, and what it is only entitled to
+    #     say when neither of the above applies.
+    var worst := 0
+    for i in out.size():
+        if out[i] == lo:
+            worst = i
+            break
+    var pair := "between rung %d and rung %d" % [worst, worst + 1]
+    var why := ("the cheapest marginal is %s ms per instance, at or below zero: a rung that "
+            % String.num(lo, 6) + "cost no more than the one below it, %s. " % pair)
+    if unpaced.size() == ys.size() and unpaced.size() > worst + 1:
+        var dx := xs[worst + 1] - xs[worst]
+        var un := (unpaced[worst + 1] - unpaced[worst]) / dx if dx != 0.0 else 0.0
+        result["unpaced_ms_per_instance_there"] = un
+        if un > 0.0:
+            why += ("CENSORED BY THE PACED TIMER: the two rungs reported the same frame "
+                    + "time, and the unpaced reading of the same frames separates them at "
+                    + "%s ms per instance. The zero is the instrument's, not the scene's."
+                    % String.num(un, 6))
+        else:
+            why += ("NOT THE TIMER: the unpaced reading of the same frames is %s ms per "
+                    % String.num(un, 6) + "instance, also at or below zero, so this is a "
+                    + "real non-monotonicity in the sweep and wants looking at rather than "
+                    + "explaining away as a floor.")
     else:
-        result["spread_undefined_because"] = ("the cheapest marginal is %s ms per instance, "
-                + "at or below zero: a rung that cost no more than the one below it, which "
-                + "is the fixed-cost floor rather than a per-instance cost") % String.num(lo, 6)
+        why += ("No unpaced reading was supplied, so this cannot tell a censored marginal "
+                + "from a real one and does not guess between them.")
+    result["spread_undefined_because"] = why
+
+    # THE WARM-UP SIGNATURE, which is what multimesh|low actually had. If the
+    # FIRST rung is dearer than some later rung with more instances in it, the
+    # sweep was still settling when it started measuring, and every fit through
+    # those points is quoting a slope partly made of that.
+    if ys.size() > 2:
+        var rest := INF
+        for i in range(1, ys.size()):
+            rest = minf(rest, ys[i])
+        if ys[0] > rest:
+            result["head_warm_up"] = ("the first rung (%s ms at %d instances) measured DEARER "
+                    % [String.num(ys[0], 4), int(xs[0])]
+                    + "than a later rung with more instances in it (%s ms). " % String.num(rest, 4)
+                    + "That is the sweep still settling, not a cost, and the rungs before the "
+                    + "minimum are worth dropping before this fit is quoted.")
     return result

@@ -423,6 +423,7 @@ func fits() -> Dictionary:
     var xs: Dictionary = {}
     var ys: Dictionary = {}
     var gs: Dictionary = {}
+    var ws: Dictionary = {}
     for r in results:
         if not bool(r.get("measured", false)):
             continue
@@ -435,6 +436,13 @@ func fits() -> Dictionary:
         var y: PackedFloat64Array = ys.get(k, PackedFloat64Array())
         y.append(float(r["frame_ms"]["p50"]))
         ys[k] = y
+        # THE UNPACED READING OF THE SAME FRAMES, so a marginal of zero can be
+        # told from a marginal that was censored into one. `frame_ms` is the
+        # per-frame delta and quantises on this platform; the wall-clock mean
+        # over the same 80 frames does not snap to a single rung.
+        var w: PackedFloat64Array = ws.get(k, PackedFloat64Array())
+        w.append(float(r.get("wall_clock_mean_ms", r["frame_ms"]["p50"])))
+        ws[k] = w
         var gm: Dictionary = r.get("gpu_ms", {})
         if gm.has("p50"):
             var g: PackedFloat64Array = gs.get(k, PackedFloat64Array())
@@ -448,7 +456,8 @@ func fits() -> Dictionary:
         var g: PackedFloat64Array = gs.get(k, PackedFloat64Array())
         out[k] = {
             "frame_p50": FrameStats.fit_linear(x, y),
-            "frame_p50_marginals": FrameStats.marginals(x, y),
+            "frame_p50_marginals": FrameStats.marginals(x, y,
+                    ws.get(k, PackedFloat64Array())),
             "gpu_p50": FrameStats.fit_linear(x, g) if g.size() == x.size()
                     else {"ok": false, "why": "this renderer reports no GPU render time"},
             "rungs_measured": x.size(),

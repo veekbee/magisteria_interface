@@ -21,6 +21,12 @@ var _frames: int = 0
 ## exactly like a real defect.
 const SCENE_FRAMES := 3
 
+## The window every shot in `shots/` is taken at, and so the height the UI has
+## to fit. `tools/screenshot.sh` and `tools/measure_scatter.sh` both default to
+## 1280x800; a panel that needs more than this is a panel that is cut in every
+## photograph this project takes of itself.
+const WINDOW_MIN_H := 800
+
 
 func _initialize() -> void:
     test_real_artefact_loads_clean()
@@ -73,6 +79,7 @@ func _initialize() -> void:
     test_the_hillshade_arrives_from_the_north_west()
     test_the_verdict_is_read_and_never_supplied()
     test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one()
+    test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate()
     test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it()
     test_the_scatter_measurement_verifies_in_pixels_not_primitives()
     test_every_wire_life_form_resolves_to_a_family()
@@ -442,6 +449,31 @@ func test_the_main_scene_populated_itself() -> void:
         click.position = Vector2(get_root().size) * 0.5
         get_root().push_input(click)
         check(_scene_root.probe_panel != null, "no probe panel in the running scene")
+        # THE DISCLAIMER HAS TO FIT THE WINDOW, and this is the assert that
+        # catches it. Photographed at 1280x800 -- the default size every shot
+        # in `shots/` is taken at -- the banner ran off the bottom: the fifth
+        # named fail stopped mid-sentence, the equivalence exclusions were
+        # never visible at all, and the probe panel below was displaced off
+        # screen entirely. It renders as a disclaimer that LOOKS complete,
+        # which is worse than an empty one.
+        #
+        # Twenty-six asserts on this banner's text saw none of it, because they
+        # read the string and the string was perfect. The headless root is a
+        # 64 px stub, but the control column still lays out for real, so the
+        # banner's own demanded height is measurable here and is the number
+        # that overflowed.
+        if _scene_root.verdict_banner != null:
+            var vb: Control = _scene_root.verdict_banner
+            var needs: float = vb.global_position.y + vb.size.y
+            check(needs <= float(WINDOW_MIN_H), "the verdict banner wants %d px of a %d px "
+                    % [int(needs), WINDOW_MIN_H]
+                    + "window, so at the size this project photographs itself the disclaimer "
+                    + "is cut off mid-sentence and whatever follows it never appears. Shorten "
+                    + "what it says or move it up the column; do not widen the window, which "
+                    + "only moves the size at which this happens.")
+            print("banner: %d x %d px, bottom at %d of %d"
+                    % [int(vb.size.x), int(vb.size.y), int(needs), WINDOW_MIN_H])
+
         if _scene_root.probe_panel != null:
             check(_scene_root.probe_panel.state.text != ProbePanel.NOT_PROBED,
                     "a click on the terrain did not reach the probe panel")
@@ -2587,11 +2619,85 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     check(not banner._fails.visible, "an absent verdict shows an empty second line")
     banner.free()
 
+    # THE COLOUR, WHICH HEADLESS CANNOT SEE AND ARITHMETIC CAN.
+    #
+    # Photographed over `band.bare_fraction` with the basin under the controls,
+    # the amber headline was ALL BUT INVISIBLE -- it had been drawn straight
+    # onto the scene, and amber against the bright end of the ramp is barely a
+    # colour difference at all. Twenty-six asserts on this text read the string
+    # and the string was perfect. So the banner draws its own plate, and this
+    # asserts the thing the picture showed: every state must stay readable over
+    # the WORST the ramp can put behind it, which is its brightest stop.
+    var worst := FieldOverlay.RAMP_STOPS[FieldOverlay.RAMP_STOPS.size() - 1]
+    var plated := VerdictBanner.plate_over(worst)
+    for st in [AncestorVerdict.ABSENT, AncestorVerdict.SCORED,
+            AncestorVerdict.EQUIVALENT, AncestorVerdict.STALE]:
+        var fg := VerdictBanner.colour_for(st)
+        var with_plate := VerdictBanner.contrast(fg, plated)
+        check(with_plate >= 4.5, "the %s headline sits at %s:1 against the plate over the "
+                % [st, String.num(with_plate, 2)]
+                + "ramp's brightest stop, under the 4.5:1 a reader needs. The disclaimer "
+                + "disappears into the picture it exists to disclaim.")
+        # AND THE PLATE IS WHAT DOES IT. Without this the assert above would
+        # pass on any dark-ish default and never notice the plate was gone.
+        var bare := VerdictBanner.contrast(fg, worst)
+        check(bare < 4.5, "the %s headline clears 4.5:1 against the bare ramp, so this test "
+                % st + "no longer demonstrates that the plate is what makes it readable — "
+                + "either the colour changed or the ramp did, and the pairing needs re-taking")
+
+    # THE EXCLUSIONS ARE GROUPED BY REASON. Three fields excluded for one gauge
+    # change printed the same forty words three times, filled a third of the
+    # banner, and pushed the fifth named fail off the bottom of an 800 px
+    # window. Grouping is not only shorter: a reader counting distinct reasons
+    # is counting what actually happened to the proof.
+    var gauge := ("the criterion-2 gauge moved from the legacy playa terminal to the "
+            + "maximum-contributing-area outlet (Morelos)")
+    var three := AncestorVerdict.read_from({"run": {
+            "base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
+            "acceptance": {"scored_at_commit": "5317027", "passed": 7, "failed": 0,
+                    "equivalence": {"to_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
+                            "fields_compared": 18, "fields_matching": 18,
+                            "fields_excluded": [
+                                    {"field": "outlet_min_daily_q_m3_s", "why": gauge},
+                                    {"field": "outlet_peak_q_m3_s", "why": gauge},
+                                    {"field": "outlet_peak_doy", "why": gauge}]}}}})
+    var grouped := three.excluded_fields()
+    check(grouped.size() == 1, "three fields excluded for one reason produced %d line(s); "
+            % grouped.size() + "fields sharing a reason are named together")
+    if grouped.size() == 1:
+        for f in ["outlet_min_daily_q_m3_s", "outlet_peak_q_m3_s", "outlet_peak_doy"]:
+            check(str(grouped[0]).contains(f), "grouping dropped %s, so the caveat is now "
+                    % f + "smaller than the thing it caveats")
+        check(str(grouped[0]).count("criterion-2 gauge moved") == 1,
+                "the shared reason is still printed more than once")
+    # Two fields excluded for DIFFERENT reasons must stay two lines, or
+    # grouping would be hiding a second cause behind the first.
+    var two := AncestorVerdict.read_from({"run": {
+            "base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
+            "acceptance": {"scored_at_commit": "5317027", "passed": 7, "failed": 0,
+                    "equivalence": {"to_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
+                            "fields_compared": 2, "fields_matching": 2,
+                            "fields_excluded": [
+                                    {"field": "a", "why": "one reason"},
+                                    {"field": "b", "why": "a different reason"}]}}}})
+    check(two.excluded_fields().size() == 2,
+            "two fields excluded for two reasons collapsed into one line, which hides a cause")
+
     # The fixture this repo actually ships, so the state above is not
     # hypothetical and the day it changes, this line says so.
     var shipped := AncestorVerdict.read_from(
             FixtureLoader.load_from("res://assets/fixture/").manifest)
+    # ON THE SHIPPED FIXTURE, because the grouping above is only worth having
+    # if the artefact this repo actually carries is the shape it was written
+    # for. Three excluded fields, one reason, one line.
+    var ship_ex := shipped.excluded_fields()
+    check(ship_ex.size() <= 1, "the shipped fixture's exclusions render as %d lines; each one "
+            % ship_ex.size() + "is a paragraph in a 420 px column and the fifth named fail is "
+            + "what falls off the bottom when they multiply")
     print("verdict: the shipped fixture reads %s -- %s" % [shipped.state, shipped.headline()])
+    print("verdict: %d named fail(s), %d exclusion line(s) for %d excluded field(s)"
+            % [shipped.named_fails().size(), ship_ex.size(),
+                    (shipped.equivalence.get("fields_excluded", []) as Array).size()])
 
 
 func test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one() -> void:
@@ -2674,6 +2780,112 @@ func test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one() -> void
 
     print("scatter cost: marginal %.2f ms resolved=%s, 1.5x agreement=%s"
             % [float(m["p50_ms"]), str(m["resolved"]), str(a["within_tolerance"])])
+
+
+func test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate() -> void:
+    """DOES THE PACED TIMER CENSOR `render_cost.json` TOO? Asked of the corpus
+    row that cites its coefficients, and answered here on the real ladders
+    rather than on a synthetic one, because the artefact is not re-run: the
+    determination is that the coefficients stand, and re-measuring them would
+    move them by noise and force the citation to be re-taken for nothing.
+
+    The benchmark already carried its own defence. `wall_clock_mean_ms` sits
+    beside every rung with the note that "the per-frame delta quantises on this
+    platform and a mean that disagrees with p50 is how that shows" — so the
+    second, unpaced reading was recorded when this was built, and it is what
+    settles the question. `scatter_cost.json` did not inherit that, which is
+    why the rung finding surfaced there and not here.
+
+    What the three ladders say:
+
+      HIGH (2400 tri) — five of nine rungs report every frame at one value, so
+        pacing is present. It does not matter: the rungs span 0.67 to 60.4 ms,
+        each landing on a DIFFERENT rung of the ladder, and the unpaced fit
+        gives 3.9963e-4 against the paced 3.9958e-4. Nothing moves.
+      MID (288 tri) — genuinely censored. 64,000 and 128,000 instances both
+        report exactly 7.1429 ms, so the artefact records a marginal of ZERO
+        and used to read it as the fixed-cost floor. It is not: the unpaced
+        reading separates them, 6.76 against 7.27 ms. The coefficient still
+        moves by 0.1%.
+      LOW (12 tri) — NOT censoring, which is the answer that was guessed wrong
+        by both sessions. Neither rung either side of the negative marginal is
+        pinned, and the negative survives on the unpaced instrument and gets
+        worse. It is warm-up: the first two rungs measure dearer than the rung
+        above them and `cpu_ms` FALLS across them, which is not work. Drop them
+        and r² goes 0.884 to 0.998.
+    """
+    var f := FileAccess.open("res://measurements/render_cost.json", FileAccess.READ)
+    check(f != null, "no measurements/render_cost.json")
+    if f == null:
+        return
+    var parsed = JSON.parse_string(f.get_as_text())
+    if typeof(parsed) != TYPE_DICTIONARY:
+        check(false, "render_cost.json is not an object")
+        return
+    var by_key := {}
+    for r in ((parsed as Dictionary).get("results", []) as Array):
+        var d: Dictionary = r
+        if not bool(d.get("measured", false)) or str(d.get("technique", "")) != "multimesh":
+            continue
+        var k := str(d["complexity"])
+        if not by_key.has(k):
+            by_key[k] = []
+        (by_key[k] as Array).append(d)
+    check(by_key.size() == 3, "expected three multimesh complexities in render_cost.json, "
+            + "found %d — the ladder this reasons about is not the one on disk" % by_key.size())
+
+    var verdicts := {}
+    for k in by_key:
+        var rows: Array = by_key[k]
+        rows.sort_custom(func(a, b): return int(a["instances"]) < int(b["instances"]))
+        var xs := PackedFloat64Array()
+        var ys := PackedFloat64Array()
+        var un := PackedFloat64Array()
+        for d in rows:
+            xs.append(float(d["instances"]))
+            ys.append(float(d["frame_ms"]["p50"]))
+            un.append(float(d.get("wall_clock_mean_ms", d["frame_ms"]["p50"])))
+        check(un.size() == ys.size(), "multimesh|%s has no unpaced reading beside every rung, "
+                % k + "so nothing here can tell a censored marginal from a real one")
+        verdicts[k] = FrameStats.marginals(xs, ys, un)
+
+    # HIGH: every marginal positive, so a spread is defined and the ladder is
+    # crossed at every step. This is the coefficient the corpus leans on hardest.
+    var high: Dictionary = verdicts.get("high", {})
+    check(high.has("spread"), "multimesh|high no longer has a defined spread, so its rungs "
+            + "stopped being separable and the 2400-triangle coefficient is now quoting the "
+            + "instrument: %s" % str(high.get("spread_undefined_because", "")))
+
+    # MID: censored, and the artefact must now say so rather than calling it a floor.
+    var mid: Dictionary = verdicts.get("mid", {})
+    if not mid.has("spread"):
+        check(str(mid.get("spread_undefined_because", "")).contains("CENSORED"),
+                "multimesh|mid's zero marginal is not being reported as censored by the "
+                + "timer, though the unpaced reading separates the two rungs: %s"
+                % str(mid.get("spread_undefined_because", "")))
+        check(float(mid.get("unpaced_ms_per_instance_there", -1.0)) > 0.0,
+                "the unpaced reading of mid's flat pair is not positive, which would mean "
+                + "the zero is real and 128,000 instances cost the same as 64,000")
+
+    # LOW: not the timer, and the warm-up signature is what it actually is.
+    var low: Dictionary = verdicts.get("low", {})
+    if not low.has("spread"):
+        check(str(low.get("spread_undefined_because", "")).contains("NOT THE TIMER"),
+                "multimesh|low's negative marginal is being blamed on the paced timer; the "
+                + "unpaced reading is negative there too: %s"
+                % str(low.get("spread_undefined_because", "")))
+    check(low.has("head_warm_up"), "multimesh|low's first rungs no longer measure dearer than "
+            + "the rungs above them. That is the warm-up this reasoning rests on, so either "
+            + "the sweep was re-run and the finding is stale, or the detector broke.")
+    check(not high.has("head_warm_up"),
+            "multimesh|high is now flagged as warming up, which would mean the detector fires "
+            + "on a clean ladder and says nothing about the dirty one")
+
+    print("ladder: high spread %s | mid %s | low %s%s"
+            % [String.num(float(high.get("spread", NAN)), 2),
+                    "censored" if not mid.has("spread") else "clean",
+                    "not-the-timer" if not low.has("spread") else "clean",
+                    ", warm-up at the head" if low.has("head_warm_up") else ""])
 
 
 func test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it() -> void:

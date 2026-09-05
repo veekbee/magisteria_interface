@@ -70,5 +70,17 @@ shot "M5 vegetation scatter -- placement and seasonal tint" \
 shot "composite -- every layer together, as the application runs it" \
   --window "$W" --row band.wetness --days 45 --camera ortho
 
+# THE DISCLAIMER, WHICH IS THE ONE ELEMENT WHOSE JOB IS TO BE IN OTHER
+# PEOPLE'S SCREENSHOTS -- and which had twenty-six headless asserts and no
+# picture until findings 6-8. Two sizes, because both defects were size- or
+# background-dependent and neither was visible in the other's shot: the default
+# every other shot here uses, where the banner overran the window; and a narrow
+# tall one that puts the basin UNDER the controls rather than beside them,
+# where the headline vanished into the bright end of the ramp.
+shot "verdict banner -- does the whole disclaimer fit the window it is read in" \
+  --window "$W" --row band.pft.biomass --days 22 --camera ortho
+shot "verdict banner -- is it legible with the ramp behind it, not beside it" \
+  --window "$W" --row band.bare_fraction --days 22 --camera ortho --size 900x1400
+
 echo "" | tee -a "$LOG"
 echo "record: measurements/visual_audit.md   shots: $OUT (not committed)" | tee -a "$LOG"

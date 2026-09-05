@@ -38,6 +38,64 @@ stated blocker was the transducer existing. It does now, so this is that scene:
 **Re-measure rather than believe.** The coefficient is a property of one machine, one renderer and
 one Godot build, and none of those travel. Run the script on the hardware whose answer you want.
 
+### Does the paced timer censor these coefficients? Checked — no, and the benchmark saw it coming
+
+`scatter_cost.json`'s rung finding lands here too, because §24 cites these coefficients. Asked
+directly of all three multimesh ladders, on the artefact as it stands. **All three coefficients
+stand.** The determination, and it is not the same answer for each:
+
+| | 12 tri | 288 tri | 2400 tri |
+|---|---:|---:|---:|
+| quoted (paced `frame_p50`) | 9.607e-6 | 5.386e-5 | 3.9958e-4 |
+| refit on the **unpaced** reading | 8.445e-6 | 5.379e-5 | 3.9963e-4 |
+| moves by | **−12.1%** | **−0.1%** | **+0.0%** |
+| rungs reporting every frame at one value | 1 of 9 | 1 of 9 | 5 of 9 |
+
+**The benchmark already carried its own defence, and that is why this is a short answer.** Every
+rung records `wall_clock_mean_ms` beside `frame_ms`, with the note *"the per-frame delta quantises
+on this platform and a mean that disagrees with p50 is how that shows."* The pacing was known when
+this was built and a second, unpaced reading of the same 80 frames was written down next to every
+rung. `scatter_cost.json` did not inherit that, which is exactly why the finding surfaced there and
+not here. (`gpu_p50` would have been better still and is unavailable — `gl_compatibility` reports no
+GPU render time. `cpu_ms` is 0.04–0.12 ms throughout and never the bottleneck, so it cannot stand in.)
+
+**2400 tri — clean, and the pacing is loudest here.** Five of nine rungs report every frame
+identically, so the ladder is unmistakably present. It does not matter, because the rungs span
+0.67 → 60.4 ms and each lands on a *different* rung of it. Paced and unpaced fits agree to four
+significant figures; r² is 0.99997 and 0.999996. Dropping the five pinned rungs moves the
+coefficient by −0.1%. **This is the coefficient the corpus leans on hardest and it is the safest of
+the three.**
+
+**288 tri — genuinely censored, and the artefact's own reading of it was wrong.** 64,000 and 128,000
+instances both report `frame_p50` of exactly **7.1429 ms**, so the artefact records a marginal of
+**zero** and explains it as *"the fixed-cost floor rather than a per-instance cost"*. It is not a
+floor: 64,000 more instances at 288 triangles is 18.4 M triangles and cannot be free. The unpaced
+reading separates the pair — **6.76 against 7.27 ms** — and every unpaced marginal on this ladder is
+positive. The coefficient moves 0.1%. **The number stands; the explanation beside it did not.**
+
+**12 tri — not censoring, which is what both sessions guessed and neither had right.** The −0.000125
+marginal is between the 2,000 and 4,000 rungs, and *neither is pinned* — both span 0.30 to 1.39 ms.
+The negative survives on the unpaced instrument and gets **worse** (−1.52e-4). What it actually is:
+**the sweep was still warming up.** The first two rungs measure dearer than the rung above them
+(wall means 0.836, 0.719 against 0.415 at 4,000) and `cpu_ms` *falls* across them, 0.059 → 0.055 →
+0.046, which is a process settling and not work. Drop the first two rungs and r² goes **0.884 →
+0.998**; drop three and every marginal is positive at r² 0.9996 with a coefficient of 1.0023e-5 —
+**+4.3% from the quoted figure, inside the benchmark's own reproducibility.** The number stands. Its
+stated reason did not, and the defect is real but is a warm-up defect, not an instrument one.
+
+**What changed in the code, and what did not.** `FrameStats.marginals` now takes the unpaced series
+and distinguishes the three causes it used to collapse into one — *censored by the paced timer*,
+*not the timer*, and *the fixed-cost floor*, which it is only entitled to claim when neither of the
+others applies — and flags the warm-up signature separately when a sweep's first rung measures
+dearer than a later one. `test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate`
+runs that over the three real ladders in the gate, so this determination is checked on every run
+rather than being a paragraph.
+
+**`render_cost.json` is deliberately NOT re-run.** The determination is that its coefficients stand;
+re-measuring would move them by noise and force every citation of them to be re-taken for nothing.
+The warm-up finding is a reason to drop the head of a sweep before quoting a fit, not a reason to
+discard this one.
+
 **And it is a floor, not a forecast.** The empty stage is the point of it, and no frame the client
 draws has ever met it: the real scene has come in above the prediction in every run taken, by about
 a third. Quote the coefficient with the observed ratio beside it rather than on its own — the ruling

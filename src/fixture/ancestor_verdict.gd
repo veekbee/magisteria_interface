@@ -244,9 +244,25 @@ func named_fails() -> PackedStringArray:
 ## What the equivalence proof left out, for a reader who wants the caveat
 ## rather than the count of it.
 func excluded_fields() -> PackedStringArray:
-    var out := PackedStringArray()
+    # FIELDS THAT SHARE A REASON ARE NAMED TOGETHER. The shipped fixture
+    # excludes three fields for one gauge change and repeats the same forty
+    # words for each, which filled a third of the banner with two copies of
+    # nothing and pushed the fifth named fail off the bottom of an 800 px
+    # window -- photographed, not supposed. Grouping is shorter and says the
+    # truer thing: one instrument change moved all three, and a reader counting
+    # distinct reasons is counting what actually happened to the proof.
+    var by_reason := {}
+    var order: Array = []
     for e in equivalence.get("fields_excluded", []):
-        if typeof(e) == TYPE_DICTIONARY:
-            out.append("%s — %s" % [str((e as Dictionary).get("field", "?")),
-                                    str((e as Dictionary).get("why", "?"))])
+        if typeof(e) != TYPE_DICTIONARY:
+            continue
+        var d: Dictionary = e
+        var why := str(d.get("why", "?"))
+        if not by_reason.has(why):
+            by_reason[why] = []
+            order.append(why)
+        (by_reason[why] as Array).append(str(d.get("field", "?")))
+    var out := PackedStringArray()
+    for why in order:
+        out.append("%s — %s" % [", ".join(PackedStringArray(by_reason[why] as Array)), why])
     return out
