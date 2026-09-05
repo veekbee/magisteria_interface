@@ -391,21 +391,55 @@ arguable, and this is the arithmetic that decides.
 today, a **constant** tint, and a **range-matched** tint whose attenuation is fitted to the
 oracle's own binned brightness — and scores each in an annulus at 0.7–1.5× the seam.
 
-### The result: the tint is sufficient on both conserved quantities
+### First, which of these runs is a measurement of a stand
 
-Seam 120 m, annulus 84–180 m, eye level on the drawn surface. Five runs:
+**Only the 1× one.** The 12× rows below are faithful measurements of what the application draws at
+its shipped exaggeration, and what it draws is not vegetation: `VegetationScatter` scales plant
+HEIGHT by the exaggeration and leaves crown alone, so at 12× every plant is a 12:1 spike, and from
+an eye inside the scatter 1.65 million of them render as a radial starburst. The picture is in
+`shots/seam/x12_..._oracle_..._insitu.png` and it settles the question; no number in this file
+would have.
 
-| window | day | exag | place | oracle cover | tint cover | tint ΔE | null ΔE | margin |
-|---|---:|---:|---|---:|---:|---:|---:|---:|
-| deepest_winter | 22 | 12× | A | 1.000 | 1.000 | 0.0198 | 0.1167 | 5.9× |
-| deepest_winter | 85 | 12× | A | 1.000 | 1.000 | 0.0198 | 0.1166 | 5.9× |
-| largest_fire | 0 | 12× | A | 1.000 | 1.000 | 0.0497 | 0.1431 | 2.9× |
-| deepest_winter | 22 | 12× | B | 1.000 | 1.000 | 0.1038 | 0.2470 | 2.4× |
-| deepest_winter | 22 | 1× | A | 1.000 | 1.000 | 0.0223 | 0.1471 | 6.6× |
+At 1× the same view is a stand — pillar-form succulents, conifer-form trees, ground between them.
 
-**The tint beats what ships today at every place, day and exaggeration**, by 2.4× to 6.6× on
-colour, and it matches the stand's coverage exactly where the null baseline reaches 0.02–0.09 of
-it. Its absolute colour error is 0.02–0.10 in RGB.
+**The exaggeration cannot be applied to vegetation consistently, and that is a trilemma rather than
+a bug.** Scale height only and the plants are the wrong shape. Scale uniformly and each plant covers
+144× the ground it should, which breaks the identity `cover = count × crown area` that the whole
+derivation rests on. Scale neither and the plants are twelve times too short against the relief,
+which is what M5 was avoiding. There is no free option here; the resolution this measurement points
+to is that **naturalistic view should not use the map view's exaggeration at all**, and that is a
+ruling this repo has not made.
+
+So: read the 1× row as the sufficiency result. Read the 12× rows as a metric check — the metric
+ranks the null baseline worst there too — and not as a statement about a stand.
+
+### The result: the tint is sufficient on both conserved quantities, at 1×
+
+Seam 120 m, annulus 84–180 m, eye level on the drawn surface. **At 1×, where the oracle is a
+stand** — two places, two windows, three day-window pairs:
+
+| window | day | place | oracle cover | tint cover | tint ΔE | null ΔE | margin |
+|---|---:|---|---:|---:|---:|---:|---:|
+| deepest_winter | 22 | A | 1.000 | 1.000 | 0.0223 | 0.1471 | 6.6× |
+| deepest_winter | 85 | A | 1.000 | 1.000 | 0.0224 | 0.1476 | 6.6× |
+| largest_fire | 0 | A | 1.000 | 1.000 | 0.0140 | 0.1873 | 13.4× |
+| deepest_winter | 22 | B | 1.000 | 1.000 | 0.0030 | 0.1588 | **53.4×** |
+
+**The tint sits 0.003 to 0.022 from the stand in RGB and matches its coverage exactly, everywhere
+it was run.** The null baseline sits 0.147 to 0.187 away. The margin runs from 6.6× to 53×.
+
+The same matrix at 12×, which is a measurement of the spike scene rather than of a stand, and is
+here as a metric check — the ranking survives, the absolute errors do not mean the same thing:
+
+| window | day | place | tint ΔE | null ΔE | margin |
+|---|---:|---|---:|---:|---:|
+| deepest_winter | 22 | A | 0.0198 | 0.1167 | 5.9× |
+| deepest_winter | 85 | A | 0.0198 | 0.1166 | 5.9× |
+| largest_fire | 0 | A | 0.0497 | 0.1431 | 2.9× |
+| deepest_winter | 22 | B | 0.1038 | 0.2470 | 2.4× |
+
+Place B is the tell: **0.003 at 1× and 0.104 at 12×**, the best row and the worst row of the two
+tables and the same place, day and window. What moved is the subject, not the candidate.
 
 Across range bands at place A it tracks the oracle the whole way out:
 
@@ -476,7 +510,10 @@ plausible-looking artefact:
 
 ### What it does not cover
 
-One machine, one seam distance, two places, three day-window pairs. The scoring annulus saturates —
+One machine, one seam distance, two places, three day-window pairs, eight runs. The 12× half of
+the matrix was run and written up before its picture was looked at, and the picture is what showed
+the subject was wrong — `visual_audit.md`'s lesson arriving late again, in the tool built to stop
+it arriving late. The scoring annulus saturates —
 oracle coverage is 1.000 in every run — so **coverage is matched trivially here and only colour
 discriminates**; a basin band where the stand did not close would test it harder. No crossfade is
 measured: each candidate is scored as if it were the whole far field. A run whose annulus contains
