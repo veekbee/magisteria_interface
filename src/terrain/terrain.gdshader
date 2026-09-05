@@ -24,21 +24,25 @@ shader_type spatial;
 // the hillshade underneath it. A hashed threshold reproduces the fraction
 // instead: below `coverage` a pixel is plant, above it the ground shows.
 //
-// THE HASH IS IN WORLD-ISH SPACE, not screen space. Screen-space dither
-// crawls when the camera moves -- the pattern stays put while the ground slides
-// under it, which reads as static rather than as vegetation. Hashing UV, which
-// is the heightfield's own texel grid, pins the pattern to the ground.
 
 uniform sampler2D field : source_color, hint_default_white;
 uniform sampler2D vegetation : source_color, hint_default_white;
 uniform vec4 bare : source_color = vec4(0.62, 0.60, 0.55, 1.0);
 uniform bool has_field = false;
 uniform bool naturalistic = false;
-/// How fine the coverage mask is, in cycles across the heightfield. High
-/// enough that a mask cell is well under a screen pixel at range -- where it
-/// averages to the coverage fraction, which is the point -- and low enough
-/// that it does not alias into moire at close range.
-uniform float mask_frequency = 900.0;
+// HOW BIG A MASK CELL IS, IN METRES OF GROUND, and it is metres rather than
+// cycles across the texture for a reason that cost a run: at 900 cycles over a
+// 998-texel raster of 1,000 m texels, a mask cell was about a KILOMETRE across.
+// A 180 m range band then fell inside one or two cells and came back either
+// entirely plant or entirely ground -- coverage 1.000 where the tint's own
+// coverage was 0.5, and nothing in the frame to say so.
+//
+// A cell has to be small enough that a range band contains many of them, since
+// what reproduces the coverage fraction is their AVERAGE. Half a metre is about
+// 1.7 screen pixels at 150 m at this viewport and FOV, which is fine dither at
+// the range this is for and visible chunk close up -- where the instances are
+// drawn instead.
+uniform float mask_cell_m = 0.5;
 
 // RANGE DARKENING. Apparent stand colour falls with range -- measured, not
 // assumed: the vegetation in a 100 m cut means (0.171, 0.340, 0.128) and in a
@@ -53,14 +57,32 @@ uniform float mask_frequency = 900.0;
 //
 // Only the VEGETATION is attenuated. The ground's own colour at range is the
 // hillshade's business and is already right.
+// MEASUREMENT ONLY. With this on, the ground is written black and only the
+// pixels the coverage mask picked as plant carry colour -- which is what the
+// instances look like when the terrain is hidden behind them. Without it a tint
+// cannot be scored against a stand at all: the instances can be isolated by
+// hiding the ground they stand on, and a tint IS the ground, so isolating it
+// has to be something the shader does.
+//
+// It is still LIT. The colours it is compared against were measured under this
+// hillshade, and an unshaded isolate would be brighter than everything it is
+// being scored on.
+uniform bool isolate_vegetation = false;
+
 uniform bool range_matched = false;
 uniform float range_k0 = 0.5;
 uniform float range_r0 = 200.0;
+
+varying vec3 world_pos;
 
 float hash12(vec2 p) {
 	vec3 p3 = fract(vec3(p.xyx) * 0.1031);
 	p3 += dot(p3, p3.yzx + 33.33);
 	return fract((p3.x + p3.y) * p3.z);
+}
+
+void vertex() {
+	world_pos = (MODEL_MATRIX * vec4(VERTEX, 1.0)).xyz;
 }
 
 void fragment() {
@@ -69,12 +91,18 @@ void fragment() {
 		vec4 veg = texture(vegetation, UV);
 		// A carries coverage: the share of this ground the stand covers.
 		float coverage = clamp(veg.a, 0.0, 1.0);
-		float pick = hash12(floor(UV * mask_frequency));
+		// HASHED IN WORLD SPACE, not screen space and not UV. Screen-space
+		// dither crawls when the camera moves -- the pattern stays put while
+		// the ground slides under it, which reads as static rather than as
+		// vegetation. UV works but its precision is the raster's, which is a
+		// kilometre per texel here.
+		float pick = hash12(floor(world_pos.xz / max(mask_cell_m, 0.01)));
 		float k = 1.0;
 		if (range_matched) {
 			k = range_k0 + (1.0 - range_k0) * exp(-length(VERTEX) / range_r0);
 		}
-		ground = pick < coverage ? veg.rgb * k : bare.rgb;
+		vec3 unplanted = isolate_vegetation ? vec3(0.0) : bare.rgb;
+		ground = pick < coverage ? veg.rgb * k : unplanted;
 	}
 	ALBEDO = ground;
 	ROUGHNESS = 1.0;

@@ -86,6 +86,8 @@ func _initialize() -> void:
     test_the_tint_holds_the_quantity_a_seam_has_to_conserve()
     test_a_recorded_distance_names_what_it_is_conditional_on()
     test_the_seam_metric_fails_the_bad_frame()
+    test_plants_stand_on_the_surface_that_is_drawn()
+    test_the_seam_measurement_ranks_the_null_baseline_worst()
     test_the_project_does_not_import_blend_sources()
     test_phenology_is_the_cell_measured_against_itself()
     test_the_tint_moves_with_the_season_it_is_read_from()
@@ -3065,3 +3067,147 @@ func test_the_seam_metric_fails_the_bad_frame() -> void:
             "an inseparable ranking does not say it is one: %s" % str(muddy.get("why_not", "")))
     print("seam metric: annulus %s, coverage 16/32 = %.2f, %d bands, far/near histogram %.1fx"
             % [str(score), SeamScore.coverage(16, 32), bands.size(), d_far / maxf(d_near, 1e-9)])
+
+
+func test_plants_stand_on_the_surface_that_is_drawn() -> void:
+    """M5 PLACED EVERY INSTANCE ON THE HEIGHTFIELD AND THE TERRAIN DRAWS A
+    TRIANGULATION OF IT.
+
+    `TerrainMesh.build` samples the field every `stride` texels — 4 km apart on
+    the 1,000 m overview — so the surface that renders between samples is a
+    plane and the field beneath it is not. Measured over 3,916 mid-quad points:
+    the two differ by a mean of 426 m in mesh space and up to 7,722 m, which at
+    12× is 35 and 644 true metres. Plants placed on the field float above the
+    ground or are buried under it by tens of metres.
+
+    From the overview camera, where the basin is 1.5 million metres across, that
+    is invisible, and four milestones of screenshots did not show it. The seam
+    harness photographed 1.65 million instances as a patch on the horizon, which
+    is what finally did.
+
+    Two things are checked: that the drawn surface agrees with the field exactly
+    at the sample points (so it IS the same surface, interpolated differently),
+    and that it disagrees between them by enough to matter.
+    """
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    var hf := v.heightfield
+    var tm := v.terrain
+    var verts: PackedVector3Array = tm.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+
+    # AT a mesh vertex the two must agree: the triangulation passes through its
+    # own samples, so any disagreement there is a transform bug and not coarseness.
+    var checked := 0
+    var worst_at_node := 0.0
+    for i in range(0, verts.size(), 977):
+        var w := tm.mesh_to_world(verts[i], hf)
+        var drawn := tm.drawn_surface_y(w, hf)
+        if is_nan(drawn):
+            continue
+        checked += 1
+        worst_at_node = maxf(worst_at_node, absf(drawn - verts[i].y))
+    check(checked > 20, "only %d mesh vertices could be compared" % checked)
+    check(worst_at_node < 1.0,
+            "the drawn surface misses its own vertices by %s m: it is not reproducing the "
+            % String.num(worst_at_node, 3)
+            + "triangulation, which means the diagonal it splits quads along is wrong")
+
+    # BETWEEN vertices they must differ, or none of this mattered.
+    var rng := RandomNumberGenerator.new()
+    rng.seed = 20260904
+    var n := 0
+    var total := 0.0
+    var worst := 0.0
+    for i in 800:
+        var base := tm.mesh_to_world(verts[rng.randi_range(0, verts.size() - 1)], hf)
+        var w := base + Vector2(rng.randf_range(-2000.0, 2000.0),
+                                rng.randf_range(-2000.0, 2000.0))
+        var field := hf.height_at_world(w.x, w.y)
+        var drawn := tm.drawn_surface_y(w, hf)
+        if is_nan(field) or is_nan(drawn):
+            continue
+        var gap := absf(field * tm.exaggeration - drawn)
+        n += 1
+        total += gap
+        worst = maxf(worst, gap)
+    check(n > 200, "only %d mid-quad points were valid" % n)
+    check(total / float(maxi(n, 1)) > 50.0,
+            "the drawn surface and the field differ by only %s m on average. If that is now "
+            % String.num(total / float(maxi(n, 1)), 1)
+            + "small the stride has changed and this guard has stopped guarding anything; if "
+            + "it is zero, something is sampling the field where it should sample the mesh.")
+
+    # And the scatter's own centre stands on the drawn surface, not the field --
+    # the same call every instance makes.
+    v.bind_fields()
+    if bool(v.bind_families().get("ok", false)):
+        v.show_field("deepest_winter", "band.pft_fractions", 22)
+        var centre := tm.mesh_to_world(verts[5000], hf)
+        var r := v.scatter_at(centre, 400.0, [], 2000)
+        if bool(r.get("ok", false)):
+            var want := tm.drawn_surface_y(centre, hf)
+            check(absf(v.scatter_centre_mesh.y - want) < 1.0,
+                    "the scatter centre stands at %s and the drawn surface is at %s"
+                    % [String.num(v.scatter_centre_mesh.y, 2), String.num(want, 2)])
+            var field_y: float = hf.height_at_world(centre.x, centre.y) * tm.exaggeration
+            check(absf(v.scatter_centre_mesh.y - field_y) > 1.0 or absf(want - field_y) < 1.0,
+                    "the scatter centre is on the field rather than on the drawn surface")
+    print("surface: drawn matches its vertices within %s m and the field by %s m on average "
+            % [String.num(worst_at_node, 3), String.num(total / float(maxi(n, 1)), 1)]
+            + "between them (worst %s)" % String.num(worst, 1))
+    v.queue_free()
+
+
+func test_the_seam_measurement_ranks_the_null_baseline_worst() -> void:
+    """The seam harness's own finding, held in the gate.
+
+    The metric is only worth pointing at a subtle candidate if it visibly fails
+    an unsubtle one, so every run grades the null baseline — what ships today —
+    alongside the tint. If the tint ever stops beating it, either the tint
+    regressed or the metric did, and both are worth failing for.
+
+    The numbers are read from the artefact rather than restated, so a re-run
+    that moves them moves this test with it.
+    """
+    var path := "res://measurements/scatter_seam.json"
+    if not FileAccess.file_exists(path):
+        return
+    var parsed = JSON.parse_string(FileAccess.open(path, FileAccess.READ).get_as_text())
+    check(typeof(parsed) == TYPE_DICTIONARY, "the seam artefact is not a JSON object")
+    if typeof(parsed) != TYPE_DICTIONARY:
+        return
+    var runs: Array = (parsed as Dictionary).get("runs", [])
+    check(runs.size() >= 4, "the seam artefact carries %d run(s); sufficiency is a claim about "
+            % runs.size() + "places and days and one row of it is not evidence for the claim")
+    var places := {}
+    var days := {}
+    var worst_ratio := INF
+    for r in runs:
+        var run: Dictionary = r
+        if not bool(run.get("measured", true)):
+            continue
+        places[str(run["scene"]["at_world_epsg5070"])] = true
+        days[str(run["scene"]["window"]) + str(run["scene"]["day"])] = true
+        var e: Dictionary = run["errors_against_oracle"]["isolated_colour"]
+        check(e.has("null") and e.has("constant"),
+                "a run scored neither the null baseline nor the tint")
+        var tint := float(e["constant"])
+        var null_err := float(e["null"])
+        check(tint > 0.0, "the tint scored a colour error of exactly zero, which is a frame "
+                + "that was not drawn rather than a perfect match")
+        worst_ratio = minf(worst_ratio, null_err / tint)
+        check(null_err > tint,
+                "the null baseline (%s) scored better than the tint (%s) at %s day %d. Either "
+                % [String.num(null_err, 4), String.num(tint, 4),
+                   str(run["scene"]["window"]), int(run["scene"]["day"])]
+                + "the candidate regressed or the metric stopped discriminating; a metric that "
+                + "cannot fail the frame that ships today cannot grade anything subtler.")
+    check(places.size() >= 2, "every run stands in the same place; place-dependence is measured "
+            + "and one place cannot show sufficiency")
+    check(days.size() >= 2, "every run draws the same day")
+    check(worst_ratio > 2.0,
+            "the tint's worst margin over the null baseline is only %sx" % String.num(worst_ratio, 2))
+    print("seam: %d runs over %d places and %d day(s); the tint beats what ships today by at "
+            % [runs.size(), places.size(), days.size()]
+            + "least %sx on annulus colour" % String.num(worst_ratio, 1))

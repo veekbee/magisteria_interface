@@ -320,11 +320,21 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         for i in n:
             var wx := origin.x + rng.randf_range(-half, half)
             var wy := origin.y + rng.randf_range(-half, half)
+            # ON THE SURFACE THAT IS DRAWN, not on the field it was sampled
+            # from. The mesh triangulates the heightfield every `stride` texels
+            # -- 4 km apart on the overview -- and the two disagree by a MEAN OF
+            # 426 m in mesh space (35 true metres) and up to 7,722 m. Plants
+            # placed on the field therefore float above the ground or are buried
+            # under it by tens of metres. From the overview camera, where the
+            # basin is 1.5 million metres across, that is invisible; at eye
+            # level it is the whole picture, and it is why the first seam run
+            # photographed 1.65 million instances as a patch on the horizon.
             var h := _hf.height_at_world(wx, wy)
-            if is_nan(h):
+            var y := _tm.drawn_surface_y(Vector2(wx, wy), _hf)
+            if is_nan(h) or is_nan(y):
                 continue            # the one-texel nodata border; dropped, not clamped
             var m := _tm.world_to_mesh(Vector2(wx, wy), _hf)
-            var pos := Vector3(m.x, h * _tm.exaggeration, m.y)
+            var pos := Vector3(m.x, y, m.y)
             var xf := _fs.instance_transform(life_form, pos, float(item["height_m"]),
                     float(item["crown_m"]), _tm.exaggeration)
             if not bool(xf["ok"]):

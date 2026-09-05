@@ -14,6 +14,8 @@ claims a `PIN` does: what was measured, how, on what, and what it does not cover
 - `scatter_bands.json` — what distance-banded density schedules cost and cover, for deciding where
   individual instances should stop and a collective representation start. Re-take it with
   `bash tools/measure_bands.sh`.
+- `scatter_seam.json` — how far a far-field candidate sits from the instances it stands in for,
+  scored in an annulus around the seam. Re-take it with `bash tools/measure_seam.sh`.
 - `visual_audit.md` — what each milestone's claim looks like when photographed, and the five
   defects that came out of looking. Re-take it with `bash tools/audit.sh`.
 
@@ -375,3 +377,108 @@ One machine, one place, one day, one camera, one FOV. Density is a property of t
 `scatter_cost.json` — so the instance counts here do not transfer to another part of the basin;
 the *ratios* between schedules should. No far-field representation exists yet, so nothing here
 measures a seam: it measures what a seam would have to match.
+
+
+## `scatter_seam.json` — grading the far field against the stand it replaces
+
+Beyond a few hundred metres the far field has to become a collective representation. Candidate #1
+is the cheapest one: a **per-cell vegetation tint** on the terrain — mean colour and coverage from
+the same two wire rows the scatter samples, no new geometry. Whether that is sufficient is not
+arguable, and this is the arithmetic that decides.
+
+`bash tools/measure_seam.sh` renders four candidates at a pinned place, day and camera — an
+**oracle** of instances at full density out to 2.5× the seam, the **null** baseline that ships
+today, a **constant** tint, and a **range-matched** tint whose attenuation is fitted to the
+oracle's own binned brightness — and scores each in an annulus at 0.7–1.5× the seam.
+
+### The result: the tint is sufficient on both conserved quantities
+
+Seam 120 m, annulus 84–180 m, eye level on the drawn surface. Five runs:
+
+| window | day | exag | place | oracle cover | tint cover | tint ΔE | null ΔE | margin |
+|---|---:|---:|---|---:|---:|---:|---:|---:|
+| deepest_winter | 22 | 12× | A | 1.000 | 1.000 | 0.0198 | 0.1167 | 5.9× |
+| deepest_winter | 85 | 12× | A | 1.000 | 1.000 | 0.0198 | 0.1166 | 5.9× |
+| largest_fire | 0 | 12× | A | 1.000 | 1.000 | 0.0497 | 0.1431 | 2.9× |
+| deepest_winter | 22 | 12× | B | 1.000 | 1.000 | 0.1038 | 0.2470 | 2.4× |
+| deepest_winter | 22 | 1× | A | 1.000 | 1.000 | 0.0223 | 0.1471 | 6.6× |
+
+**The tint beats what ships today at every place, day and exaggeration**, by 2.4× to 6.6× on
+colour, and it matches the stand's coverage exactly where the null baseline reaches 0.02–0.09 of
+it. Its absolute colour error is 0.02–0.10 in RGB.
+
+Across range bands at place A it tracks the oracle the whole way out:
+
+| band | ground px | oracle colour | tint colour |
+|---|---:|---|---|
+| 30–60 m | 188,544 | (0.248, 0.309, 0.160) | (0.233, 0.286, 0.148) |
+| 84–120 m | 53,460 | (0.227, 0.322, 0.153) | (0.210, 0.309, 0.142) |
+| 120–180 m | 42,299 | (0.209, 0.337, 0.147) | (0.198, 0.324, 0.139) |
+| 240–360 m | 21,580 | (0.188, 0.380, 0.145) | (0.177, 0.367, 0.137) |
+| 360–480 m | 10,837 | (0.186, 0.387, 0.145) | (0.176, 0.376, 0.138) |
+
+### The range dependence is geography, not optics
+
+The brief asked for a fitted range darkening, from four schedule rows that showed apparent stand
+colour falling from (0.171, 0.340, 0.128) to (0.085, 0.210, 0.061). **Binned by range rather than
+by cumulative cut, there is no darkening to fit**: the fit returns `k0 = 1.000` in all five runs,
+and the oracle's brightness actually *rises* slightly with range (0.285 → 0.327).
+
+What does change with range is **hue** — green-minus-red goes +0.061 near to +0.201 far — and the
+tint reproduces that with **no range term at all**, because the cells at different ranges genuinely
+carry different composition. The earlier figures were an artefact of measuring cumulative cuts:
+a 300 m cut contains its own 100 m core, so the difference between the rows was mixture, not
+attenuation.
+
+So `range_matched` and `constant` are the same candidate here, with identical uniforms and
+identical frames. The two tying is arithmetic, not a metric that cannot separate them — the metric
+separates the null baseline by 2.4× at its worst.
+
+### Cost
+
+| candidate | instances | build | frame p50 |
+|---|---:|---:|---:|
+| oracle (300 m at full density) | 1,652,596 | 16.3 s | 52.38 ms |
+| null (ships today) | 119,994 | 1.6 s | 3.33 ms |
+| tint (instances cut at 120 m) | 302,588 | 3.0 s | 12.50 ms |
+
+The tint itself is a texture on a surface already being drawn; **all 12.5 ms is the near-field
+instances inside the seam**, and the number to move is the seam distance, not the tint. Rebuilding
+the per-cell texture costs **247 ms**, per day-step and not per frame.
+
+### What had to be got right first, and was not
+
+**Plants stood on the wrong surface, since M5.** `TerrainMesh.build` samples the heightfield every
+`stride` texels — 4 km apart on the 1,000 m overview — and triangulates those samples, and the
+scatter placed every instance on the *field*. The two differ by a **mean of 426 m in mesh space and
+up to 7,722 m**; at 12× that is 35 and 644 true metres of float or bury. Invisible from an overview
+camera 1.5 million metres wide, and the whole picture at eye level: the first seam run photographed
+1.65 million instances as a patch on the horizon. `TerrainMesh.drawn_surface_y` reproduces the
+triangulation exactly, including which diagonal a quad is split along, and both the instances and
+the camera stand on it now.
+
+That also retracts a conclusion from `scatter_bands.json`: the eye-level coverage saturation there
+was a camera placed *underground*, not an incompatibility between eye level and 12×. Both work.
+
+**Four other things this harness got wrong before it got them right**, each of which produced a
+plausible-looking artefact:
+
+- A depth image encoding range into RGB, which does not survive this renderer's sRGB output. The
+  annulus is a one-bit mask instead, one render per band.
+- `length(VERTEX)` read as a camera distance: every mask came back black at every band, which looks
+  exactly like a camera pointing at nothing. World positions and `CAMERA_POSITION_WORLD` instead,
+  and horizontally — a 3D distance at 12× would put a band's far edge partway up a hillside.
+- A grey backdrop, so the sky counted as vegetation and coverage came back at exactly 1.0 for every
+  candidate including the ones drawing nothing.
+- A dither cell a **kilometre** across, because the mask frequency was in cycles across a raster
+  whose texels are 1,000 m. A 180 m band fell inside one or two cells and came back entirely plant
+  or entirely ground. It is metres of ground now, at 0.5 m.
+
+### What it does not cover
+
+One machine, one seam distance, two places, three day-window pairs. The scoring annulus saturates —
+oracle coverage is 1.000 in every run — so **coverage is matched trivially here and only colour
+discriminates**; a basin band where the stand did not close would test it harder. No crossfade is
+measured: each candidate is scored as if it were the whole far field. A run whose annulus contains
+no ground is recorded as unmeasured rather than as a four-way tie at zero error, which is what the
+first attempt at place B produced.

@@ -152,6 +152,66 @@ func world_to_mesh(w: Vector2, hf: Heightfield) -> Vector2:
                    (world_origin.y - w.y) - h.y - 0.5 * hf.pixel_size_m)
 
 
+## The height of the DRAWN surface at a world position -- the mesh's own
+## triangulated plane, not the field it was sampled from.
+##
+## THE MESH IS NOT THE HEIGHTFIELD AND THE GAP IS METRES TO HUNDREDS OF METRES.
+## `build` samples the field every `stride` texels -- 4 km apart on the 1,000 m
+## overview -- and triangulates those samples, so what renders between them is a
+## plane and the field beneath it is not. A camera placed at "field height plus
+## eye height" is routinely UNDER the drawn surface, and back-face culling then
+## renders that as an empty frame or as a view out from under a slab with no
+## near ground in it. Both were observed while building `measure_seam`, and a
+## bound over the four surrounding samples was not good enough either: an upper
+## bound puts the eye up to a cell's worth of relief above the ground, which
+## from 4 km cells is hundreds of metres and takes the near field out of frame
+## the other way.
+##
+## So this reproduces the triangulation exactly, including which diagonal
+## `build` splits a quad along -- `[a, b, c, b, d, c]`, the diagonal from
+## (i+1, j) to (i, j+1). A different diagonal here would put the camera under
+## the surface on half the quads and nowhere near it on the rest.
+## Memoised on the last quad, because the caller is the scatter and its
+## instances arrive in runs: every plant in a texel -- and there are up to a
+## kilometre of them -- falls in the same 4 km quad, so four bicubic samples
+## serve thousands of placements. Without it a 1.65 M-instance build went from
+## 14 s to 44 s.
+var _quad_at := Vector2i(-2147483648, -2147483648)
+var _quad_y := PackedFloat64Array([NAN, NAN, NAN, NAN])
+
+
+func drawn_surface_y(w: Vector2, hf: Heightfield) -> float:
+    var m := world_to_mesh(w, hf)
+    var h := _half_extent(hf)
+    var step := float(stride) * hf.pixel_size_m
+    var fx := (m.x + h.x) / step
+    var fy := (m.y + h.y) / step
+    var i := int(floor(fx))
+    var j := int(floor(fy))
+    var u := fx - float(i)
+    var v := fy - float(j)
+    if _quad_at.x != i or _quad_at.y != j:
+        _quad_at = Vector2i(i, j)
+        _quad_y[0] = hf.height_at(float(i * stride), float(j * stride))
+        _quad_y[1] = hf.height_at(float((i + 1) * stride), float(j * stride))
+        _quad_y[2] = hf.height_at(float(i * stride), float((j + 1) * stride))
+        _quad_y[3] = hf.height_at(float((i + 1) * stride), float((j + 1) * stride))
+    var ya := _quad_y[0]
+    var yb := _quad_y[1]
+    var yc := _quad_y[2]
+    var yd := _quad_y[3]
+    var y: float
+    if u + v <= 1.0:
+        if is_nan(ya) or is_nan(yb) or is_nan(yc):
+            return NAN
+        y = ya + u * (yb - ya) + v * (yc - ya)
+    else:
+        if is_nan(yd) or is_nan(yb) or is_nan(yc):
+            return NAN
+        y = yd + (1.0 - u) * (yc - yd) + (1.0 - v) * (yb - yd)
+    return y * exaggeration
+
+
 func _half_extent(hf: Heightfield) -> Vector2:
     return Vector2(0.5 * float(int(hf.width / stride) - 1) * stride * hf.pixel_size_m,
                    0.5 * float(int(hf.height / stride) - 1) * stride * hf.pixel_size_m)

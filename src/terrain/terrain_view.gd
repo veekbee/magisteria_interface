@@ -278,6 +278,13 @@ func set_range_curve(matched: bool, k0: float, r0: float) -> void:
     _terrain_mat.set_shader_parameter("range_r0", r0)
 
 
+## Measurement only: write the ground black so the tint's own pixels can be
+## counted the way an instance render's are.
+func set_isolate_vegetation(on: bool) -> void:
+    if _terrain_mat != null:
+        _terrain_mat.set_shader_parameter("isolate_vegetation", on)
+
+
 func _rebuild_tint(window: String, day: int) -> void:
     if tint == null or not tint.is_bound() or overlay == null or not overlay.is_bound():
         tint_report = {"ok": false, "why": "no tint is bound"}
@@ -563,9 +570,12 @@ func scatter_at(centre: Vector2, radius_m: float = SCATTER_HORIZON_M,
     # is the one that explains an empty-looking window: at the overview camera
     # the whole scatter is about a pixel, and a viewer has no way to know that
     # from looking.
-    var h := heightfield.height_at_world(centre.x, centre.y)
+    # The DRAWN surface, for the same reason the instances stand on it: the
+    # mesh and the field it was sampled from differ by tens of metres, and a
+    # camera flown to a centre on the field arrives underground.
+    var y := terrain.drawn_surface_y(centre, heightfield)
     var m := terrain.world_to_mesh(centre, heightfield)
-    scatter_centre_mesh = Vector3(m.x, (0.0 if is_nan(h) else h) * terrain.exaggeration, m.y)
+    scatter_centre_mesh = Vector3(m.x, (0.0 if is_nan(y) else y), m.y)
     has_scatter = true
     r["on_screen_px"] = _on_screen_px(radius_m * 2.0)
     r["focus_key"] = "G"
