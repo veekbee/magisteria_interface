@@ -21,6 +21,9 @@ claims a `PIN` does: what was measured, how, on what, and what it does not cover
 - `scatter_horizon.json` — the individuation constant `k` swept at the basin's five densest cells,
   which is where decision 949's `[PROVISIONAL]` ruling is tested. Re-take it with
   `bash tools/measure_seam.sh --sweep-k --at X,Y --out measurements/scatter_horizon.json`.
+- `scatter_motion.json` — what the far field does when the camera MOVES: a scripted dolly through
+  the seam and a lateral-step parallax pair. Roadmap item 2. Re-take it with
+  `bash tools/measure_motion.sh`.
 - `visual_audit.md` — what each milestone's claim looks like when photographed, and the five
   defects that came out of looking. Re-take it with `bash tools/audit.sh`.
 
@@ -408,6 +411,77 @@ is checked against is itself not portable, and neither is this. It measures the 
 at this place — the **922 ms** figure remains a prediction, now made from a coefficient known to
 under-predict by about a third in this scene, and known not to notice fill at all.
 
+
+## `scatter_motion.json` — the dolly, and why it does not catch popping
+
+Roadmap item 2: *"scripted dolly through the seam scoring worst frame-pair delta in the annulus;
+lateral-step parallax pair. Static sufficiency does not cover temporal defects."* Built, run, and
+**it does not do the job it was wanted for.** That is the finding, and it is worth more than a table
+of smooth-looking numbers would have been, because the item exists to gate backlog 198's inversion
+before it lands.
+
+**Nothing pops today, so the harness ships with the thing that would.** The scatter is built once
+around a place and does not follow the camera, so dollying changes the view and not the population.
+Backlog 198 proposes solving the horizon from an instance budget *per place*, which makes the
+population a function of where the camera is — and then every camera step re-decides which instances
+exist. `rebuilt` does exactly that at every step and is the deliberately popping control; `static` is
+what ships; `tint` is painted on the ground and cannot pop, which calibrates the other two.
+
+**The metric ranks them wrong.** `deepest_winter` day 22, place B, k/k_res = 0.35, 12 dolly steps of
+20 m, annulus 84–180 m:
+
+| | coverage worst / median | ratio | colour worst / median | ratio |
+|---|---|---:|---|---:|
+| static | 0.189 / **0.000** | — | 0.092 / 0.018 | 5.13× |
+| **rebuilt** (the control) | 0.080 / 0.016 | **4.90×** | 0.097 / 0.016 | **5.98×** |
+| tint (cannot pop) | 0.091 / 0.007 | **13.43×** | 0.042 / **0.000** | — |
+
+The control is not separated from the static scene, and the candidate that *cannot* pop scores worst.
+Three measured reasons:
+
+1. **Coverage saturates.** `static` sits at 1.000 for ten of twelve steps — `lit_pixels` equals
+   `ground_pixels` exactly — so the median adjacent delta is zero and there is no ratio at all.
+2. **The ratio is unstable near zero.** A candidate that varies very little gets a huge score from
+   one ordinary step, because the denominator is nearly nothing. That is the whole of the tint's
+   13.43×.
+3. **An aggregate is blind to a local event, which is what a pop is.** Coverage and mean colour are
+   means over ~8,000 pixels; re-centring the horizon disc on a camera 20 m away changes the
+   population at the disc's rim, which is the far edge of the annulus and sub-pixel there.
+
+**The same-camera comparison was the obvious next instrument, and it does not close it either.**
+Comparing `static` against `rebuilt` at the *same* camera position removes camera motion entirely —
+same camera, same terrain, same day, only the population differs. It reports **77–85% of annulus
+pixels changed at every position, at a worst/median of 1.10**. Large and *steady*: two different
+scenes rather than one flickering, and steadiness is what says so. It is large because `static`
+measures its horizon from the place while `rebuilt` measures it from the camera, so at 240 m back
+they are simply not the same scene.
+
+**What the metric would have to be.** Popping is a frame-to-frame event, so it needs a per-pixel
+difference between *consecutive* frames of the same candidate — and consecutive frames differ almost
+everywhere because the camera moved 20 m, so that difference needs motion compensation before it
+means anything. Reprojecting the previous frame by the camera delta is the missing piece. The
+`tint` candidate is the natural baseline once it exists: it cannot pop, so whatever per-pixel change
+it shows over a step *is* the motion, and a candidate's excess over it is the pop. Not built.
+
+**A refusal that fired twice, for real.** On this platform a window that loses focus or is occluded
+stops being drawn while the main loop keeps ticking, so `get_image()` goes on returning the last
+frame rendered. It cost two complete runs: every candidate after the freeze scored one frozen image
+against each position's own mask, which gave *different* numbers per position and *identical* ones
+between candidates — a table that looked like a result. Three saved PNGs from three different
+candidates and positions came out byte-identical, which is how it was found. The harness now
+compares each capture with the last and refuses when two are identical across a camera move, and it
+renders at 640 × 400 because every score here is a ratio and the pixel loops were minutes of CPU
+with no frame drawn — which is when the compositor gives up.
+
+**The parallax pair** is recorded and says little yet: over a 4 m lateral step the tint's mean colour
+in the annulus does not move measurably and the instances' moves by ΔE 0.018. That is the expected
+direction — a tint painted on the terrain shifts with the ground it is on — but with the dolly metric
+unable to separate its own control, this pair is not load-bearing either.
+
+### What it does not cover
+
+One place, one day, one dolly axis, one `k`. The camera translates and never rotates, so nothing here
+says what happens when a viewer turns — which is the motion a viewer actually makes most.
 
 ## `scatter_bands.json` — where individuals should stop
 

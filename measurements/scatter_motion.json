@@ -1,0 +1,1684 @@
+{
+  "_what": "motion metrics for the far field",
+  "vertical_exaggeration": 1.0,
+  "shading_exaggeration": 12.0,
+  "runs": [
+    {
+      "what": "what the far field does when the camera MOVES, which static sufficiency does not cover",
+      "measured_at_commit": "13f7f50",
+      "vertical_exaggeration": 1.0,
+      "shading_exaggeration": 12.0,
+      "scene": {
+        "window": "deepest_winter",
+        "row": "band.pft.biomass",
+        "day": 22,
+        "at_world_epsg5070": [
+          -1212793.0,
+          1376226.0
+        ],
+        "seam_m": 120.0,
+        "annulus": {
+          "lo_m": 84.0,
+          "hi_m": 180.0
+        },
+        "eye_height_m": 1.7,
+        "eye_pitch_degrees": 10.0
+      },
+      "scatter_radius_m": 480.0,
+      "viewport": [
+        640,
+        400
+      ],
+      "dolly": {
+        "steps": 12,
+        "span_m": 240.0,
+        "step_m": 21.8181818181818,
+        "along": "the view axis, ending at the place the scatter is centred on"
+      },
+      "individuation_k": 91.2257760988844,
+      "k_over_k_res": 0.35,
+      "k_resolution": 260.645074568241,
+      "candidates": {
+        "static": "the horizon rule as it ships: one build around the place, dollied through",
+        "rebuilt": "re-scattered around the CAMERA at every step -- what solving the horizon from a per-place budget does. The deliberately popping control, and the reason this harness exists before that inversion does",
+        "tint": "the far-field tint alone, painted on the ground"
+      },
+      "scores": {
+        "static": {
+          "ok": true,
+          "steps": 12,
+          "step_m": 21.8181818181818,
+          "coverage": {
+            "worst_step_delta": 0.188677800957307,
+            "median_step_delta": 0.0,
+            "pop_ratio": null,
+            "why_no_ratio": "every adjacent step differed by zero, so there is no smooth rate to measure a jump against: this candidate did not change over the dolly at all",
+            "at_step": 3
+          },
+          "colour": {
+            "worst_step_delta": 0.092354841530323,
+            "median_step_delta": 0.0179885104298592,
+            "pop_ratio": 5.13410167509051,
+            "why_no_ratio": null,
+            "at_step": 4
+          },
+          "parallax": {
+            "lateral_m": 4.0,
+            "colour_delta": 0.018418800085783,
+            "luminance_distance": 0.014317594310565,
+            "coverage_delta": 0.00108656283955089
+          }
+        },
+        "rebuilt": {
+          "ok": true,
+          "steps": 12,
+          "step_m": 21.8181818181818,
+          "coverage": {
+            "worst_step_delta": 0.0797869778917328,
+            "median_step_delta": 0.016288874191392,
+            "pop_ratio": 4.89824999286303,
+            "why_no_ratio": null,
+            "at_step": 10
+          },
+          "colour": {
+            "worst_step_delta": 0.0970515832304955,
+            "median_step_delta": 0.0162194725126028,
+            "pop_ratio": 5.9836460868308,
+            "why_no_ratio": null,
+            "at_step": 10
+          },
+          "parallax": {
+            "lateral_m": 4.0,
+            "colour_delta": 0.00341374985873699,
+            "luminance_distance": 0.00628418112840056,
+            "coverage_delta": 0.0
+          }
+        },
+        "tint": {
+          "ok": true,
+          "steps": 12,
+          "step_m": 21.8181818181818,
+          "coverage": {
+            "worst_step_delta": 0.0908798236423957,
+            "median_step_delta": 0.00676678339480097,
+            "pop_ratio": 13.4302841305989,
+            "why_no_ratio": null,
+            "at_step": 1
+          },
+          "colour": {
+            "worst_step_delta": 0.0418146699666977,
+            "median_step_delta": 0.0,
+            "pop_ratio": null,
+            "why_no_ratio": "every adjacent step differed by zero, so there is no smooth rate to measure a jump against: this candidate did not change over the dolly at all",
+            "at_step": 1
+          },
+          "parallax": {
+            "lateral_m": 4.0,
+            "colour_delta": 0.0,
+            "luminance_distance": 0.0,
+            "coverage_delta": 0.00387700611840236
+          }
+        }
+      },
+      "population_change": {
+        "static_vs_rebuilt": {
+          "ok": true,
+          "between": [
+            "static",
+            "rebuilt"
+          ],
+          "worst_changed_fraction": 0.845575221238938,
+          "median_changed_fraction": 0.767734553775744,
+          "mean_changed_fraction": 0.773867354842091,
+          "pop_ratio": 1.10139007952732,
+          "per_position": [
+            {
+              "step": 0,
+              "changed_fraction": 0.842243975903614,
+              "ground_pixels": 2656
+            },
+            {
+              "step": 1,
+              "changed_fraction": 0.767734553775744,
+              "ground_pixels": 2622
+            },
+            {
+              "step": 2,
+              "changed_fraction": 0.728361669242658,
+              "ground_pixels": 2588
+            },
+            {
+              "step": 3,
+              "changed_fraction": 0.673099645529736,
+              "ground_pixels": 2539
+            },
+            {
+              "step": 4,
+              "changed_fraction": 0.723076923076923,
+              "ground_pixels": 2665
+            },
+            {
+              "step": 5,
+              "changed_fraction": 0.727406318883174,
+              "ground_pixels": 2722
+            },
+            {
+              "step": 6,
+              "changed_fraction": 0.815,
+              "ground_pixels": 2800
+            },
+            {
+              "step": 7,
+              "changed_fraction": 0.80977312390925,
+              "ground_pixels": 2865
+            },
+            {
+              "step": 8,
+              "changed_fraction": 0.79422514619883,
+              "ground_pixels": 2736
+            },
+            {
+              "step": 9,
+              "changed_fraction": 0.742773508964508,
+              "ground_pixels": 2733
+            },
+            {
+              "step": 10,
+              "changed_fraction": 0.817138171381714,
+              "ground_pixels": 2439
+            },
+            {
+              "step": 11,
+              "changed_fraction": 0.845575221238938,
+              "ground_pixels": 2260
+            },
+            {
+              "step": -1,
+              "changed_fraction": 0.825976845151954,
+              "ground_pixels": 2764
+            },
+            {
+              "step": -2,
+              "changed_fraction": 0.813111191597247,
+              "ground_pixels": 2761
+            }
+          ],
+          "what": "the share of annulus pixels that differ between the two candidates at the SAME camera position, so nothing here is camera motion"
+        },
+        "static_vs_tint": {
+          "ok": true,
+          "between": [
+            "static",
+            "tint"
+          ],
+          "worst_changed_fraction": 0.934111445783133,
+          "median_changed_fraction": 0.80319803198032,
+          "mean_changed_fraction": 0.829739130322871,
+          "pop_ratio": 1.1629902073839,
+          "per_position": [
+            {
+              "step": 0,
+              "changed_fraction": 0.934111445783133,
+              "ground_pixels": 2656
+            },
+            {
+              "step": 1,
+              "changed_fraction": 0.916475972540046,
+              "ground_pixels": 2622
+            },
+            {
+              "step": 2,
+              "changed_fraction": 0.928902627511592,
+              "ground_pixels": 2588
+            },
+            {
+              "step": 3,
+              "changed_fraction": 0.92083497439937,
+              "ground_pixels": 2539
+            },
+            {
+              "step": 4,
+              "changed_fraction": 0.805253283302064,
+              "ground_pixels": 2665
+            },
+            {
+              "step": 5,
+              "changed_fraction": 0.809698750918442,
+              "ground_pixels": 2722
+            },
+            {
+              "step": 6,
+              "changed_fraction": 0.74,
+              "ground_pixels": 2800
+            },
+            {
+              "step": 7,
+              "changed_fraction": 0.761605584642234,
+              "ground_pixels": 2865
+            },
+            {
+              "step": 8,
+              "changed_fraction": 0.783991228070175,
+              "ground_pixels": 2736
+            },
+            {
+              "step": 9,
+              "changed_fraction": 0.781558726673985,
+              "ground_pixels": 2733
+            },
+            {
+              "step": 10,
+              "changed_fraction": 0.80319803198032,
+              "ground_pixels": 2439
+            },
+            {
+              "step": 11,
+              "changed_fraction": 0.771238938053097,
+              "ground_pixels": 2260
+            },
+            {
+              "step": -1,
+              "changed_fraction": 0.746382054992764,
+              "ground_pixels": 2764
+            },
+            {
+              "step": -2,
+              "changed_fraction": 0.773994929373415,
+              "ground_pixels": 2761
+            }
+          ],
+          "what": "the share of annulus pixels that differ between the two candidates at the SAME camera position, so nothing here is camera motion"
+        }
+      },
+      "samples": [
+        {
+          "candidate": "static",
+          "step": 0,
+          "back_m": 240.0,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2656,
+          "lit_pixels": 1538,
+          "coverage": 0.579066265060241,
+          "mean_colour": [
+            0.142165789300738,
+            0.112096181088484,
+            0.0684132700027857
+          ],
+          "luminance": [
+            0.0,
+            0.718465539661899,
+            0.250975292587776,
+            0.00325097529258778,
+            0.0273081924577373,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": 1,
+          "back_m": 218.181818181818,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2622,
+          "lit_pixels": 1698,
+          "coverage": 0.647597254004577,
+          "mean_colour": [
+            0.142462877567651,
+            0.112302827728897,
+            0.0647035737371662
+          ],
+          "luminance": [
+            0.0,
+            0.706124852767962,
+            0.271495877502945,
+            0.00530035335689046,
+            0.0170789163722026,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": 2,
+          "back_m": 196.363636363636,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2588,
+          "lit_pixels": 1957,
+          "coverage": 0.756182380216383,
+          "mean_colour": [
+            0.155975034960113,
+            0.123869071319113,
+            0.063151884292941
+          ],
+          "luminance": [
+            0.0,
+            0.562595809913132,
+            0.378129790495657,
+            0.00970873786407767,
+            0.0189064895247828,
+            0.0250383239652529,
+            0.0056208482370976,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": 3,
+          "back_m": 174.545454545455,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2539,
+          "lit_pixels": 2399,
+          "coverage": 0.94486018117369,
+          "mean_colour": [
+            0.19590679585325,
+            0.157904034293334,
+            0.0739409413892138
+          ],
+          "luminance": [
+            0.0,
+            0.352230095873281,
+            0.457690704460192,
+            0.00166736140058358,
+            0.0862859524802001,
+            0.090454355981659,
+            0.011671529804085,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": 4,
+          "back_m": 152.727272727273,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2665,
+          "lit_pixels": 2665,
+          "coverage": 1.0,
+          "mean_colour": [
+            0.262608253399494,
+            0.215961453796663,
+            0.100580513343131
+          ],
+          "luminance": [
+            0.0,
+            0.257786116322702,
+            0.254784240150094,
+            0.00450281425891182,
+            0.161350844277674,
+            0.25703564727955,
+            0.0645403377110694,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": 5,
+          "back_m": 130.909090909091,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2722,
+          "lit_pixels": 2722,
+          "coverage": 1.0,
+          "mean_colour": [
+            0.261072457813871,
+            0.214661948552559,
+            0.101967991316728
+          ],
+          "luminance": [
+            0.0,
+            0.265980896399706,
+            0.247612049963262,
+            0.000734753857457752,
+            0.186994856722998,
+            0.249816311535636,
+            0.0488611315209405,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": 6,
+          "back_m": 109.090909090909,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2800,
+          "lit_pixels": 2800,
+          "coverage": 1.0,
+          "mean_colour": [
+            0.301366952335728,
+            0.249584042233016,
+            0.113263309700415
+          ],
+          "luminance": [
+            0.0,
+            0.137857142857143,
+            0.213214285714286,
+            0.00321428571428571,
+            0.209285714285714,
+            0.338214285714286,
+            0.0982142857142857,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": 7,
+          "back_m": 87.2727272727273,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2865,
+          "lit_pixels": 2865,
+          "coverage": 1.0,
+          "mean_colour": [
+            0.292383401993058,
+            0.241791747627458,
+            0.111659998017612
+          ],
+          "luminance": [
+            0.0,
+            0.179406631762653,
+            0.206631762652705,
+            0.00383944153577661,
+            0.204188481675393,
+            0.316928446771379,
+            0.0890052356020942,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": 8,
+          "back_m": 65.4545454545455,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2736,
+          "lit_pixels": 2736,
+          "coverage": 1.0,
+          "mean_colour": [
+            0.289009293394261,
+            0.238956263011093,
+            0.111040882345518
+          ],
+          "luminance": [
+            0.0,
+            0.182017543859649,
+            0.230263157894737,
+            0.0043859649122807,
+            0.188961988304094,
+            0.297880116959064,
+            0.0964912280701754,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": 9,
+          "back_m": 43.6363636363636,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2733,
+          "lit_pixels": 2733,
+          "coverage": 1.0,
+          "mean_colour": [
+            0.276037972400008,
+            0.227570084258614,
+            0.105972755069245
+          ],
+          "luminance": [
+            0.0,
+            0.22905232345408,
+            0.234174899377973,
+            0.00439077936333699,
+            0.155140870837907,
+            0.292718624222466,
+            0.0845225027442371,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": 10,
+          "back_m": 21.8181818181818,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2439,
+          "lit_pixels": 2439,
+          "coverage": 1.0,
+          "mean_colour": [
+            0.260814063874191,
+            0.214382307830772,
+            0.101346585563567
+          ],
+          "luminance": [
+            0.0,
+            0.288642886428864,
+            0.227142271422714,
+            0.002870028700287,
+            0.161131611316113,
+            0.259122591225912,
+            0.0610906109061091,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": 11,
+          "back_m": 0.0,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2260,
+          "lit_pixels": 2260,
+          "coverage": 1.0,
+          "mean_colour": [
+            0.278781889751554,
+            0.229888954244356,
+            0.106928686812454
+          ],
+          "luminance": [
+            0.0,
+            0.270796460176991,
+            0.167256637168142,
+            0.00265486725663717,
+            0.16858407079646,
+            0.296017699115044,
+            0.0946902654867257,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": -1,
+          "back_m": 120.0,
+          "lateral_m": 0.0,
+          "parallax": true,
+          "ground_pixels": 2764,
+          "lit_pixels": 2764,
+          "coverage": 1.0,
+          "mean_colour": [
+            0.290624562357101,
+            0.240206018122595,
+            0.109252011713433
+          ],
+          "luminance": [
+            0.0,
+            0.194645441389291,
+            0.201881331403763,
+            0.00289435600578871,
+            0.173299565846599,
+            0.331765557163531,
+            0.0955137481910275,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "static",
+          "step": -2,
+          "back_m": 120.0,
+          "lateral_m": 4.0,
+          "parallax": true,
+          "ground_pixels": 2761,
+          "lit_pixels": 2758,
+          "coverage": 0.998913437160449,
+          "mean_colour": [
+            0.276941239363781,
+            0.228432091243398,
+            0.105592291540128
+          ],
+          "luminance": [
+            0.0,
+            0.227338651196519,
+            0.224075416968818,
+            0.00108774474256708,
+            0.185279187817259,
+            0.290065264684554,
+            0.0721537345902828,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": 0,
+          "back_m": 240.0,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2656,
+          "lit_pixels": 2656,
+          "coverage": 1.0,
+          "mean_colour": [
+            0.26438844137466,
+            0.217292707646266,
+            0.102095148805248
+          ],
+          "luminance": [
+            0.0,
+            0.257906626506024,
+            0.242846385542169,
+            0.00225903614457831,
+            0.1875,
+            0.242093373493976,
+            0.067394578313253,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": 1,
+          "back_m": 218.181818181818,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2622,
+          "lit_pixels": 2610,
+          "coverage": 0.995423340961098,
+          "mean_colour": [
+            0.252745854980187,
+            0.207330785466222,
+            0.0967771048518433
+          ],
+          "luminance": [
+            0.0,
+            0.361302681992337,
+            0.194252873563218,
+            0.00421455938697318,
+            0.122222222222222,
+            0.237931034482759,
+            0.0800766283524904,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": 2,
+          "back_m": 196.363636363636,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2588,
+          "lit_pixels": 2534,
+          "coverage": 0.979134466769706,
+          "mean_colour": [
+            0.233053226703109,
+            0.190189893971232,
+            0.0907176158301997
+          ],
+          "luminance": [
+            0.0,
+            0.39344909234412,
+            0.241910023677979,
+            0.0138121546961326,
+            0.142067876874507,
+            0.166140489344909,
+            0.042620363062352,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": 3,
+          "back_m": 174.545454545455,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2539,
+          "lit_pixels": 2367,
+          "coverage": 0.932256794013391,
+          "mean_colour": [
+            0.212178902909078,
+            0.172111637805351,
+            0.0834580074097091
+          ],
+          "luminance": [
+            0.0,
+            0.514575411913815,
+            0.201098436839882,
+            0.0147866497676384,
+            0.0895648500211238,
+            0.133079847908745,
+            0.0468948035487959,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": 4,
+          "back_m": 152.727272727273,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2665,
+          "lit_pixels": 2419,
+          "coverage": 0.907692307692308,
+          "mean_colour": [
+            0.204471144426357,
+            0.165218170952482,
+            0.0802016734996824
+          ],
+          "luminance": [
+            0.0,
+            0.537412153782555,
+            0.157089706490285,
+            0.0863993385696569,
+            0.0781314592806945,
+            0.10334849111203,
+            0.0376188507647788,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": 5,
+          "back_m": 130.909090909091,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2722,
+          "lit_pixels": 2329,
+          "coverage": 0.855620867009552,
+          "mean_colour": [
+            0.187056639215346,
+            0.150238682331574,
+            0.0758753669311838
+          ],
+          "luminance": [
+            0.0,
+            0.601975096607986,
+            0.163589523400601,
+            0.077286389008158,
+            0.0678402747960498,
+            0.068699012451696,
+            0.0206097037355088,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": 6,
+          "back_m": 109.090909090909,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2800,
+          "lit_pixels": 2437,
+          "coverage": 0.870357142857143,
+          "mean_colour": [
+            0.180322966812378,
+            0.144288625639997,
+            0.07239212624799
+          ],
+          "luminance": [
+            0.0,
+            0.640541649569142,
+            0.151005334427575,
+            0.0865818629462454,
+            0.048420188756668,
+            0.0590890439064423,
+            0.014361920393927,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": 7,
+          "back_m": 87.2727272727273,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2865,
+          "lit_pixels": 2474,
+          "coverage": 0.863525305410122,
+          "mean_colour": [
+            0.184014144221813,
+            0.146933602863319,
+            0.0744004326909419
+          ],
+          "luminance": [
+            0.0,
+            0.620452708164915,
+            0.132983023443816,
+            0.13055780113177,
+            0.0379951495553759,
+            0.068714632174616,
+            0.00929668552950687,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": 8,
+          "back_m": 65.4545454545455,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2736,
+          "lit_pixels": 2361,
+          "coverage": 0.862938596491228,
+          "mean_colour": [
+            0.170158877148309,
+            0.135213562747726,
+            0.0685253020775162
+          ],
+          "luminance": [
+            0.0,
+            0.684455739093604,
+            0.128335451080051,
+            0.132147395171537,
+            0.0321897501058873,
+            0.0169419737399407,
+            0.00592969080897925,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": 9,
+          "back_m": 43.6363636363636,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2733,
+          "lit_pixels": 2469,
+          "coverage": 0.903402854006586,
+          "mean_colour": [
+            0.168791052948347,
+            0.133816185748712,
+            0.0671304580444337
+          ],
+          "luminance": [
+            0.0,
+            0.693803159173755,
+            0.10530579181855,
+            0.161603888213852,
+            0.0243013365735115,
+            0.0137707573916565,
+            0.00121506682867558,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": 10,
+          "back_m": 21.8181818181818,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2439,
+          "lit_pixels": 2398,
+          "coverage": 0.983189831898319,
+          "mean_colour": [
+            0.243336772435874,
+            0.19439239133836,
+            0.0810037796899018
+          ],
+          "luminance": [
+            0.0,
+            0.229357798165138,
+            0.455379482902419,
+            0.0521267723102585,
+            0.0,
+            0.149708090075063,
+            0.113427856547123,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": 11,
+          "back_m": 0.0,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2260,
+          "lit_pixels": 2220,
+          "coverage": 0.982300884955752,
+          "mean_colour": [
+            0.233119595013894,
+            0.185721609486384,
+            0.0762992423245901
+          ],
+          "luminance": [
+            0.0,
+            0.231531531531532,
+            0.495045045045045,
+            0.0436936936936937,
+            0.0,
+            0.128828828828829,
+            0.100900900900901,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": -1,
+          "back_m": 120.0,
+          "lateral_m": 0.0,
+          "parallax": true,
+          "ground_pixels": 2764,
+          "lit_pixels": 2764,
+          "coverage": 1.0,
+          "mean_colour": [
+            0.155412732969899,
+            0.124607704679567,
+            0.080877388684637
+          ],
+          "luminance": [
+            0.0,
+            0.606729377713459,
+            0.234804630969609,
+            0.12698986975398,
+            0.0314761215629522,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "rebuilt",
+          "step": -2,
+          "back_m": 120.0,
+          "lateral_m": 4.0,
+          "parallax": true,
+          "ground_pixels": 2761,
+          "lit_pixels": 2761,
+          "coverage": 1.0,
+          "mean_colour": [
+            0.157567239121245,
+            0.126448931627863,
+            0.0827804661596417
+          ],
+          "luminance": [
+            0.0,
+            0.537124230351322,
+            0.321984788120246,
+            0.12278160086925,
+            0.0181093806591815,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": 0,
+          "back_m": 240.0,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2656,
+          "lit_pixels": 2243,
+          "coverage": 0.844503012048193,
+          "mean_colour": [
+            0.375040438243761,
+            0.322504009950177,
+            0.160091969028042
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": 1,
+          "back_m": 218.181818181818,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2622,
+          "lit_pixels": 1976,
+          "coverage": 0.753623188405797,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": 2,
+          "back_m": 196.363636363636,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2588,
+          "lit_pixels": 1960,
+          "coverage": 0.757341576506955,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": 3,
+          "back_m": 174.545454545455,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2539,
+          "lit_pixels": 1915,
+          "coverage": 0.754233950374163,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": 4,
+          "back_m": 152.727272727273,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2665,
+          "lit_pixels": 1992,
+          "coverage": 0.747467166979362,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": 5,
+          "back_m": 130.909090909091,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2722,
+          "lit_pixels": 2106,
+          "coverage": 0.773695811903013,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": 6,
+          "back_m": 109.090909090909,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2800,
+          "lit_pixels": 2166,
+          "coverage": 0.773571428571429,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": 7,
+          "back_m": 87.2727272727273,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2865,
+          "lit_pixels": 2164,
+          "coverage": 0.755322862129145,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": 8,
+          "back_m": 65.4545454545455,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2736,
+          "lit_pixels": 2038,
+          "coverage": 0.744883040935672,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": 9,
+          "back_m": 43.6363636363636,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2733,
+          "lit_pixels": 2033,
+          "coverage": 0.743871203805342,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": 10,
+          "back_m": 21.8181818181818,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2439,
+          "lit_pixels": 1867,
+          "coverage": 0.765477654776548,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": 11,
+          "back_m": 0.0,
+          "lateral_m": 0.0,
+          "parallax": false,
+          "ground_pixels": 2260,
+          "lit_pixels": 1719,
+          "coverage": 0.760619469026549,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": -1,
+          "back_m": 120.0,
+          "lateral_m": 0.0,
+          "parallax": true,
+          "ground_pixels": 2764,
+          "lit_pixels": 2115,
+          "coverage": 0.765195369030391,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        },
+        {
+          "candidate": "tint",
+          "step": -2,
+          "back_m": 120.0,
+          "lateral_m": 4.0,
+          "parallax": true,
+          "ground_pixels": 2761,
+          "lit_pixels": 2102,
+          "coverage": 0.761318362911988,
+          "mean_colour": [
+            0.411764711141586,
+            0.341176480054855,
+            0.152941182255745
+          ],
+          "luminance": [
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            1.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0,
+            0.0
+          ]
+        }
+      ],
+      "not_covered": "one place, one day, one dolly axis, one k. A lateral pair is not a pan: the camera translates and does not rotate, so nothing here says what happens when a viewer turns."
+    }
+  ]
+}

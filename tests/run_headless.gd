@@ -99,6 +99,7 @@ func _initialize() -> void:
     test_the_seam_metric_fails_the_bad_frame()
     test_plants_stand_on_the_surface_that_is_drawn()
     test_the_shading_is_exaggerated_and_the_geometry_is_not()
+    test_the_motion_metric_does_not_yet_detect_popping()
     test_a_per_family_reference_holds_only_that_family()
     test_a_family_is_scored_in_its_own_annulus_or_not_at_all()
     test_the_seam_measurement_ranks_the_null_baseline_worst()
@@ -3796,6 +3797,78 @@ func test_plants_stand_on_the_surface_that_is_drawn() -> void:
             % [String.num(worst_at_node, 3), String.num(total / float(maxi(n, 1)), 1)]
             + "between them (worst %s)" % String.num(worst, 1))
     v.queue_free()
+
+
+func test_the_motion_metric_does_not_yet_detect_popping() -> void:
+    """ROADMAP ITEM 2, AND A NEGATIVE RESULT ABOUT IT.
+
+    The item asks for "a scripted dolly through the seam scoring worst
+    frame-pair delta in the annulus". Built, run, and it does not do the job it
+    was wanted for. `rebuilt` re-scatters around the camera at every step --
+    which is what solving the horizon from a per-place budget does, and the
+    defect backlog 198 buys -- and the metric ranks it as SMOOTHER than the
+    static scene it is supposed to be worse than. The tint, which is painted on
+    the ground and cannot pop at all, scores worst of the three.
+
+    Three measured reasons: coverage SATURATES (static sits at 1.000 for most
+    of the dolly, so the median adjacent delta is exactly zero and there is no
+    ratio); the ratio is UNSTABLE near zero (a candidate that barely varies
+    gets a huge score from one ordinary step); and an aggregate over thousands
+    of pixels is BLIND to a local event by construction, which is what a pop is.
+
+    This asserts the finding so it cannot rot: if a future metric does separate
+    them, this fails and the note beside it is what is stale, not the metric.
+    Until then the roadmap item is built and its verdict is that it would NOT
+    have gated the inversion it exists to gate.
+    """
+    var f := FileAccess.open("res://measurements/scatter_motion.json", FileAccess.READ)
+    if f == null:
+        check(false, "no measurements/scatter_motion.json -- run tools/measure_motion.sh")
+        return
+    var parsed = JSON.parse_string(f.get_as_text())
+    if typeof(parsed) != TYPE_DICTIONARY:
+        check(false, "scatter_motion.json is not an object")
+        return
+    var runs: Array = (parsed as Dictionary).get("runs", [])
+    check(runs.size() > 0, "scatter_motion.json carries no runs")
+    for run_v in runs:
+        var run: Dictionary = run_v
+        var sc: Dictionary = run.get("scores", {})
+        for name in ["static", "rebuilt", "tint"]:
+            check(sc.has(name), "the run does not score '%s'. All three are needed: the "
+                    % name + "control that pops, the scene that ships, and the one that "
+                    + "cannot pop and calibrates the other two.")
+            if not sc.has(name):
+                continue
+            var one: Dictionary = sc[name]
+            check(one.has("parallax"), "%s has no lateral-step pair, which is the other half "
+                    % name + "of the roadmap item")
+        var reb: Dictionary = (sc.get("rebuilt", {}) as Dictionary).get("colour", {})
+        var sta: Dictionary = (sc.get("static", {}) as Dictionary).get("colour", {})
+        if reb.get("pop_ratio", null) == null or sta.get("pop_ratio", null) == null:
+            continue
+        var r := float(reb["pop_ratio"])
+        var t := float(sta["pop_ratio"])
+        check(r <= t * 1.5, "the dolly metric now ranks the re-scattering control at %sx "
+                % String.num(r, 2)
+                + "against %sx for the static scene -- it SEPARATES them, which it did not "
+                        % String.num(t, 2)
+                + "when this was written (5.98x against 5.13x, the wrong way round). If that "
+                + "is real, the metric works and this test and the note beside it are what "
+                + "need retiring.")
+        # And the same-camera comparison: a difference that is large but STEADY
+        # is two different scenes, not one flickering. 77-85% of annulus pixels
+        # differ between static and rebuilt at every position, at a ratio of
+        # 1.1 -- steady, so it is not churn either.
+        var cross: Dictionary = (run.get("population_change", {}) as Dictionary).get(
+                "static_vs_rebuilt", {})
+        if bool(cross.get("ok", false)) and cross.get("pop_ratio", null) != null:
+            check(float(cross["pop_ratio"]) < 2.0,
+                    "the same-camera difference between static and rebuilt now spikes "
+                    + "(%sx worst over median). That IS churn rather than two steady scenes, "
+                            % String.num(float(cross["pop_ratio"]), 2)
+                    + "and it would be the popping signal this harness could not find.")
+    print("motion: the dolly metric is built and does not separate the popping control")
 
 
 func test_a_per_family_reference_holds_only_that_family() -> void:
