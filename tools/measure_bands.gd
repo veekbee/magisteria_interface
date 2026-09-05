@@ -75,7 +75,6 @@ var day := 22
 var out_path := "measurements/scatter_bands.json"
 var ceiling := 1500000
 var camera_mode := "eye"
-var exaggeration := 12.0
 
 var _wall := PackedFloat64Array()
 var _drawn_at_start := 0
@@ -97,7 +96,6 @@ func _initialize() -> void:
     day = int(_arg("--day", str(day)))
     ceiling = int(_arg("--ceiling", str(ceiling)))
     camera_mode = _arg("--camera", camera_mode)
-    exaggeration = float(_arg("--exaggeration", str(exaggeration)))
     var a := _arg("--at", "")
     if a != "":
         var p := a.split(",")
@@ -109,9 +107,6 @@ func _initialize() -> void:
     DisplayServer.window_set_vsync_mode(DisplayServer.VSYNC_DISABLED)
     Engine.max_fps = 0
     scene = (load("res://scenes/main.tscn") as PackedScene).instantiate()
-    # Set before the terrain is built, because every height in the mesh, both
-    # drapes and every plant carries it.
-    scene.get_node("TerrainView").exaggeration = exaggeration
     get_root().add_child(scene)
 
 
@@ -199,7 +194,7 @@ func _aim_camera() -> void:
     # point 1.7 m above the FIELD is routinely underneath the drawn SURFACE,
     # which back-face culling then renders as an empty frame.
     # ABOVE THE DRAWN SURFACE, not above the field. The mesh triangulates
-    # samples 4 km apart and the two differ by a mean of 426 m in mesh space, so
+    # samples 4 km apart and the two differ by a mean of 36 m, so
     # an eye placed on the field is underground -- which renders as an empty
     # frame or as a view out from under a slab with no near ground in it. Every
     # coverage row this tool took before `drawn_surface_y` existed was taken

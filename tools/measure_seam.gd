@@ -2,7 +2,7 @@ extends SceneTree
 
 ## Grade a far-field candidate against the instances it stands in for.
 ##
-##     bash tools/measure_seam.sh --seam 120 --exaggeration 12
+##     bash tools/measure_seam.sh --seam 120
 ##
 ## THE QUESTION. Beyond a few hundred metres a plant is a fraction of a pixel
 ## and there are tens of millions of it, so the far field has to become a
@@ -64,7 +64,6 @@ var stage := SETTLE
 var frames := 0
 
 var seam_m := 120.0
-var exaggeration := 12.0
 var window_name := ""
 var row_name := "band.pft.biomass"
 var day := 22
@@ -97,7 +96,6 @@ func _initialize() -> void:
         quit(2)
         return
     seam_m = float(_arg("--seam", str(seam_m)))
-    exaggeration = float(_arg("--exaggeration", str(exaggeration)))
     window_name = _arg("--window", "")
     row_name = _arg("--row", row_name)
     day = int(_arg("--day", str(day)))
@@ -118,10 +116,6 @@ func _initialize() -> void:
     DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path("res://") + shots_dir)
 
     scene = (load("res://scenes/main.tscn") as PackedScene).instantiate()
-    # The exaggeration is a property of the view and every distance measured
-    # here is conditional on it, so it is set BEFORE the terrain is built and
-    # travels in the artefact.
-    scene.get_node("TerrainView").exaggeration = exaggeration
     get_root().add_child(scene)
     bands = SeamScore.bands(seam_m)
 
@@ -210,7 +204,7 @@ func _aim_camera() -> void:
     # all, which the first runs of this harness reported as empty range bands.
     var surface: float = view.terrain.drawn_surface_y(at_world, view.heightfield)
     var ground: float = view.scatter_centre_mesh.y if is_nan(surface) else surface
-    var eye := Vector3(view.scatter_centre_mesh.x, ground + EYE_HEIGHT_M * exaggeration,
+    var eye := Vector3(view.scatter_centre_mesh.x, ground + EYE_HEIGHT_M * view.terrain.exaggeration,
             view.scatter_centre_mesh.z)
     # The far plane comes down with the near one. Left at the rig's basin scale
     # against a near of a metre or two, this renderer draws nothing at all.
@@ -251,7 +245,7 @@ func _take_mask() -> void:
     var n := SeamScore.mask_pixels(img)
     ground_px.append(n)
     var b: Dictionary = bands[mask_at]
-    img.save_png("res://%s/mask_x%d_%03d_%03d.png" % [shots_dir, int(exaggeration),
+    img.save_png("res://%s/mask_%03d_%03d.png" % [shots_dir,
             int(float(b["lo_m"])), int(float(b["hi_m"]))])
     var su := FrameProbe.summarise(img)
     print("mask   %4.0f-%4.0f m: %8d px in band | frame %d neutral %d near-black %d coloured"
@@ -336,10 +330,7 @@ func _run_candidate(delta: float) -> void:
 func _apply_candidate(job: Dictionary) -> void:
     var kind := str(job["kind"])
     var cut: float = float(job["cut_m"])
-    # HOLDING the exaggeration: this run chose one and both the tint candidates
-    # and the instance ones have to be drawn at it, or the comparison is between
-    # two different worlds rather than between two candidates.
-    view.set_naturalistic(kind == "tint", true)
+    view.set_naturalistic(kind == "tint")
     if kind == "tint":
         view.set_range_curve(bool(job.get("matched", false)),
                 float(curve["k0"]), float(curve["r0"]))
@@ -396,7 +387,7 @@ func _hide_everything_but_terrain() -> void:
 
 func _capture(job: Dictionary, what: String) -> Image:
     var img := get_root().get_texture().get_image()
-    img.save_png("res://%s/x%d_%s_%s_%s_d%d_%s.png" % [shots_dir, int(exaggeration),
+    img.save_png("res://%s/%s_%s_%s_d%d_%s.png" % [shots_dir,
             window_name, str(job["name"]), row_name.replace(".", "_"), day, what])
     return img
 
@@ -540,7 +531,8 @@ func _write() -> void:
                 + "a surface that falls away, and every candidate ties at zero error because "
                 + "none of them was scored on anything")
                 % [float(bands[i]["lo_m"]), float(bands[i]["hi_m"])]),
-        "vertical_exaggeration": exaggeration,
+        "vertical_exaggeration": view.terrain.exaggeration,
+        "shading_exaggeration": view.terrain.shading_exaggeration,
         "scene": {
             "window": window_name, "row": row_name, "day": day,
             "at_world_epsg5070": [at_world.x, at_world.y],
@@ -573,7 +565,11 @@ func _write() -> void:
         "measured_at_commit": _git_head(),
         "measured_at_commit_means": ("the HEAD the run was taken against; the commit that "
                 + "lands this artefact is its child"),
-        "vertical_exaggeration": exaggeration,
+        # 1:1, and stated in every artefact because the rule that a measurement
+        # names the exaggeration its distances were taken at outlived the
+        # exaggeration itself -- which is the point of the rule.
+        "vertical_exaggeration": view.terrain.exaggeration,
+        "shading_exaggeration": view.terrain.shading_exaggeration,
         "host": {
             "gpu": RenderingServer.get_video_adapter_name(),
             "rendering_method": RenderingServer.get_current_rendering_method(),
@@ -591,7 +587,7 @@ func _write() -> void:
             "curve": ("the range-matched candidate's attenuation is FITTED to the oracle's own "
                     + "binned brightness in this run, not chosen"),
             "camera": ("placed on TerrainMesh.drawn_surface_y, not on the heightfield. The two "
-                    + "differ by a mean of 426 m in mesh space and an eye on the field is "
+                    + "differ by a mean of 36 m and an eye on the field is "
                     + "underground."),
         },
         "runs": [run],

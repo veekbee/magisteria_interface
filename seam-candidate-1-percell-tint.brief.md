@@ -25,10 +25,12 @@ individualizes — nothing below cell scale is being invented that the scatter d
 - **Range darkening.** Apparent stand colour falls with range — measured at 3eeb69c:
   (0.171, 0.340, 0.128) for the 100 m cut down to (0.085, 0.210, 0.061) for the fade-to-300 m.
   A tint that paints the near colour everywhere is visibly brighter than the stand it replaces.
-  Fit a range-dependent darkening from the four measured rows in `scatter_bands.json`; the target
-  is a function of range, not a constant.
+  The target is a function of range, not a constant. Those rows were taken with 12× plants and
+  are method precedent under the addendum's 1:1 decision — fit the darkening from the harness's
+  own 1:1 re-take, not from them.
 - **Coverage, not opacity.** Instance bands cover 32–58% of screen with ground showing through;
-  the 200→300 m band is worth 158,762 px of a 1,024,000 px frame at the pinned camera. Prefer
+  the 200→300 m band is worth 158,762 px of a 1,024,000 px frame at the pinned camera. (Both
+  figures are 12×-era illustrations of the shape; the 1:1 re-take supplies the targets.) Prefer
   reproducing coverage with a noise/dither mask over the tint rather than alpha blending — alpha
   over hillshade shifts colour, a mask reproduces "some pixels plant, some pixels ground," which
   is what the near field actually is. If you find a better mechanism, take it; the requirement is
@@ -71,8 +73,10 @@ Frame cost of the tint is whatever the harness measures. Do not budget it from
    23.8 M implied instances between the two windows). One place/day cannot show sufficiency.
 2. **Eye-level cameras must bring the far plane down.** `near` 0.1 against the rig's 5,888,000 far
    draws nothing under `gl_compatibility`. Inherit `measure_bands`' placement code.
-3. **Everything is conditional on the 12× vertical exaggeration.** Record any tuned distance as
-   conditional on the factor, so a change to it stales them together rather than silently.
+3. **The 12× is gone and its numbers went with it** (addendum). Do not tune anything against the
+   3eeb69c screen-space rows; they are precedent for method, and the 1:1 re-take is the data.
+   At true scale a shrub is sub-pixel past ~85 m and a tree past ~780 m — the bands file's own
+   statement — so expect seam distances well inside the old 150–300 m sketch.
 4. **The near field has no ground until the tile pyramid.** Ground colour through coverage gaps is
    pre-pyramid. Take the measurements anyway; when the pyramid lands, flag the absolute rows for
    re-take rather than rescaling them.
@@ -92,3 +96,44 @@ point of choosing the cheapest candidate first is that the harness gets to say n
 range-matched tint beats both baselines on colour and coverage in the annulus at every pinned
 view — with the margins quoted, not asserted. Findings that come out of looking at the PNGs get
 pinned by blindable asserts in `tests/run_headless.gd`, per the `visual_audit.md` pattern.
+
+---
+
+## Addendum: the scale is 1:1, everywhere — superseding the per-view proposal
+
+**Decision (owner).** Vertical exaggeration is removed from the design: terrain and plants render
+at 1:1 in every view. This supersedes the per-view proposal (naturalistic 1×, data view 12×) that
+implementation raised — this is the "say otherwise." Recorded as an explicit reversal, not a
+silent edit: the per-view split was proposed, endorsed by design, and then superseded by this.
+
+**Why it holds up.** The trilemma dissolves rather than being resolved: with no exaggeration
+anywhere there is no plant-scaling question, no per-view setting, no rebuild-on-toggle, no
+shader-Y fallback, and no standing "conditional on the 12×" hazard on any tuned distance.
+Cover = count × crown area holds everywhere by construction, which is the identity every metric
+in this brief assumes. Time compression is untouched — playback rate and spatial scale are
+independent axes.
+
+**The one cost, and its mitigation.** The 12× existed for basin-scale relief legibility: 1×
+Colorado relief hillshades weakly from a map camera. Recommended (not required): exaggerate the
+*shading*, not the space — steepen the gradient at normal-computation time in the shader, a
+lighting parameter rather than a mesh parameter. Geometry, distances, plant sizes and the cover
+identity stay true while data view keeps legible relief. The hillshade-direction assert applies
+to it unchanged; tune the factor by eye against the old 12× look and record it as a shading
+parameter, staling nothing geometric if it changes.
+
+**Consequence 1 — the staleness event is unconditional.** Every screen-space row at 3eeb69c —
+`scatter_bands.json`'s coverage fractions, colour-vs-range table, marginals, and the pixel-size
+table's drawn columns — was taken with 12× plants. They are method precedent now, not targets,
+in every view. The harness re-takes all targets at 1:1 as its first act. The carried figures are
+the bands file's own true-scale statements: a shrub is sub-pixel past ~85 m, a tree past ~780 m.
+Expect the small-family instance band to contract hard and the tint to govern most of the field
+— each scale decision so far has strengthened this candidate, and this one most of all.
+
+**Consequence 2 — ordering.** The 1:1 scale change lands first (with the shading-exaggeration
+recommendation taken or explicitly declined), then `measure_seam` pins its targets at 1:1, then
+the tint is graded. A harness run against 12× frames would measure a render that no longer
+exists.
+
+**Parked, mostly dissolved.** Whether data view draws the scatter at all is now purely a
+clutter/legibility question — there is no separate exaggerated-plant path left to retire. Still
+not decided here; nothing in this brief depends on it.

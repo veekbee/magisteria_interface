@@ -12,8 +12,6 @@
 #   --ceiling N     instances the builder may place, so the SCHEDULE binds and
 #                   not the builder (default: 1500000; the shipped app uses 120000)
 #   --size WxH      window size           (default: 1280x800)
-#   --exaggeration N  vertical exaggeration to build at. Naturalistic view is
-#                   1x and data view 12x; every distance here is conditional on it
 #   --camera NAME   eye (default) or overview; eye stands in the scatter, overview
 #                   is the app's own focus_on_scatter, which frames it from above
 #   --pitch DEG     how far below level the eye camera looks (default: 10)

@@ -268,9 +268,9 @@ scatter** — 1.7 m real, pitched 10° down, looking north — on Apple M5 / `gl
 
 † ceiling-bound rather than schedule-bound: measurements of the cap, not of the schedule.
 
-**Re-taken at 1×**, which is what naturalistic view now uses, from an eye placed on the *drawn*
-surface. Both of those changed since the rows this table replaces: the earlier ones were taken at
-12×, where plants are 12:1 spikes, from a camera that was underground.
+**Re-taken at 1:1**, which is the only scale this project draws at now, from an eye placed on the
+*drawn* surface. Both of those changed since the rows this table replaces: the earlier ones were
+taken at 12×, where plants are 12:1 spikes, from a camera that was underground.
 
 ### Coverage here is a lower bound, and that is why it is not monotonic
 
@@ -384,59 +384,42 @@ arguable, and this is the arithmetic that decides.
 today, a **constant** tint, and a **range-matched** tint whose attenuation is fitted to the
 oracle's own binned brightness — and scores each in an annulus at 0.7–1.5× the seam.
 
-### Vertical exaggeration is per view now, and these runs bracket the decision
+### The scale is 1:1, and that is what these runs are of
 
-Naturalistic view draws at **1×** and data view at **12×** — the design side ruled it after this
-harness photographed what 12× does to a stand. `TerrainView.set_naturalistic` rebuilds every piece
-of geometry that carries the factor in its vertex positions, and the cost of a toggle is:
+Vertical exaggeration is out of this project's geometry: terrain, plants and the distances between
+them are true scale in every view. It was 12×, then briefly per view, and both were superseded —
+**this harness is what removed it.** At 12× the oracle is not a stand: the factor was applied to
+plant *height* and not to the horizontal distance to a plant, so every plant is a 12:1 spike and
+1.65 M of them seen from inside render as a radial starburst. The numbers looked fine; the picture
+did not, and it is at `shots/seam/` in the runs that produced it.
 
-| | |
-|---|---:|
-| terrain mesh rebuild | 252 ms |
-| flowline drape | 14 ms |
-| flow colours and contours | 14 ms |
-| **view switch total** | **280 ms** |
-| per-cell tint, on entering naturalistic | 267 ms |
+At 1:1 `cover = count × crown area` — the identity every metric here is derived through — holds by
+construction, and no tuned distance carries a factor it is conditional on.
 
-**The mesh is rebuilt rather than Y-scaled in a vertex shader**, which was the offered fallback. A
-shader scale would leave `TerrainMesh.drawn_surface_y` — which the scatter, both drapes and the
-eye-level camera all stand on — computing the *old* surface, and everything on the ground would
-float off it again. That is the defect this session spent its length on; one CPU-side surface is
-worth 252 ms.
+**The cost is paid in the shading, not in the space.** Relief is what the 12× was for, and true
+normals over 4 km of relief across 1,000 km of basin hillshade to almost nothing. So the gradient
+is steepened where the *light* reads it and nowhere else — `TerrainMesh.shading_exaggeration`, a
+lighting parameter that moves no vertex. Tuned against what the old geometry produced rather than
+by eye, over the bare terrain at the overview camera:
 
-**The drapes are rescaled rather than re-draped**, which is what took the switch from 1.63 s to
-280 ms. A draped Y is `drawn_surface_y × e + lift`, exactly linear in the exaggeration, so moving
-between views is arithmetic on vertices already computed. Held to the thing it replaces:
-`test_a_rescaled_drape_matches_a_rebuilt_one` compares a rescaled drape against a rebuilt one and
-finds **0.24 mm over 233,362 vertices**. The lift does not scale — it is a z-fighting nudge in
-absolute metres against a depth buffer that does not shrink with the terrain.
+| shading | brightness levels | spread |
+|---:|---:|---:|
+| 1× (true normals) | **13** | **0.016** |
+| 6× | 50 | 0.098 |
+| **12×** | **74** | **0.188** |
+| 18× | 90 | 0.266 |
 
-### First, which of these runs is a measurement of a stand
+against **68 levels and 0.188** for the old 12× *geometry*. The first row is the cost the decision
+was accepting, measured. And from the ortho map camera the whole change is **byte-identical** to
+the 12× render — an orthographic top-down projection does not project Y at all, so only the normals
+reach the frame, and those are unchanged. `test_the_shading_is_exaggerated_and_the_geometry_is_not`
+holds the two apart: vertices within 0.006 m of the field they are sampled from, normals turning up
+to 52° away from the ones those heights would give.
 
-**Only the 1× one.** The 12× rows below are faithful measurements of what the application draws at
-its shipped exaggeration, and what it draws is not vegetation: `VegetationScatter` scales plant
-HEIGHT by the exaggeration and leaves crown alone, so at 12× every plant is a 12:1 spike, and from
-an eye inside the scatter 1.65 million of them render as a radial starburst. The picture is in
-`shots/seam/x12_..._oracle_..._insitu.png` and it settles the question; no number in this file
-would have.
+### The result: the tint is sufficient on both conserved quantities
 
-At 1× the same view is a stand — pillar-form succulents, conifer-form trees, ground between them.
-
-**The exaggeration cannot be applied to vegetation consistently, and that is a trilemma rather than
-a bug.** Scale height only and the plants are the wrong shape. Scale uniformly and each plant covers
-144× the ground it should, which breaks the identity `cover = count × crown area` that the whole
-derivation rests on. Scale neither and the plants are twelve times too short against the relief,
-which is what M5 was avoiding. There is no free option here; the resolution this measurement points
-to is that **naturalistic view should not use the map view's exaggeration at all**, and that is a
-ruling this repo has not made.
-
-So: read the 1× row as the sufficiency result. Read the 12× rows as a metric check — the metric
-ranks the null baseline worst there too — and not as a statement about a stand.
-
-### The result: the tint is sufficient on both conserved quantities, at 1×
-
-Seam 120 m, annulus 84–180 m, eye level on the drawn surface. **At 1×, where the oracle is a
-stand** — two places, two windows, three day-window pairs:
+Seam 120 m, annulus 84–180 m, eye level on the drawn surface, two places and three day-window
+pairs:
 
 | window | day | place | oracle cover | tint cover | tint ΔE | null ΔE | margin |
 |---|---:|---|---:|---:|---:|---:|---:|
@@ -446,20 +429,8 @@ stand** — two places, two windows, three day-window pairs:
 | deepest_winter | 22 | B | 1.000 | 1.000 | 0.0030 | 0.1588 | **53.4×** |
 
 **The tint sits 0.003 to 0.022 from the stand in RGB and matches its coverage exactly, everywhere
-it was run.** The null baseline sits 0.147 to 0.187 away. The margin runs from 6.6× to 53×.
-
-The same matrix at 12×, which is a measurement of the spike scene rather than of a stand, and is
-here as a metric check — the ranking survives, the absolute errors do not mean the same thing:
-
-| window | day | place | tint ΔE | null ΔE | margin |
-|---|---:|---|---:|---:|---:|
-| deepest_winter | 22 | A | 0.0198 | 0.1167 | 5.9× |
-| deepest_winter | 85 | A | 0.0198 | 0.1166 | 5.9× |
-| largest_fire | 0 | A | 0.0497 | 0.1431 | 2.9× |
-| deepest_winter | 22 | B | 0.1038 | 0.2470 | 2.4× |
-
-Place B is the tell: **0.003 at 1× and 0.104 at 12×**, the best row and the worst row of the two
-tables and the same place, day and window. What moved is the subject, not the candidate.
+it was run.** The null baseline — what ships today — sits 0.147 to 0.187 away and reaches 0.02 to
+0.09 of the coverage. The margin runs from 6.6× to 53×.
 
 Across range bands at place A it tracks the oracle the whole way out:
 
@@ -504,15 +475,17 @@ the per-cell texture costs **247 ms**, per day-step and not per frame.
 
 **Plants stood on the wrong surface, since M5.** `TerrainMesh.build` samples the heightfield every
 `stride` texels — 4 km apart on the 1,000 m overview — and triangulates those samples, and the
-scatter placed every instance on the *field*. The two differ by a **mean of 426 m in mesh space and
-up to 7,722 m**; at 12× that is 35 and 644 true metres of float or bury. Invisible from an overview
-camera 1.5 million metres wide, and the whole picture at eye level: the first seam run photographed
-1.65 million instances as a patch on the horizon. `TerrainMesh.drawn_surface_y` reproduces the
+scatter placed every instance on the *field*. The two differ by a **mean of 36 m and by up to
+640 m** of float or bury. Invisible from an overview camera 1.5 million metres wide, and the whole
+picture at eye level: the first seam run photographed 1.65 million instances as a patch on the
+horizon. `TerrainMesh.drawn_surface_y` reproduces the
 triangulation exactly, including which diagonal a quad is split along, and both the instances and
 the camera stand on it now.
 
-That also retracts a conclusion from `scatter_bands.json`: the eye-level coverage saturation there
-was a camera placed *underground*, not an incompatibility between eye level and 12×. Both work.
+That also retracts a conclusion from `scatter_bands.json`: the eye-level coverage saturation
+recorded there was a camera placed *underground*, not an incompatibility between eye level and the
+exaggeration. The exaggeration turned out to be incompatible with eye level for a different reason
+— the spikes — and is gone.
 
 **Four other things this harness got wrong before it got them right**, each of which produced a
 plausible-looking artefact:
@@ -521,7 +494,7 @@ plausible-looking artefact:
   annulus is a one-bit mask instead, one render per band.
 - `length(VERTEX)` read as a camera distance: every mask came back black at every band, which looks
   exactly like a camera pointing at nothing. World positions and `CAMERA_POSITION_WORLD` instead,
-  and horizontally — a 3D distance at 12× would put a band's far edge partway up a hillside.
+  and horizontally, so a band means the same thing whatever the relief does.
 - A grey backdrop, so the sky counted as vegetation and coverage came back at exactly 1.0 for every
   candidate including the ones drawing nothing.
 - A dither cell a **kilometre** across, because the mask frequency was in cycles across a raster
@@ -530,10 +503,11 @@ plausible-looking artefact:
 
 ### What it does not cover
 
-One machine, one seam distance, two places, three day-window pairs, eight runs. The 12× half of
-the matrix was run and written up before its picture was looked at, and the picture is what showed
-the subject was wrong — `visual_audit.md`'s lesson arriving late again, in the tool built to stop
-it arriving late. The scoring annulus saturates —
+One machine, one seam distance, two places, three day-window pairs, four runs, all at 1:1. An
+earlier 12× half of this matrix was run and written up before its picture was looked at, and the
+picture is what showed the subject was wrong — `visual_audit.md`'s lesson arriving late again, in
+the tool built to stop it arriving late. Those rows are gone rather than kept: they measure a
+render that no longer exists. The scoring annulus saturates —
 oracle coverage is 1.000 in every run — so **coverage is matched trivially here and only colour
 discriminates**; a basin band where the stand did not close would test it harder. No crossfade is
 measured: each candidate is scored as if it were the whole far field. A run whose annulus contains

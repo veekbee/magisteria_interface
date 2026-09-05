@@ -55,11 +55,11 @@ func build(arcs: Array, hf: Heightfield, tm: TerrainMesh) -> ArrayMesh:
         for w in arc:
             # ON THE SURFACE THAT IS DRAWN. `h * exaggeration` is the field,
             # and the mesh triangulates the field every `stride` texels -- the
-            # two differ by a mean of 426 m in mesh space. A line draped on the
-            # field floats above the terrain or is buried under it by that much,
+            # two differ by a mean of 36 m. A line draped on the field floats
+            # above the terrain or is buried under it by that much,
             # and the `lift` below is a z-fighting nudge that assumed it was
             # sitting on the surface. Invisible from the overview camera, where
-            # 426 m is sub-pixel; wrong at every closer view. Found when the
+            # 36 m is sub-pixel; wrong at every closer view. Found when the
             # same defect was found in the scatter.
             #
             # FALLING BACK TO THE FIELD WHERE NO QUAD IS DRAWN, which is the

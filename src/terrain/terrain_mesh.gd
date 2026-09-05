@@ -26,11 +26,34 @@ var skipped_quads: int = 0
 var stride: int = 1
 var exaggeration: float = 1.0
 
+## What the NORMALS are computed as if the exaggeration were, which is not what
+## the vertices are built at.
+##
+## THE SPACE IS 1:1 AND THE SHADING IS NOT. Vertical exaggeration was removed
+## from this project's geometry: terrain, plants and distances are all true
+## scale, so `cover = count x crown area` holds by construction and no tuned
+## distance is conditional on a factor. What that costs is relief legibility --
+## 4 km of relief across 1,000 km of basin hillshades weakly from a map camera,
+## and 12x existed for exactly that.
+##
+## So the gradient is steepened where the light reads it and nowhere else. A
+## normal is a lighting input; moving a vertex is a geometric claim. Nothing
+## downstream of this can tell the difference, because nothing downstream of
+## this reads a normal for anything but shading: `drawn_surface_y`, the drapes,
+## the scatter and the probe all use the height field and the vertex positions,
+## which are true.
+var shading_exaggeration: float = 1.0
 
-## `stride` samples every Nth texel; `exaggeration` scales height only.
-func build(hf: Heightfield, stride_: int = 2, exaggeration_: float = 1.0) -> ArrayMesh:
+
+## `stride` samples every Nth texel. `exaggeration` scales vertex height, and is
+## 1.0 everywhere in this project; `shading_exaggeration` steepens the gradient
+## the NORMALS are computed from, which moves no geometry.
+func build(hf: Heightfield, stride_: int = 2, exaggeration_: float = 1.0,
+           shading_exaggeration_: float = -1.0) -> ArrayMesh:
     stride = max(1, stride_)
     exaggeration = exaggeration_
+    shading_exaggeration = (exaggeration_ if shading_exaggeration_ < 0.0
+            else shading_exaggeration_)
     var nx := int(hf.width / stride)
     var ny := int(hf.height / stride)
     world_origin = Vector2(hf.origin_x, hf.origin_y)
@@ -70,7 +93,7 @@ func build(hf: Heightfield, stride_: int = 2, exaggeration_: float = 1.0) -> Arr
             verts.append(Vector3(float(i) * step - half_x,
                                  z * exaggeration,
                                  float(j) * step - half_y))
-            normals.append(_normal_at(h, nx, ny, i, j, step, exaggeration))
+            normals.append(_normal_at(h, nx, ny, i, j, step, shading_exaggeration))
             uvs.append(Vector2((float(i * stride) + 0.5) / float(hf.width),
                                (float(j * stride) + 0.5) / float(hf.height)))
 

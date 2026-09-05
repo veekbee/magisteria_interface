@@ -87,7 +87,7 @@ func _initialize() -> void:
     test_a_recorded_distance_names_what_it_is_conditional_on()
     test_the_seam_metric_fails_the_bad_frame()
     test_plants_stand_on_the_surface_that_is_drawn()
-    test_a_rescaled_drape_matches_a_rebuilt_one()
+    test_the_shading_is_exaggerated_and_the_geometry_is_not()
     test_the_seam_measurement_ranks_the_null_baseline_worst()
     test_the_project_does_not_import_blend_sources()
     test_phenology_is_the_cell_measured_against_itself()
@@ -3076,10 +3076,10 @@ func test_plants_stand_on_the_surface_that_is_drawn() -> void:
 
     `TerrainMesh.build` samples the field every `stride` texels — 4 km apart on
     the 1,000 m overview — so the surface that renders between samples is a
-    plane and the field beneath it is not. Measured over 3,916 mid-quad points:
-    the two differ by a mean of 426 m in mesh space and up to 7,722 m, which at
-    12× is 35 and 644 true metres. Plants placed on the field float above the
-    ground or are buried under it by tens of metres.
+    plane and the field beneath it is not. Measured over 3,916 mid-quad points
+    at 1:1: the two differ by a mean of 36 m and by up to 640 m. Plants placed
+    on the field float above the ground or are buried under it by tens of
+    metres.
 
     From the overview camera, where the basin is 1.5 million metres across, that
     is invisible, and four milestones of screenshots did not show it. The seam
@@ -3133,7 +3133,10 @@ func test_plants_stand_on_the_surface_that_is_drawn() -> void:
         total += gap
         worst = maxf(worst, gap)
     check(n > 200, "only %d mid-quad points were valid" % n)
-    check(total / float(maxi(n, 1)) > 50.0,
+    # Five metres, against a measured 36. The threshold is a floor on "this
+    # still matters", not a restatement of the measurement -- and it is in true
+    # metres, because the geometry is 1:1 and mesh space is world space.
+    check(total / float(maxi(n, 1)) > 5.0,
             "the drawn surface and the field differ by only %s m on average. If that is now "
             % String.num(total / float(maxi(n, 1)), 1)
             + "small the stride has changed and this guard has stopped guarding anything; if "
@@ -3214,61 +3217,69 @@ func test_the_seam_measurement_ranks_the_null_baseline_worst() -> void:
             + "least %sx on annulus colour" % String.num(worst_ratio, 1))
 
 
-func test_a_rescaled_drape_matches_a_rebuilt_one() -> void:
-    """A view switch changes the vertical exaggeration, and re-draping 29,484
-    reaches against the terrain costs 1.34 s of what is otherwise a keypress.
-    It does not have to: a draped Y is `drawn_surface_y × e + lift`, so moving
-    from one exaggeration to another is exact arithmetic on vertices already
-    computed.
+func test_the_shading_is_exaggerated_and_the_geometry_is_not() -> void:
+    """The 1:1 decision's one concession, and the line it must not cross.
 
-    "Exact" is the whole licence for the shortcut, so it is checked against the
-    thing it replaces rather than reasoned about. If it ever stops matching, the
-    fast path is silently drawing rivers somewhere other than where the slow one
-    would put them, which is the defect this session already found once.
+    Vertical exaggeration is out of this project's geometry — terrain, plants
+    and the distances between them are true scale, so `cover = count × crown
+    area` holds by construction. What that costs is relief: at true normals this
+    basin hillshades to thirteen brightness levels and a map camera cannot read
+    it. So the gradient is steepened where the LIGHT reads it, and nowhere else.
+
+    A normal is a lighting input; a vertex position is a geometric claim. This
+    holds those apart: every vertex must sit at its true height, and the normals
+    must not be the ones true heights would give — because if they were, the
+    concession would have quietly stopped working, and a flat basin looks like a
+    basin.
     """
     var hf := heightfield()
-    var tm12 := TerrainMesh.new()
-    tm12.build(hf, 8, 12.0)
-    var tm1 := TerrainMesh.new()
-    tm1.build(hf, 8, 1.0)
-    var f := FileAccess.open("res://assets/terrain/flowlines.json", FileAccess.READ)
-    check(f != null, "no flowlines.json to drape")
-    if f == null:
-        return
-    var parsed = JSON.parse_string(f.get_as_text())
-    var reaches: Array = (parsed as Dictionary).get("reaches", []) \
-            if typeof(parsed) == TYPE_DICTIONARY else []
-    check(reaches.size() > 1000, "only %d reaches to drape" % reaches.size())
+    var true_scale := TerrainMesh.new()
+    true_scale.build(hf, 8, 1.0, 12.0)
+    var flat_lit := TerrainMesh.new()
+    flat_lit.build(hf, 8, 1.0, 1.0)
 
-    var rebuilt := FlowlineDrape.new()
-    rebuilt.build(reaches, hf, tm1)
-    var rescaled := FlowlineDrape.new()
-    rescaled.build(reaches, hf, tm12)
-    # Which vertices exist cannot depend on the exaggeration: an off-map point
-    # is off-map at any height.
-    check(rescaled.dropped_offmap == rebuilt.dropped_offmap,
-            "draping at 12x dropped %d vertices and at 1x dropped %d; the exaggeration is "
-            % [rescaled.dropped_offmap, rebuilt.dropped_offmap]
-            + "deciding which points are on the map, which it must not")
-    rescaled.rescale(1.0 / 12.0, hf)
-
-    var a := rebuilt.paint_flow(PackedFloat64Array(), fixture(), FlowDisplay.new())
-    var b := rescaled.paint_flow(PackedFloat64Array(), fixture(), FlowDisplay.new())
-    check(a != null and b != null, "one of the two drapes produced no mesh")
-    if a == null or b == null:
-        return
-    var va: PackedVector3Array = a.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
-    var vb: PackedVector3Array = b.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
-    check(va.size() == vb.size(), "%d vertices rebuilt against %d rescaled"
-            % [va.size(), vb.size()])
+    var va: PackedVector3Array = true_scale.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var vb: PackedVector3Array = flat_lit.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var na: PackedVector3Array = true_scale.mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
+    var nb: PackedVector3Array = flat_lit.mesh.surface_get_arrays(0)[Mesh.ARRAY_NORMAL]
+    check(va.size() == vb.size() and va.size() > 1000, "the two builds differ in vertex count")
     if va.size() != vb.size():
         return
-    var worst := 0.0
+
+    # GEOMETRY IS IDENTICAL. The shading factor must move nothing that anything
+    # stands on, or the scatter, the drapes and the camera are all misplaced by
+    # it -- which is the defect that cost this project four milestones.
+    var moved := 0.0
     for i in va.size():
-        worst = maxf(worst, absf(va[i].y - vb[i].y))
-    # A metre over a basin whose mesh-space heights run to 25,000: this is
-    # float32 accumulation in a linear map, not a disagreement about geometry.
-    check(worst < 1.0, "a rescaled drape sits %s m from a rebuilt one at worst"
-            % String.num(worst, 4))
-    print("drape: rescaling 12x -> 1x matches a rebuild within %s m over %d vertices"
-            % [String.num(worst, 5), va.size()])
+        moved = maxf(moved, va[i].distance_to(vb[i]))
+    check(moved < 1e-4,
+            "steepening the shading moved a vertex by %s m. It is a lighting parameter; a mesh "
+            % String.num(moved, 5) + "that moves with it puts everything standing on the ground "
+            + "somewhere the ground is not.")
+
+    # And the vertex heights are the field's own, unmultiplied.
+    var worst := 0.0
+    var checked := 0
+    for i in range(0, va.size(), 401):
+        var w := true_scale.mesh_to_world(va[i], hf)
+        var field := hf.height_at_world(w.x, w.y)
+        if is_nan(field):
+            continue
+        checked += 1
+        worst = maxf(worst, absf(va[i].y - field))
+    check(checked > 20, "only %d vertices could be checked against the field" % checked)
+    check(worst < 1.0, "a vertex sits %s m from the height the field gives it, so the geometry "
+            % String.num(worst, 3) + "is not 1:1")
+
+    # SHADING IS NOT IDENTICAL, or the concession is not being made.
+    var turned := 0.0
+    for i in na.size():
+        turned = maxf(turned, na[i].angle_to(nb[i]))
+    check(turned > deg_to_rad(20.0),
+            "the steepened normals differ from the true ones by at most %.1f degrees. The "
+            % rad_to_deg(turned) + "hillshade is reading true gradients, which over 4 km of "
+            + "relief across 1,000 km of basin is thirteen brightness levels of flat.")
+    check(TerrainView.EXAGGERATION == 1.0,
+            "the view builds geometry at %s, not 1:1" % String.num(TerrainView.EXAGGERATION, 2))
+    print("scale: geometry 1:1 within %s m of the field; shading normals turn up to %.0f degrees"
+            % [String.num(worst, 4), rad_to_deg(turned)])

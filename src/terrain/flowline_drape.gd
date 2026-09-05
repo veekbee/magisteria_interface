@@ -43,11 +43,11 @@ func build(reaches: Array, hf: Heightfield, tm: TerrainMesh) -> Dictionary:
             var wy := float(xy[k + 1])
             # ON THE SURFACE THAT IS DRAWN. `h * exaggeration` is the field,
             # and the mesh triangulates the field every `stride` texels -- the
-            # two differ by a mean of 426 m in mesh space. A line draped on the
-            # field floats above the terrain or is buried under it by that much,
+            # two differ by a mean of 36 m. A line draped on the field floats
+            # above the terrain or is buried under it by that much,
             # and the `lift` below is a z-fighting nudge that assumed it was
             # sitting on the surface. Invisible from the overview camera, where
-            # 426 m is sub-pixel; wrong at every closer view. Found when the
+            # 36 m is sub-pixel; wrong at every closer view. Found when the
             # same defect was found in the scatter.
             #
             # FALLING BACK TO THE FIELD WHERE NO QUAD IS DRAWN, which is the
@@ -102,30 +102,6 @@ func build(reaches: Array, hf: Heightfield, tm: TerrainMesh) -> Dictionary:
         m.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, arrays)
         order_meshes[order] = m
     return order_meshes
-
-
-## Move every draped vertex to a new vertical exaggeration, without re-draping.
-##
-## EXACT, NOT AN APPROXIMATION, and that is why it is allowed to exist beside
-## the build. `TerrainMesh.drawn_surface_y` is the interpolated field times the
-## exaggeration, so a draped Y is `surface x e + lift` and moving from `e` to
-## `e2` is `(y - lift) * e2/e + lift` for every vertex. Nothing about which
-## vertices exist depends on the exaggeration -- an off-map point is off-map at
-## any height -- so the drops, the splits and the counts are untouched.
-##
-## THE LIFT DOES NOT SCALE. It is a z-fighting nudge in absolute metres against
-## a depth buffer that does not shrink with the terrain, so scaling it with
-## everything else would make it twelve times too small to do its job at 1x.
-##
-## It exists because rebuilding this drape is 1.34 s of a 1.63 s view switch,
-## and a view switch is a keypress. `test_a_rescaled_drape_matches_a_rebuilt_one`
-## holds it to the rebuild it is standing in for.
-func rescale(ratio: float, hf: Heightfield) -> void:
-    var lift := LIFT_FRACTION * hf.pixel_size_m
-    for i in _flow_verts.size():
-        var v := _flow_verts[i]
-        v.y = (v.y - lift) * ratio + lift
-        _flow_verts[i] = v
 
 
 ## Repaint the flow mesh for one day. `flow_of_node` is looked up per reach;

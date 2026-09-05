@@ -3,12 +3,10 @@
 # measurements/scatter_seam.json. Windowed, never headless; the window must stay
 # on screen and in front for the whole run.
 #
-#   bash tools/measure_seam.sh --seam 120 --exaggeration 12
-#   bash tools/measure_seam.sh --seam 120 --exaggeration 1 --window largest_fire --day 60
+#   bash tools/measure_seam.sh --seam 120
+#   bash tools/measure_seam.sh --seam 120 --window largest_fire --day 60
 #
 #   --seam M          the candidate seam distance     (default: 120)
-#   --exaggeration N  vertical exaggeration to build at; every distance in the
-#                     artefact is conditional on it   (default: 12, the app's)
 #   --window NAME     fixture window                  (default: the first)
 #   --row NAME        row the scatter reads           (default: band.pft.biomass)
 #   --day N           day within the window           (default: 22)

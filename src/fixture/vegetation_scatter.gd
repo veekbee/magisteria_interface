@@ -323,12 +323,12 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             # ON THE SURFACE THAT IS DRAWN, not on the field it was sampled
             # from. The mesh triangulates the heightfield every `stride` texels
             # -- 4 km apart on the overview -- and the two disagree by a MEAN OF
-            # 426 m in mesh space (35 true metres) and up to 7,722 m. Plants
-            # placed on the field therefore float above the ground or are buried
-            # under it by tens of metres. From the overview camera, where the
-            # basin is 1.5 million metres across, that is invisible; at eye
-            # level it is the whole picture, and it is why the first seam run
-            # photographed 1.65 million instances as a patch on the horizon.
+            # 36 m and up to 640 m. Plants placed on the field therefore float
+            # above the ground or are buried under it by tens of metres. From
+            # the overview camera, where the basin is 1.5 million metres across,
+            # that is invisible; at eye level it is the whole picture, and it is
+            # why the first seam run photographed 1.65 million instances as a
+            # patch on the horizon.
             var h := _hf.height_at_world(wx, wy)
             var y := _tm.drawn_surface_y(Vector2(wx, wy), _hf)
             if is_nan(h) or is_nan(y):
