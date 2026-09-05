@@ -73,6 +73,7 @@ func _initialize() -> void:
     test_the_hillshade_arrives_from_the_north_west()
     test_the_verdict_is_read_and_never_supplied()
     test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one()
+    test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it()
     test_the_scatter_measurement_verifies_in_pixels_not_primitives()
     test_every_wire_life_form_resolves_to_a_family()
     test_no_family_is_keyed_below_life_form()
@@ -2653,6 +2654,77 @@ func test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one() -> void
             % [float(m["p50_ms"]), str(m["resolved"]), str(a["within_tolerance"])])
 
 
+func test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it() -> void:
+    """THE RULING ON `render_cost.json`'s COEFFICIENT, PINNED SO IT CAN FAIL.
+
+    `render_cost.json` prices instancing on an empty stage — no terrain, no
+    culling, no LOD — and the corpus cites it. Both of the last two conditions
+    have since changed in the viewer: the scatter thins with distance and the
+    far field is drawn. The question raised was whether to re-measure the
+    coefficient in the scene that now exists.
+
+    THE ANSWER IS NO, AND THIS IS THE CLAIM THAT ANSWER RESTS ON: the empty
+    stage is a FLOOR. A coefficient re-measured with a basin under it stops
+    being a coefficient and becomes a joint measurement of instancing and one
+    scene, which is what `scatter_cost.json` already is — two artefacts of the
+    same thing under different names, and neither recoverable from the other.
+    So the floor stays, and the scene's distance above it is the figure that
+    gets re-measured, because that is the one that moves.
+
+    A floor that is sometimes come in under is not a floor. Ten runs — five at
+    12× and five at 1:1, across a 5.6× change in the pixels the scatter draws —
+    never went below the prediction, and this fails if one ever does, at which
+    point the word "floor" is what has to change and not the artefact.
+    """
+    var f := FileAccess.open("res://measurements/scatter_cost.json", FileAccess.READ)
+    check(f != null, "no measurements/scatter_cost.json")
+    if f == null:
+        return
+    var parsed = JSON.parse_string(f.get_as_text())
+    check(typeof(parsed) == TYPE_DICTIONARY, "scatter_cost.json is not an object")
+    if typeof(parsed) != TYPE_DICTIONARY:
+        return
+    var doc: Dictionary = parsed
+    var predicted: Dictionary = doc.get("predicted_by_render_cost", {})
+    var marginal: Dictionary = doc.get("marginal", {})
+    check(bool(predicted.get("ok", false)), "the artefact carries no empty-stage prediction")
+    check(bool(marginal.get("ok", false)) and bool(marginal.get("resolved", false)),
+            "the artefact carries no resolved marginal, so it says nothing about the floor")
+    if not (bool(predicted.get("ok", false)) and bool(marginal.get("ok", false))):
+        return
+
+    var pred := float(predicted["ms"])
+    var obs := float(marginal["p50_ms"])
+    check(obs >= pred, "the scene cost %s ms and the empty-stage coefficient predicted %s ms. "
+            % [String.num(obs, 3), String.num(pred, 3)]
+            + "The empty stage is supposed to be a FLOOR — instancing with nothing drawn over "
+            + "it — and a real scene coming in UNDER it means either the floor is not one or "
+            + "this scene is drawing less than it claims. The corpus row cites that coefficient "
+            + "as a floor; if this is real, the row is wrong and not the artefact.")
+
+    # The other half of the ruling: the floor is only useful if the scene's
+    # distance above it is recorded beside it. A ratio the artefact does not
+    # carry is a ratio nobody can quote.
+    var agree: Dictionary = doc.get("agreement", {})
+    check(bool(agree.get("ok", false)) and agree.has("ratio_observed_over_predicted"),
+            "the artefact prices the scene and does not record its ratio to the floor, which "
+            + "is the whole figure the corpus row needs beside the coefficient")
+
+    # And the floor must be a floor of the same scene: a prediction made for a
+    # different instance count than was drawn compares two populations.
+    var placed := 0
+    for k in (doc.get("placed", {}) as Dictionary):
+        placed += int((doc["placed"] as Dictionary)[k])
+    check(int(predicted.get("instances", -1)) == placed,
+            "the prediction is for %d instances and %d were placed, so the ratio compares two "
+            % [int(predicted.get("instances", -1)), placed]
+            + "different populations")
+
+    print("floor: scene %s ms over an empty-stage %s ms, ratio %sx"
+            % [String.num(obs, 2), String.num(pred, 2),
+                    String.num(float(agree.get("ratio_observed_over_predicted", NAN)), 2)])
+
+
 func test_the_scatter_measurement_verifies_in_pixels_not_primitives() -> void:
     """A CORRECTION TO THE BENCHMARK'S CHECK, and the reason it is worth a test.
 
@@ -2853,25 +2925,34 @@ func test_pft_fractions_are_a_composition_of_the_cover() -> void:
 func test_a_recorded_distance_names_what_it_is_conditional_on() -> void:
     """TRAP 3 AS A GUARD RATHER THAN AS A DISCIPLINE.
 
-    Every distance this project measures is conditional on the 12× vertical
-    exaggeration: relief, plant height and eye height are all multiplied by it
-    and horizontal distance is not, so a plant subtends about twelve times the
-    angle it would in the field. "Record any tuned distance as conditional on
-    the factor" is the right rule and it is the kind of rule that has gone
-    stale twice in these repos already — a transcribed caveat outlives the
-    number it qualifies.
+    The scale is 1:1 now, so no distance here is conditional on a factor — and
+    the rule outlived the factor, which is the point of it. When relief and
+    plant height were multiplied by twelve and horizontal distance was not, a
+    plant subtended about twelve times the angle it would in the field, and
+    "record any tuned distance as conditional on the factor" was the right rule
+    and exactly the kind that goes stale: a transcribed caveat outlives the
+    number it qualifies. This docstring was itself that caveat for one commit.
 
     So the factor goes in the artefact and this asserts that it is there: a
     measurement carrying metres must carry the exaggeration those metres were
-    taken at. Change the factor and every artefact stales together and loudly,
-    rather than one of them silently keeping a distance that no longer means
-    what it says.
+    taken at.
+
+    AND THAT THEY ALL AGREE, which is the half that has teeth. Asserting each
+    artefact names *a* factor caught nothing when the scale actually changed:
+    the artefacts that were re-taken went to 1.0 one at a time, and
+    `scatter_cost.json` — which was not re-taken — kept naming 12.0 and pricing
+    a scene nobody drew any more, while this test passed on it and on the files
+    that disagreed with it. A directory at two scales is not a set of
+    measurements; it is one set and one relic, and no file in it says which it
+    is. Only the comparison between them can.
     """
     var dir := DirAccess.open("res://measurements/")
     check(dir != null, "no measurements/ directory")
     if dir == null:
         return
     var checked := 0
+    ## factor -> the artefacts taken at it, so a mixed directory names both sides.
+    var factors := {}
     for name in dir.get_files():
         if not name.ends_with(".json"):
             continue
@@ -2894,10 +2975,31 @@ func test_a_recorded_distance_names_what_it_is_conditional_on() -> void:
             check(float(doc["vertical_exaggeration"]) > 0.0,
                     "measurements/%s records an exaggeration of %s" % [name,
                             str(doc["vertical_exaggeration"])])
+            var f_ := float(doc["vertical_exaggeration"])
+            # Array, not PackedStringArray: the packed arrays are value types, so
+            # appending through a dictionary lookup appends to a copy and the
+            # message comes out naming no files at all -- which is how this was
+            # first written and what blinding it showed.
+            if not factors.has(f_):
+                factors[f_] = []
+            (factors[f_] as Array).append(name)
     check(checked > 0, "no measurement artefact carries a distance, which is unlikely enough "
             + "to be a bug in this test rather than a property of the repo")
-    print("distances: %d measurement artefact(s) carry metres and name their exaggeration"
-            % checked)
+    var seen := factors.keys()
+    seen.sort()
+    var by_factor := PackedStringArray()
+    for f_ in seen:
+        by_factor.append("x%s: %s" % [String.num(f_, 2),
+                ", ".join(PackedStringArray(factors[f_] as Array))])
+    check(seen.size() <= 1, "measurements/ holds distances taken at %d different vertical "
+            % seen.size()
+            + "exaggerations — %s. " % " | ".join(by_factor)
+            + "Every metre in the minority group describes a render nobody draws any more. "
+            + "Re-take those artefacts, or mark them superseded and move them out of this "
+            + "directory; do not hand-edit the factor, which would leave the distances wrong "
+            + "and the label right.")
+    print("distances: %d measurement artefact(s) carry metres, all at %s"
+            % [checked, "x" + String.num(float(seen[0]), 2) if seen.size() == 1 else "MIXED"])
 
 
 ## Keys anywhere in a document whose name says they hold metres.

@@ -305,15 +305,15 @@ func _end() -> void:
         "measured_at_commit": _git_head(),
         "measured_at_commit_means": ("the HEAD the run was taken against; the commit that "
                 + "lands this artefact is its child"),
-        # EVERY DISTANCE IN THIS FILE IS CONDITIONAL ON THIS NUMBER. M1 draws
-        # the basin at 12x vertical relief and the scatter scales plant height
-        # by the same factor, while horizontal distance is not exaggerated -- so
-        # a plant subtends about twelve times the angle it would in the field
-        # and any range tuned by eye here is tuned against that. Recorded in the
-        # artefact rather than in a paragraph, and
-        # `test_a_recorded_distance_names_what_it_is_conditional_on` fails if a
-        # measurement carrying metres does not carry it.
+        # 1:1, and stated anyway because the rule that a measurement names the
+        # exaggeration its distances were taken at outlived the exaggeration
+        # itself -- which is the point of the rule. The shading factor is
+        # separate and is recorded beside it: it moves no vertex, so no distance
+        # here is conditional on it, but it is a real parameter of the frame
+        # being timed. `test_a_recorded_distance_names_what_it_is_conditional_on`
+        # fails if a measurement carrying metres does not carry the first field.
         "vertical_exaggeration": view.terrain.exaggeration,
+        "shading_exaggeration": view.terrain.shading_exaggeration,
         "host": {
             "gpu": RenderingServer.get_video_adapter_name(),
             "rendering_method": RenderingServer.get_current_rendering_method(),

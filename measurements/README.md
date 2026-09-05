@@ -7,7 +7,9 @@ claims a `PIN` does: what was measured, how, on what, and what it does not cover
 
 ## What is here
 
-- `render_cost.json` — per-instance frame cost, and the ladder it was fitted from.
+- `render_cost.json` — per-instance frame cost, and the ladder it was fitted from. It prices an
+  empty stage, which makes it a **floor** rather than a prediction; see the ruling under
+  `scatter_cost.json` for why it stays one.
 - `scatter_cost.json` — what M5's scatter costs a frame in the viewer that draws it, and whether
   `render_cost.json`'s empty-stage coefficient predicts it. Re-take it with
   `bash tools/measure_scatter.sh`.
@@ -35,6 +37,11 @@ stated blocker was the transducer existing. It does now, so this is that scene:
 
 **Re-measure rather than believe.** The coefficient is a property of one machine, one renderer and
 one Godot build, and none of those travel. Run the script on the hardware whose answer you want.
+
+**And it is a floor, not a forecast.** The empty stage is the point of it, and no frame the client
+draws has ever met it: the real scene has come in above the prediction in every run taken, by about
+a third. Quote the coefficient with the observed ratio beside it rather than on its own — the ruling
+and the current ratio are under `scatter_cost.json` below.
 
 ## What it measures, and the three things it refuses to do
 
@@ -156,26 +163,53 @@ recovers one term of that sum.
 
 `deepest_winter`, `band.pft.biomass`, day 22, standing at EPSG:5070 `(-1310793, 1616226)` — the
 centre of the opening view — with the fly camera framed on the scatter, which is what the `G` key
-gives. Apple M5 / `gl_compatibility` / Godot 4.7.2, windowed at 1280 × 800, vsync off.
+gives. Apple M5 / `gl_compatibility` / Godot 4.7.2, windowed at 1280 × 800, vsync off. **Re-taken
+at 1:1**; the 12× column below is the same scene at the old scale, kept for the one comparison it
+makes possible and quoted nowhere else.
 
-| | |
-|---|---:|
-| instances drawn | 119,994 (ceiling-bound) |
-| frame p50, scatter hidden | 0.80 ms |
-| frame p50, scatter drawn | 3.70 ms |
-| **marginal, p50** | **2.90 ms** |
-| `render_cost.json` predicts | 2.13 ms |
-| ratio | **1.36×** |
+| | 12× (superseded) | **1:1** |
+|---|---:|---:|
+| instances drawn | 119,994 | **119,994** (ceiling-bound) |
+| triangles in frame | 5,944,404 | **5,944,404** |
+| frame p50, scatter hidden | 0.80 ms | **0.57 ms** |
+| frame p50, scatter drawn | 3.70 ms | **3.49 ms** |
+| **marginal, p50** | 2.90 ms | **2.93 ms** |
+| `render_cost.json` predicts | 2.13 ms | **2.13 ms** |
+| ratio | 1.36× | **1.37×** |
+| pixels the scatter changed | 4,387 | **778** |
 
-**The empty-stage coefficient under-predicts, consistently.** Five runs gave marginals of 2.94,
-2.90, 2.83, 2.75 and 2.74 ms against a ~2.14 ms prediction — 1.28× to 1.37×, reproducible to
-1.07× and never once below the prediction. (The count is ceiling-bound at ~120 k either way, so
-this row survived the cover correction below almost unchanged.) That is a bias rather than noise, and it is the size of
-the conditional on every budget sentence M5 rests on that coefficient. What it does *not* say is
-which of the differences is responsible: this scene draws through a custom shader with culling
-disabled rather than a `StandardMaterial3D`, it overdraws a terrain rather than empty space, and it
-uses three MultiMesh nodes rather than one. Naming the cause needs a sweep this artefact does not
-run.
+**The empty-stage coefficient under-predicts, consistently.** Five runs at 1:1 gave marginals of
+2.93, 3.12, 2.88, 2.85 and 2.86 ms against a 2.13 ms prediction — **1.34× to 1.46×, reproducible
+to 1.09×**. Five runs at 12× gave 2.94, 2.90, 2.83, 2.75 and 2.74 — 1.28× to 1.37×. Across all ten,
+**never once below the prediction.** That is a bias rather than noise, and it is the size of the
+conditional on every budget sentence M5 rests on that coefficient. What it does *not* say is which
+of the differences is responsible: this scene draws through a custom shader with culling disabled
+rather than a `StandardMaterial3D`, it overdraws a terrain rather than empty space, and it uses
+three MultiMesh nodes rather than one. Naming the cause needs a sweep this artefact does not run.
+
+**The scatter's cost is per-instance, not per-pixel, and the scale change is what showed it.**
+Going to 1:1 shortened every plant by twelve and the scatter's drawn pixels fell **5.6×**, from
+4,387 to 778 — shrub 213 → 38, succulent 3,758 → 595, tree 627 → 161. The frame cost did not move:
+2.90 ms then, 2.93 ms now, both inside a spread that covers the difference several times over. The
+same instance count over the same triangle count costs the same time whether it covers 4,000 pixels
+or 800. This was not measured on purpose; it fell out of re-taking a stale artefact, and it is the
+strongest thing the file says.
+
+**Which is also why the empty-stage coefficient stays.** The under-prediction held at 1.36× and
+1.37× across a 5.6× change in fill, so the gap between the empty stage and this scene is not fill —
+it is per-instance overhead the empty stage does not have. A coefficient re-measured with a basin
+under it would fold the two together and let neither be recovered. See the ruling below.
+
+### One thing changed that this file cannot explain
+
+Draw calls in the same scene fell from 223 to 29 with the scatter hidden (226 → 32 with it drawn:
+the delta of three, one per MultiMesh, is unchanged), and the hidden-scatter frame got 32% faster,
+0.80 → 0.57 ms. Primitives are essentially unchanged, 210,423 → 212,503, and **every layer was
+confirmed still drawing** — photographed alone against black, the contours put 926 px on screen and
+the flowlines 14,533 px. So nothing was lost; the same geometry is arriving in a seventh of the
+calls. No commit between the two runs names a cause, and none of the drape or contour code builds
+more than one surface. Recorded as observed and unexplained rather than attributed, because the
+marginal is a difference and is unaffected by it either way.
 
 **The horizon question, which is what the coefficient was wanted for.** At this place, the full
 scatter the wire implies inside a 1,500 m horizon is **51,869,460 instances — 922 ms, 27.7× the
@@ -228,20 +262,51 @@ and has the property that matters: it does not pass a frame the scatter is missi
 procedural mesh and the counter tracked it exactly there; but anyone reusing that check on other
 meshes should confirm the counter tracks them first.
 
+### The ruling: `render_cost.json` is a floor, and stays one
+
+The corpus row citing the per-instance coefficient carries its conditions — one machine,
+`gl_compatibility`, and **no culling, no LOD, no terrain**. Two of those three have since changed in
+the viewer: the scatter thins with distance and the far field is drawn. The row is therefore
+true-as-written about the artefact it cites and misleading-in-effect about the client it describes,
+and the question was whether to re-measure the coefficient in the scene that now exists.
+
+**It is not re-measured, and the reason is that the floor property survived a test nobody designed.**
+A coefficient measured with a basin under it is no longer a coefficient: it is a joint measurement of
+instancing and one particular scene, which is exactly what `scatter_cost.json` already is. Two
+artefacts of the same quantity under different names is worse than one floor and one observation,
+because neither is recoverable from the other. And the empty stage behaves like a floor: ten runs
+across a 5.6× change in drawn pixels and a 12× change in vertical scale, never once below it, with
+the gap holding at ~1.36× throughout. A number that stable under that much perturbation is measuring
+something real about instancing rather than something incidental about a scene.
+
+**So the two figures sit together, and the second one is the one that gets re-taken.** The row wants
+the coefficient stated as a floor *and* the observed ratio beside it — currently **1.34× to 1.46×,
+five runs, 1:1, this scene**. When LOD or the seam moves the client again, it is this ratio that
+moves; the floor underneath it does not, and re-measuring it would only make the pair less
+informative. `test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it` fails if a
+scene ever comes in *under* the prediction, at which point the word "floor" is what has to change,
+not the artefact.
+
+The conditions worth adding to the row are not new measurements but a sentence: the coefficient is a
+lower bound on instancing alone, and the client has never rendered a frame that met it.
+
 ### What it does not cover
 
 **Frustum culling is all-or-nothing, and it works.** Timed at the same place: 1.04 ms with the
 scatter hidden, 3.70 ms with the camera on it, and **0.85 ms with the camera turned 180°** — the
 three vegetation draw calls disappear and the primitive count returns to the baseline's. A
 MultiMesh is culled as one node against one AABB, so looking away from the scatter is free and
-looking at any part of it costs all 120,006 instances. Nothing between those two is available
-without splitting the scatter into more than one MultiMesh.
+looking at any part of it costs all of them. Nothing between those two is available without
+splitting the scatter into more than one MultiMesh. *(Those three timings are 12×-era and were not
+re-taken; the property is structural and the scale change moved the marginal by less than its own
+spread, but they are illustrations of a shape rather than current figures — the harness has no flag
+for the turned-around camera, so re-taking them is a hand-driven run.)*
 
 One machine, one renderer, one place, one window, one day, one camera distance. The coefficient it
 is checked against is itself not portable, and neither is this. It measures the scatter that was
-*drawn*, which is the build ceiling's 120,006 instances and not the 28 million the wire implies —
-the 501 ms figure remains a prediction, now made from a coefficient known to under-predict by about
-a third in this scene.
+*drawn*, which is the build ceiling's 119,994 instances and not the **51,869,460** the wire implies
+at this place — the **922 ms** figure remains a prediction, now made from a coefficient known to
+under-predict by about a third in this scene, and known not to notice fill at all.
 
 
 ## `scatter_bands.json` — where individuals should stop

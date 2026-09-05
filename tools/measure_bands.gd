@@ -25,13 +25,14 @@ extends SceneTree
 ## scatter, so this puts the camera there -- `--camera eye`, the default -- and
 ## keeps `--camera overview` for comparison.
 ##
-## EYE HEIGHT IS EXAGGERATED, LIKE EVERYTHING ELSE VERTICAL HERE. M1 draws the
-## basin at 12x relief and the scatter scales plants by the same factor, so a
-## 1.7 m eye has to be 20 m in mesh space to stand in the right relation to a
-## tree that is 2.1 m tall and drawn 25 m. Horizontal distance is NOT
-## exaggerated, so a plant subtends about twelve times the angle it would in
-## the field -- which is the single biggest caveat on any band distance tuned
-## by eye on this render.
+## EYE HEIGHT IS REAL HEIGHT. The scale is 1:1 in every view, so a 1.7 m eye is
+## 1.7 m in mesh space and stands in the right relation to a 2.1 m tree without
+## any correction. The multiplication by `terrain.exaggeration` is kept where a
+## height becomes a distance, so that a factor reintroduced anywhere would reach
+## these numbers rather than silently miss them; it is 1.0 and this file's
+## distances are the field's own. What that removes is the caveat this harness
+## used to carry -- that a plant subtended about twelve times the angle it would
+## in the field, and so every band distance tuned by eye was tuned against that.
 ##
 ## IT REFUSES HEADLESS, for the reason everything that times or photographs a
 ## frame in this repo refuses.
@@ -291,12 +292,10 @@ func _cover() -> void:
 ## a viewer reads is the aggregate however many instances are drawn, and the
 ## only thing more instances buy is cost.
 ##
-## Reported at DRAWN size, which is not true size: M1 draws the basin at 12x
-## vertical relief and the scatter scales plant height by the same factor so
-## the two agree, while horizontal distance is not exaggerated. A plant
-## therefore subtends about twelve times the angle it would in the field, and a
-## band boundary chosen from real-world intuition would be twelve times too
-## near.
+## Drawn size IS true size at 1:1, so `drawn_height_m` and `height_m` agree and
+## a band boundary chosen from real-world intuition is the boundary this table
+## measures. The two columns are kept apart anyway, because they answer
+## different questions and a factor reintroduced later would separate them again.
 func _screen_table() -> Array:
     var out: Array = []
     var cam = view.rig.fly
@@ -336,15 +335,13 @@ func _write() -> void:
         "measured_at_commit": _git_head(),
         "measured_at_commit_means": ("the HEAD the run was taken against; the commit that "
                 + "lands this artefact is its child"),
-        # EVERY DISTANCE IN THIS FILE IS CONDITIONAL ON THIS NUMBER. M1 draws
-        # the basin at 12x vertical relief and the scatter scales plant height
-        # by the same factor, while horizontal distance is not exaggerated -- so
-        # a plant subtends about twelve times the angle it would in the field
-        # and any range tuned by eye here is tuned against that. Recorded in the
-        # artefact rather than in a paragraph, and
+        # 1:1, and stated anyway because the rule that a measurement names the
+        # exaggeration its distances were taken at outlived the exaggeration
+        # itself -- which is the point of the rule.
         # `test_a_recorded_distance_names_what_it_is_conditional_on` fails if a
-        # measurement carrying metres does not carry it.
+        # measurement carrying metres does not carry this field.
         "vertical_exaggeration": view.terrain.exaggeration,
+        "shading_exaggeration": view.terrain.shading_exaggeration,
         "host": {
             "gpu": RenderingServer.get_video_adapter_name(),
             "rendering_method": RenderingServer.get_current_rendering_method(),
@@ -360,10 +357,12 @@ func _write() -> void:
             "measurement_ceiling": ceiling,
             "shipped_ceiling": VegetationScatter.MAX_BUILT_INSTANCES,
             "camera": camera_mode,
-            "camera_note": ("eye = standing in the scatter at %.1f m real (x%.0f exaggeration) "
-                    + "looking level to the north; overview = the app's focus_on_scatter, "
-                    + "which frames the whole horizon from above")
-                    % [EYE_HEIGHT_M, view.terrain.exaggeration],
+            "camera_note": ("eye = standing in the scatter at %.1f m, which at x%.0f "
+                    + "exaggeration is %.1f m in mesh space, looking level to the north; "
+                    + "overview = the app's focus_on_scatter, which frames the whole horizon "
+                    + "from above")
+                    % [EYE_HEIGHT_M, view.terrain.exaggeration,
+                            EYE_HEIGHT_M * view.terrain.exaggeration],
             "eye_height_m": EYE_HEIGHT_M,
             "eye_pitch_degrees": float(_arg("--pitch", "10")),
             "eye_lift_m": float(_arg("--lift", "0")),

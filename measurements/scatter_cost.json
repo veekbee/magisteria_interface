@@ -1,9 +1,9 @@
 {
   "agreement": {
     "ok": true,
-    "ratio_observed_over_predicted": 1.36138682998454,
+    "ratio_observed_over_predicted": 1.37137149104629,
     "tolerance": 0.35,
-    "verdict": "the frame cost 1.36x what the empty-stage coefficient predicts, outside the 35% the benchmark's own reproducibility supports. Every budget sentence resting on that coefficient is conditional on a stage nobody renders, and this is the size of the conditional.",
+    "verdict": "the frame cost 1.37x what the empty-stage coefficient predicts, outside the 35% the benchmark's own reproducibility supports. Every budget sentence resting on that coefficient is conditional on a stage nobody renders, and this is the size of the conditional.",
     "within_tolerance": false
   },
   "frame_budget_ms": 33.3,
@@ -29,14 +29,14 @@
   },
   "marginal": {
     "ok": true,
-    "p50_ms": 2.9037037037037,
-    "p95_ms": 2.8837037037037,
-    "p99_ms": 2.8497037037037,
+    "p50_ms": 2.925,
+    "p95_ms": 2.31481481481481,
+    "p99_ms": 2.31481481481481,
     "resolved": true,
-    "scene_spread_ms": 0.0199999999999999
+    "scene_spread_ms": 0.822888888888889
   },
   "measured": true,
-  "measured_at_commit": "850f482",
+  "measured_at_commit": "6e431d1",
   "measured_at_commit_means": "the HEAD the run was taken against; the commit that lands this artefact is its child",
   "method": {
     "attempts": 1,
@@ -52,7 +52,7 @@
       "counter_tracked_the_instances": false,
       "instances": 8490,
       "life_form": "shrub",
-      "pixels_drawn": 213,
+      "pixels_drawn": 38,
       "primitives_counted": 20,
       "primitives_expected": 594300,
       "renders": true
@@ -62,7 +62,7 @@
       "counter_tracked_the_instances": true,
       "instances": 110982,
       "life_form": "succulent",
-      "pixels_drawn": 3758,
+      "pixels_drawn": 595,
       "primitives_counted": 5327136,
       "primitives_expected": 5327136,
       "renders": true
@@ -72,7 +72,7 @@
       "counter_tracked_the_instances": false,
       "instances": 522,
       "life_form": "tree",
-      "pixels_drawn": 627,
+      "pixels_drawn": 161,
       "primitives_counted": 14,
       "primitives_expected": 22968,
       "renders": true
@@ -84,7 +84,7 @@
     "succulent": 17.5230121053839,
     "tree": 16.8679764969218
   },
-  "pixels_the_scatter_changed": 4387,
+  "pixels_the_scatter_changed": 778,
   "placed": {
     "grass": 0,
     "shrub": 8490,
@@ -110,40 +110,41 @@
     "row": "band.pft.biomass",
     "window": "deepest_winter"
   },
+  "shading_exaggeration": 12.0,
   "share_bound_by": "the build ceiling, which is lower here than the frame budget",
   "share_drawn": 0.00231350007657522,
   "suspect": "",
   "triangles_in_frame": 5944404,
-  "vertical_exaggeration": 12.0,
+  "vertical_exaggeration": 1.0,
   "what": "what M5's vegetation scatter costs a frame in the viewer that draws it, and whether the empty-stage coefficient in render_cost.json predicts it",
   "with_scatter": {
-    "draw_calls_p50": 226.0,
+    "draw_calls_p50": 32.0,
     "frame_ms": {
       "max": 3.7037037037037,
-      "mean": 3.7037037037037,
-      "min": 3.7037037037037,
+      "mean": 3.54987916666667,
+      "min": 3.341,
       "n": 80,
-      "p50": 3.7037037037037,
+      "p50": 3.491,
       "p95": 3.7037037037037,
       "p99": 3.7037037037037
     },
     "frames_drawn": 80,
     "frames_timed": 80,
-    "primitives_p50": 5537593.0
+    "primitives_p50": 5539673.0
   },
   "without_scatter": {
-    "draw_calls_p50": 223.0,
+    "draw_calls_p50": 29.0,
     "frame_ms": {
-      "max": 0.854,
-      "mean": 0.699945833333333,
-      "min": 0.0989999971352518,
+      "max": 1.38888888888889,
+      "mean": 0.585550520845336,
+      "min": 0.0688750005792826,
       "n": 80,
-      "p50": 0.8,
-      "p95": 0.82,
-      "p99": 0.854
+      "p50": 0.566,
+      "p95": 1.38888888888889,
+      "p99": 1.38888888888889
     },
     "frames_drawn": 80,
     "frames_timed": 80,
-    "primitives_p50": 210423.0
+    "primitives_p50": 212503.0
   }
 }
