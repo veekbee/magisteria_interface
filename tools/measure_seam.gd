@@ -53,6 +53,15 @@ const ORACLE_CHECK_MULTIPLE := 5.0
 ## Grid the range curve is fitted over. Coarse and stated: the curve has two
 ## parameters and eight bands to fit them to, and a finer grid would be
 ## precision the data does not carry.
+## THE k SWEEP. `k` is dimensionless -- an object is individuated out to `k`
+## times its own drawn height -- and it is bounded above by the camera:
+## `VegetationScatter.resolution_k` is the k whose horizon lands exactly at one
+## pixel, 521 at this rig. Individuation cannot outlast resolution, so the
+## sweep runs at fractions of that and asks how far below it the eye stops
+## telling one plant from a texture. Quoted as the fraction, because a bare k
+## is conditional on a viewport and a field of view.
+const K_FRACTIONS: Array = [0.05, 0.1, 0.2, 0.35, 0.5, 0.75, 1.0]
+
 const K0_STEPS := 21
 const R0_CHOICES: Array = [40.0, 60.0, 80.0, 120.0, 160.0, 220.0, 300.0, 420.0, 600.0]
 
@@ -71,6 +80,7 @@ var at_world := Vector2.ZERO
 var out_path := "measurements/scatter_seam.json"
 var shots_dir := "shots/seam"
 var oracle_check := false
+var sweep_k := false
 ## Runs accumulate into one artefact: sufficiency is a claim about places and
 ## days, and one row of it is not evidence for the claim.
 var append_to_existing := false
@@ -103,6 +113,7 @@ func _initialize() -> void:
     shots_dir = _arg("--shots", shots_dir)
     oracle_check = _has("--oracle-check")
     append_to_existing = _has("--append")
+    sweep_k = _has("--sweep-k")
     var a := _arg("--at", "")
     if a != "":
         var p := a.split(",")
@@ -192,6 +203,16 @@ func _plan() -> Array:
     if oracle_check:
         out.insert(1, {"name": "oracle_deeper", "kind": "instances",
                        "cut_m": seam_m * ORACLE_CHECK_MULTIPLE})
+    # THE HORIZON SWEEP, one job per k. A rebuild per value costs seconds and
+    # is fine for a harness; the deferred shader-evaluated fade would make it
+    # free, and the sweep must not wait on it.
+    if sweep_k:
+        var k_res := VegetationScatter.resolution_k(
+                float(get_root().get_visible_rect().size.y), view.rig.fly.fov)
+        for q in K_FRACTIONS:
+            out.append({"name": "k_%s" % String.num(float(q), 2), "kind": "horizon",
+                        "cut_m": 0.0, "k": float(q) * k_res, "k_fraction": float(q),
+                        "k_resolution": k_res})
     return out
 
 
@@ -338,8 +359,15 @@ func _apply_candidate(job: Dictionary) -> void:
     var t0 := Time.get_ticks_usec()
     var schedule: Array = ([] if cut <= 0.0 else [{"to_m": cut, "keep": 1.0}])
     var ceiling: int = (VegetationScatter.MAX_BUILT_INSTANCES if cut <= 0.0 else 4000000)
+    # A HORIZON JOB CUTS BY THE RULE AND NOT BY A DISTANCE: no schedule, and
+    # the ceiling stays wide open, because the point of the sweep is to find
+    # out what the rule costs rather than what the ceiling allows.
+    var k: float = float(job.get("k", VegetationScatter.NO_HORIZON_RULE))
+    if kind == "horizon":
+        schedule = []
+        ceiling = 4000000
     var r: Dictionary = view.scatter_at(at_world, TerrainView.SCATTER_HORIZON_M,
-            schedule, ceiling)
+            schedule, ceiling, k)
     job["build_ms"] = float(Time.get_ticks_usec() - t0) / 1000.0
     job["scatter"] = {
         "ok": bool(r.get("ok", false)),
@@ -347,6 +375,8 @@ func _apply_candidate(job: Dictionary) -> void:
         "share_drawn": r.get("share_drawn", NAN),
         "share_bound_by": r.get("share_bound_by", ""),
         "implied_after_bands": r.get("implied_after_bands", NAN),
+        "individuation_k": r.get("individuation_k", 0.0),
+        "horizon": r.get("horizon", {}),
     }
     if kind == "tint":
         job["tint"] = view.tint_report.duplicate()

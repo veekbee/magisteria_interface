@@ -79,6 +79,43 @@ const MAX_BUILT_INSTANCES := 120000
 ## and the implication is a measurement.
 const NO_SCHEDULE: Array = []
 
+## THE HORIZON RULE: an object stops being drawn individually beyond `k` times
+## its own drawn height, one shared `k` for every family. Zero disables it and
+## is the shipped default until the sweep has ruled a value.
+##
+## WHY ONE CONSTANT AND NOT FOUR TUNED DISTANCES. Individuation range is
+## proportional to apparent size, so a per-family distance is a per-family
+## restatement of one fact. Derived, the horizon cannot drift between families
+## the way four tuned numbers can, and there is one knob to sweep instead of a
+## product of four.
+##
+## AND THE CONSTANT IS BOUNDED ABOVE BY THE CAMERA, which is worth knowing
+## before sweeping it. `resolution_k` is the `k` at which the horizon lands
+## exactly where the object falls below one pixel, and it is a pinhole
+## identity -- 521 at 1280x800 and a 75 degree fov, THE SAME 521 for every
+## family, measured off `scatter_bands.json`'s own pixel table for shrub,
+## succulent and tree. So k is not free: individuation stops at or before
+## resolution, and the sweep is looking for how far before.
+const NO_HORIZON_RULE := 0.0
+
+
+## How far one object of this drawn height is individuated, under constant `k`.
+static func individuation_horizon_m(height_m: float, k: float) -> float:
+    if k <= 0.0 or height_m <= 0.0:
+        return 0.0
+    return k * height_m
+
+
+## The `k` whose horizon IS the one-pixel range: a property of the camera and
+## the viewport, not of vegetation, and the same number for every family.
+## `k / resolution_k(...)` is the fraction of the resolvable range that is
+## being individuated, which is the portable way to quote a swept `k`.
+static func resolution_k(viewport_height_px: float, fov_degrees: float) -> float:
+    var t := tan(deg_to_rad(0.5 * fov_degrees))
+    if t <= 0.0 or viewport_height_px <= 0.0:
+        return 0.0
+    return viewport_height_px / (2.0 * t)
+
 ## A TEXEL IS A KILOMETRE, AND A BAND BOUNDARY IS A HUNDRED METRES. The
 ## residence and height rasters this scatter places against are the 1,000 m
 ## overview -- the export declares a tile pyramid and does not emit it -- so a
@@ -141,7 +178,8 @@ func is_bound() -> bool:
 ## basin is 5,684 of them, so "scatter the fixture" is not a thing any frame
 ## can contain. The horizon is the caller's and the cost of it is reported.
 func build(window: String, day: int, centre: Vector2, radius_m: float,
-           bands: Array = NO_SCHEDULE, ceiling: int = MAX_BUILT_INSTANCES) -> Dictionary:
+           bands: Array = NO_SCHEDULE, ceiling: int = MAX_BUILT_INSTANCES,
+           k: float = NO_HORIZON_RULE) -> Dictionary:
     var t_build := Time.get_ticks_usec()
     meshes = {}
     if not is_bound():
@@ -186,6 +224,9 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
     var flat_cells := 0
     var phen_lo := 1.0
     var phen_hi := 0.0
+    ## [life_form, horizon_m] per cell the rule was evaluated at, so the report
+    ## can say what one `k` actually meant in metres per family.
+    var horizons_seen: Array = []
     var centre_texel := _hf.world_to_texel(centre.x, centre.y)
     var reach := int(ceil(radius_m / _hf.pixel_size_m))
     for dy in range(-reach, reach + 1):
@@ -242,7 +283,17 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 if float(seasons[gi]["hi"][cell]) - float(seasons[gi]["lo"][cell]) <= 0.0:
                     flat_cells += 1
                 var half := 0.5 * _hf.pixel_size_m
-                if bands.is_empty():
+                # THE HORIZON IS PER FAMILY AND SMALLER THAN A TEXEL, so it
+                # has to be evaluated on the subdivided grid for the same
+                # reason the density schedule does: a texel is a kilometre, and
+                # cutting at 15 m or at 300 m inside one keeps the same whole
+                # texel either way. Measured before the schedule existed:
+                # cuts at 100, 200 and 300 m gave byte-identical counts. So a
+                # horizon rule forces subdivision even with no schedule.
+                var horizon_m := individuation_horizon_m(float(params["height_m"]), k)
+                if k > 0.0:
+                    horizons_seen.append([life_form, horizon_m])
+                if bands.is_empty() and k <= 0.0:
                     wanted.append({"origin": w, "half_m": half, "life_form": life_form,
                                    "count": count, "banded": count,
                                    "distance_m": Vector2(w.x - centre.x,
@@ -262,6 +313,10 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                                 w.x - half + sub_half * (2.0 * float(sx) + 1.0),
                                 w.y - half + sub_half * (2.0 * float(sy) + 1.0))
                         var d_m := Vector2(o.x - centre.x, o.y - centre.y).length()
+                        # The horizon is a hard cut and the schedule is a fade;
+                        # they compose, and neither substitutes for the other.
+                        if k > 0.0 and d_m > horizon_m:
+                            continue
                         var keep := keep_at(d_m, bands)
                         if keep <= 0.0:
                             continue
@@ -366,6 +421,38 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             f["crown_min_m"] = minf(float(f["crown_min_m"]), c)
             f["crown_max_m"] = maxf(float(f["crown_max_m"]), c)
 
+    # WHAT ONE `k` MEANT, PER FAMILY, IN METRES. The rule is one constant and
+    # the consequence is four distances, so the artefact carries the
+    # consequence: a reader should not have to multiply to find out that a
+    # shared k put grass at tens of metres and trees at a couple of kilometres.
+    var horizon: Dictionary = {}
+    if k > 0.0:
+        var sub_m := _hf.pixel_size_m / float(BAND_SUBDIVISION)
+        for pair in horizons_seen:
+            var lf: String = pair[0]
+            var hz: float = pair[1]
+            if not horizon.has(lf):
+                horizon[lf] = {"min_m": hz, "max_m": hz}
+            else:
+                var e: Dictionary = horizon[lf]
+                e["min_m"] = minf(float(e["min_m"]), hz)
+                e["max_m"] = maxf(float(e["max_m"]), hz)
+        for lf in horizon:
+            var e: Dictionary = horizon[lf]
+            # THE CUT IS QUANTISED TO THE SUB-CELL, which is the resolution
+            # wall one level down. A horizon of a few sub-cells is a circle
+            # drawn with a handful of squares, and a horizon under one is not
+            # drawn at all -- the family vanishes rather than thinning, and it
+            # would look exactly like a family the wire never carried.
+            e["sub_cell_m"] = sub_m
+            e["cut_in_sub_cells"] = float(e["min_m"]) / sub_m
+            if float(e["min_m"]) < sub_m:
+                e["below_the_grid"] = ("%s's smallest horizon is %s m against a %s m sub-cell, "
+                        % [lf, String.num(float(e["min_m"]), 1), String.num(sub_m, 1)]
+                        + "so the rule cuts it below the resolution the cut is evaluated at "
+                        + "and this family is dropped rather than thinned. Raise k, raise "
+                        + "BAND_SUBDIVISION, or read this family's count as absent-by-grid.")
+
     var triangles := 0
     for life_form in by_family:
         var transforms: Array = by_family[life_form]
@@ -412,6 +499,8 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         "build_ceiling_used": ceiling,
         "placed": placed,
         "form": form,
+        "individuation_k": k,
+        "horizon": horizon,
         "share_drawn": share,
         "share_bound_by": bound_by,
         "build_ceiling": MAX_BUILT_INSTANCES,

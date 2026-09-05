@@ -621,6 +621,82 @@ So `range_matched` and `constant` are the same candidate here, with identical un
 identical frames. The two tying is arithmetic, not a metric that cannot separate them — the metric
 separates the null baseline by 2.4× at its worst.
 
+### The horizon rule: one constant, and where size stops doing the rest
+
+The instancing horizon is derived rather than tuned — `d_f = k × height_f`, one shared individuation
+constant for every family — so four distances become one knob. `bash tools/measure_seam.sh --sweep-k`
+rebuilds per `k` and records what that `k` meant in metres per family. The rule is **off in the
+shipped viewer** (`k = 0`); it exists to be swept.
+
+**`k` is bounded above by the camera, and that bound is exact.** The range at which an object falls
+below one pixel is `k_res × height` with `k_res = H / (2·tan(fov/2))` — a pinhole identity, a
+property of the rig and not of vegetation. At 1280 × 800 and 75° it is **521.3**, and
+`scatter_bands.json`'s own pixel table gives **521 for shrub, succulent and tree alike**. So the
+premise "individuation range is proportional to size" is not an approximation to be measured; it is
+geometry. What is left to measure is how far *below* resolution individuation actually stops, which
+is why the sweep runs at fractions of `k_res` and quotes them that way — a bare `k` is conditional
+on a viewport and a field of view.
+
+`deepest_winter`, day 22, at EPSG:5070 `(-1310793, 1616226)`, seam 120 m:
+
+| k/k_res | k | shrub | succulent | tree | instances | ×prev | k² predicts | frame p50 |
+|---:|---:|---:|---:|---:|---:|---:|---:|---:|
+| 0.05 | 26 | 13 m | 24 m | 113 m | 22,588 | | | 2.08 ms |
+| 0.10 | 52 | 27 m | 49 m | 226 m | 26,956 | 1.19 | 4.00 | 1.39 ms |
+| 0.20 | 104 | 53 m | 97 m | 453 m | 193,072 | 7.16 | 4.00 | 5.56 ms |
+| **0.35** | **183** | **93 m** | **170 m** | **792 m** | **535,126** | **2.77** | **3.06** | **14.29 ms** |
+| 0.50 | 261 | 133 m | 243 m | 1,131 m | 1,155,030 | 2.16 | 2.04 | 29.63 ms |
+| 0.75 | 391 | 199 m | 364 m | 1,697 m | 1,875,526 | 1.62 | 2.25 | 46.97 ms |
+| 1.00 | 521 | 265 m | 485 m | 2,263 m | 1,874,296 | 1.00 | 1.78 | 46.30 ms |
+
+**The k² law holds in the middle and is bounded at both ends by things that are not the rule.**
+0.2 → 0.35 → 0.5 track the prediction (2.77 vs 3.06, 2.16 vs 2.04). Below that, the horizon falls
+under the **31.25 m sub-cell** the cut is evaluated on — the resolution wall one level down from the
+1 km texel — and families are dropped rather than thinned; the report names them
+(`horizon.<family>.below_the_grid`) rather than letting a count read as a measurement. Above it, the
+tree horizon passes the **1,500 m scan radius** and the outer loop binds instead of the rule. So the
+usable sweep range here is roughly **k/k_res ∈ [0.2, 0.6]**, and that is a property of this raster
+and this radius, not of the rule.
+
+**Trees carry about 8.5× further than shrubs**, which is the brief's "roughly an order of
+magnitude", arriving by arithmetic rather than by tuning.
+
+### Where "size cancels" does not hold, and what it costs
+
+The brief's arithmetic is that per-family drawn count is `π k² × cover_f` — size cancels, so every
+family costs the same order of instances per unit cover and the budget is one scalar. **Half of that
+is true here and half is not**, and the half that fails is the one the brief's own caveat predicts:
+*height sets the horizon while crown sets the cover*.
+
+Count inside a family's own horizon is `cover_f × π k² × height²/crown_area`. That last factor only
+cancels if it is common across families. It is not:
+
+| | grass | shrub | succulent | tree |
+|---|---:|---:|---:|---:|
+| height² / crown area (declared max) | 22.1 | 2.0 | **127.3** | 9.1 |
+| the same, on realised sizes | — | 2.7 | **51.0** | 3.6 |
+
+A **64× spread declared, 19× realised**, and it is not spread evenly — the columnar succulent is the
+outlier, because a form that stays narrow as it grows tall earns a far horizon and a tiny crown
+area at the same time. The consequence is measured, not inferred: **succulents are 80–95% of the
+drawn population at every k in the sweep**, against ~2% shrub and ~8% tree.
+
+**What is true, and is the useful half:** one `k` does set the whole budget, total count really does
+go as `k²` over the usable range, and **the family mix is k-invariant** — succulent share moves only
+between 88.7% and 90.0% across 0.2 → 0.75. So the budget is one scalar in the sense that matters for
+a knob. It is not one scalar in the sense that a family's share of it is predictable from its cover
+alone.
+
+**The lever is the brief's own.** It names the drawn *proxy unit* — "a grass clump, not a blade" —
+as the per-family choice of what "individual" means, and that choice is exactly what sets the
+height:crown ratio. A columnar family drawn as a clump of columns rather than one column would move
+its aspect factor toward the woody families and the imbalance with it. That is a family-authoring
+change and is not made here.
+
+**One thing the sweep could not be allowed to find.** Grass draws **zero instances** at this
+place and day (the brief's own trap 1), so the family whose horizon the rule pulls in hardest is
+absent from every row above. Nothing here says anything about grass.
+
 ### Cost
 
 | candidate | instances | build | frame p50 |

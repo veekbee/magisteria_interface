@@ -587,13 +587,14 @@ func bind_families() -> Dictionary:
 ## would put winter's canopy over summer's ground.
 func scatter_at(centre: Vector2, radius_m: float = SCATTER_HORIZON_M,
                 bands: Array = VegetationScatter.NO_SCHEDULE,
-                ceiling: int = VegetationScatter.MAX_BUILT_INSTANCES) -> Dictionary:
+                ceiling: int = VegetationScatter.MAX_BUILT_INSTANCES,
+                k: float = VegetationScatter.NO_HORIZON_RULE) -> Dictionary:
     if scatter == null or not scatter.is_bound():
         return {"ok": false, "why": "no vegetation scatter is bound"}
     if shown.is_empty():
         return {"ok": false, "why": "no row is painted, so there is no day to scatter"}
     var r := scatter.build(str(shown["window"]), int(shown["day"]), centre, radius_m,
-            bands, ceiling)
+            bands, ceiling, k)
     if not bool(r.get("ok", false)):
         return r
     for life_form in scatter.meshes:

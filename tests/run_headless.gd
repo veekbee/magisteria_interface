@@ -89,6 +89,7 @@ func _initialize() -> void:
     test_the_families_hold_the_unit_convention_the_transform_relies_on()
     test_the_cost_model_refuses_outside_its_measured_span()
     test_the_scatter_reports_what_it_could_not_draw()
+    test_the_individuation_horizon_is_one_constant_bounded_by_the_camera()
     test_a_density_schedule_is_finer_than_the_texel_it_thins()
     test_pft_fractions_are_a_composition_of_the_cover()
     test_the_tint_holds_the_quantity_a_seam_has_to_conserve()
@@ -2986,6 +2987,125 @@ func test_the_scatter_measurement_verifies_in_pixels_not_primitives() -> void:
     check(short != "", "80 frames were timed while 12 were drawn and the run was accepted")
     check(short.contains("cadence"),
             "the refusal does not name what it is refusing: %s" % short)
+
+
+func test_the_individuation_horizon_is_one_constant_bounded_by_the_camera() -> void:
+    """THE HORIZON RULE: `d_f = k x height_f`, one shared k for every family,
+    so a per-family distance is derived rather than tuned. Four tuned numbers
+    can drift apart; one constant cannot, and there is one knob to sweep
+    instead of a product of four.
+
+    THE PREMISE IS EXACTLY TRUE AND IS A PINHOLE IDENTITY. Individuation range
+    is proportional to apparent size, so the range at which an object falls
+    below one pixel is `k_res x height` with `k_res = H / (2 tan(fov/2))` --
+    a property of the CAMERA, identical for every family. Checked here against
+    `scatter_bands.json`'s own pixel table rather than asserted: shrub,
+    succulent and tree all give 521 at 1280x800 and 75 degrees, and so does
+    the formula. That is worth knowing before sweeping k, because it means k
+    is not free -- individuation stops at or before resolution, and the sweep
+    is looking for how far before.
+    """
+    # The camera constant, from the formula and from the measured ranges.
+    var k_res := VegetationScatter.resolution_k(800.0, 75.0)
+    check(absf(k_res - 521.3) < 0.5, "k_res at 1280x800 / 75 degrees is %s, not ~521.3"
+            % String.num(k_res, 2))
+    check(VegetationScatter.resolution_k(0.0, 75.0) == 0.0
+                    and VegetationScatter.resolution_k(800.0, 0.0) == 0.0,
+            "a degenerate camera returned a horizon constant instead of zero")
+
+    var f := FileAccess.open("res://measurements/scatter_bands.json", FileAccess.READ)
+    if f != null:
+        var parsed = JSON.parse_string(f.get_as_text())
+        if typeof(parsed) == TYPE_DICTIONARY:
+            var rows := _rows_with(parsed, "pixels_at")
+            check(rows.size() > 0, "scatter_bands.json carries no screen-size table, so the "
+                    + "premise this rule rests on cannot be checked against a measurement")
+            for r in rows:
+                var row: Dictionary = r
+                var h := float(row["height_m"])
+                var px: Dictionary = row["pixels_at"]
+                # px * d is constant for a pinhole, so any row gives the
+                # one-pixel range. Take them all and require they agree.
+                for d_str in px:
+                    var one_px_range := float(d_str) * float(px[d_str])
+                    var k_here := one_px_range / h
+                    check(absf(k_here - k_res) / k_res < 0.02,
+                            "%s at %s m gives k = %s, against the camera's %s. Individuation "
+                                    % [str(row["life_form"]), str(d_str),
+                                            String.num(k_here, 0), String.num(k_res, 0)]
+                            + "range is supposed to be proportional to size with ONE constant; "
+                            + "if the families disagree, the horizon rule needs a per-family "
+                            + "term and is no longer one knob.")
+
+    # The rule itself: linear in both, and degenerate inputs give no horizon
+    # rather than a nonsense one.
+    check(absf(VegetationScatter.individuation_horizon_m(4.0, 500.0) - 2000.0) < 1e-9,
+            "a 4 m object at k = 500 should individuate to 2,000 m")
+    check(absf(VegetationScatter.individuation_horizon_m(0.5, 500.0) - 250.0) < 1e-9,
+            "the horizon is not linear in height")
+    check(VegetationScatter.individuation_horizon_m(4.0, 0.0) == 0.0,
+            "k = 0 is the rule being off and must not produce a horizon")
+    check(VegetationScatter.individuation_horizon_m(-1.0, 500.0) == 0.0,
+            "a negative height produced a horizon")
+
+    # THE BRIEF'S ARITHMETIC, CHECKED AGAINST THIS REPO'S FAMILIES -- and it
+    # does not come out. Count inside a family's own horizon is
+    # `cover x pi k^2 x height^2 / crown_area`, so "size cancels and the budget
+    # is one scalar" needs `height^2 / crown_area` to be the same for every
+    # family. It is not: the brief's own caveat says height sets the horizon
+    # while crown sets the cover, and that is exactly where it comes apart.
+    var fam := FileAccess.open("res://assets/families/families.json", FileAccess.READ)
+    check(fam != null, "no families.json")
+    if fam == null:
+        return
+    var doc = JSON.parse_string(fam.get_as_text())
+    if typeof(doc) != TYPE_DICTIONARY:
+        return
+    var families: Dictionary = (doc as Dictionary).get("families", {})
+    var factor := {}
+    for name in families:
+        var pars: Dictionary = (families[name] as Dictionary).get("parameters", {})
+        if not (pars.has("height_m") and pars.has("crown_m")):
+            check(false, "%s declares no height or crown range, so it supplies one number to "
+                    % name + "two formulas and the horizon rule cannot be applied to it")
+            continue
+        var h_max := float((pars["height_m"] as Dictionary)["max"])
+        var c_max := float((pars["crown_m"] as Dictionary)["max"])
+        var crown_area: float = PI * (0.5 * c_max) * (0.5 * c_max)
+        factor[name] = (h_max * h_max) / crown_area if crown_area > 0.0 else INF
+    var lo := INF
+    var hi := 0.0
+    for name in factor:
+        lo = minf(lo, float(factor[name]))
+        hi = maxf(hi, float(factor[name]))
+    var said := PackedStringArray()
+    for name in factor:
+        said.append("%s %s" % [name, String.num(float(factor[name]), 1)])
+    # A SELF-RETIRING ASSERT. It fails if the families ever become uniform
+    # enough that the cancellation really does hold -- at which point the
+    # budget CAN be one scalar and this note is what is stale, not the brief.
+    check(hi / lo > 2.0, "height^2/crown_area now spans only %sx across the families (%s), so "
+            % [String.num(hi / lo, 1), ", ".join(said)]
+            + "size really does cancel and the per-family instance budget really is one "
+            + "scalar. That is the brief's claim and it did not hold when this was written "
+            + "(64x); if it holds now, drop this check and the note beside it.")
+    print("horizon: k_res %s at 1280x800/75deg; height^2/crown_area spans %sx (%s)"
+            % [String.num(k_res, 0), String.num(hi / lo, 1), ", ".join(said)])
+
+
+## Every dictionary anywhere in `node` that carries `key`.
+static func _rows_with(node: Variant, key: String) -> Array:
+    var out: Array = []
+    if typeof(node) == TYPE_DICTIONARY:
+        var d: Dictionary = node
+        if d.has(key) and d.has("life_form") and d.has("height_m"):
+            out.append(d)
+        for k in d:
+            out.append_array(_rows_with(d[k], key))
+    elif typeof(node) == TYPE_ARRAY:
+        for v in (node as Array):
+            out.append_array(_rows_with(v, key))
+    return out
 
 
 func test_a_density_schedule_is_finer_than_the_texel_it_thins() -> void:

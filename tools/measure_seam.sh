@@ -11,6 +11,8 @@
 #   --row NAME        row the scatter reads           (default: band.pft.biomass)
 #   --day N           day within the window           (default: 22)
 #   --at X,Y          EPSG:5070 point to stand at     (default: centre of the opening view)
+#   --sweep-k         sweep the individuation constant k, one rebuild per value,
+#                     and record what one k meant per family in metres
 #   --oracle-check    also build an oracle at 5x the seam, to measure whether
 #                     the 2.5x one is deep enough for the annulus score
 #   --size WxH        window size                     (default: 1280x800)
