@@ -288,8 +288,17 @@ func show_field(window: String, row: String, day: int, group: int = 0) -> bool:
 ## Which view the terrain is in. Data view is the ramp over a carried row;
 ## naturalistic view is the stand. Neither decorates the other, and they no
 ## longer share a vertical exaggeration.
-func set_naturalistic(on: bool) -> void:
+## `hold_exaggeration` is for measurement, and it is a named argument rather
+## than a private hook because holding it is a legitimate thing to want: a
+## harness comparing a tint against instances has to draw both at ONE
+## exaggeration or it is comparing two scenes. Without it, `measure_seam`
+## silently dropped to 1x for its tint candidates and stayed at 12x for its
+## instance ones, and every 12x row would have compared a stand against a
+## different world. The application never passes it.
+func set_naturalistic(on: bool, hold_exaggeration := false) -> void:
     var want: float = NATURAL_VIEW_EXAGGERATION if on else DATA_VIEW_EXAGGERATION
+    if hold_exaggeration and terrain != null:
+        want = terrain.exaggeration
     naturalistic = on
     if _terrain_mat != null:
         _terrain_mat.set_shader_parameter("naturalistic", on)

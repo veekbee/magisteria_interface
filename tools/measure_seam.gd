@@ -336,7 +336,10 @@ func _run_candidate(delta: float) -> void:
 func _apply_candidate(job: Dictionary) -> void:
     var kind := str(job["kind"])
     var cut: float = float(job["cut_m"])
-    view.set_naturalistic(kind == "tint")
+    # HOLDING the exaggeration: this run chose one and both the tint candidates
+    # and the instance ones have to be drawn at it, or the comparison is between
+    # two different worlds rather than between two candidates.
+    view.set_naturalistic(kind == "tint", true)
     if kind == "tint":
         view.set_range_curve(bool(job.get("matched", false)),
                 float(curve["k0"]), float(curve["r0"]))

@@ -130,6 +130,8 @@ func _process(_delta: float) -> bool:
             return false
         _say_verdict()
         if natural:
+            # The application's own switch, exaggeration and all: this is a
+            # photograph of the viewer, not a measurement holding a variable.
             view.set_naturalistic(true)
         _choose_camera(view)
         stage = 1
