@@ -80,6 +80,7 @@ func _initialize() -> void:
     test_the_verdict_is_read_and_never_supplied()
     test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one()
     test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate()
+    test_the_budget_says_it_is_made_from_a_floor()
     test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it()
     test_the_scatter_measurement_verifies_in_pixels_not_primitives()
     test_every_wire_life_form_resolves_to_a_family()
@@ -2889,6 +2890,43 @@ func test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate() -
                     "censored" if not mid.has("spread") else "clean",
                     "not-the-timer" if not low.has("spread") else "clean",
                     ", warm-up at the head" if low.has("head_warm_up") else ""])
+
+
+func test_the_budget_says_it_is_made_from_a_floor() -> void:
+    """The scatter budgets by dividing a frame budget by `render_cost.json`'s
+    per-instance coefficient, and that coefficient is measured on an empty
+    stage. It is a FLOOR, so the budget it yields is an over-estimate of what
+    fits, by however far a real frame sits above it.
+
+    That is not a hypothetical. At the basin's densest cells the thinning is
+    already engaged -- one draws 6.8% of its implied stand -- and the frame
+    still measures 36 to 49 ms against a 33.3 ms budget. Two of the five draw
+    everything, believing they fit, and do not.
+
+    The correction is NOT applied: §19.8.9 owns the coefficient. What is
+    required is that the budget block SAYS so, and that the figure it says stays
+    the one `scatter_cost.json` actually measures.
+    """
+    var f := FileAccess.open("res://measurements/scatter_cost.json", FileAccess.READ)
+    if f == null:
+        check(false, "no scatter_cost.json to check the quoted ratio against")
+        return
+    var parsed = JSON.parse_string(f.get_as_text())
+    if typeof(parsed) != TYPE_DICTIONARY:
+        return
+    var ratio := float(((parsed as Dictionary).get("agreement", {}) as Dictionary).get(
+            "ratio_observed_over_predicted", NAN))
+    check(not is_nan(ratio), "scatter_cost.json records no observed/predicted ratio")
+    if is_nan(ratio):
+        return
+    check(absf(ratio - VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS) < 0.15,
+            "the scatter quotes the empty stage as under-predicting by %sx and the artefact "
+            % String.num(VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS, 2)
+            + "now measures %sx. The quoted figure is what a reader uses to know what the "
+                    % String.num(ratio, 3)
+            + "budget is worth, so it has to track the measurement it came from.")
+    print("budget: the empty stage under-predicts by %sx measured, %sx quoted"
+            % [String.num(ratio, 3), String.num(VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS, 2)])
 
 
 func test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it() -> void:

@@ -98,6 +98,24 @@ const NO_SCHEDULE: Array = []
 ## resolution, and the sweep is looking for how far before.
 const NO_HORIZON_RULE := 0.0
 
+## How far `render_cost.json`'s coefficient sits below a real frame.
+##
+## The budget below is `budget_ms / mean_ns_per_instance`, and that coefficient
+## is measured on an EMPTY STAGE -- no terrain, no culling, no LOD. It is a
+## floor, and `measurements/scatter_cost.json` measures the distance from it:
+## the same instances in the viewer that draws them cost about a third more,
+## reproducibly and never less, across a 5.6x change in the pixels they cover.
+##
+## So a scatter thinned "to fit 33.3 ms" by this coefficient lands near 44 ms.
+## That is not a hypothetical: at the basin's densest cells the thinning is
+## already engaged and the frame still measures 36-49 ms
+## (`measurements/scatter_horizon.json`). The number is NOT applied here --
+## §19.8.9 owns the coefficient and correcting a budget is its call, not this
+## client's -- but the budget block says it, so nobody reads the prediction as
+## the frame. `test_the_budget_says_it_is_made_from_a_floor` keeps it current
+## against the artefact it is quoted from.
+const EMPTY_STAGE_UNDER_PREDICTS := 1.33
+
 
 ## How far one object of this drawn height is individuated, under constant `k`.
 static func individuation_horizon_m(height_m: float, k: float) -> float:
@@ -637,6 +655,14 @@ func _affordable(groups: PackedStringArray, implied: Dictionary) -> Dictionary:
         "implied_ms": weighted_ns / 1.0e6,
         "measured_on": str(_fc.host.get("gpu", "?")) + " / "
                 + str(_fc.host.get("rendering_method", "?")),
+        "predicted_from": ("render_cost.json's empty-stage coefficient, which is a FLOOR and "
+                + "not a forecast: measured against a real frame it under-predicts by about "
+                + "%sx, so a scatter thinned to fit %s ms lands nearer %s ms. The correction "
+                        % [String.num(EMPTY_STAGE_UNDER_PREDICTS, 2),
+                                String.num(_fc.budget_ms, 1),
+                                String.num(_fc.budget_ms * EMPTY_STAGE_UNDER_PREDICTS, 1)]
+                + "is not applied here; the coefficient is §19.8.9's."),
+        "budget_ms_if_corrected": _fc.budget_ms / EMPTY_STAGE_UNDER_PREDICTS,
     }
 
 

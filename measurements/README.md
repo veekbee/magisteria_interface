@@ -18,6 +18,9 @@ claims a `PIN` does: what was measured, how, on what, and what it does not cover
   `bash tools/measure_bands.sh`.
 - `scatter_seam.json` — how far a far-field candidate sits from the instances it stands in for,
   scored in an annulus around the seam. Re-take it with `bash tools/measure_seam.sh`.
+- `scatter_horizon.json` — the individuation constant `k` swept at the basin's five densest cells,
+  which is where decision 949's `[PROVISIONAL]` ruling is tested. Re-take it with
+  `bash tools/measure_seam.sh --sweep-k --at X,Y --out measurements/scatter_horizon.json`.
 - `visual_audit.md` — what each milestone's claim looks like when photographed, and the five
   defects that came out of looking. Re-take it with `bash tools/audit.sh`.
 
@@ -709,6 +712,71 @@ oracle**, cut to each family's own deepest annulus rather than one cut for all: 
 need depth are the sparse ones (84,608 trees inside 1,500 m at place B against 7.65 M grass), so
 depth is cheap exactly where it is needed. Not built here.
 
+### `scatter_horizon.json` — `k` at the hard cells, and what the ruled value costs there
+
+Decision 949 rules `k/k_res = 0.35` `[PROVISIONAL]` with a named revisit trigger. §23.909 locates the
+two places priced above at the **81st percentile** of the count law's own weight and predicts the p99
+cell at 2.05× and the densest at 2.35×. This is that test: the five densest cells swept at their own
+EPSG:5070 centroids, `deepest_winter` day 22.
+
+**Frame p50, against the 33.3 ms budget. Three of five are over at the ruled value.**
+
+| HUC10 | weight | 0.05 | 0.1 | 0.2 | **0.35** | 0.5 | 0.75 |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| 1502001703 | 69.7 | 0.9 | 1.9 | 5.5 | **14.6** | 28.3 | 47.6 ✗ |
+| 1502000807 | 67.8 | 2.7 | 7.1 | 23.3 | **49.2 ✗** | 49.1 ✗ | 47.2 ✗ |
+| 1502001607 | 67.3 | 18.3 | 41.7 ✗ | 37.9 ✗ | **36.4 ✗** | 38.3 ✗ | 42.3 ✗ |
+| 1502001608 | 67.0 | 1.8 | 4.2 | 13.9 | **35.7 ✗** | 48.6 ✗ | 47.2 ✗ |
+| 1505030306 | 66.5 | 1.7 | 1.8 | 4.2 | **11.9** | 22.9 | 47.0 ✗ |
+
+**The weight ordering is very nearly the reverse of the cost ordering.** The heaviest cell is the
+*cheapest* — 14.6 ms — and the fifth-heaviest is the second cheapest. Ordering by weight was offered
+as the robust half of §23.909 and against measured frame cost it does not hold.
+
+**What does predict the cost is realised plant HEIGHT, and it predicts it exactly.** Succulent drawn
+height across the five: 0.98, 3.34, 8.95, 2.58, 0.90 m; cost at 0.35: 14.6, 49.2, 36.4, 35.7,
+11.9 ms — the same rank order, no exceptions. The mechanism is in the rule itself: `d_f = k × h`, so
+the drawn area goes as `h²` and the count with it. Height enters **squared**, cover enters linearly,
+and a cell with 9 m succulents against 1 m succulents carries ~80× the count from that term alone.
+A weight built from cover and a declared aspect factor cannot see it, because realised height comes
+from biomass per covered area and is not in the formula.
+
+**And no `k` satisfies both bounds at 1502001607.** It is over budget at every value from 0.1 up, and
+0.05 is far below the 0.35 placement-raster floor. The window is empty there. That is not a tuning
+problem; it is the shape of a fixed global constant meeting a basin with two orders of magnitude of
+plant height in it.
+
+### The budgeter is already engaged at these cells, and it is calibrated on a floor
+
+This is the finding that outranks the sweep. `VegetationScatter._affordable` divides the frame budget
+by `render_cost.json`'s per-instance coefficient — **the empty-stage floor**, which
+`scatter_cost.json` measures a real frame sitting **1.33× above**. So a scatter thinned to "fit
+33.3 ms" lands near 44 ms, and the thinning is not hypothetical:
+
+| cell, k = 0.35 | share drawn | bound by | frame p50 |
+|---|---:|---|---:|
+| 1502001607 | **6.8%** | the frame budget | **36.4 ms** |
+| 1502000807 | 80.8% | the frame budget | **49.2 ms** |
+| 1502001608 | 100% | *nothing: the whole implied scatter is drawn* | **35.7 ms** |
+
+The first two thinned themselves *on purpose, to fit the budget*, and missed it. The third believed
+it fitted and did not. **A scatter cannot budget itself with a coefficient that under-predicts the
+frame it is budgeting for**, and no choice of `k` repairs that — at best it moves which cells the
+error is visible in.
+
+The correction is **not applied here**: §19.8.9 owns the coefficient, and dividing the budget by 1.33
+would thin the scatter everywhere, which is a fidelity decision and not this client's. What is
+applied is disclosure — the report's `budget` block now names the coefficient as a floor, quotes the
+measured ratio, and carries `budget_ms_if_corrected`. `test_the_budget_says_it_is_made_from_a_floor`
+keeps the quoted figure tracking `scatter_cost.json`, currently 1.334× measured against 1.33 quoted.
+
+**What this says about the revisit trigger.** The trigger fires, but not for the reason it names: the
+ruled `k` is over budget at three of five hard cells, and the instrument that ranked them mis-ranks
+against measured cost. Both point the same way — an instance budget solved *per place* (backlog 198)
+would hold where a fixed global constant cannot, because the quantity that varies is a property of
+the place. That is an argument for the inversion and not a recommendation to land it: it buys a
+popping defect, and the motion metrics that would catch one do not exist yet.
+
 ### Recommended `k`, for the corpus to rule on
 
 The horizon rule is §19.8.4's; `k_res` is a pinhole identity and that half is measurement. What
@@ -717,6 +785,12 @@ rule off (`k = 0`).
 
 > **Recommended: `k / k_res = 0.35`** — `k ≈ 182` at 1280 × 800 and 75°.
 > **Usable range: `k / k_res ∈ [0.35, 0.6]`.**
+>
+> **SUPERSEDED AT THE HARD CELLS — see `scatter_horizon.json` above.** This range was derived at two
+> 81st-percentile places. At the five densest cells 0.35 is over budget in three, and one has no
+> value that is both above the placement-raster floor and inside the frame budget. The recommendation
+> stands for the basin's typical cell and does not generalise; a fixed global constant is what fails,
+> not this particular value of it.
 
 **Bounded below at 0.35 by the placement raster, measured from both directions.** The horizon is cut
 on a 31.25 m sub-cell grid, and a family whose horizon is under about four sub-cells is drawn as a
