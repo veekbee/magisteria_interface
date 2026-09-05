@@ -259,43 +259,36 @@ scatter** — 1.7 m real, pitched 10° down, looking north — on Apple M5 / `gl
 
 | schedule | instances | build | marginal | coverage | px per 1,000 instances |
 |---|---:|---:|---:|---:|---:|
-| today: uniform over 1,500 m, 120 k ceiling | 119,994 | 0.91 s | 2.95 ms | 27,250 px (2.7%) | 227 |
-| cut at 100 m | 186,208 | 1.42 s | 6.82 ms | 990,531 px (96.7%) | 5,319 |
-| cut at 200 m | 721,556 | 5.47 s | 24.25 ms | 841,062 px (82.1%) | 1,166 |
-| cut at 300 m | 1,500,088 † | 11.44 s | 43.69 ms | 939,757 px (91.8%) | 626 |
-| fade 1 / .75 / .5 / .25 to 300 m | 750,500 | 5.75 s | 23.49 ms | 861,749 px (84.2%) | 1,148 |
-| fade 1 / .5 / .15 / .05 to 1,500 m | 1,498,616 † | 11.52 s | 39.99 ms | 516,144 px (50.4%) | 344 |
+| today: uniform over 1,500 m, 120 k ceiling | 119,994 | 1.5 s | 2.35 ms | 4,968 px (0.5%) | 41 |
+| cut at 100 m | 186,208 | 1.8 s | 4.83 ms | 595,240 px (58.1%) | 3,196 |
+| cut at 200 m | 721,556 | 7.0 s | 18.47 ms | 447,144 px (43.7%) | 620 |
+| cut at 300 m | 1,500,088 † | 14.7 s | 38.35 ms | 600,990 px (58.7%) | 401 |
+| fade 1 / .75 / .5 / .25 to 300 m | 750,500 | 7.5 s | 19.60 ms | 531,535 px (51.9%) | 708 |
+| fade 1 / .5 / .15 / .05 to 1,500 m | 1,498,616 † | 15.0 s | 37.10 ms | 280,378 px (27.4%) | 187 |
 
-† ceiling-bound rather than schedule-bound: these two are measurements of the cap, not of the
-schedule, and the cap thins uniformly.
+† ceiling-bound rather than schedule-bound: measurements of the cap, not of the schedule.
 
-### These rows no longer support the conclusions they were taken for, and that is the finding
+**Re-taken at 1×**, which is what naturalistic view now uses, from an eye placed on the *drawn*
+surface. Both of those changed since the rows this table replaces: the earlier ones were taken at
+12×, where plants are 12:1 spikes, from a camera that was underground.
 
-**The cover correction changed the plants, not just the counts.** Height comes from biomass per
-*covered* area and crown from cover, so halving cover made every family taller and narrower: shrub
-0.23 → 0.51 m, succulent 0.23 → 0.94 m, tree 2.10 → 4.37 m. At the 12× exaggeration those are drawn
-6.1 m, 11.3 m and **52.5 m**.
+### Coverage here is a lower bound, and that is why it is not monotonic
 
-The consequence is that **coverage saturates the frame at every horizon**: 96.7% at a 100 m cut,
-82.1% at 200 m, 91.8% at 300 m — no longer monotonic, and no longer a curve anything can be fitted
-to. From an eye at 1.7 m real (20.4 m drawn) among trees drawn 52.5 m tall, the near field fills the
-picture whatever the far field does.
+Going from a 100 m cut to a 200 m cut adds 535,348 instances and **removes** 148,096 covered
+pixels. Reproducible to the digit across runs, so it is not noise.
 
-Read before the correction, these rows said coverage saturates with range and a fade beats a cut.
-**Neither claim survives on this data.** What replaced them is a sharper constraint: *an eye-level
-naturalistic view and a 12× vertical exaggeration are incompatible*, because the exaggeration is
-applied to plants and not to the horizontal distance to them. Any seam distance tuned at eye level
-here is tuned against a stand twelve times too tall.
+The picture explains it: `shots/bands/cut_at_200_m.png` is a dense stand of succulent trunks, and
+the ones in shadow are **darker than `FrameProbe.BLACK_CEILING`**, so they are counted as near-black
+rather than as coloured. Adding plants adds mutual shadowing, and shadowed plants leave the count.
 
-The cost column is untouched by all of this and still stands: instances cost what they cost.
+So **"coverage" in this file is the share of the frame carrying a plant bright enough to see, not
+the share carrying a plant**, and it undercounts by more as density rises. `scatter_seam.json`
+measures the same quantity against an explicit ground denominator in a range annulus, with oracle
+and candidate measured identically at the same density — its *ranking* is unaffected by this and
+its absolute coverage is a lower bound in the same way. Neither file supports a claim about how
+coverage varies with density, and the earlier version of this section made one; it is withdrawn.
 
-### The bottom row is a warning about the ceiling, not about long fades
-
-The 1,500 m fade is the only schedule the build ceiling bound rather than the schedule, and it
-covers **less** screen than the 300 m cut while costing more. When the ceiling binds it thins
-**uniformly**, including the near field, which is exactly where the pixels are. A band system and a
-global instance cap interact badly: the cap has to be spent near the camera or it undoes the
-schedule.
+The cost column is untouched by any of this. Instances cost what they cost.
 
 ### Build time, not frame time, is what stops this being dynamic
 
@@ -328,22 +321,22 @@ A 1,500 m horizon is **nine texels**, sitting inside one or two cells. Three con
   is in the middle of one flat triangle. Near-field vegetation would stand on a plane. Tuning a
   200 m boundary by eye is not really possible until the tile pyramid lands.
 
-### One plant on screen, and the 12× problem
+### One plant on screen
 
-Drawn height, not real height: M1 draws the basin at 12× vertical relief and the scatter scales
-plants by the same factor so the two agree, while horizontal distance is **not** exaggerated. A
-plant therefore subtends about twelve times the angle it would in the field.
+At 1×, where naturalistic view now draws, real height and drawn height are the same number.
 
-| family | real | drawn | 100 m | 200 m | 300 m | 500 m | 1,000 m | 1,500 m |
-|---|---:|---:|---:|---:|---:|---:|---:|---:|
-| shrub | 0.23 m | 2.7 m | 14.1 px | 7.0 px | 4.7 px | 2.8 px | 1.4 px | 0.9 px |
-| succulent | 0.23 m | 2.8 m | 14.7 px | 7.3 px | 4.9 px | 2.9 px | 1.5 px | 1.0 px |
-| tree | 2.10 m | 25.2 m | 131 px | 65.6 px | 43.7 px | 26.2 px | 13.1 px | 8.7 px |
+| family | real = drawn at 1× | 100 m | 200 m | 300 m | 500 m | 1,000 m | 1,500 m |
+|---|---:|---:|---:|---:|---:|---:|---:|
+| shrub | 0.51 m | 2.7 px | 1.3 px | **0.9 px** | 0.5 px | 0.3 px | 0.2 px |
+| succulent | 0.94 m | 4.9 px | 2.5 px | 1.6 px | **1.0 px** | 0.5 px | 0.3 px |
+| tree | 4.37 m | 22.8 px | 11.4 px | 7.6 px | 4.6 px | 2.3 px | 1.5 px |
 
-At true scale every one of these numbers is twelve times smaller: a real shrub is **sub-pixel past
-about 85 m** and a real tree past about 780 m. **Any band distance tuned by eye on this render is
-tuned against a 12× distortion, and the families do not fade together** — a tree is still 44 pixels
-at 300 m where a shrub is 4.7.
+**A shrub goes sub-pixel past about 300 m, a succulent past about 500 m, a tree past about
+2,300 m** — 1280 × 800 at 75° FOV. The families do not fade together, so a single global seam
+distance is the wrong shape and per-family distances fall straight out of this table. (Those
+figures supersede the ~85 m and ~780 m carried into the seam brief's addendum: those divided the
+12× numbers by twelve, but the 12× numbers predate the cover correction that made every family
+roughly twice as tall.)
 
 ### What a far-field texture would have to match
 
@@ -390,6 +383,33 @@ arguable, and this is the arithmetic that decides.
 **oracle** of instances at full density out to 2.5× the seam, the **null** baseline that ships
 today, a **constant** tint, and a **range-matched** tint whose attenuation is fitted to the
 oracle's own binned brightness — and scores each in an annulus at 0.7–1.5× the seam.
+
+### Vertical exaggeration is per view now, and these runs bracket the decision
+
+Naturalistic view draws at **1×** and data view at **12×** — the design side ruled it after this
+harness photographed what 12× does to a stand. `TerrainView.set_naturalistic` rebuilds every piece
+of geometry that carries the factor in its vertex positions, and the cost of a toggle is:
+
+| | |
+|---|---:|
+| terrain mesh rebuild | 252 ms |
+| flowline drape | 14 ms |
+| flow colours and contours | 14 ms |
+| **view switch total** | **280 ms** |
+| per-cell tint, on entering naturalistic | 267 ms |
+
+**The mesh is rebuilt rather than Y-scaled in a vertex shader**, which was the offered fallback. A
+shader scale would leave `TerrainMesh.drawn_surface_y` — which the scatter, both drapes and the
+eye-level camera all stand on — computing the *old* surface, and everything on the ground would
+float off it again. That is the defect this session spent its length on; one CPU-side surface is
+worth 252 ms.
+
+**The drapes are rescaled rather than re-draped**, which is what took the switch from 1.63 s to
+280 ms. A draped Y is `drawn_surface_y × e + lift`, exactly linear in the exaggeration, so moving
+between views is arithmetic on vertices already computed. Held to the thing it replaces:
+`test_a_rescaled_drape_matches_a_rebuilt_one` compares a rescaled drape against a rebuilt one and
+finds **0.24 mm over 233,362 vertices**. The lift does not scale — it is a z-fighting nudge in
+absolute metres against a depth buffer that does not shrink with the terrain.
 
 ### First, which of these runs is a measurement of a stand
 

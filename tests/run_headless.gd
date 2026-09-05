@@ -87,6 +87,7 @@ func _initialize() -> void:
     test_a_recorded_distance_names_what_it_is_conditional_on()
     test_the_seam_metric_fails_the_bad_frame()
     test_plants_stand_on_the_surface_that_is_drawn()
+    test_a_rescaled_drape_matches_a_rebuilt_one()
     test_the_seam_measurement_ranks_the_null_baseline_worst()
     test_the_project_does_not_import_blend_sources()
     test_phenology_is_the_cell_measured_against_itself()
@@ -3211,3 +3212,63 @@ func test_the_seam_measurement_ranks_the_null_baseline_worst() -> void:
     print("seam: %d runs over %d places and %d day(s); the tint beats what ships today by at "
             % [runs.size(), places.size(), days.size()]
             + "least %sx on annulus colour" % String.num(worst_ratio, 1))
+
+
+func test_a_rescaled_drape_matches_a_rebuilt_one() -> void:
+    """A view switch changes the vertical exaggeration, and re-draping 29,484
+    reaches against the terrain costs 1.34 s of what is otherwise a keypress.
+    It does not have to: a draped Y is `drawn_surface_y × e + lift`, so moving
+    from one exaggeration to another is exact arithmetic on vertices already
+    computed.
+
+    "Exact" is the whole licence for the shortcut, so it is checked against the
+    thing it replaces rather than reasoned about. If it ever stops matching, the
+    fast path is silently drawing rivers somewhere other than where the slow one
+    would put them, which is the defect this session already found once.
+    """
+    var hf := heightfield()
+    var tm12 := TerrainMesh.new()
+    tm12.build(hf, 8, 12.0)
+    var tm1 := TerrainMesh.new()
+    tm1.build(hf, 8, 1.0)
+    var f := FileAccess.open("res://assets/terrain/flowlines.json", FileAccess.READ)
+    check(f != null, "no flowlines.json to drape")
+    if f == null:
+        return
+    var parsed = JSON.parse_string(f.get_as_text())
+    var reaches: Array = (parsed as Dictionary).get("reaches", []) \
+            if typeof(parsed) == TYPE_DICTIONARY else []
+    check(reaches.size() > 1000, "only %d reaches to drape" % reaches.size())
+
+    var rebuilt := FlowlineDrape.new()
+    rebuilt.build(reaches, hf, tm1)
+    var rescaled := FlowlineDrape.new()
+    rescaled.build(reaches, hf, tm12)
+    # Which vertices exist cannot depend on the exaggeration: an off-map point
+    # is off-map at any height.
+    check(rescaled.dropped_offmap == rebuilt.dropped_offmap,
+            "draping at 12x dropped %d vertices and at 1x dropped %d; the exaggeration is "
+            % [rescaled.dropped_offmap, rebuilt.dropped_offmap]
+            + "deciding which points are on the map, which it must not")
+    rescaled.rescale(1.0 / 12.0, hf)
+
+    var a := rebuilt.paint_flow(PackedFloat64Array(), fixture(), FlowDisplay.new())
+    var b := rescaled.paint_flow(PackedFloat64Array(), fixture(), FlowDisplay.new())
+    check(a != null and b != null, "one of the two drapes produced no mesh")
+    if a == null or b == null:
+        return
+    var va: PackedVector3Array = a.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var vb: PackedVector3Array = b.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    check(va.size() == vb.size(), "%d vertices rebuilt against %d rescaled"
+            % [va.size(), vb.size()])
+    if va.size() != vb.size():
+        return
+    var worst := 0.0
+    for i in va.size():
+        worst = maxf(worst, absf(va[i].y - vb[i].y))
+    # A metre over a basin whose mesh-space heights run to 25,000: this is
+    # float32 accumulation in a linear map, not a disagreement about geometry.
+    check(worst < 1.0, "a rescaled drape sits %s m from a rebuilt one at worst"
+            % String.num(worst, 4))
+    print("drape: rescaling 12x -> 1x matches a rebuild within %s m over %d vertices"
+            % [String.num(worst, 5), va.size()])

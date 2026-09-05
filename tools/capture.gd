@@ -274,6 +274,13 @@ func _set_state(view, day: int) -> void:
     else:
         scene._on_field_changed(w, r, day, 0)
     if natural:
+        var vr: Dictionary = view.view_report
+        if not vr.is_empty():
+            print("view   exaggeration %.0fx -> %.0fx in %.0f ms (mesh %.0f, drape %.0f, "
+                    % [float(vr["from"]), float(vr["to"]), float(vr["total_ms"]),
+                       float(vr["mesh_ms"]), float(vr["flowline_drape_ms"])]
+                    + "flow+contours %.0f, scatter %.0f)"
+                    % [float(vr["flow_and_contours_ms"]), float(vr["scatter_ms"])])
         var tr: Dictionary = view.tint_report
         if bool(tr.get("ok", false)):
             print("tint   %d/%d cells covered, mean cover %.3f, rebuild %.0f ms (cells %.0f ms)"

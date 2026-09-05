@@ -104,6 +104,30 @@ func build(reaches: Array, hf: Heightfield, tm: TerrainMesh) -> Dictionary:
     return order_meshes
 
 
+## Move every draped vertex to a new vertical exaggeration, without re-draping.
+##
+## EXACT, NOT AN APPROXIMATION, and that is why it is allowed to exist beside
+## the build. `TerrainMesh.drawn_surface_y` is the interpolated field times the
+## exaggeration, so a draped Y is `surface x e + lift` and moving from `e` to
+## `e2` is `(y - lift) * e2/e + lift` for every vertex. Nothing about which
+## vertices exist depends on the exaggeration -- an off-map point is off-map at
+## any height -- so the drops, the splits and the counts are untouched.
+##
+## THE LIFT DOES NOT SCALE. It is a z-fighting nudge in absolute metres against
+## a depth buffer that does not shrink with the terrain, so scaling it with
+## everything else would make it twelve times too small to do its job at 1x.
+##
+## It exists because rebuilding this drape is 1.34 s of a 1.63 s view switch,
+## and a view switch is a keypress. `test_a_rescaled_drape_matches_a_rebuilt_one`
+## holds it to the rebuild it is standing in for.
+func rescale(ratio: float, hf: Heightfield) -> void:
+    var lift := LIFT_FRACTION * hf.pixel_size_m
+    for i in _flow_verts.size():
+        var v := _flow_verts[i]
+        v.y = (v.y - lift) * ratio + lift
+        _flow_verts[i] = v
+
+
 ## Repaint the flow mesh for one day. `flow_of_node` is looked up per reach;
 ## a reach with no node is drawn as NO_FLOW rather than skipped -- the channel
 ## exists on the ground whatever the fixture can say about it, and hiding it

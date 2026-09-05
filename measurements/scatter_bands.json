@@ -10,7 +10,7 @@
     ],
     "vsync": "disabled"
   },
-  "measured_at_commit": "850f482",
+  "measured_at_commit": "e1075a7",
   "measured_at_commit_means": "the HEAD the run was taken against; the commit that lands this artefact is its child",
   "method": {
     "coverage": "counted with the terrain, flowlines, contours and UI hidden, so a coloured pixel is a plant",
@@ -22,53 +22,53 @@
   "one_plant_on_screen": [
     {
       "crown_m": 0.353644141948703,
-      "drawn_height_m": 6.14899680222454,
+      "drawn_height_m": 0.512416400185378,
       "height_m": 0.512416400185378,
       "life_form": "shrub",
       "pixels_at": {
-        "100": 32.0541146007138,
-        "1000": 3.20541146007138,
-        "150": 21.3694097338092,
-        "1500": 2.13694097338092,
-        "200": 16.0270573003569,
-        "25": 128.216458402855,
-        "300": 10.6847048669046,
-        "50": 64.1082292014276,
-        "500": 6.41082292014276
+        "100": 2.67117621672615,
+        "1000": 0.267117621672615,
+        "150": 1.7807841444841,
+        "1500": 0.17807841444841,
+        "200": 1.33558810836308,
+        "25": 10.6847048669046,
+        "300": 0.89039207224205,
+        "50": 5.3423524334523,
+        "500": 0.53423524334523
       }
     },
     {
       "crown_m": 0.148582446598509,
-      "drawn_height_m": 11.2784048691484,
+      "drawn_height_m": 0.939867072429037,
       "height_m": 0.939867072429037,
       "life_form": "succulent",
       "pixels_at": {
-        "100": 58.7932135626002,
-        "1000": 5.87932135626002,
-        "150": 39.1954757084001,
-        "1500": 3.91954757084001,
-        "200": 29.3966067813001,
-        "25": 235.172854250401,
-        "300": 19.5977378542001,
-        "50": 117.5864271252,
-        "500": 11.75864271252
+        "100": 4.89943446355002,
+        "1000": 0.489943446355002,
+        "150": 3.26628964236668,
+        "1500": 0.326628964236668,
+        "200": 2.44971723177501,
+        "25": 19.5977378542001,
+        "300": 1.63314482118334,
+        "50": 9.79886892710003,
+        "500": 0.979886892710004
       }
     },
     {
       "crown_m": 2.61231178041298,
-      "drawn_height_m": 52.4679392915832,
+      "drawn_height_m": 4.3723282742986,
       "height_m": 4.3723282742986,
       "life_form": "tree",
       "pixels_at": {
-        "100": 273.510198981933,
-        "1000": 27.3510198981933,
-        "150": 182.340132654622,
-        "1500": 18.2340132654622,
-        "200": 136.755099490967,
-        "25": 1094.04079592773,
-        "300": 91.1700663273111,
-        "50": 547.020397963866,
-        "500": 54.7020397963866
+        "100": 22.7925165818278,
+        "1000": 2.27925165818278,
+        "150": 15.1950110545518,
+        "1500": 1.51950110545518,
+        "200": 11.3962582909139,
+        "25": 91.1700663273111,
+        "300": 7.59750552727592,
+        "50": 45.5850331636555,
+        "500": 4.55850331636555
       }
     }
   ],
@@ -78,7 +78,7 @@
       1616226.125
     ],
     "camera": "eye",
-    "camera_note": "eye = standing in the scatter at 1.7 m real (x12 exaggeration) looking level to the north; overview = the app's focus_on_scatter, which frames the whole horizon from above",
+    "camera_note": "eye = standing in the scatter at 1.7 m real (x1 exaggeration) looking level to the north; overview = the app's focus_on_scatter, which frames the whole horizon from above",
     "day": 22,
     "eye_height_m": 1.7,
     "eye_lift_m": 0.0,
@@ -95,25 +95,25 @@
     {
       "bands": [],
       "coverage": {
-        "fraction_of_frame": 0.026611328125,
-        "green_minus_red": 0.00839503035318414,
+        "fraction_of_frame": 0.0048515625,
+        "green_minus_red": -0.00186527293136466,
         "mean_colour": [
-          0.264827065014921,
-          0.273222095368105,
-          0.161842350596682
+          0.166241993479005,
+          0.16437672054764,
+          0.0936100876503197
         ],
-        "pixels": 27250
+        "pixels": 4968
       },
       "frame_ms": {
         "frames_drawn": 60,
         "frames_timed": 60,
-        "max": 3.967,
-        "mean": 3.76319444444445,
-        "min": 3.7037037037037,
+        "max": 3.7037037037037,
+        "mean": 3.50699444444444,
+        "min": 3.33333333333333,
         "n": 60,
-        "p50": 3.7037037037037,
-        "p95": 3.932,
-        "p99": 3.967
+        "p50": 3.577,
+        "p95": 3.7037037037037,
+        "p99": 3.7037037037037
       },
       "name": "today",
       "scatter": {
@@ -129,7 +129,7 @@
         },
         "build_ceiling": 120000,
         "build_ceiling_used": 120000,
-        "build_ms": 901.779,
+        "build_ms": 1500.349,
         "centre_m": [
           -1310792.875,
           1616226.125
@@ -172,7 +172,7 @@
         "implied_after_bands": 51869460.1374908,
         "implied_total": 51869460.1374908,
         "ok": true,
-        "on_screen_px": 76658.8481640629,
+        "on_screen_px": 919950.215796222,
         "phenology": {
           "cells_with_no_seasonal_signal": 18,
           "days_sampled": 10,
@@ -195,7 +195,7 @@
         "share_drawn": 0.00231350007657522,
         "texels": 9,
         "triangles_in_frame": 5944404,
-        "vertical_exaggeration": 12.0,
+        "vertical_exaggeration": 1.0,
         "what_share_means": "one share across every family, so the mix between them is what the wire says. A share below 1 is a sample of the stand, not a thinner stand.",
         "window": "deepest_winter"
       }
@@ -208,25 +208,25 @@
         }
       ],
       "coverage": {
-        "fraction_of_frame": 0.9673154296875,
-        "green_minus_red": 0.154750203392449,
+        "fraction_of_frame": 0.5812890625,
+        "green_minus_red": 0.0496898932504317,
         "mean_colour": [
-          0.133131348441201,
-          0.28788155183365,
-          0.100710604930138
+          0.140111878444064,
+          0.189801771694495,
+          0.0853632371023327
         ],
-        "pixels": 990531
+        "pixels": 595240
       },
       "frame_ms": {
         "frames_drawn": 60,
         "frames_timed": 60,
-        "max": 7.57575757575758,
-        "mean": 7.57575757575757,
-        "min": 7.57575757575758,
+        "max": 6.06060606060606,
+        "mean": 6.05507424242424,
+        "min": 5.951,
         "n": 60,
-        "p50": 7.57575757575758,
-        "p95": 7.57575757575758,
-        "p99": 7.57575757575758
+        "p50": 6.06060606060606,
+        "p95": 6.06060606060606,
+        "p99": 6.06060606060606
       },
       "name": "cut at 100 m",
       "scatter": {
@@ -247,7 +247,7 @@
         },
         "build_ceiling": 120000,
         "build_ceiling_used": 1500000,
-        "build_ms": 1413.447,
+        "build_ms": 1820.047,
         "centre_m": [
           -1310792.875,
           1616226.125
@@ -290,7 +290,7 @@
         "implied_after_bands": 186214.670233255,
         "implied_total": 51869460.1374908,
         "ok": true,
-        "on_screen_px": 76658.8481640629,
+        "on_screen_px": 919950.215796222,
         "phenology": {
           "cells_with_no_seasonal_signal": 18,
           "days_sampled": 10,
@@ -313,7 +313,7 @@
         "share_drawn": 1.0,
         "texels": 9,
         "triangles_in_frame": 9218048,
-        "vertical_exaggeration": 12.0,
+        "vertical_exaggeration": 1.0,
         "what_share_means": "one share across every family, so the mix between them is what the wire says. A share below 1 is a sample of the stand, not a thinner stand.",
         "window": "deepest_winter"
       }
@@ -326,25 +326,25 @@
         }
       ],
       "coverage": {
-        "fraction_of_frame": 0.821349609375,
-        "green_minus_red": 0.164460739731411,
+        "fraction_of_frame": 0.4366640625,
+        "green_minus_red": 0.00361480924624254,
         "mean_colour": [
-          0.20863020477088,
-          0.373090944502292,
-          0.155540351434678
+          0.181984491138914,
+          0.185599300385156,
+          0.105650426484469
         ],
-        "pixels": 841062
+        "pixels": 447144
       },
       "frame_ms": {
         "frames_drawn": 60,
         "frames_timed": 60,
-        "max": 28.842757575757,
-        "mean": 25.0878944444444,
-        "min": 25.0,
+        "max": 20.0,
+        "mean": 19.7997651515152,
+        "min": 19.6969696969697,
         "n": 60,
-        "p50": 25.0,
-        "p95": 25.0,
-        "p99": 28.842757575757
+        "p50": 19.6969696969697,
+        "p95": 20.0,
+        "p99": 20.0
       },
       "name": "cut at 200 m",
       "scatter": {
@@ -365,7 +365,7 @@
         },
         "build_ceiling": 120000,
         "build_ceiling_used": 1500000,
-        "build_ms": 5458.982,
+        "build_ms": 7004.603,
         "centre_m": [
           -1310792.875,
           1616226.125
@@ -408,7 +408,7 @@
         "implied_after_bands": 721581.847153865,
         "implied_total": 51869460.1374908,
         "ok": true,
-        "on_screen_px": 76658.8481640629,
+        "on_screen_px": 919950.215796222,
         "phenology": {
           "cells_with_no_seasonal_signal": 18,
           "days_sampled": 10,
@@ -431,7 +431,7 @@
         "share_drawn": 1.0,
         "texels": 9,
         "triangles_in_frame": 35719936,
-        "vertical_exaggeration": 12.0,
+        "vertical_exaggeration": 1.0,
         "what_share_means": "one share across every family, so the mix between them is what the wire says. A share below 1 is a sample of the stand, not a thinner stand.",
         "window": "deepest_winter"
       }
@@ -444,25 +444,25 @@
         }
       ],
       "coverage": {
-        "fraction_of_frame": 0.9177314453125,
-        "green_minus_red": 0.173614183362262,
+        "fraction_of_frame": 0.586904296875,
+        "green_minus_red": 0.0618816218371868,
         "mean_colour": [
-          0.150352253463867,
-          0.323966436826129,
-          0.117371180319078
+          0.146989843433091,
+          0.208871465270277,
+          0.0935575610798473
         ],
-        "pixels": 939757
+        "pixels": 600990
       },
       "frame_ms": {
         "frames_drawn": 60,
         "frames_timed": 60,
-        "max": 44.4444444444444,
-        "mean": 44.1566444444445,
-        "min": 43.838,
+        "max": 39.5833333333333,
+        "mean": 39.5833333333333,
+        "min": 39.5833333333333,
         "n": 60,
-        "p50": 44.1221111111111,
-        "p95": 44.4444444444444,
-        "p99": 44.4444444444444
+        "p50": 39.5833333333333,
+        "p95": 39.5833333333333,
+        "p99": 39.5833333333333
       },
       "name": "cut at 300 m",
       "scatter": {
@@ -483,7 +483,7 @@
         },
         "build_ceiling": 120000,
         "build_ceiling_used": 1500000,
-        "build_ms": 11418.323,
+        "build_ms": 14693.92,
         "centre_m": [
           -1310792.875,
           1616226.125
@@ -526,7 +526,7 @@
         "implied_after_bands": 1652655.19832016,
         "implied_total": 51869460.1374908,
         "ok": true,
-        "on_screen_px": 76658.8481640629,
+        "on_screen_px": 919950.215796222,
         "phenology": {
           "cells_with_no_seasonal_signal": 18,
           "days_sampled": 10,
@@ -549,7 +549,7 @@
         "share_drawn": 0.907630340269814,
         "texels": 9,
         "triangles_in_frame": 74260888,
-        "vertical_exaggeration": 12.0,
+        "vertical_exaggeration": 1.0,
         "what_share_means": "one share across every family, so the mix between them is what the wire says. A share below 1 is a sample of the stand, not a thinner stand.",
         "window": "deepest_winter"
       }
@@ -574,25 +574,25 @@
         }
       ],
       "coverage": {
-        "fraction_of_frame": 0.8415517578125,
-        "green_minus_red": 0.187342764824475,
+        "fraction_of_frame": 0.5190771484375,
+        "green_minus_red": 0.0436249360264845,
         "mean_colour": [
-          0.200848856935174,
-          0.38819162175965,
-          0.154260541738778
+          0.169254858610951,
+          0.212879794637436,
+          0.105115586527617
         ],
-        "pixels": 861749
+        "pixels": 531535
       },
       "frame_ms": {
         "frames_drawn": 60,
         "frames_timed": 60,
-        "max": 25.4641212121226,
-        "mean": 24.277597979798,
-        "min": 23.5183030303044,
+        "max": 20.8333333333333,
+        "mean": 20.7180055555556,
+        "min": 20.3030000000015,
         "n": 60,
-        "p50": 24.2424242424242,
-        "p95": 24.653,
-        "p99": 25.4641212121226
+        "p50": 20.8333333333333,
+        "p95": 20.8333333333333,
+        "p99": 20.8333333333333
       },
       "name": "fade 1/.75/.5/.25 to 300 m",
       "scatter": {
@@ -625,7 +625,7 @@
         },
         "build_ceiling": 120000,
         "build_ceiling_used": 1500000,
-        "build_ms": 5794.658,
+        "build_ms": 7472.287,
         "centre_m": [
           -1310792.875,
           1616226.125
@@ -668,7 +668,7 @@
         "implied_after_bands": 750677.889377815,
         "implied_total": 51869460.1374908,
         "ok": true,
-        "on_screen_px": 76658.8481640629,
+        "on_screen_px": 919950.215796222,
         "phenology": {
           "cells_with_no_seasonal_signal": 18,
           "days_sampled": 10,
@@ -691,7 +691,7 @@
         "share_drawn": 1.0,
         "texels": 9,
         "triangles_in_frame": 37150552,
-        "vertical_exaggeration": 12.0,
+        "vertical_exaggeration": 1.0,
         "what_share_means": "one share across every family, so the mix between them is what the wire says. A share below 1 is a sample of the stand, not a thinner stand.",
         "window": "deepest_winter"
       }
@@ -716,25 +716,25 @@
         }
       ],
       "coverage": {
-        "fraction_of_frame": 0.504046875,
-        "green_minus_red": 0.124859697350904,
+        "fraction_of_frame": 0.273806640625,
+        "green_minus_red": 0.000685626889363336,
         "mean_colour": [
-          0.224367730789513,
-          0.349227428140418,
-          0.157573192083656
+          0.174956377944438,
+          0.175642004833802,
+          0.10011308561558
         ],
-        "pixels": 516144
+        "pixels": 280378
       },
       "frame_ms": {
         "frames_drawn": 60,
         "frames_timed": 60,
-        "max": 40.9090909090909,
-        "mean": 40.5182287477954,
-        "min": 40.133,
+        "max": 38.682,
+        "mean": 38.4315,
+        "min": 38.3333333333333,
         "n": 60,
-        "p50": 40.4761904761905,
-        "p95": 40.7407407407407,
-        "p99": 40.9090909090909
+        "p50": 38.3333333333333,
+        "p95": 38.605,
+        "p99": 38.682
       },
       "name": "fade 1/.5/.15/.05 to 1500 m",
       "scatter": {
@@ -767,7 +767,7 @@
         },
         "build_ceiling": 120000,
         "build_ceiling_used": 1500000,
-        "build_ms": 11538.805,
+        "build_ms": 15026.436,
         "centre_m": [
           -1310792.875,
           1616226.125
@@ -810,7 +810,7 @@
         "implied_after_bands": 4513272.4936172,
         "implied_total": 51869460.1374908,
         "ok": true,
-        "on_screen_px": 76658.8481640629,
+        "on_screen_px": 919950.215796222,
         "phenology": {
           "cells_with_no_seasonal_signal": 18,
           "days_sampled": 10,
@@ -833,23 +833,23 @@
         "share_drawn": 0.332353076868579,
         "texels": 9,
         "triangles_in_frame": 74227048,
-        "vertical_exaggeration": 12.0,
+        "vertical_exaggeration": 1.0,
         "what_share_means": "one share across every family, so the mix between them is what the wire says. A share below 1 is a sample of the stand, not a thinner stand.",
         "window": "deepest_winter"
       }
     }
   ],
-  "vertical_exaggeration": 12.0,
+  "vertical_exaggeration": 1.0,
   "what": "what a distance-banded density schedule costs and covers, for choosing where individual instances stop and a collective representation starts",
   "without_scatter": {
     "frames_drawn": 60,
     "frames_timed": 60,
-    "max": 0.926626262626264,
-    "mean": 0.761610437710438,
-    "min": 0.743,
+    "max": 1.266,
+    "mean": 1.2007986111861,
+    "min": 0.157749993377365,
     "n": 60,
-    "p50": 0.757,
-    "p95": 0.781,
-    "p99": 0.926626262626264
+    "p50": 1.229,
+    "p95": 1.251,
+    "p99": 1.266
   }
 }

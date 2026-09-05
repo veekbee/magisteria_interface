@@ -55,6 +55,27 @@ const BARE_ALBEDO := Color(0.62, 0.60, 0.55)
 const SUN_AZIMUTH_DEGREES := 225.0
 const SUN_ALTITUDE_DEGREES := -45.0
 
+## VERTICAL EXAGGERATION IS PER VIEW, and the two views want different numbers.
+##
+## Data view asks what a carried row's value is here, over a basin 1,000 km
+## across with 4 km of relief in it; 12x is what makes that relief legible as a
+## hillshade at all, and it is a cartographic convention with a long history.
+## Naturalistic view asks what this place looks like, and there 12x is not a
+## convention but a distortion: the exaggeration is applied to plant HEIGHT and
+## not to the horizontal distance to a plant, so every one of them is drawn as a
+## 12:1 spike and a stand seen from within renders as a radial starburst. That
+## is photographed at `shots/seam/x12_..._oracle_..._insitu.png`.
+##
+## THE OTHER TWO OPTIONS WERE MEASURED AND BOTH LOSE. Scaling plants uniformly
+## keeps the shape and multiplies the ground each covers by 144, which breaks
+## `cover = count x crown area` -- the identity every figure in
+## `measurements/scatter_seam.json` is derived through, and the one a far-field
+## candidate is graded against. Scaling nothing leaves plants twelve times too
+## short against the relief, which is what M5 was avoiding when it chose
+## height-only. There is no free option, so the exaggeration follows the view.
+const DATA_VIEW_EXAGGERATION := 12.0
+const NATURAL_VIEW_EXAGGERATION := 1.0
+
 ## A fill so that a slope facing away from the sun still shows its albedo.
 ##
 ## WITHOUT IT A SHADOWED SLOPE IS PURE BLACK, and black is not a spare colour
@@ -102,6 +123,9 @@ var has_scatter := false
 var tint: VegetationTint = null
 var naturalistic := false
 var tint_report: Dictionary = {}
+## What the last view switch cost, in the parts that cost anything.
+var view_report: Dictionary = {}
+var _flow_reaches: Array = []
 
 var contour_sets: Dictionary = {}        ## window -> ContourSet
 var contour_drape: ContourDrape = null
@@ -145,8 +169,11 @@ func build() -> Dictionary:
     _terrain_mat = mat
 
     var flow := _read_json(TERRAIN_DIR + "flowlines.json")
+    # KEPT, because a view switch rebuilds the drape and `paint_flow` colours a
+    # vertex cache it cannot regenerate on its own.
+    _flow_reaches = flow.get("reaches", [])
     drape = FlowlineDrape.new()
-    var by_order := drape.build(flow.get("reaches", []), heightfield, terrain)
+    var by_order := drape.build(_flow_reaches, heightfield, terrain)
     for order in by_order:
         var fi := MeshInstance3D.new()
         fi.name = "Flowlines_order_%d" % order
@@ -259,13 +286,77 @@ func show_field(window: String, row: String, day: int, group: int = 0) -> bool:
 
 
 ## Which view the terrain is in. Data view is the ramp over a carried row;
-## naturalistic view is the stand. Neither decorates the other.
+## naturalistic view is the stand. Neither decorates the other, and they no
+## longer share a vertical exaggeration.
 func set_naturalistic(on: bool) -> void:
+    var want: float = NATURAL_VIEW_EXAGGERATION if on else DATA_VIEW_EXAGGERATION
     naturalistic = on
     if _terrain_mat != null:
         _terrain_mat.set_shader_parameter("naturalistic", on)
+    if terrain != null and absf(terrain.exaggeration - want) > 1e-6:
+        _rebuild_at(want)
     if on and not shown.is_empty():
         _rebuild_tint(str(shown["window"]), int(shown["day"]))
+
+
+## Rebuild every piece of geometry whose height depends on the exaggeration.
+##
+## THE MESH IS REBUILT RATHER THAN SCALED IN A SHADER, and the reason is the
+## defect this session spent its length on. A vertex shader scaling Y would
+## leave `TerrainMesh.drawn_surface_y` -- which the scatter, both drapes and the
+## eye-level camera all stand on -- computing the OLD surface, and everything
+## placed on the ground would float above it or sink under it by the difference.
+## That is exactly the bug that had plants, flowlines and contours off the
+## terrain by a mean of 426 m in mesh space since M1. One source of truth for a
+## surface, on the CPU, where the things that stand on it can read it.
+func _rebuild_at(e: float) -> void:
+    var t0 := Time.get_ticks_usec()
+    var was := terrain.exaggeration
+    _terrain_mi.mesh = terrain.build(heightfield, stride, e)
+    var mesh_ms := float(Time.get_ticks_usec() - t0) / 1000.0
+
+    # RESCALED, NOT RE-DRAPED. A draped Y is the interpolated surface times the
+    # exaggeration plus a fixed lift, so moving between exaggerations is exact
+    # arithmetic on the vertices already computed -- and re-draping 29,484
+    # reaches is 1.34 s of what would otherwise be a 1.63 s keypress. The
+    # CONTOURS are re-draped rather than rescaled, because `show_contours`
+    # rebuilds them from the arc set on every day change anyway.
+    var ratio: float = e / was
+    drape.rescale(ratio, heightfield)
+    for c in get_children():
+        if String(c.name).begins_with("Flowlines_order_"):
+            _rescale_line_mesh(c, ratio)
+    var drape_ms := float(Time.get_ticks_usec() - t0) / 1000.0 - mesh_ms
+
+    # The camera keeps the view it had: heights scale with the terrain, so a
+    # camera that stays put would be twelve times too high or too low.
+    if rig != null and rig.fly != null and was > 0.0:
+        rig.fly.position.y *= e / was
+    if has_scatter:
+        scatter_centre_mesh.y *= e / was
+
+    var t1 := Time.get_ticks_usec()
+    if not shown.is_empty():
+        show_flow(str(shown["window"]), int(shown["day"]))
+        show_contours(str(shown["window"]), int(shown["day"]))
+    var layers_ms := float(Time.get_ticks_usec() - t1) / 1000.0
+
+    var t2 := Time.get_ticks_usec()
+    var scatter_ms := 0.0
+    if has_scatter and not shown.is_empty():
+        var w := terrain.mesh_to_world(scatter_centre_mesh, heightfield)
+        scatter_at(w)
+        scatter_ms = float(Time.get_ticks_usec() - t2) / 1000.0
+
+    view_report = {
+        "from": was, "to": e,
+        "mesh_ms": mesh_ms, "flowline_drape_ms": drape_ms,
+        "flow_and_contours_ms": layers_ms, "scatter_ms": scatter_ms,
+        "total_ms": float(Time.get_ticks_usec() - t0) / 1000.0,
+        "why": ("the mesh, both drapes and the scatter all carry the exaggeration in their "
+                + "vertex positions, and drawn_surface_y is the single CPU-side surface they "
+                + "stand on"),
+    }
 
 
 ## The range curve the tint is attenuated by, fitted from `measure_seam`'s
@@ -283,6 +374,25 @@ func set_range_curve(matched: bool, k0: float, r0: float) -> void:
 func set_isolate_vegetation(on: bool) -> void:
     if _terrain_mat != null:
         _terrain_mat.set_shader_parameter("isolate_vegetation", on)
+
+
+## The same arithmetic for the static order-coloured line meshes, which are
+## built once and hidden as soon as flow is painted over them.
+func _rescale_line_mesh(node: MeshInstance3D, ratio: float) -> void:
+    var mesh: ArrayMesh = node.mesh as ArrayMesh
+    if mesh == null or mesh.get_surface_count() == 0:
+        return
+    var lift: float = FlowlineDrape.LIFT_FRACTION * heightfield.pixel_size_m
+    var arrays := mesh.surface_get_arrays(0)
+    var verts: PackedVector3Array = arrays[Mesh.ARRAY_VERTEX]
+    for i in verts.size():
+        var v := verts[i]
+        v.y = (v.y - lift) * ratio + lift
+        verts[i] = v
+    arrays[Mesh.ARRAY_VERTEX] = verts
+    var out := ArrayMesh.new()
+    out.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, arrays)
+    node.mesh = out
 
 
 func _rebuild_tint(window: String, day: int) -> void:
