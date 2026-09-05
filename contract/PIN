@@ -9,8 +9,7 @@
   ],
   "source": {
     "repo": "git@github.com:veekbee/magisteria.git",
-    "path": "data/schema_output/schema.json",
-    "_not": "data/schema_draft_output/schema.DRAFT-v0.json -- a superseded draft sharing this basename"
+    "path": "data/schema_output/schema.json"
   },
   "file_sha256": "b44a2280919732b7e4795603bbe658888e7e6f6789285832c14f53b7c6a8393b",
   "_file_sha256_note": "sha256 of contract/schema.json's BYTES. This is what the local half of the check verifies, and it needs no JSON parser to do it.",
