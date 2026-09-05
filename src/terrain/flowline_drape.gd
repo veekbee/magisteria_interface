@@ -41,14 +41,33 @@ func build(reaches: Array, hf: Heightfield, tm: TerrainMesh) -> Dictionary:
         for k in range(0, xy.size() - 1, 2):
             var wx := float(xy[k])
             var wy := float(xy[k + 1])
+            # ON THE SURFACE THAT IS DRAWN. `h * exaggeration` is the field,
+            # and the mesh triangulates the field every `stride` texels -- the
+            # two differ by a mean of 426 m in mesh space. A line draped on the
+            # field floats above the terrain or is buried under it by that much,
+            # and the `lift` below is a z-fighting nudge that assumed it was
+            # sitting on the surface. Invisible from the overview camera, where
+            # 426 m is sub-pixel; wrong at every closer view. Found when the
+            # same defect was found in the scatter.
+            #
+            # FALLING BACK TO THE FIELD WHERE NO QUAD IS DRAWN, which is the
+            # basin's ragged edge: `TerrainMesh.build` emits a quad only when
+            # all four of its corners are valid, so a point over an incomplete
+            # quad has no drawn surface to sit on. Dropping those would delete
+            # the outermost reach and contour of the basin -- 132 vertices of
+            # one test set -- to fix a case where nothing is drawn either way.
+            # The field is where they were before and where they stay.
             var h := hf.height_at_world(wx, wy)
             if is_nan(h):
                 continue          # off the valid heightfield; see dropped_offmap
+            var y := tm.drawn_surface_y(Vector2(wx, wy), hf)
+            if is_nan(y):
+                y = h * tm.exaggeration
             # Through the mesh's own transform, not a second copy of it: this
             # method held a half-texel error for as long as it was written out
             # here as well as in `mesh_to_world`.
             var m := tm.world_to_mesh(Vector2(wx, wy), hf)
-            pts.append(Vector3(m.x, h * tm.exaggeration + lift, m.y))
+            pts.append(Vector3(m.x, y + lift, m.y))
         if pts.size() < 2:
             dropped_offmap += 1
             continue

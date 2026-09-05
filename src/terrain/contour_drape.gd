@@ -53,14 +53,33 @@ func build(arcs: Array, hf: Heightfield, tm: TerrainMesh) -> ArrayMesh:
         var run := PackedVector3Array()
         var runs_here := 0
         for w in arc:
+            # ON THE SURFACE THAT IS DRAWN. `h * exaggeration` is the field,
+            # and the mesh triangulates the field every `stride` texels -- the
+            # two differ by a mean of 426 m in mesh space. A line draped on the
+            # field floats above the terrain or is buried under it by that much,
+            # and the `lift` below is a z-fighting nudge that assumed it was
+            # sitting on the surface. Invisible from the overview camera, where
+            # 426 m is sub-pixel; wrong at every closer view. Found when the
+            # same defect was found in the scatter.
+            #
+            # FALLING BACK TO THE FIELD WHERE NO QUAD IS DRAWN, which is the
+            # basin's ragged edge: `TerrainMesh.build` emits a quad only when
+            # all four of its corners are valid, so a point over an incomplete
+            # quad has no drawn surface to sit on. Dropping those would delete
+            # the outermost reach and contour of the basin -- 132 vertices of
+            # one test set -- to fix a case where nothing is drawn either way.
+            # The field is where they were before and where they stay.
             var h := hf.height_at_world(w.x, w.y)
             if is_nan(h):
                 dropped_offmap += 1
                 runs_here += _flush(run, verts)
                 run = PackedVector3Array()
                 continue
+            var y := tm.drawn_surface_y(w, hf)
+            if is_nan(y):
+                y = h * tm.exaggeration
             var m := tm.world_to_mesh(w, hf)
-            run.append(Vector3(m.x, h * tm.exaggeration + lift, m.y))
+            run.append(Vector3(m.x, y + lift, m.y))
         runs_here += _flush(run, verts)
         runs_out += runs_here
         if runs_here == 0:
