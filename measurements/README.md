@@ -706,11 +706,56 @@ in `[1.0, 1.5]`, which is exactly the range the tint exists to cover. An instanc
 therefore expected to under-cover its own annulus, and does — except where coverage saturates,
 which is why the dense succulent reads 1.00 throughout and says less than it appears to.
 
-**No tree row is measurable at either place.** Trees are tall, so their horizons are the deepest —
-283 m to 5.7 km — and every one of them is past the oracle. The next increment is a **per-family
-oracle**, cut to each family's own deepest annulus rather than one cut for all: the families that
-need depth are the sparse ones (84,608 trees inside 1,500 m at place B against 7.65 M grass), so
-depth is cheap exactly where it is needed. Not built here.
+### The per-family oracle, and the two things that had to be true first
+
+One cut cannot serve horizons spanning two orders of magnitude, so each family now has **its own
+reference, cut to its own deepest annulus** and built with `only` set so a three-kilometre tree
+reference does not pay for grass at three kilometres. **55 of 84 rows measurable, against 19 of 42
+before** — and trees and succulents have rows at all for the first time.
+
+| | grass | shrub | succulent | tree |
+|---|---:|---:|---:|---:|
+| own reach, place B | 494 m | 1,040 m | — | **8,498 m** |
+| own reach, place A | — | 398 m | *refused* | 3,394 m |
+
+**A reference must not be budgeted like a frame.** Every per-family oracle was refused on the first
+attempt: the scatter thins to fit 33.3 ms, so each drew 80–95% of its own stand and became a
+*sample*, which is the one thing a reference may not be. An oracle is photographed once and never
+played, so these builds now run with the frame budget deliberately not applied — the build ceiling
+still binds, and at place A the succulent's own oracle hit it at 72.4% and was **refused**, falling
+back to the shared reach rather than pretending. That family is dense enough that no deep reference
+for it is affordable, and the artefact says so.
+
+**A reference must be placed the way the candidate is placed.** With no schedule and no `k` the
+scatter takes its *unsubdivided* path — one placement per kilometre texel — while every candidate
+subdivides, because `k > 0` forces it. Two arrangements of the same count differ enormously inside an
+annulus tens of metres wide.
+
+**And the frame has to hold the family the name says.** This is the one that was caught by opening
+the PNG and by nothing else. A MultiMesh node keeps its previous mesh when a build does not mention
+its family; the harness showed every `Vegetation_*` node before photographing, which **resurrected
+the last build's instances**. `oracle_grass` came back as a frame full of trees and shrubs with grass
+as a fringe along the bottom, and produced a complete, plausible table — every score finite, every
+row in the right annulus, ΔE rising smoothly with `k`. The tell was in the numbers and was missed:
+three *different* family references reporting the same mean colour to three decimals. That is now the
+assert, beside the cheaper structural one.
+
+**What the corrected rows say.** Every family matches its own reference on colour at every `k` —
+**ΔE ≤ 0.019 across all 55 rows** — so the instance representation's colour is right regardless of
+the horizon, which is what one would expect of instances. `k` shows in **coverage**, as the fraction
+of the annulus the candidate fills against the oracle:
+
+| k/k_res | grass (B) | shrub (B) | tree (B) | succulent (A) | shrub (A) |
+|---:|---:|---:|---:|---:|---:|
+| 0.05 | 1.04 | 1.05 | 0.98 | 1.00 | 1.00 |
+| 0.10 | 0.93 | 1.01 | 1.00 | 0.95 | 0.98 |
+| 0.20 | 0.67 | 1.00 | 1.00 | 1.00 | 0.79 |
+| **0.35** | **0.94** | **1.00** | **1.00** | **1.00** | **0.88** |
+| 0.50 | 0.96 | 1.00 | 1.00 | — | 0.78 |
+
+Shrub, tree and succulent reach parity by **0.2**; grass by **0.35–0.5**, with the 0.67 dip at 0.2
+being the sub-cell quantisation zone already documented above. The read is unchanged in direction and
+now rests on each family's own reference rather than on one shallow shared one.
 
 ### `scatter_horizon.json` — `k` at the hard cells, and what the ruled value costs there
 

@@ -90,6 +90,11 @@ var family_h: Dictionary = {}
 ## k can be scored against the same reference in the same annulus.
 var oracle_family: Dictionary = {}
 var fam_names: Array = []
+## life_form -> how deep its own reference actually reaches. Starts at the
+## shared oracle's cut and is raised per family where a deeper one was
+## affordable, so a family whose deep oracle had to be refused keeps the
+## shallow reach rather than losing its rows entirely.
+var oracle_reach: Dictionary = {}
 var fam_at := 0
 ## Runs accumulate into one artefact: sufficiency is a claim about places and
 ## days, and one row of it is not evidence for the claim.
@@ -240,6 +245,27 @@ func _plan() -> Array:
         {"name": "constant", "kind": "tint", "cut_m": seam_m, "matched": false},
         {"name": "range_matched", "kind": "tint", "cut_m": seam_m, "matched": true},
     ]
+    # PER-FAMILY ORACLES, each cut to ITS OWN deepest annulus. One cut for all
+    # families cannot serve horizons that span two orders of magnitude: it is
+    # either too shallow for the tall families or unaffordable for the dense
+    # ones. Depth is cheap exactly where it is needed -- the families whose
+    # horizons run furthest are the sparse ones -- and `only` keeps a deep tree
+    # reference from paying for grass at the same radius.
+    if sweep_k:
+        var k_res2 := VegetationScatter.resolution_k(
+                float(get_root().get_visible_rect().size.y), view.rig.fly.fov)
+        var k_max: float = 0.0
+        for q in K_FRACTIONS:
+            k_max = maxf(k_max, float(q) * k_res2)
+        var at := 1
+        for lf in family_h:
+            var h := float((family_h[lf] as Dictionary)["height_m"])
+            var deepest := SeamScore.SCORE_HI_MULTIPLE * k_max * h
+            if deepest <= _oracle_cut_m():
+                continue
+            out.insert(at, {"name": "oracle_%s" % lf, "kind": "family_oracle",
+                            "cut_m": 0.0, "family": lf, "reach_m": deepest})
+            at += 1
     if oracle_check:
         out.insert(1, {"name": "oracle_deeper", "kind": "instances",
                        "cut_m": seam_m * ORACLE_CHECK_MULTIPLE})
@@ -403,13 +429,28 @@ func _run_candidate(delta: float) -> void:
             job["frame_ms"] = FrameStats.summarise(_wall)
             job["in_situ"] = _capture(job, "insitu")
             _isolate(true)
+            if str(job.get("kind", "")) == "family_oracle":
+                _only_family(str(job["family"]))
             frames = 0
             job_step = 3
         3:
             if frames < HOLD_FRAMES:
                 return
-            job["isolated"] = _capture(job, "isolated")
+            var iso := _capture(job, "isolated")
+            job["isolated"] = iso
             _score(job)
+            if str(job.get("kind", "")) == "family_oracle":
+                # The build holds ONLY this family, so the isolated frame is
+                # the family alone and needs no second pass.
+                var lf := str(job["family"])
+                if job.has("oracle_is_a_sample"):
+                    job["reach_used_m"] = float(oracle_reach.get(lf, _oracle_cut_m()))
+                else:
+                    oracle_family[lf] = iso
+                    oracle_reach[lf] = float(job["reach_m"])
+                    job["reach_used_m"] = float(job["reach_m"])
+                _finish_candidate(job)
+                return
             # PER FAMILY, and only where it means something: an instance
             # candidate decomposes into families and a tint does not. A tint is
             # one ground colour standing in for whatever is past the horizon, so
@@ -483,7 +524,8 @@ func _take_family(job: Dictionary) -> void:
     # Per-family horizons span 16 m to 8.5 km here, and one oracle cut chosen
     # for a single 120 m seam cannot cover that. So the row is REFUSED with its
     # reason rather than scored, which is the whole point of these rows existing.
-    var reach: float = minf(_oracle_cut_m(), TerrainView.SCATTER_HORIZON_M)
+    var reach: float = float(oracle_reach.get(lf,
+            minf(_oracle_cut_m(), TerrainView.SCATTER_HORIZON_M)))
     if float(b["hi_m"]) > reach:
         (job["per_family"] as Array).append({
             "family": lf,
@@ -492,13 +534,11 @@ func _take_family(job: Dictionary) -> void:
             "annulus_lo_m": b["lo_m"],
             "annulus_hi_m": b["hi_m"],
             "measurable": false,
-            "why": ("the annulus reaches %s m and the reference only reaches %s m -- the "
-                    % [String.num(float(b["hi_m"]), 0), String.num(reach, 0)]
-                    + "oracle is cut at %s m and the scatter draws nothing "
-                            % String.num(_oracle_cut_m(), 0)
-                    + "past %s m. Scoring here would compare near vegetation drawn over far "
-                            % String.num(TerrainView.SCATTER_HORIZON_M, 0)
-                    + "ground against the same, and report the agreement as the candidate's."),
+            "why": ("the annulus reaches %s m and %s's own reference only reaches %s m. "
+                    % [String.num(float(b["hi_m"]), 0), lf, String.num(reach, 0)]
+                    + "Scoring here would compare near vegetation drawn over far ground "
+                    + "against the same, and report the agreement as the candidate's."),
+            "reference_reach_m": reach,
         })
         return
     var cand := SeamScore.within(masks[idx], img)
@@ -571,8 +611,29 @@ func _apply_candidate(job: Dictionary) -> void:
     if kind == "horizon":
         schedule = []
         ceiling = 4000000
-    var r: Dictionary = view.scatter_at(at_world, TerrainView.SCATTER_HORIZON_M,
-            schedule, ceiling, k)
+    var radius: float = TerrainView.SCATTER_HORIZON_M
+    var only := ""
+    if kind == "family_oracle":
+        # The radius is the reference's own depth, and `only` is what makes a
+        # three kilometre one affordable at all.
+        #
+        # THE SCHEDULE IS NOT REDUNDANT WITH THE RADIUS. With no schedule and no
+        # `k` the scatter takes its UNSUBDIVIDED path -- one placement per
+        # kilometre texel -- while every candidate subdivides, because `k > 0`
+        # forces it. Two placements of the same count differ enormously inside
+        # an annulus a few tens of metres wide, and the first version of this
+        # measured that difference and reported it as the candidate's error:
+        # grass came back at dE 0.19 and RISING with k, which is backwards.
+        # A reference has to be placed the way the candidate is placed.
+        radius = float(job["reach_m"])
+        schedule = [{"to_m": radius, "keep": 1.0}]
+        ceiling = 4000000
+        only = str(job["family"])
+    # The references are built without the frame budget: an oracle thinned to
+    # fit a frame is a sample, and a candidate graded against a sample is
+    # flattered by the sampling. The build ceiling still binds.
+    var budgeted := not (kind == "family_oracle" or str(job["name"]) == "oracle")
+    var r: Dictionary = view.scatter_at(at_world, radius, schedule, ceiling, k, only, budgeted)
     job["build_ms"] = float(Time.get_ticks_usec() - t0) / 1000.0
     job["scatter"] = {
         "ok": bool(r.get("ok", false)),
@@ -582,6 +643,8 @@ func _apply_candidate(job: Dictionary) -> void:
         "implied_after_bands": r.get("implied_after_bands", NAN),
         "individuation_k": r.get("individuation_k", 0.0),
         "horizon": r.get("horizon", {}),
+        "only_life_form": r.get("only_life_form", ""),
+        "frame_budget_applied": r.get("frame_budget_applied", true),
     }
     if kind == "tint":
         job["tint"] = view.tint_report.duplicate()
@@ -590,6 +653,15 @@ func _apply_candidate(job: Dictionary) -> void:
     # exactly what the oracle exists NOT to be: every candidate would then be
     # graded against a thinner stand than the wire says is there, and the
     # thinner the oracle the better every candidate would score.
+    if kind == "family_oracle":
+        var fshare := float(r.get("share_drawn", NAN))
+        if not is_nan(fshare) and fshare < 0.999:
+            job["oracle_is_a_sample"] = ("%s's own oracle drew %s of the stand its %s m reach "
+                    % [only, String.num(fshare, 4), String.num(radius, 0)]
+                    + "implies, bound by %s. Refused as a reference; %s keeps the shared "
+                            % [str(r.get("share_bound_by", "?")), only]
+                    + "oracle's shallower reach and its deeper rows stay unmeasurable.")
+            printerr("measure_seam: %s" % str(job["oracle_is_a_sample"]))
     if str(job["name"]) == "oracle":
         var share := float(r.get("share_drawn", NAN))
         if not is_nan(share) and share < 0.999:
@@ -634,8 +706,19 @@ func _show_all() -> void:
     view.set_isolate_vegetation(false)
     for c in view.get_children():
         var n := String(c.name)
-        if n.begins_with("Flow") or n == "Contours" or n.begins_with("Vegetation"):
+        if n.begins_with("Flow") or n == "Contours":
             c.visible = true
+        elif n.begins_with("Vegetation_"):
+            # ONLY THE FAMILIES THIS BUILD ACTUALLY CONTAINS. A MultiMesh node
+            # keeps its previous mesh when a build does not mention its family,
+            # and `scatter_at` hides those -- so showing every Vegetation node
+            # here resurrects the LAST build's instances.
+            #
+            # Harmless while every build held every family, and fatal the moment
+            # one did not: the first per-family oracle came back as a frame full
+            # of trees and shrubs with grass as a fringe along the bottom, and
+            # its scores read as a plausible table. Found by opening the PNG.
+            c.visible = view.scatter.meshes.has(n.substr("Vegetation_".length()))
 
 
 func _hide_everything_but_terrain() -> void:
@@ -840,7 +923,8 @@ func _write() -> void:
         # reader lands before any score, not on one job three screens down.
         "reference_is_a_sample": _oracle_sample_note(),
         "oracle_cut_m": _oracle_cut_m(),
-        "reference_reach_m": minf(_oracle_cut_m(), TerrainView.SCATTER_HORIZON_M),
+        "reference_reach_m": oracle_reach.duplicate(),
+        "shared_oracle_reach_m": minf(_oracle_cut_m(), TerrainView.SCATTER_HORIZON_M),
         "candidates": results,
     }
     var doc := {

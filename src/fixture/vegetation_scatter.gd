@@ -195,9 +195,16 @@ func is_bound() -> bool:
 ## A radius rather than the basin: a cell here is about 126 km2 and the whole
 ## basin is 5,684 of them, so "scatter the fixture" is not a thing any frame
 ## can contain. The horizon is the caller's and the cost of it is reported.
+## `only`, when set, builds ONE life form and skips the rest entirely.
+##
+## Not a convenience: the build ceiling and the frame budget are applied as ONE
+## SHARE ACROSS EVERY FAMILY, so a deep build for a sparse family would thin the
+## dense ones and then thin the sparse one with them. A reference for trees at
+## three kilometres has to not be paying for grass at three kilometres.
 func build(window: String, day: int, centre: Vector2, radius_m: float,
            bands: Array = NO_SCHEDULE, ceiling: int = MAX_BUILT_INSTANCES,
-           k: float = NO_HORIZON_RULE) -> Dictionary:
+           k: float = NO_HORIZON_RULE, only: String = "",
+           frame_budget: bool = true) -> Dictionary:
     var t_build := Time.get_ticks_usec()
     meshes = {}
     if not is_bound():
@@ -270,6 +277,8 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             for gi in groups.size():
                 var life_form := groups[gi]
                 if not _fs.has(life_form):
+                    continue
+                if only != "" and life_form != only:
                     continue
                 var vals_f: PackedFloat64Array = fractions[gi]
                 var vals_b: PackedFloat64Array = biomass[gi]
@@ -359,7 +368,17 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
     var afford := _affordable(groups, implied)
     var head: float = float(afford.get("instances", 0.0)) if bool(afford.get("ok", false)) else 0.0
     var bound_by := "the frame budget"
-    if not bool(afford.get("ok", false)):
+    if not frame_budget:
+        # AN ORACLE IS NOT A FRAME ANYONE HAS TO PLAY. It is photographed once,
+        # and thinning it to 33.3 ms makes it a SAMPLE of the stand rather than
+        # the stand -- which is the one thing a reference must not be, because
+        # every candidate is then flattered by exactly the sampling. The build
+        # ceiling still applies: that is about what fits in memory and in a
+        # build, which is a real limit on any build.
+        head = float(ceiling)
+        bound_by = ("the build ceiling; the frame budget is deliberately not applied to this "
+                + "build, which is a reference and not a frame")
+    elif not bool(afford.get("ok", false)):
         head = float(ceiling)
         bound_by = "the build ceiling, with no frame-cost measurement to price against"
     elif head > float(ceiling):
@@ -519,6 +538,8 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         "form": form,
         "individuation_k": k,
         "horizon": horizon,
+        "only_life_form": only,
+        "frame_budget_applied": frame_budget,
         "share_drawn": share,
         "share_bound_by": bound_by,
         "build_ceiling": MAX_BUILT_INSTANCES,

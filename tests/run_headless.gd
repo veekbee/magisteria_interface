@@ -99,6 +99,7 @@ func _initialize() -> void:
     test_the_seam_metric_fails_the_bad_frame()
     test_plants_stand_on_the_surface_that_is_drawn()
     test_the_shading_is_exaggerated_and_the_geometry_is_not()
+    test_a_per_family_reference_holds_only_that_family()
     test_a_family_is_scored_in_its_own_annulus_or_not_at_all()
     test_the_seam_measurement_ranks_the_null_baseline_worst()
     test_the_project_does_not_import_blend_sources()
@@ -3797,6 +3798,71 @@ func test_plants_stand_on_the_surface_that_is_drawn() -> void:
     v.queue_free()
 
 
+func test_a_per_family_reference_holds_only_that_family() -> void:
+    """FOUND BY OPENING THE PNG, AND BY NOTHING ELSE.
+
+    Each family's reference is built with `only` set, so the scatter holds that
+    family and no other. The harness then showed every `Vegetation_*` node
+    before photographing it -- and a MultiMesh node KEEPS its previous mesh when
+    a build does not mention its family, so showing them all resurrected the
+    last build's instances. The `oracle_grass` frame came back full of trees and
+    shrubs with grass as a fringe along the bottom.
+
+    It produced a complete, plausible table: every score finite, every row in
+    the right annulus, ordering that looked like a result. The tell was in the
+    numbers and I missed it -- three DIFFERENT family references reporting the
+    same mean colour to three decimals -- so that is what is asserted here,
+    beside the cheaper structural check.
+    """
+    var f := FileAccess.open("res://measurements/scatter_seam.json", FileAccess.READ)
+    if f == null:
+        return
+    var parsed = JSON.parse_string(f.get_as_text())
+    if typeof(parsed) != TYPE_DICTIONARY:
+        return
+    var checked := 0
+    for run_v in ((parsed as Dictionary).get("runs", []) as Array):
+        var run: Dictionary = run_v
+        var seen := {}
+        for cand_v in (run.get("candidates", []) as Array):
+            var cand: Dictionary = cand_v
+            var name := str(cand.get("name", ""))
+            if not name.begins_with("oracle_"):
+                continue
+            var lf := name.substr("oracle_".length())
+            var sc: Dictionary = cand.get("scatter", {})
+            # The BUILD held one family.
+            check(str(sc.get("only_life_form", "")) == lf,
+                    "%s was built without `only` set to %s, so it is a reference for one "
+                    % [name, lf] + "family drawn from a scatter holding all of them")
+            var nonzero := PackedStringArray()
+            for g in (sc.get("placed", {}) as Dictionary):
+                if int((sc["placed"] as Dictionary)[g]) > 0:
+                    nonzero.append(str(g))
+            check(nonzero.size() <= 1, "%s placed %s. A per-family reference that holds more "
+                    % [name, ", ".join(nonzero)] + "than its own family is not one.")
+            # And the FRAME held one family. Two references that drew different
+            # families cannot agree to three decimals on mean colour; when they
+            # do, they are the same frame under different names.
+            var bands_a: Array = cand.get("bands", [])
+            if bands_a.is_empty():
+                continue
+            var mid: Dictionary = bands_a[bands_a.size() / 2]
+            var col: Array = mid.get("isolated_mean_colour", [])
+            if col.size() < 3:
+                continue
+            var key := "%s|%s|%s" % [String.num(float(col[0]), 3), String.num(float(col[1]), 3),
+                    String.num(float(col[2]), 3)]
+            check(not seen.has(key), "%s and %s photographed the same mean colour (%s). Two "
+                    % [name, str(seen.get(key, "?")), key]
+                    + "references of DIFFERENT families cannot agree to three decimals: one "
+                    + "build's instances are still on screen under the other's name.")
+            seen[key] = name
+            checked += 1
+    if checked > 0:
+        print("references: %d per-family oracle(s), each holding only its own family" % checked)
+
+
 func test_a_family_is_scored_in_its_own_annulus_or_not_at_all() -> void:
     """THE POLARITY THIS FEATURE EXISTS TO KEEP. A per-family score that
     silently graded every family in ONE family's annulus is the plausible
@@ -3829,7 +3895,10 @@ func test_a_family_is_scored_in_its_own_annulus_or_not_at_all() -> void:
     var refused := 0
     for run_v in runs:
         var run: Dictionary = run_v
-        var reach := float(run.get("reference_reach_m", NAN))
+        # Per family now: each family's reference is cut to its own deepest
+        # annulus, so one run-level depth would be four different claims.
+        var reach_of: Dictionary = run.get("reference_reach_m", {}) if typeof(
+                run.get("reference_reach_m", {})) == TYPE_DICTIONARY else {}
         # A run whose reference was thinned has to say so where a reader lands,
         # not on one job three screens down: every score in it is flattered by
         # the sampling and none of them is safe to quote.
@@ -3867,6 +3936,8 @@ func test_a_family_is_scored_in_its_own_annulus_or_not_at_all() -> void:
                 check(row.has("colour_error"),
                         "%s claims to be measurable and carries no error against the oracle"
                         % str(row["family"]))
+                var reach := float(row.get("reference_reach_m",
+                        reach_of.get(str(row["family"]), NAN)))
                 if not is_nan(reach):
                     check(hi <= reach + 0.5, "%s was SCORED out to %s m against a reference "
                             % [str(row["family"]), String.num(hi, 0)]
