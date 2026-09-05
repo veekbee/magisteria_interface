@@ -43,6 +43,38 @@ This repo consumes exactly four artefacts from the simulation repo — the schem
 terrain export, the fixture, and the pre-extracted contours — each vendored and pinned. No Python imports, no reading the
 simulation's `sim/` or run directories, no internal-rung debug path. See `README.md`.
 
+## How large artefacts arrive: fetch by manifest, never LFS
+
+**Ruled upstream (decision 948).** Anything over roughly **10 MB** is fetched, not committed.
+Smaller artefacts stay committed directly, which is why everything vendored under `assets/` and
+`contract/` today is simply in the tree.
+
+Four rules, and the first two are the ones that bite:
+
+1. **The manifest's `sha256` is authoritative; its host column is not.** The digest is what makes a
+   fetched byte-stream the artefact. Hosting starts on this repo's GitHub Releases and is expected
+   to move; a move of hosting is not a change of contract, and nothing may be written that would
+   make it one.
+2. **The fetch script is the only sanctioned way bytes arrive.** Not a browser download, not a
+   second helper, not a hand-placed file. One path, so there is no second one to drift from it.
+3. **CI verifies digests on whatever is present.** A clone with none of the large artefacts is a
+   valid clone and must stay one — the checks that need them skip, loudly, naming what is absent.
+   A clone with the *wrong* bytes is not valid and fails.
+4. **A manifest row carries the same fields a pin does**, one artefact wider: `path`, `sha256`,
+   `size`, the producing `repo@SHA`, the producing tool, and the artefact's acceptance verdict
+   where it carries one. `contract/PIN` is the idiom to copy.
+
+**Why not git-LFS**, since it is the obvious answer and was rejected: it binds the bytes to the
+forge that stores them and requires a reader to speak the protocol before they can clone at all.
+This repo is public and its readers are not this project. A manifest leaves a plain `git clone`
+working with the bytes optional.
+
+**Why this paragraph exists at all.** A distribution policy that lives only in a conversation is
+not readable from a fresh clone, and this project does not treat conversation history as authority.
+If you are adding an artefact and are unsure which side of the threshold it falls on, the answer is
+the manifest — a small artefact listed there costs a row, and a large artefact committed costs the
+repo permanently.
+
 ## No addons, of any kind
 
 No third-party terrain plugins and no test framework. `godot --headless --script` with hand-rolled
