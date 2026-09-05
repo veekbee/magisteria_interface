@@ -140,11 +140,24 @@ def check_multi(pin_path: Path, label: str) -> list[str]:
         pin = json.loads(pin_path.read_text())
     except json.JSONDecodeError as exc:
         return [f"{label} PIN is not valid JSON: {exc}"]
+    # DECISION 948's three outcomes, and only the third fails: present-and-
+    # matching, ABSENT, present-and-mismatched. A file the PIN marks `fetched`
+    # is not committed, so a clone without it is a working clone -- but the skip
+    # is LOUD and names what it wanted, because a silent skip on a missing
+    # artefact is a green run certifying nothing. A file NOT marked fetched is
+    # committed, and absent still fails: that is a claim about something that is
+    # not there.
+    fetched = set((pin.get("fetched") or {}).get("files", {}))
     problems = []
     for name, claimed in pin.get("files", {}).items():
         path = pin_path.parent / name
         if not path.exists():
-            problems.append(f"{label} PIN names {name}, which is not present")
+            if name in fetched:
+                print(f"  {label}: {name} ABSENT -- fetched artefact, not committed. "
+                      f"`python3 tools/fetch_artefacts.py` brings it in; checks that "
+                      f"need it are not running.")
+            else:
+                problems.append(f"{label} PIN names {name}, which is not present")
             continue
         actual = sha256(path.read_bytes())
         if actual != claimed:
@@ -292,7 +305,15 @@ def main(argv=None) -> int:
                       (CONTOUR_PIN, "contours")):
         if pp.exists():
             d = json.loads(pp.read_text())
-            print(f"{label} OK: {len(d.get('files', {}))} file(s)")
+            names = d.get("files", {})
+            # COUNT WHAT WAS CHECKED, not what was claimed. "OK: 2 file(s)" over
+            # a directory holding one of them reads as two verifications and is
+            # one -- the same overclaim a selection line makes when it prints the
+            # set it intended rather than the set it ran.
+            checked = sum(1 for n in names if (pp.parent / n).exists())
+            absent = len(names) - checked
+            print(f"{label} OK: {checked} file(s) verified"
+                  + (f", {absent} absent (fetched, not committed)" if absent else ""))
     if a.against is None:
         print("  (cross-repo half not run -- pass --against <sim-checkout> when one is at hand)")
     else:

@@ -48,3 +48,7 @@
 # Screenshots from tools/screenshot.sh. Regenerable, and a frame is large;
 # quote the measurement in a commit message rather than committing the picture.
 shots/
+
+# Fetched, not committed (decision 948). tools/fetch_artefacts.py brings these in;
+# their sha256 lives in the neighbouring PIN and is authoritative.
+assets/fixture/fixture_client.bin

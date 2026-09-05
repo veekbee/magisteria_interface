@@ -60,6 +60,12 @@ REQUIRED = {
 }
 
 
+#: Decision 948's threshold, exact so a file's side of it is computable rather
+#: than arguable. Recorded into the PIN by this tool so `check_contract.py` reads
+#: it from the artefact instead of carrying a second copy that can drift.
+FETCH_THRESHOLD_BYTES = 10 * 1024 * 1024
+
+
 def sha256(p: Path) -> str:
     h = hashlib.sha256()
     with p.open("rb") as f:
@@ -129,10 +135,32 @@ def main(argv=None) -> int:
     pin = json.loads((DEST / "PIN").read_text())
     pin["run"] = full["run"]
     pin["is_a_display_encoding"] = full["client_form"]["is_a_display_encoding"]
-    pin["files"] = {
-        "fixture_client.bin": sha256(DEST / "fixture_client.bin"),
-        "fixture_client.json": sha256(DEST / "fixture_client.json"),
-    }
+    vendored = ["fixture_client.bin", "fixture_client.json"]
+    pin["files"] = {n: sha256(DEST / n) for n in vendored}
+    # DECISION 948: anything at or above the threshold is FETCHED, not committed.
+    # Derived by size rather than by naming the file, so the day a vendored
+    # artefact crosses the line it moves on its own instead of waiting for
+    # someone to remember. The digest above stays authoritative; `host` is a
+    # field and never a source of truth, so a move of hosting changes nothing
+    # a checker reads.
+    fetched = {n: (DEST / n).stat().st_size for n in vendored
+               if (DEST / n).stat().st_size >= FETCH_THRESHOLD_BYTES}
+    if fetched:
+        hosts = (pin.get("fetched") or {}).get("files", {})
+        pin["fetched"] = {
+            "_what": "files over decision 948's threshold. NOT committed: they arrive "
+                     "through tools/fetch_artefacts.py and nothing else. Absent is a "
+                     "valid state for a clone; wrong bytes is not.",
+            "_host_is_not_authoritative": "the sha256 in `files` is the whole of the "
+                                          "check. A move of hosting is a one-field edit "
+                                          "here and changes no contract (decision 948).",
+            "threshold_bytes": FETCH_THRESHOLD_BYTES,
+            "files": {n: {"bytes": b,
+                          "host": (hosts.get(n) or {}).get("host")}
+                      for n, b in sorted(fetched.items())},
+        }
+    else:
+        pin.pop("fetched", None)
     # HOW EACH FILE IS CHECKABLE against `source_commit`, declared by the tool
     # that made it rather than hand-added to the PIN, which does not survive the
     # next vendor run.
@@ -154,10 +182,29 @@ def main(argv=None) -> int:
     pin["carried_rows"] = sorted(carried)
     pin["contract_version"] = f"{version['major']}.{version['minor']}"
     if a.sim:
+        # TWO COMMITS, NOT ONE, and recording only HEAD was a claim the bytes do
+        # not support. `source_commit` must be where the ARTEFACT came to rest --
+        # the last commit to touch the source directory -- because that is what
+        # `cross_repo` compares against. HEAD at vendor time is a different fact:
+        # it moves every time anyone re-vendors, whether or not the artefact
+        # changed, so a PIN carrying it as `source_commit` claims a provenance
+        # that is true only by luck. Both are recorded and named for what they
+        # are (COLLABORATION.md §5.1a).
+        rest = subprocess.run(
+            ["git", "log", "-1", "--format=%H", "--", "data/fixture_output"],
+            cwd=a.sim, text=True, capture_output=True)
+        if rest.returncode == 0 and rest.stdout.strip():
+            pin["source_commit"] = rest.stdout.strip()
         head = subprocess.run(["git", "rev-parse", "HEAD"], cwd=a.sim,
                               text=True, capture_output=True)
         if head.returncode == 0:
-            pin["source_commit"] = head.stdout.strip()
+            pin["vendored_against_commit"] = head.stdout.strip()
+            pin["_two_commits_note"] = (
+                "`source_commit` is where the artefact's bytes came to rest -- the "
+                "last commit touching the source directory, and what `cross_repo` "
+                "checks against. `vendored_against_commit` is the sim tree this "
+                "vendoring read. They differ whenever the sim moved without the "
+                "artefact moving, which is most of the time.")
     (DEST / "PIN").write_text(json.dumps(pin, indent=2) + "\n")
 
     print(f"vendored: {len(carried)} row(s) against contract "
