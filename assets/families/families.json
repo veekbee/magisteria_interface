@@ -13,9 +13,9 @@
    "file": "family_grass.glb",
    "parameters": {
     "crown_m": {
-     "from": "a tussock, not a canopy: the width span is narrow because the form does not build one",
-     "max": 0.6,
-     "min": 0.05,
+     "from": "the drawn unit is a PATCH of sward, not one tussock. Widened from 0.05-0.6 because the horizon rule made the cost of a narrow unit visible: drawn count carries height^2/crown_area, grass scored 68.5 on it and took 77-87% of every drawn population at the place that carries it. Cover is conserved by construction -- count is cover x texel_area / crown_area -- so this is the same ground under fewer, wider instances",
+     "max": 0.5,
+     "min": 0.3,
      "unit": "m"
     },
     "height_m": {
@@ -31,8 +31,8 @@
      "unit": "fraction"
     }
    },
-   "triangles": 12,
-   "vertices": 24
+   "triangles": 192,
+   "vertices": 384
   },
   "shrub": {
    "blend_source": "tools/blender/family_shrub.blend",

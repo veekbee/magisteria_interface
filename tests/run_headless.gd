@@ -92,6 +92,7 @@ func _initialize() -> void:
     test_the_individuation_horizon_is_one_constant_bounded_by_the_camera()
     test_a_density_schedule_is_finer_than_the_texel_it_thins()
     test_pft_fractions_are_a_composition_of_the_cover()
+    test_the_tint_takes_wire_shares_unfloored_and_the_drawn_unit_can_change()
     test_the_tint_holds_the_quantity_a_seam_has_to_conserve()
     test_a_recorded_distance_names_what_it_is_conditional_on()
     test_the_seam_metric_fails_the_bad_frame()
@@ -3370,6 +3371,105 @@ static func _distance_keys(node: Variant, prefix: String) -> PackedStringArray:
         for i in (node as Array).size():
             out.append_array(_distance_keys((node as Array)[i], "%s[%d]" % [prefix, i]))
     return out
+
+
+func test_the_tint_takes_wire_shares_unfloored_and_the_drawn_unit_can_change() -> void:
+    """TWO REQUIREMENTS THAT PULL AGAINST EACH OTHER, and both are the seam's.
+
+    ONE. Trace shares are grass's main mode of existence -- median share 0.88%
+    across the reference basin, half of it under 1% -- and they correctly draw
+    NO INDIVIDUALS, because a hundredth of a texel's ground does not resolve
+    into a plant anyone sees. They must still TINT. A presence floor anywhere
+    in the tint's composition input would delete grass from half the basin by
+    construction, and it would look like a basin without much grass rather than
+    like a floor.
+
+    TWO. The drawn unit is a per-family choice -- a patch of sward, not one
+    tussock -- and changing it must not change the ground covered. Count is
+    `cover x texel_area / crown_area`, so cover falls out of the product
+    exactly; that is what makes the unit free to change and is the whole reason
+    the grass unit could be widened to fix the population imbalance the horizon
+    rule exposed.
+    """
+    # TWO first, because it is arithmetic and needs no fixture.
+    var texel_area := 1_000_000.0
+    var cover := 0.0655
+    var covered := PackedFloat64Array()
+    for crown in [0.086, 0.313, 0.5, 4.0]:
+        var crown_area: float = PI * (0.5 * crown) * (0.5 * crown)
+        var count := cover * texel_area / crown_area
+        covered.append(count * crown_area)
+    for i in covered.size():
+        check(absf(covered[i] - cover * texel_area) < 1e-6,
+                "a %s m drawn unit covers %s m2 of a %s m2 texel, not the %s the wire says. "
+                        % [str(i), String.num(covered[i], 1), String.num(texel_area, 0),
+                                String.num(cover * texel_area, 1)]
+                + "Cover conservation is what makes the proxy unit free to choose; without it, "
+                + "widening the unit is a change to the data and not to the drawing.")
+
+    # And the unit that was actually chosen: grass's crown floor has to keep
+    # `height^2 / crown_area` at order 1-5, which is the number that decides
+    # whether one family swamps the frame under the horizon rule.
+    var fam := FileAccess.open("res://assets/families/families.json", FileAccess.READ)
+    if fam != null:
+        var doc = JSON.parse_string(fam.get_as_text())
+        if typeof(doc) == TYPE_DICTIONARY:
+            var g: Dictionary = ((doc as Dictionary).get("families", {}) as Dictionary).get(
+                    "grass", {})
+            var pars: Dictionary = g.get("parameters", {})
+            if pars.has("crown_m"):
+                # Trace-cover cells get the RANGE MINIMUM, so the floor is the
+                # value that matters: `t_crown` is the cover fraction itself.
+                var c_min := float((pars["crown_m"] as Dictionary)["min"])
+                var h := 0.631      # measured realised height at the place that carries grass
+                var factor: float = (h * h) / (PI * (0.5 * c_min) * (0.5 * c_min))
+                check(factor <= 8.0, "grass's crown floor of %s m puts height^2/crown_area at "
+                        % String.num(c_min, 3)
+                        + "%s for a %s m plant. It was 68.5 at an 0.086 m tussock and grass took "
+                                % [String.num(factor, 1), String.num(h, 2)]
+                        + "77-87% of every drawn population; the drawn unit was widened to a "
+                        + "patch to bring it to order 1-5. Narrowing it again brings that back.")
+
+    # ONE needs the shipped fixture, because a trace share is a property of the
+    # data and a synthetic one would only test the arithmetic again.
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    if not bool(v.bind_families().get("ok", false)):
+        v.queue_free()
+        return
+    var window := "deepest_winter"
+    var day := 22
+    var colours := v.tint.cell_colours(window, day)
+    if not bool(v.tint.report.get("ok", false)):
+        v.queue_free()
+        return
+    var groups := v.fixture.taxon_groups(window, "band.pft_fractions")
+    var bare := v.fixture.day_values(window, "band.bare_fraction", day)
+    var trace := 0
+    var trace_tinted := 0
+    var smallest := INF
+    for gi in groups.size():
+        var fr := v.fixture.day_values(window, "band.pft_fractions", day, gi)
+        for cell in fr.size():
+            var cov := VegetationScatter.ground_cover(fr[cell],
+                    NAN if cell >= bare.size() else bare[cell])
+            if is_nan(cov) or cov <= 0.0 or cov >= 0.01:
+                continue
+            trace += 1
+            smallest = minf(smallest, cov)
+            if cell < colours.size() and colours[cell].a > 0.0:
+                trace_tinted += 1
+    check(trace > 0, "no cell in the shipped fixture carries a trace share under 1%, so this "
+            + "test proves nothing about floors. Either the fixture changed or the reading did.")
+    check(trace_tinted == trace, "%d of %d trace-share cell-groups reach the tint. The rest are "
+            % [trace_tinted, trace]
+            + "being floored away, and a floor here deletes grass from most of the basin -- "
+            + "which renders as a basin with little grass in it rather than as a bug.")
+    print("tint: %d trace cell-groups under 1%% cover, smallest %s, all tinted"
+            % [trace, String.num(smallest, 9)])
+    v.queue_free()
 
 
 func test_the_tint_holds_the_quantity_a_seam_has_to_conserve() -> void:

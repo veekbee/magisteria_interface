@@ -183,20 +183,59 @@ def build_shrub():
     return finish(bm, "family_shrub", lambda co: 0.0 if co.z < 0.3 else 1.0)
 
 
+#: Blades in the grass patch. See `build_grass`.
+GRASS_BLADES = 96
+
+
 def build_grass():
-    """Six crossed blades, twelve triangles. A tussock is never the thing a
-    viewer resolves and at horizon distance it is a few pixels -- but twelve is
-    a floor rather than a taste: `measurements/render_cost.json` measured mesh
-    complexities from twelve triangles up, and a family below that span could
-    only be priced by extrapolating the cost model past its own evidence."""
+    """A PATCH OF SWARD, NOT ONE TUSSOCK -- and the unit changed for a measured
+    reason rather than a visual one.
+
+    This was six crossed full-width ribbons, twelve triangles, drawn at a crown
+    of about 0.086 m. The horizon rule made the consequence visible: drawn count
+    carries a `height^2 / crown_area` factor, so a form that is tall and narrow
+    earns a far horizon and a tiny footprint at once and swamps the frame. Grass
+    scored 68.5 on that factor and took 77-87% of every drawn population at the
+    place that carries it. Widening the drawn unit to a ~0.3-0.5 m patch drops
+    the factor to about 5 and the instance count with it, and COVER IS CONSERVED
+    BY CONSTRUCTION -- count is `cover x texel_area / crown_area`, so a wider
+    unit is proportionally fewer of them and the ground covered is unchanged.
+
+    SIX RIBBONS COULD NOT BE SCALED UP. Each spanned the whole unit footprint,
+    so at 0.36 m across they draw as six 0.36 m leaves rather than as grass: the
+    instance transform scales the blades as well as their spacing. A patch needs
+    blades that stay blade-width while the footprint grows, which means more of
+    them -- 96 here, placed on a sunflower spiral so the disc fills evenly and
+    the mesh is deterministic.
+
+    THE TRIANGLE BUDGET SURVIVES THIS. 192 triangles against 12 is 16x per
+    instance, against roughly 17x fewer instances for the same cover: triangles
+    in frame come out about level, and the cost that is actually per-INSTANCE --
+    measured, `measurements/scatter_cost.json` -- falls with the count. 192 is
+    also still an order below the benchmark's heavy rung and well inside the
+    12-to-2,400 span `render_cost.json` has evidence for, which is what the
+    twelve was protecting.
+    """
     bm = bmesh.new()
-    for k in range(6):
-        a = math.pi * k / 6.0
-        dx, dy = 0.5 * math.cos(a), 0.5 * math.sin(a)   # normalise() fixes the width
-        v0 = bm.verts.new((-dx, -dy, 0.0))
-        v1 = bm.verts.new((dx, dy, 0.0))
-        v2 = bm.verts.new((dx * 0.35, dy * 0.35, 1.0))
-        v3 = bm.verts.new((-dx * 0.35, -dy * 0.35, 1.0))
+    n = GRASS_BLADES
+    w = 0.045                                   # blade half-width, mesh units
+    golden = math.pi * (3.0 - math.sqrt(5.0))
+    for i in range(n):
+        # Sunflower placement: even over the disc, no clumping at the centre,
+        # and the same every build.
+        r = 0.5 * math.sqrt((i + 0.5) / n)
+        a = i * golden
+        px, py = r * math.cos(a), r * math.sin(a)
+        # A lean, so the patch is not a bed of nails. Deterministic in the
+        # blade's own position rather than random, so two builds agree.
+        lean = 0.20 * math.cos(3.0 * a + 5.0 * r)
+        lx, ly = lean * math.cos(a + 1.1), lean * math.sin(a + 1.1)
+        ux, uy = -math.sin(a), math.cos(a)      # base edge across the blade
+        h = 0.55 + 0.45 * float((i * 7) % 11) / 10.0
+        v0 = bm.verts.new((px - ux * w, py - uy * w, 0.0))
+        v1 = bm.verts.new((px + ux * w, py + uy * w, 0.0))
+        v2 = bm.verts.new((px + lx + ux * w * 0.2, py + ly + uy * w * 0.2, h))
+        v3 = bm.verts.new((px + lx - ux * w * 0.2, py + ly - uy * w * 0.2, h))
         bm.faces.new((v0, v1, v2, v3))
     return finish(bm, "family_grass", lambda co: 1.0)
 
@@ -257,8 +296,13 @@ RANGES = {
     },
     "grass": {
         "height_m": (0.03, 2.5, "cropped sward to tall bunchgrass in seed"),
-        "crown_m": (0.05, 0.6, "a tussock, not a canopy: the width span is narrow because "
-                               "the form does not build one"),
+        "crown_m": (0.30, 0.50, "the drawn unit is a PATCH of sward, not one tussock. Widened "
+                                "from 0.05-0.6 because the horizon rule made the cost of a "
+                                "narrow unit visible: drawn count carries height^2/crown_area, "
+                                "grass scored 68.5 on it and took 77-87% of every drawn "
+                                "population at the place that carries it. Cover is conserved "
+                                "by construction -- count is cover x texel_area / crown_area -- "
+                                "so this is the same ground under fewer, wider instances"),
     },
     "succulent": {
         "height_m": (0.05, 12.0, "cushion cactus to columnar; the widest height span of the "

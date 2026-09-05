@@ -687,11 +687,52 @@ between 88.7% and 90.0% across 0.2 → 0.75. So the budget is one scalar in the 
 a knob. It is not one scalar in the sense that a family's share of it is predictable from its cover
 alone.
 
-**The lever is the brief's own.** It names the drawn *proxy unit* — "a grass clump, not a blade" —
-as the per-family choice of what "individual" means, and that choice is exactly what sets the
-height:crown ratio. A columnar family drawn as a clump of columns rather than one column would move
-its aspect factor toward the woody families and the imbalance with it. That is a family-authoring
-change and is not made here.
+**The lever is the brief's own, and it has now been pulled for grass.** It names the drawn *proxy
+unit* — "a grass clump, not a blade" — as the per-family choice of what "individual" means, and that
+choice is exactly what sets the height:crown ratio. Grass's drawn unit is now a **patch of sward**
+rather than one tussock: `crown_m` 0.05–0.6 → **0.30–0.50**, which at the place that carries grass
+takes the realised crown from **0.086 m to 0.313 m** and the aspect factor from **68.5 to 5.17** —
+the "order 1–5" the brief asks for.
+
+**The mesh had to change with it, and six ribbons could not simply be scaled.** Each of the old six
+blades spanned the whole unit footprint, so at 0.31 m across they draw as six 0.31 m leaves: the
+instance transform scales the blades as well as their spacing. The patch is 96 narrow blades on a
+sunflower spiral — even over the disc, deterministic, and blade-width at any crown. 12 → **192
+triangles**.
+
+**Cover is conserved by construction, and measured to five significant figures.** Count is
+`cover × texel_area / crown_area`, so a wider unit is proportionally fewer of them. Implied grass at
+place B falls **101,413,641 → 7,651,670** (13.3×, exactly the crown-area ratio) and the ground
+covered goes **589,113 m² → 589,102 m²**. The same ground, under fewer and wider instances.
+
+What that does to the sweep at place B, k/k_res = 0.35:
+
+| | before | after |
+|---|---:|---:|
+| grass instances | 484,176 | **36,520** |
+| total instances | 627,840 | **180,184** |
+| grass share | **77.1%** | **20.3%** |
+| shrub / tree share | 9.8% / 13.1% | 34.1% / 45.6% |
+| frame p50 | 9.52 ms | 9.09 ms |
+
+**The composition is the win; the frame time is not, and should not be quoted as one.** 9.52 → 9.09
+ms is inside the paced timer's own step (see the instrument section under `scatter_cost.json`), and
+the reason it did not fall with the instance count is that the triangles moved into the mesh —
+grass contributes 5.81 M triangles before and 7.01 M after. What changed is that the frame is no
+longer three-quarters one family.
+
+**The succulent is untouched and is now the remaining outlier** (127.3 declared, 51.0 realised). The
+brief required the grass unit and permitted the rest; a columnar cactus drawn as one column is
+arguably the honest unit for that form, where a single grass blade never was.
+
+**And the tint must keep taking trace shares un-floored**, which is the constraint that pulls the
+other way. Trace shares are grass's main mode of existence — median 0.88% across the reference
+basin, half of it under 1% — and they correctly draw *no individuals*, because a hundredth of a
+texel's ground does not resolve into a plant. They must still tint, or grass vanishes from most of
+the basin by construction and it renders as a basin without much grass rather than as a floor. The
+shipped fixture carries **996 trace cell-groups under 1% cover, the smallest at 2.77e-7**, and all
+996 reach the tint. Asserted, and blinded: a 1% floor in the tint drops 58 of them and breaks the
+coverage-conservation check at the same time.
 
 ### Grass: it is the place, not the day — and the two pinned places are complementary
 
