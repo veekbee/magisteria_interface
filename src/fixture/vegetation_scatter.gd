@@ -286,6 +286,30 @@ const BAND_SUBDIVISION := 32
 const PHENOLOGY_SAMPLE_STRIDE := 9
 
 var meshes: Dictionary = {}          ## life_form -> MultiMesh
+
+## THE STAND AS A CENSUS: sub-cell -> [count, mesh x, mesh y, mesh z].
+##
+## `meshes` is the only record of what was placed, and under the dummy renderer
+## nothing can be read back out of it. That is tolerable for a photograph and
+## fatal for a replay: a trace scored headlessly has to know what population
+## each frame held, and it cannot ask the MultiMesh.
+##
+## So the build keeps the census beside the meshes. It is exact rather than a
+## summary, and it is enough to compute what changed between two builds without
+## either of them being drawn -- BECAUSE placement is a stable prefix of a fixed
+## per-sub-cell order. Two builds that admit the same sub-cell hold the first
+## `n_a` and the first `n_b` of one sequence, so the plants they share are the
+## first `min(n_a, n_b)` of it. Set arithmetic collapses to `min`, per sub-cell,
+## and a churn is three sums over two dictionaries.
+##
+## That identity is worth naming as the thing it is: a consequence of the
+## placement rule, not a property of scatters in general. Against the sequential
+## draw this replaced, two builds shared nothing and no census could have said
+## otherwise.
+##
+## NOT SERIALISED. It is thousands of entries and it is an intermediate, not a
+## measurement; what reaches an artefact is what was computed FROM it.
+var census: Dictionary = {}
 var report: Dictionary = {}
 
 var _hf: Heightfield = null
@@ -328,6 +352,7 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
            frame_budget: bool = true) -> Dictionary:
     var t_build := Time.get_ticks_usec()
     meshes = {}
+    census = {}
     if not is_bound():
         report = {"ok": false, "why": "the scatter is not bound to its artefacts"}
         return report
@@ -580,6 +605,8 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 int(round(origin.x * PLACEMENT_QUANTUM)),
                 int(round(origin.y * PLACEMENT_QUANTUM)),
                 int(round(half * PLACEMENT_QUANTUM))])
+        var here := 0
+        var here_at := Vector3.ZERO
         for i in n:
             var candidate := candidate_at(i, pool, cell_key)
             if candidate < 0:
@@ -618,6 +645,9 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             phen_lo = minf(phen_lo, float(item["phenology"]))
             phen_hi = maxf(phen_hi, float(item["phenology"]))
             placed[life_form] = int(placed[life_form]) + 1
+            here += 1
+            if here == 1:
+                here_at = pos
             var seen := stable_hash([int(round(wx * PLACEMENT_QUANTUM)),
                     int(round(wy * PLACEMENT_QUANTUM)), family_key(life_form)])
             digest["all"] = int(digest["all"]) ^ seen
@@ -635,6 +665,17 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             acc[0] = int(acc[0]) ^ seen
             acc[1] = int(acc[1]) + 1
             digest_texel[tkey] = acc
+        if here > 0:
+            # ONE ENTRY PER SUB-CELL, NOT PER PLANT. The key is the family and
+            # the sub-cell's own quantised origin, so two builds name the same
+            # ground with the same string and nothing about either camera is in
+            # it. The position carried is the first instance's, which is where
+            # the sub-cell's plants are to within half a sub-cell -- enough to
+            # ask what a heading has in front of it, and not a claim about any
+            # individual plant.
+            census["%s|%d|%d" % [life_form, int(round(origin.x * PLACEMENT_QUANTUM)),
+                    int(round(origin.y * PLACEMENT_QUANTUM))]] = [
+                    here, here_at.x, here_at.y, here_at.z]
 
     # The size the wire implied, per family, over the cells this horizon
     # touched. A band scheme needs it to know when an individual stops being

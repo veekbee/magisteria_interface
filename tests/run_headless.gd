@@ -93,6 +93,9 @@ func _initialize() -> void:
     test_the_individuation_horizon_is_one_constant_bounded_by_the_camera()
     test_placement_is_a_function_of_where_and_thins_by_a_stable_prefix()
     test_two_builds_over_the_same_ground_place_the_same_plants()
+    test_a_census_is_the_stand_a_headless_replay_can_score()
+    test_a_flight_trace_round_trips_and_a_pan_cannot_churn()
+    test_the_pinned_flight_replays_to_what_the_artefact_says()
     test_a_density_schedule_is_finer_than_the_texel_it_thins()
     test_pft_fractions_are_a_composition_of_the_cover()
     test_the_tint_takes_wire_shares_unfloored_and_the_drawn_unit_can_change()
@@ -3444,6 +3447,257 @@ func test_two_builds_over_the_same_ground_place_the_same_plants() -> void:
     else:
         check(false, "the subdivided re-centring builds did not complete")
     v.queue_free()
+
+
+func test_a_census_is_the_stand_a_headless_replay_can_score() -> void:
+    """THE PIECE THAT MAKES A REPLAY POSSIBLE AT ALL.
+
+    Instance transforms read back as the identity under the dummy renderer, so
+    a headless harness cannot ask a MultiMesh what it holds. That is fine for a
+    photograph and fatal for a replay, which has to know what population every
+    frame of a recorded flight had.
+
+    So the build keeps a census beside the meshes: sub-cell -> count and a
+    position. Two claims are checked here rather than assumed:
+
+      1. IT IS THE STAND, not a summary of it. The census sums to exactly what
+         the report says was placed, family by family.
+      2. CHURN COLLAPSES TO A MINIMUM. Two builds that admit one sub-cell hold
+         the first n_a and the first n_b plants of ONE fixed order, so what
+         they share is the first min(n_a, n_b) -- which is only true because
+         placement is a stable prefix of a positional order. Against the
+         per-build random sequence this replaced, two builds shared nothing
+         whatever their counts said, and no census could have told them apart.
+    """
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    var bound := v.bind_families()
+    check(bool(bound["ok"]), "families did not bind: %s" % str(bound.get("why", "")))
+    check(v.show_field("deepest_winter", "band.pft_fractions", 22), "the field did not paint")
+    var verts: PackedVector3Array = v.terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var centre := v.terrain.mesh_to_world(verts[5000], v.heightfield)
+
+    var r := v.scatter_at(centre, 1500.0)
+    check(bool(r.get("ok", false)), "the scatter did not build: %s" % str(r.get("why", "")))
+    if not bool(r.get("ok", false)):
+        v.queue_free()
+        return
+    var cen: Dictionary = v.scatter.census
+    var placed: Dictionary = r["placed"]
+    var total := 0
+    for g in placed:
+        total += int(placed[g])
+    check(FlightTrace.population(cen) == total,
+            "the census holds %d plants and the report says %d were placed. A replay scored "
+                    % [FlightTrace.population(cen), total]
+            + "off this would be scoring a different stand than the one drawn.")
+    check(cen.size() > 0 and cen.size() < total,
+            "the census has %d entries for %d plants; it is meant to be one row per sub-cell"
+            % [cen.size(), total])
+
+    # A build of the same ground with the population thinned: with the share
+    # halved, every sub-cell keeps a PREFIX of what it kept before, so the
+    # census arithmetic must report gone-only and nothing appearing.
+    var before: Dictionary = v.scatter.census
+    var half: Dictionary = v.scatter_at(centre, 1500.0, VegetationScatter.NO_SCHEDULE,
+            maxi(1, int(total / 2)))
+    check(bool(half.get("ok", false)), "the thinned scatter did not build")
+    if not bool(half.get("ok", false)):
+        v.queue_free()
+        return
+    var after: Dictionary = v.scatter.census
+    var churn: Dictionary = FlightTrace.churn_between(before, after)
+    check(int(churn["before"]) == total,
+            "churn_between read %d plants before, against %d placed" % [int(churn["before"]), total])
+    check(int(churn["after"]) < int(churn["before"]),
+            "halving the build ceiling did not thin the stand")
+    check(int(churn["appeared"]) == 0,
+            "thinning the stand made %d plants APPEAR. Lowering a share is supposed to remove "
+                    % int(churn["appeared"])
+            + "candidates from a fixed order, never to re-draw them -- which is the whole of "
+            + "why a crossfade has something bounded to hide.")
+    check(int(churn["survived"]) == int(churn["after"]),
+            "%d of the %d plants in the thinned stand are not in the fuller one it came from"
+            % [int(churn["after"]) - int(churn["survived"]), int(churn["after"])])
+    check(float(churn["gone_fraction"]) > 0.0 and float(churn["gone_fraction"]) <= 1.0,
+            "gone_fraction came out at %s" % String.num(float(churn["gone_fraction"]), 4))
+
+    # And the identity that keeps the two fractions apart, because reading one
+    # as the other has already cost a prediction.
+    var symmetric := float(int(churn["appeared"]) + int(churn["gone"]))
+    check(absf(float(churn["churn_fraction"])
+                    - symmetric / float(int(churn["before"]) + int(churn["after"]))) < 1e-9,
+            "churn_fraction is not the symmetric difference over both populations")
+    v.queue_free()
+
+
+func test_a_flight_trace_round_trips_and_a_pan_cannot_churn() -> void:
+    """A TRACE THAT CANNOT BE REPLAYED IS A DEMO.
+
+    The pose has to come back out of JSON as the pose that went in, or a
+    replay scores a path nobody flew. Checked to a tolerance far under
+    anything that could change a build: placement quantises world position to
+    the centimetre, so a pose that round-trips to a micron is exact for every
+    purpose here.
+
+    AND THE PAN CLAIM IS STRUCTURAL, WHICH IS WHY IT IS ASSERTED RATHER THAN
+    MEASURED. The scatter is built around a centre; a rotation does not move
+    the centre; so the population is identical and churn is exactly zero for
+    any pan, always. A metric that cannot fail on what it is pointed at is not
+    the metric for pans -- what a heading has IN FRONT of it is, and that has
+    to actually vary with heading or it is no better.
+    """
+    var t := FlightTrace.new()
+    t.begin({"what": "a test", "recentre_m": 0.0})
+    var poses: Array = [
+        Transform3D(Basis.from_euler(Vector3(0.1, 0.9, 0.0)), Vector3(12345.5, 1713.25, -987.75)),
+        Transform3D(Basis.from_euler(Vector3(-0.4, -2.7, 0.0)), Vector3(-500.125, 40.0, 6.5)),
+    ]
+    for i in poses.size():
+        t.add(float(i) * 16.0, poses[i], {"mark": FlightTrace.MARK_NONE})
+    var doc = JSON.parse_string(JSON.stringify(t.to_dict(), "  ", false))
+    check(typeof(doc) == TYPE_DICTIONARY, "the trace did not serialise to a document")
+    if typeof(doc) != TYPE_DICTIONARY:
+        return
+    var back: Array = (doc as Dictionary)["frames"]
+    check(back.size() == poses.size(), "the trace lost frames on the way through JSON")
+    for i in back.size():
+        var got: Transform3D = FlightTrace.pose_of(back[i])
+        var want: Transform3D = poses[i]
+        check((got.origin - want.origin).length() < 1e-6,
+                "frame %d came back %s m from where it was recorded"
+                % [i, String.num((got.origin - want.origin).length(), 9)])
+        check(rad_to_deg(got.basis.get_rotation_quaternion().angle_to(
+                        want.basis.get_rotation_quaternion())) < 1e-4,
+                "frame %d came back pointing somewhere else" % i)
+
+    # A pan: same position, different heading. The census is untouched by
+    # construction, so churn is zero -- and what is in front of the camera is
+    # not, or the substitute metric is no better than the one it replaces.
+    var cen := {
+        "tree|1|1": [10, 0.0, 0.0, -100.0],
+        "tree|2|2": [20, 0.0, 0.0, 100.0],
+    }
+    var facing := Transform3D(Basis.from_euler(Vector3(0.0, 0.0, 0.0)), Vector3.ZERO)
+    var turned := Transform3D(Basis.from_euler(Vector3(0.0, PI, 0.0)), Vector3.ZERO)
+    var still: Dictionary = FlightTrace.churn_between(cen, cen)
+    check(int(still["gone"]) == 0 and int(still["appeared"]) == 0
+                    and float(still["gone_fraction"]) == 0.0,
+            "a population compared with itself churned, which no pan can do")
+    var ahead: Dictionary = FlightTrace.in_view(cen, facing, 75.0, 1.6)
+    var behind: Dictionary = FlightTrace.in_view(cen, turned, 75.0, 1.6)
+    check(int(ahead["instances"]) == 10 and int(behind["instances"]) == 20,
+            "turning around showed %d then %d instances, against 10 and 20. If a heading does "
+                    % [int(ahead["instances"]), int(behind["instances"])]
+            + "not change what is counted, the pan metric measures nothing.")
+
+    var q: Dictionary = FlightTrace.quantiles([3.0, 1.0, 2.0, 4.0])
+    check(float(q["p50"]) == 2.0 and float(q["max"]) == 4.0 and float(q["min"]) == 1.0,
+            "nearest-rank quantiles came out at %s" % str(q))
+    check(FlightTrace.quantiles([]).is_empty(),
+            "an empty sample returned numbers, which read as a measurement of zero")
+
+
+func test_the_pinned_flight_replays_to_what_the_artefact_says() -> void:
+    """ONE RECORDED PATH, SCORED THE SAME WAY FOREVER.
+
+    The whole argument for recording a flight is that the measurement outlives
+    the session. That is a claim about THIS repo on THIS commit, so it is
+    checked the way every other artefact here is: the trace is loaded, its
+    shape is asserted, and the committed replay is required to be about the
+    trace that is committed beside it.
+
+    WHAT IS NOT CHECKED HERE, AND IT IS THE POINT OF THE WHOLE HARNESS. The
+    scripted trace carries no marks, because a script cannot judge. The
+    threshold between an invisible churn and a visible one stays exactly as
+    unmeasured as it was, and the artefact has to keep saying so rather than
+    quietly reading as a result.
+    """
+    var loaded: Dictionary = FlightTrace.load_from(
+            "res://measurements/flights/scripted.trace.json")
+    check(bool(loaded["ok"]), "the pinned trace did not load: %s" % str(loaded.get("why", "")))
+    if not bool(loaded["ok"]):
+        return
+    var t: FlightTrace = loaded["trace"]
+    check(t.frames.size() > 100, "the pinned trace is %d frames, too short to score"
+            % t.frames.size())
+    var h: Dictionary = t.header
+    for field in ["scene", "viewport", "fov_degrees", "individuation_k", "scatter_radius_m",
+                  "recentre_m"]:
+        check(h.has(field), "the trace header has no `%s`, so a replay cannot rebuild the "
+                % field + "world it was flown in")
+    check(str(h.get("flown_by", "")).length() > 0,
+            "the pinned trace does not say who flew it. A scripted path and a person's are "
+            + "different evidence and the artefact must not blur them.")
+    check(int(h.get("marks", -1)) == 0,
+            "the scripted trace carries %d marks. A script cannot judge what looked wrong, "
+                    % int(h.get("marks", -1))
+            + "and a mark from one would be a measurement of nothing.")
+
+    # THE SPEED IS THE RULED ONE, checked off the poses rather than off the
+    # setting. A harness that reports its own constant is not measuring.
+    var motion: Array = FlightTrace.motion_of(t.frames)
+    var speeds: Array = []
+    for m in motion:
+        speeds.append(float((m as Dictionary)["speed_m_s"]))
+    var sq: Dictionary = FlightTrace.quantiles(speeds)
+    check(absf(float(sq["mean"]) - 5.0) < 0.25,
+            "the pinned path travels at %s m/s, against the 5.0 m/s the corpus derives for an "
+                    % String.num(float(sq["mean"]), 2)
+            + "avatar. Tuning at the wrong speed is tuning against a world nobody sees.")
+    var turns: Array = []
+    for m2 in motion:
+        turns.append(float((m2 as Dictionary)["turn_degrees_s"]))
+    check(float(FlightTrace.quantiles(turns)["max"]) > 1.0,
+            "the pinned path never turns, so it exercises nothing a dolly did not")
+
+    var f := FileAccess.open("res://measurements/flight_replay.json", FileAccess.READ)
+    check(f != null, "no flight_replay.json")
+    if f == null:
+        return
+    var parsed = JSON.parse_string(f.get_as_text())
+    check(typeof(parsed) == TYPE_DICTIONARY, "flight_replay.json is not a document")
+    if typeof(parsed) != TYPE_DICTIONARY:
+        return
+    var runs: Array = (parsed as Dictionary)["runs"]
+    check(runs.size() > 0, "flight_replay.json records no runs")
+    var run: Dictionary = runs[0]
+    check(str(run["trace"]).ends_with("scripted.trace.json"),
+            "the committed replay is of %s, not of the trace committed beside it"
+            % str(run["trace"]))
+    check(int(run["frames"]) == t.frames.size(),
+            "the replay scored %d frames and the trace has %d" % [int(run["frames"]),
+                    t.frames.size()])
+
+    # THE AGREEMENT CHECK MUST NOT READ AS PASSED WHEN IT COMPARED NOTHING.
+    # A synthesised trace records no populations, so there is nothing to
+    # disagree with -- and a harness that called that "exact" would be the
+    # exact shape of defect this repo keeps finding in its own instruments.
+    var agree: Dictionary = run["replay_agreement"]
+    check(agree.has("ran") and agree.has("frames_compared"),
+            "the replay agreement does not say whether it compared anything")
+    if int(agree["frames_compared"]) == 0:
+        check(not bool(agree["ok"]) and str(agree["why_not"]).length() > 20,
+                "the agreement check compared no frames and still reported ok")
+    else:
+        check(bool(agree["ok"]) == (int(agree["frames_disagreeing_on_population"]) == 0),
+                "the agreement verdict does not follow from its own count")
+
+    # Churn is quoted over the frames that could churn, and the artefact says
+    # which those are.
+    var per: Dictionary = run["per_frame"]
+    check(per.has("gone_fraction_at_rebuilds") and per.has("rebuilds"),
+            "the replay quotes churn without saying how many frames could churn")
+    if int(per["rebuilds"]) == 0:
+        check((per["gone_fraction_at_rebuilds"] as Dictionary).is_empty(),
+                "no frame rebuilt and a churn distribution was reported anyway")
+    check(str(run["not_covered"]).find("tile pyramid") >= 0,
+            "the replay does not record that the near field has no ground until the pyramid "
+            + "lands, which is what limits eye-level judgement")
+    check((run["marks"] as Array).is_empty(),
+            "the committed replay reports marks, and the trace it is of has none")
 
 
 func test_a_density_schedule_is_finer_than_the_texel_it_thins() -> void:

@@ -37,6 +37,10 @@ claims a `PIN` does: what was measured, how, on what, and what it does not cover
 - `scatter_motion.json` — what the far field does when the camera MOVES: a scripted dolly through
   the seam and a lateral-step parallax pair. Roadmap item 2. Re-take it with
   `bash tools/measure_motion.sh`.
+- `flights/*.trace.json` — recorded camera paths: what a person did, frame by frame, at walking
+  pace. Fixtures, not results. Record one with `bash tools/free_flight.sh`.
+- `flight_replay.json` — a trace scored again from its poses alone, headlessly. Re-take it with
+  `bash tools/replay_flight.sh --trace measurements/flights/<name>.trace.json`.
 - `visual_audit.md` — what each milestone's claim looks like when photographed, and the five
   defects that came out of looking. Re-take it with `bash tools/audit.sh`.
 
@@ -570,6 +574,129 @@ unable to separate its own control, this pair is not load-bearing either.
 
 One place, one day, one dolly axis, one `k`. The camera translates and never rotates, so nothing here
 says what happens when a viewer turns — which is the motion a viewer actually makes most.
+
+## `flight_replay.json` — a walk at walking pace, recorded once and scored forever
+
+Everything above is an aggregate over a scripted path. Two of the open questions are not aggregate
+questions — **where between 0 and 1 a churn becomes visible**, and **what a pan does** — and neither
+can be answered by pointing a harness at itself. They need a person moving through the world the way
+a player would.
+
+The risk in that is a judgement nobody can reproduce, which is the opposite of everything else here.
+So the flight is not the measurement: **the trace is**.
+
+1. A person flies, at 5 m/s, translating and panning (`bash tools/free_flight.sh`).
+2. Every frame records the pose, the population, what is in front of the camera, the churn, the
+   frame time, and whether the window was actually being drawn.
+3. The trace is pinned as a fixture in `flights/`.
+4. `bash tools/replay_flight.sh` scores it again, headlessly, on any machine, forever.
+
+**5 m/s is not a round number picked for being round.** It is the speed the corpus derives for an
+avatar under its own kinematic compression (§3.1c), so tuning here is tuning at the speed the world
+will be seen at. The harness records what was *travelled* rather than what was *asked for*, and the
+pinned path measures 5.00 m/s mean off its own poses.
+
+### The replay is headless, which every other harness here refuses to be
+
+The others photograph frames, so the dummy renderer — which draws nothing and reports success — is
+fatal to them. This one photographs nothing. What it recomputes is the **population**, and that is
+arithmetic over the scatter's own census rather than anything read off a screen.
+
+That is only possible because of the placement rule. Two builds that admit the same sub-cell hold
+the first `n_a` and the first `n_b` plants of one fixed order, so **the plants they share are the
+first `min(n_a, n_b)`** — set intersection collapses to a minimum, per sub-cell, and a churn is
+three sums over two dictionaries. Against the per-build random sequence this replaced, two builds
+shared nothing whatever their counts said and no census could have told the difference. The
+instrument did not exist before the fix did.
+
+| what replays | what does not |
+|---|---|
+| which instances existed, and where | frame time — a headless frame is not drawn and costs nothing |
+| how the population changed between frames | anything about colour, coverage or the seam's appearance |
+| what a heading had in front of it | |
+
+Frame times in the artefact are the **flight's** measurements carried through, never re-derived, and
+every column says which it is. Read them to about half a millisecond: the frame timer on this
+platform lands on a paced ladder.
+
+### Two fractions, named apart, because reading one as the other has cost a prediction
+
+- **`gone_fraction`** — what left, over what was there. `1 − survival`. This is what a disc-overlap
+  argument predicts.
+- **`churn_fraction`** — the symmetric difference over both populations summed. This is what
+  `scatter_motion.json` reports, and roughly **twice** the first when the populations are similar.
+
+### What the pinned path says
+
+A scripted 30 s walk with a slow pan, at the viewer's own 1280×800 and `k/k_res = 0.35`, re-centring
+every 25 m:
+
+| | |
+|---|---:|
+| frames | 1,800 |
+| rebuilds | 5 |
+| `gone_fraction` per rebuild, p50 / max | **0.088** / 0.097 |
+| instances in view, p50 | 27,283 of 107,690 |
+| in view by heading, lowest to highest mean | 24,242 → 28,732 (**1.19×**) |
+
+**A quantile over every frame would have been a lie of arithmetic.** Only a rebuild can change the
+population, so 1,795 of those 1,800 frames are zero by construction; a p95 over all of them reads
+0.0000 and says nothing. The churn distribution is quoted over the frames that could churn, with
+the count of them beside it.
+
+**The 1.19× is the pan finding, and it is the statistic a pan has to be measured by.** A pan cannot
+churn — the scatter is built around a centre and a rotation does not move it, so churn is exactly
+0.0000 for any pan, always. That is a metric that cannot fail on what it is pointed at. What *does*
+vary with heading is what is in front of the camera, and here it varies by a fifth between the
+emptiest heading and the fullest, which a translation-only dolly never sampled. The ratio is only
+meaningful across frames at a comparable attitude, so the artefact carries the pitch quantiles and a
+count of frames with nothing in view beside it.
+
+### What this does not answer, and it is the reason the harness exists
+
+**The scripted path carries no marks, so the threshold is exactly as unmeasured as it was.** A
+script cannot judge. The mechanism is built and waiting: SPACE, bound to *"that looked wrong"*,
+lands on a frame that already carries the churn, the population and the frame time, so a judgement
+becomes a row and several presses give a distribution rather than a number. Until someone flies it,
+`marks` is an empty array and the gate asserts that it is.
+
+The pinned trace exists so the instrument is testable with nobody at the machine — and so that the
+day a person does fly, the harness has already been shown to work rather than being debugged around
+a human session.
+
+### Whether this replaces the scripted dolly: no, and they are not substitutes
+
+Asked, and answered here rather than assumed:
+
+- The dolly scores **pictures** — annulus colour, coverage, luminance distance — against an oracle,
+  and needs a renderer. The replay scores **populations** and cannot say anything about how a frame
+  looks. They do not overlap.
+- The dolly compares three candidates **at identical camera positions**, which is the only
+  comparison in either harness with no camera motion in it. A flight has one candidate.
+- The dolly runs today with nobody present. A flight's trace is reproducible only after somebody
+  has flown it once.
+- What the flight adds and the dolly cannot: **per-frame sampling** — at 5 m/s the dolly's 20 m step
+  is four seconds of travel, and everything between two samples is invisible to it — **pan**, and
+  **the mark**.
+
+So the gate keeps the dolly and the tuning uses the flight.
+
+### The refusal that matters most here
+
+An interactive window loses focus by construction: it is what happens every time a person looks at
+something else, and a window that is not focused stops being drawn while the loop keeps ticking. It
+already cost two complete `measure_motion` runs. So the flight harness counts frames recorded while
+unfocused and **refuses to write a trace at all** if more than a tenth of it was not on screen — the
+path would replay perfectly and the judgement it carries, which is the entire reason a person is
+there, would be about frames nobody saw. Recording does not begin until the window has been clicked,
+so setup is not counted against the flyer.
+
+### Not covered
+
+One path, one place, one day, one `k`, one walking speed. **The near field has no ground until the
+tile pyramid lands** — the terrain is triangulated every 4 km on the overview, so at eye level the
+surface under the plants is an interpolated plane and not a hillside. Eye-level judgement is limited
+by that and nothing here generalises past it.
 
 ## `scatter_bands.json` — where individuals should stop
 

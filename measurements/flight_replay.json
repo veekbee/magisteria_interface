@@ -1,0 +1,206 @@
+{
+  "_what": "a recorded flight, replayed and scored",
+  "vertical_exaggeration": 1.0,
+  "shading_exaggeration": 12.0,
+  "runs": [
+    {
+      "what": "a recorded walk through the far field, scored again from its poses alone",
+      "trace": "measurements/flights/scripted.trace.json",
+      "trace_header": {
+        "what": "a SCRIPTED walk with a pan in it -- not a flight. It exists so the replay and the gate have a path to score with nobody at the machine.",
+        "flown_by": "a script. No person saw these frames, so the trace carries no marks and says nothing about what is visible. That answer needs a person.",
+        "recorded_at_commit": "af3d023",
+        "scene": {
+          "window": "deepest_winter",
+          "row": "band.pft.biomass",
+          "day": 22.0,
+          "at_world_epsg5070": [
+            -1212793.0,
+            1376226.0
+          ]
+        },
+        "vertical_exaggeration": 1.0,
+        "shading_exaggeration": 12.0,
+        "viewport": [
+          1280.0,
+          800.0
+        ],
+        "fov_degrees": 75.0,
+        "eye_height_m": 1.7,
+        "asked_speed_m_s": 5.0,
+        "individuation_k": 182.451552197769,
+        "k_over_k_res": 0.35,
+        "k_resolution": 521.290149136482,
+        "scatter_radius_m": 480.0,
+        "recentre_m": 25.0,
+        "recentre_means": "metres the camera may travel before the scatter is rebuilt around it. 0 is one build flown through, which is what ships; above 0 is a population that follows the camera, which is what a per-place instance budget does",
+        "marks_mean": "none: a script cannot judge",
+        "frame_ms_is": "the script's own cadence, not a measurement of anything. A real flight's frame_ms is measured; this one is 1/fps by construction.",
+        "pose_fields": "position is the camera in MESH space; orientation is a quaternion (x, y, z, w)",
+        "frames": 1800.0,
+        "seconds": 30.0,
+        "marks": 0.0,
+        "frames_not_drawn": 1800.0,
+        "speed_m_s_measured": {
+          "n": 1799.0,
+          "min": 4.68750581145287,
+          "p50": 4.68770608305999,
+          "p95": 5.62500000000082,
+          "max": 5.62500000000082,
+          "mean": 5.00032059570824
+        },
+        "turn_degrees_s_measured": {
+          "n": 1799.0,
+          "min": 0.0,
+          "p50": 17.7645184167612,
+          "p95": 25.0104425252552,
+          "max": 25.234756609769,
+          "mean": 15.8768217668903
+        }
+      },
+      "replayed_at_commit": "af3d023",
+      "vertical_exaggeration": 1.0,
+      "shading_exaggeration": 12.0,
+      "frames": 1800,
+      "builds": 6,
+      "replay_agreement": {
+        "frames_compared": 0,
+        "frames_disagreeing_on_population": 0,
+        "worst_disagreement_instances": 0,
+        "ok": false,
+        "ran": false,
+        "why_not": "this trace records no per-frame population, which is what a synthesised path looks like: nothing was built while it was written, so there is nothing to disagree with. The check goes live the first time a flown trace is replayed.",
+        "what": "the flight recorded what it measured; this recomputed it from the poses alone. They have to agree exactly, because placement is a function of the ground and the rebuild rule is a function of the path. A disagreement means the flight was not deterministic or this replay is not faithful, and neither is a thing to quote a number over.",
+        "not_compared": "frame time. A headless frame is not drawn and costs nothing, so the milliseconds in this artefact are the FLIGHT's measurements carried through and are never re-derived."
+      },
+      "per_frame": {
+        "rebuilds": 5,
+        "gone_fraction_at_rebuilds": {
+          "n": 5,
+          "min": 0.0769503413796963,
+          "p50": 0.0880759307040177,
+          "p95": 0.0973461113158865,
+          "max": 0.0973461113158865,
+          "mean": 0.0878406146268338
+        },
+        "gone_fraction_is": "over the frames that REBUILT, which are the only frames that can churn. 5 of 1800 here. A quantile over every frame would be a quantile over a list that is zero by construction.",
+        "instances": {
+          "n": 1800,
+          "min": 107212.0,
+          "p50": 107690.0,
+          "p95": 108520.0,
+          "max": 108520.0,
+          "mean": 107945.666666667
+        },
+        "in_view_instances": {
+          "n": 1800,
+          "min": 20263.0,
+          "p50": 27283.0,
+          "p95": 30014.0,
+          "max": 30728.0,
+          "mean": 26944.0227777778
+        },
+        "frame_ms_in_flight": {
+          "n": 1800,
+          "min": 16.6666666666667,
+          "p50": 16.6666666666667,
+          "p95": 16.6666666666667,
+          "max": 16.6666666666667,
+          "mean": 16.6666666666671
+        },
+        "what": "per frame, not per step. At 5 m/s the dolly's 20 m step is four seconds of travel, and everything between two samples is invisible to a sampled metric.",
+        "frame_ms_note": "the frame timer on this platform lands on a paced ladder: read differences to about half a millisecond and do not tune against smaller ones. A spread of zero is the absence of a measurement."
+      },
+      "churn_is_zero_by_construction": false,
+      "churn_note": "with `recentre_m` at 0 the scatter is built once and flown through, so the population cannot change and a churn of exactly 0 is the calibration rather than a result -- the same role `static` plays in scatter_motion.json. Above 0 the population follows the camera and the churn is a measurement.",
+      "by_heading": [
+        {
+          "from_degrees": 0.0,
+          "frames": 302,
+          "in_view_mean": 24241.9039735099
+        },
+        {
+          "from_degrees": 30.0,
+          "frames": 596,
+          "in_view_mean": 27237.8808724832
+        },
+        {
+          "from_degrees": 60.0,
+          "frames": 2,
+          "in_view_mean": 28731.5
+        },
+        {
+          "from_degrees": 90.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 120.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 150.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 180.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 210.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 240.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 270.0,
+          "frames": 2,
+          "in_view_mean": 28221.5
+        },
+        {
+          "from_degrees": 300.0,
+          "frames": 596,
+          "in_view_mean": 27862.1224832215
+        },
+        {
+          "from_degrees": 330.0,
+          "frames": 302,
+          "in_view_mean": 27234.0331125828
+        }
+      ],
+      "heading_spread": {
+        "lowest_mean_in_view": 24241.9039735099,
+        "highest_mean_in_view": 28731.5,
+        "ratio": 1.18519981068302,
+        "frames_with_nothing_in_view": 0,
+        "pitch_degrees": {
+          "n": 1800,
+          "min": -6.00000092238322,
+          "p50": -6.00000006390675,
+          "p95": -5.99999920543028,
+          "max": -5.99999834695381,
+          "mean": -5.99999995898187
+        },
+        "read_the_ratio_against_the_pitch": "a heading is only comparable with another at a comparable attitude. A camera pitched at the sky has nothing in front of it whatever its heading, so a bucket full of those reads as an empty heading and drives the ratio to nothing. If `frames_with_nothing_in_view` is not small, or the pitch quantiles reach the clamp, the spread is about where the camera was pointing up and down and not about heading at all.",
+        "what": "what a HEADING has in front of it, which a translation-only dolly never sampled. A pan cannot churn -- the scatter is built around a centre and a rotation does not move it, so churn is exactly 0 for any pan, always, and is a metric that cannot fail on what it is pointed at. This is the statistic a pan is measured by instead.",
+        "counted_per_sub_cell": "a sub-cell is in view or out as a whole, and it is 31 m across against a seam of hundreds. This counts what a heading admits, not what a renderer would clip: no near or far plane is applied."
+      },
+      "marks": [],
+      "marks_note": "a person pressing a key when something looked wrong. The window BEFORE each mark is where the event is, because reaction time is not zero. With no marks, the threshold between an invisible churn and a visible one is exactly as unmeasured as it was.",
+      "not_covered": "one path, one place, one day, one k. THE NEAR FIELD HAS NO GROUND until the tile pyramid lands -- the terrain is triangulated every 4 km on the overview, so at eye level the surface under the plants is an interpolated plane and not a hillside. Eye-level judgement is limited by that and this artefact does not generalise past it. Frame time is not replayable and is carried from the flight. Nothing here says what a different walking speed does."
+    }
+  ]
+}
