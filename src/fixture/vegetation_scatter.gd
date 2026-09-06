@@ -51,9 +51,48 @@ extends RefCounted
 ## too short, so the same factor scales plant height and the report carries it.
 ## No height should be read off the picture either way.
 
-## Placement is seeded, so two runs over one day differ by the data and not by
-## the draw. The seed travels in the report.
+## PLACEMENT IS A FUNCTION OF WHERE, NOT OF WHEN IT WAS DRAWN. This is the
+## world key that function is hashed against; it is not a sequence seed, and
+## nothing here consumes a random stream. It travels in the report.
+##
+## WHY, MEASURED. A sequential stream makes a position depend on visit order,
+## and the scatter is rebuilt around a camera that moves, so re-centring the
+## disc renumbers every position inside it. One 21.8 m dolly step, same day,
+## same place, overlapping discs: 36,081 instances became 28,358, of which
+## EIGHT were the same plants (`measurements/scatter_motion.json`). A stand
+## that reshuffles under motion is not a stand, and no crossfade can hide an
+## unbounded one.
+##
+## So a candidate's position comes from a hash of its own quantised world
+## coordinates, its family, and its index within its sub-cell. Two builds over
+## the same ground agree instance for instance, whatever else differs.
 const SCATTER_SEED := 20260903
+
+## Sub-cell origins are quantised to a centimetre before hashing, so the key is
+## the ground rather than a float that arithmetic happened to reassociate.
+const PLACEMENT_QUANTUM := 100.0
+
+## Mixing is done in 32 bits with every product masked, because GDScript ints
+## are 64-bit and a multiplier over 2^31 would overflow the signed range rather
+## than wrap into it. Both multipliers below are under 2^31 for that reason.
+const HASH_MASK := 0xFFFFFFFF
+const HASH_SPAN := 4294967296.0
+
+## Rounds in the candidate ordering. Any number of rounds is a bijection, which
+## is the property that matters; four is where the order stops resembling the
+## index.
+const PERMUTATION_ROUNDS := 4
+
+## Cycle-walking terminates with probability 1 and is bounded anyway. Reaching
+## this would be a bug, and `placement_walk_overruns` in the report is how it
+## would be found rather than absorbed.
+const PERMUTATION_WALK_LIMIT := 64
+
+## Discs the placement digest is folded over, in metres from the build centre.
+## Absolute rather than fractions of the radius, so two builds at two radii are
+## comparing the same ground; see the digest's own note for what makes a ring
+## comparable.
+const DIGEST_RINGS_M: Array = [500, 1000, 2000]
 
 ## A ceiling on instances BUILT, which is not the frame budget and must not be
 ## confused with it. `measurements/render_cost.json` prices a frame; this
@@ -133,6 +172,88 @@ static func resolution_k(viewport_height_px: float, fov_degrees: float) -> float
     if t <= 0.0 or viewport_height_px <= 0.0:
         return 0.0
     return viewport_height_px / (2.0 * t)
+
+
+## A 32-bit avalanche. Deterministic, portable, and not `String.hash()` or
+## `RandomNumberGenerator`: both are engine internals free to change between
+## versions, and a placement that moves when Godot updates is the defect this
+## whole scheme exists to remove.
+static func mix32(value: int) -> int:
+    var x: int = value & HASH_MASK
+    x = ((x ^ (x >> 16)) * 0x21f0aaad) & HASH_MASK
+    x = ((x ^ (x >> 15)) * 0x735a2d97) & HASH_MASK
+    return (x ^ (x >> 15)) & HASH_MASK
+
+
+## One hash over an ordered list of integers. Order matters and is the point:
+## `[x, y]` and `[y, x]` are different ground.
+static func stable_hash(parts: Array) -> int:
+    var h: int = 0x9e3779b9
+    for p in parts:
+        h = mix32(h ^ mix32(int(p)))
+    return h
+
+
+## The hash read as a fraction of 1, which is the form a rank and a jitter both
+## want.
+static func hash01(h: int) -> float:
+    return float(h & HASH_MASK) / HASH_SPAN
+
+
+## The family axis of the key, from the name rather than from an index, so
+## adding a family to the fixture cannot move an existing family's plants.
+## FNV-1a over the UTF-8 bytes -- small, specified elsewhere, and ours.
+static func family_key(life_form: String) -> int:
+    var h: int = 0x811c9dc5
+    for b in life_form.to_utf8_buffer():
+        h = ((h ^ int(b)) * 16777619) & HASH_MASK
+    return h
+
+
+## A Feistel round pair over `2 * bits` bits. Invertible for any round function,
+## which is the only property asked of it here.
+static func _feistel(value: int, bits: int, key: int) -> int:
+    var half: int = (1 << bits) - 1
+    var l: int = value & half
+    var r: int = (value >> bits) & half
+    for i in PERMUTATION_ROUNDS:
+        var f: int = mix32(key ^ mix32(r ^ ((i + 1) * 0x9e3779b1))) & half
+        var carry: int = r
+        r = l ^ f
+        l = carry
+    return (r << bits) | l
+
+
+## THE `index`-th CANDIDATE OF `n`, UNDER THE ORDERING `key` NAMES.
+##
+## Thinning has to be a stable ordering rather than a fresh draw (§16.6), and
+## the obvious way to write one is to give each candidate a hashed rank and
+## keep the ranks under the drawn fraction. That form is O(n), and `n` for
+## grass is the millions of blades a texel implies -- visited to find the
+## hundreds that pass. A permutation gives the same set in O(m): the first `m`
+## of a fixed order.
+##
+## Nesting is what makes it a fix rather than a different shuffle. The set for
+## `m - 1` is the set for `m` minus one plant, so a falling share thins the
+## stand and a rising one puts back the same plants it took.
+##
+## A Feistel network over the smallest power-of-four domain covering `n`,
+## cycle-walked back into range. The domain is under `4n`, so the walk expects
+## fewer than four turns whatever `n` is.
+static func candidate_at(index: int, n: int, key: int) -> int:
+    if n <= 1:
+        return 0
+    var bits := 1
+    while (1 << (2 * bits)) < n and bits < 31:
+        bits += 1
+    var x: int = index % (1 << (2 * bits))
+    for _walk in PERMUTATION_WALK_LIMIT:
+        x = _feistel(x, bits, key)
+        if x < n:
+            return x
+    # Not reachable in any run; counted rather than silently modulo'd, because
+    # a fallback that looks like an answer is how a broken permutation ships.
+    return -1
 
 ## A TEXEL IS A KILOMETRE, AND A BAND BOUNDARY IS A HUNDRED METRES. The
 ## residence and height rasters this scatter places against are the 1,000 m
@@ -392,10 +513,45 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 else "nothing: the whole implied scatter is drawn")
 
     # PASS TWO: place the share, preserving the mix between families.
-    var rng := RandomNumberGenerator.new()
-    rng.seed = SCATTER_SEED
+    #
+    # Every position below is a pure function of the ground it stands on. The
+    # camera decides HOW MANY of a sub-cell's candidates are drawn and never
+    # WHICH, so re-centring the disc moves the rim and leaves the interior
+    # alone. See SCATTER_SEED for what this replaced and what it cost.
     var placed: Dictionary = {}
     var refused := 0
+    var walk_overruns := 0
+    # WHAT THE STAND ACTUALLY IS, IN A FORM A HEADLESS TEST CAN COMPARE.
+    #
+    # Instance transforms cannot be read back under the dummy renderer, so the
+    # claim "two builds over the same ground placed the same plants" would be
+    # uncheckable in the gate -- exactly the claim this scheme exists to make.
+    # An XOR fold over the quantised world position of every placed instance is
+    # order-independent, so two builds that scanned the disc differently still
+    # agree, and it is nested by radius so a small build can be compared with
+    # the inner part of a large one.
+    #
+    # THE RINGS ARE ABSOLUTE METRES, NOT FRACTIONS OF THE RADIUS, and that is
+    # the difference between a comparable digest and a plausible one. A texel
+    # is a kilometre, so a build's radius decides which TEXELS are scanned
+    # while an instance sits anywhere inside its own texel -- up to 707 m from
+    # that texel's centre. Two builds at two radii therefore agree on the
+    # plants within D metres only if both scanned every texel that could put
+    # one there, which is a statement about D and not about either radius.
+    var digest: Dictionary = {}
+    var digest_n: Dictionary = {}
+    for ring in DIGEST_RINGS_M:
+        digest[str(ring)] = 0
+        digest_n[str(ring)] = 0
+    digest["all"] = 0
+    digest_n["all"] = 0
+    # AND PER TEXEL, WHICH IS THE ONLY FORM THAT SURVIVES RE-CENTRING. The
+    # rings above are measured from the build's own centre, so two builds
+    # around two cameras have no ring in common and the defect this scheme
+    # fixes is exactly a change of centre. A texel is fixed ground: whichever
+    # build reaches it, it holds the same plants, and two builds can be
+    # compared on the texels they both covered whole.
+    var digest_texel: Dictionary = {}
     var by_family: Dictionary = {}
     var phen_of: Dictionary = {}
     for g in groups:
@@ -409,9 +565,32 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         var life_form: String = item["life_form"]
         var origin: Vector2 = item["origin"]
         var half: float = item["half_m"]
+        # THE CANDIDATE POPULATION IS THE UNTHINNED ONE, which is what makes
+        # the drawn set a prefix of a fixed order rather than its own draw.
+        # `count` is the sub-cell's own implication from the wire -- no camera
+        # is in it -- so this bound, and the ordering keyed below, hold across
+        # every build over this patch of ground.
+        var pool := int(round(float(item["count"])))
+        if pool < n:
+            # Unreachable while keep and share are both fractions; clamped
+            # rather than trusted, because `n > pool` would be asking for more
+            # plants than the ground has and the prefix would run off the end.
+            pool = n
+        var cell_key := stable_hash([SCATTER_SEED, family_key(life_form),
+                int(round(origin.x * PLACEMENT_QUANTUM)),
+                int(round(origin.y * PLACEMENT_QUANTUM)),
+                int(round(half * PLACEMENT_QUANTUM))])
         for i in n:
-            var wx := origin.x + rng.randf_range(-half, half)
-            var wy := origin.y + rng.randf_range(-half, half)
+            var candidate := candidate_at(i, pool, cell_key)
+            if candidate < 0:
+                walk_overruns += 1
+                continue
+            # Uniform in the sub-cell square, which is the distribution the
+            # sequential draw had. §16.6 asks for blue noise and this is not
+            # it: a hash-seeded uniform jitter fixes the STABILITY defect and
+            # leaves the spacing one open. Recorded in the report, not implied.
+            var wx := origin.x + (2.0 * hash01(stable_hash([cell_key, candidate, 1])) - 1.0) * half
+            var wy := origin.y + (2.0 * hash01(stable_hash([cell_key, candidate, 2])) - 1.0) * half
             # ON THE SURFACE THAT IS DRAWN, not on the field it was sampled
             # from. The mesh triangulates the heightfield every `stride` texels
             # -- 4 km apart on the overview -- and the two disagree by a MEAN OF
@@ -439,6 +618,23 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             phen_lo = minf(phen_lo, float(item["phenology"]))
             phen_hi = maxf(phen_hi, float(item["phenology"]))
             placed[life_form] = int(placed[life_form]) + 1
+            var seen := stable_hash([int(round(wx * PLACEMENT_QUANTUM)),
+                    int(round(wy * PLACEMENT_QUANTUM)), family_key(life_form)])
+            digest["all"] = int(digest["all"]) ^ seen
+            digest_n["all"] = int(digest_n["all"]) + 1
+            var d_centre := Vector2(wx - centre.x, wy - centre.y).length()
+            for ring in DIGEST_RINGS_M:
+                if d_centre <= float(ring):
+                    digest[str(ring)] = int(digest[str(ring)]) ^ seen
+                    digest_n[str(ring)] = int(digest_n[str(ring)]) + 1
+            var it := _hf.world_to_texel(wx, wy)
+            var tkey := "%d|%d" % [int(round(it.x)), int(round(it.y))]
+            if not digest_texel.has(tkey):
+                digest_texel[tkey] = [0, 0]
+            var acc: Array = digest_texel[tkey]
+            acc[0] = int(acc[0]) ^ seen
+            acc[1] = int(acc[1]) + 1
+            digest_texel[tkey] = acc
 
     # The size the wire implied, per family, over the cells this horizon
     # touched. A band scheme needs it to know when an individual stops being
@@ -544,6 +740,33 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         "share_bound_by": bound_by,
         "build_ceiling": MAX_BUILT_INSTANCES,
         "refused_parameters": refused,
+        "placement": {
+            "rule": ("a hash of the sub-cell's own quantised world position, its family and "
+                    + "the candidate's index in that sub-cell -- no random stream, so nothing "
+                    + "here depends on the order the disc was scanned in"),
+            "thinning": ("a stable prefix of a fixed per-sub-cell order, so a lower share "
+                    + "REMOVES candidates and a higher one restores the same ones"),
+            "quantum_m": 1.0 / PLACEMENT_QUANTUM,
+            "jitter": ("uniform in the sub-cell square, the same distribution the sequential "
+                    + "draw had. Blue-noise spacing is NOT implemented: this fixes what moves "
+                    + "under the camera, not how evenly plants sit"),
+            "walk_overruns": walk_overruns,
+            "digest": digest,
+            "digest_instances": digest_n,
+            "digest_rings_m": DIGEST_RINGS_M,
+            "digest_by_texel": digest_texel,
+            "digest_by_texel_is": ("[fold, count] per heightfield texel, which is ground and "
+                    + "not a distance from any camera. Two builds around two different centres "
+                    + "have to agree on every texel they both covered WHOLE -- a texel the "
+                    + "horizon or the disc clipped in one build and not the other holds fewer "
+                    + "plants, correctly, and is not comparable"),
+            "digest_is": ("an XOR fold of every placed instance's quantised world position and "
+                    + "family, over concentric discs in absolute metres. Order-independent, so "
+                    + "it compares builds that scanned the same ground in different orders. A "
+                    + "ring is comparable across two builds only if BOTH scanned every texel "
+                    + "that could place an instance inside it -- radius >= ring + %d m."
+                    % int(ceil(0.70711 * _hf.pixel_size_m))),
+        },
         "phenology": {
             "from": ("this cell's biomass today against its own trough and peak across the "
                     + "window, not against the row's range: the row's range says where a "

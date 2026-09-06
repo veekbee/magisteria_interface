@@ -91,6 +91,8 @@ func _initialize() -> void:
     test_the_cost_model_refuses_outside_its_measured_span()
     test_the_scatter_reports_what_it_could_not_draw()
     test_the_individuation_horizon_is_one_constant_bounded_by_the_camera()
+    test_placement_is_a_function_of_where_and_thins_by_a_stable_prefix()
+    test_two_builds_over_the_same_ground_place_the_same_plants()
     test_a_density_schedule_is_finer_than_the_texel_it_thins()
     test_pft_fractions_are_a_composition_of_the_cover()
     test_the_tint_takes_wire_shares_unfloored_and_the_drawn_unit_can_change()
@@ -3149,6 +3151,299 @@ static func _rows_with(node: Variant, key: String) -> Array:
         for v in (node as Array):
             out.append_array(_rows_with(v, key))
     return out
+
+
+func test_placement_is_a_function_of_where_and_thins_by_a_stable_prefix() -> void:
+    """THE PRIMITIVES UNDER THE PLACEMENT RULE, CHECKED SEPARATELY FROM A BUILD.
+
+    Placement has to be a pure function of the ground, because the scatter is
+    rebuilt around a camera that moves. Two properties carry that, and this
+    checks both directly rather than inferring them from a picture:
+
+      1. THE ORDER IS A PERMUTATION. `candidate_at(i, n, key)` for i in [0, n)
+         has to hit every candidate exactly once. If it collided, a sub-cell
+         would draw the same plant twice and be short one; if it missed, part
+         of the stand would be unreachable at any share.
+      2. THINNING IS A PREFIX, so the set at m-1 is the set at m minus one
+         plant. That is what makes a falling share thin the stand and a rising
+         one restore it, and it is the half of the fix a build test cannot see
+         -- a build test can only compare two shares it happens to produce.
+
+    AND THE HASH IS PINNED. `String.hash()` and `RandomNumberGenerator` are
+    engine internals free to change between Godot versions, and a placement
+    that moves on an engine update is the defect this scheme exists to remove.
+    So the mixer is ours and its values are nailed down here.
+    """
+    # 1. pinned, so an engine or refactor change cannot move the basin's plants
+    check(VegetationScatter.mix32(0) == 0, "mix32(0) moved")
+    check(VegetationScatter.mix32(1) == 2261973619,
+            "mix32(1) is %d, not 2261973619 -- the mixer changed, and with it every plant"
+            % VegetationScatter.mix32(1))
+    check(VegetationScatter.stable_hash([1, 2, 3]) == 3403123636,
+            "stable_hash([1,2,3]) is %d, not 3403123636"
+            % VegetationScatter.stable_hash([1, 2, 3]))
+    check(VegetationScatter.stable_hash([3, 2, 1]) == 1313732382,
+            "stable_hash is order-insensitive, so [x,y] and [y,x] are the same ground")
+    check(VegetationScatter.family_key("grass") == 2993663101
+                    and VegetationScatter.family_key("tree") == 1837839573,
+            "family_key moved; the families would swap stands")
+
+    # the 32-bit discipline: GDScript ints are 64-bit and signed, so a mixer
+    # that overflowed would produce negatives -- and a negative hash is a
+    # jitter outside its own sub-cell, which is a plant in the wrong place
+    var left_32_bits := 0
+    var not_a_fraction := 0
+    for i in 512:
+        var h := VegetationScatter.stable_hash([i, -i * 7919, i * 104729])
+        if h < 0 or h > 0xFFFFFFFF:
+            left_32_bits += 1
+        var u := VegetationScatter.hash01(h)
+        if u < 0.0 or u >= 1.0:
+            not_a_fraction += 1
+    check(left_32_bits == 0, "%d of 512 hashes left 32 bits; the mixer is overflowing"
+            % left_32_bits)
+    check(not_a_fraction == 0, "%d of 512 hashes did not read as a fraction of 1"
+            % not_a_fraction)
+
+    # 2. a permutation, at sizes that exercise every domain shape. One check
+    # over all of them: this either holds everywhere or the scheme is broken.
+    var not_a_permutation: Array = []
+    var walk_overran: Array = []
+    for n in [1, 2, 3, 5, 17, 64, 65, 1000, 4096, 4097]:
+        var key := VegetationScatter.stable_hash([20260903, n, 11])
+        var seen := {}
+        var overrun := 0
+        for i in n:
+            var c := VegetationScatter.candidate_at(i, n, key)
+            if c < 0:
+                overrun += 1
+            elif c < n:
+                seen[c] = true
+        if overrun > 0:
+            walk_overran.append("%d at n=%d" % [overrun, n])
+        if seen.size() != n:
+            not_a_permutation.append("n=%d hit %d" % [n, seen.size()])
+    check(walk_overran.is_empty(), "the cycle walk overran its limit: %s"
+            % ", ".join(PackedStringArray(walk_overran)))
+    check(not_a_permutation.is_empty(),
+            "candidate_at is not a permutation (%s). A sub-cell would draw some plants twice "
+                    % ", ".join(PackedStringArray(not_a_permutation))
+            + "and never reach others.")
+
+    # 3. the prefix nests, which is the whole of the thinning claim
+    var pool := 777
+    var nest_key := VegetationScatter.stable_hash([20260903, 4242, 7])
+    var previous := {}
+    var redrawn := 0
+    for m in range(1, pool + 1):
+        var c := VegetationScatter.candidate_at(m - 1, pool, nest_key)
+        if previous.has(c):
+            redrawn += 1
+        previous[c] = true
+    check(redrawn == 0,
+            "growing the share re-drew %d of %d candidates instead of adding one at a time. "
+                    % [redrawn, pool]
+            + "Thinning that re-rolls is the churn this replaced.")
+
+
+func test_two_builds_over_the_same_ground_place_the_same_plants() -> void:
+    """THE END-TO-END HALF: what the primitives buy in a real build.
+
+    The defect was measured, not theorised. One 21.8 m dolly step with the
+    scatter rebuilt around the camera replaced 33,117 of 36,081 instances and
+    kept EIGHT (`measurements/scatter_motion.json`, and the finding it records).
+    The cause was a single random stream seeded per build and consumed in the
+    order the disc was scanned, so the disc's own extent renumbered every
+    position inside it.
+
+    So: build the same day at the same place twice, at two radii, and require
+    the inner disc to hold the SAME PLANTS. Under the old rule the larger build
+    scans more ground before reaching the middle and every position in the
+    middle moves. The comparison is the report's XOR digest, because instance
+    transforms cannot be read back under the dummy renderer -- the digest is
+    order-independent for exactly this reason, since the two builds do not
+    visit the shared ground in the same order.
+
+    THE FRAME BUDGET IS OFF ON PURPOSE. A larger radius implies more plants and
+    therefore a smaller share, and a smaller share draws FEWER plants in the
+    middle -- correctly, and it would still be a subset. This test is about
+    whether they are the same plants, so it removes the one variable that
+    changes how many.
+    """
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    var bound := v.bind_families()
+    check(bool(bound["ok"]), "families did not bind: %s" % str(bound.get("why", "")))
+    check(v.show_field("deepest_winter", "band.pft_fractions", 22), "the field did not paint")
+
+    var verts: PackedVector3Array = v.terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var centre := v.terrain.mesh_to_world(verts[5000], v.heightfield)
+    # ABOVE THE SHIPPED CEILING ON PURPOSE. The ceiling bounds what a frame
+    # spends building; this build is neither a frame nor shipped, and letting
+    # it bind would thin the larger disc and make this a comparison of a stand
+    # against a sample of one.
+    var head := 400000
+
+    # ONE SPARSE FAMILY, so the whole implied stand fits under the build
+    # ceiling and both shares are 1.0. Grass alone runs to millions inside
+    # 800 m; two builds of it would be two samples at two different shares,
+    # and a subset is not what this test can compare.
+    var small := v.scatter_at(centre, 1800.0, VegetationScatter.NO_SCHEDULE, head, 0.0,
+            "tree", false)
+    # the same ground, reached across a disc of twice the area and one more
+    # ring of texels, so the scan order through the middle is not the same
+    var large := v.scatter_at(centre, 2600.0, VegetationScatter.NO_SCHEDULE, head, 0.0,
+            "tree", false)
+    if not bool(small.get("ok", false)) or not bool(large.get("ok", false)):
+        check(false, "a scatter did not build: %s / %s"
+                % [str(small.get("why", "")), str(large.get("why", ""))])
+        v.queue_free()
+        return
+
+    check(float(small["share_drawn"]) == 1.0 and float(large["share_drawn"]) == 1.0,
+            "a share below 1 (%s / %s) makes this a comparison of two samples rather than "
+                    % [String.num(float(small["share_drawn"]), 4),
+                            String.num(float(large["share_drawn"]), 4)]
+            + "of two stands, and the test cannot mean what it says")
+
+    var a: Dictionary = small["placement"]
+    var b: Dictionary = large["placement"]
+    check(int(a["walk_overruns"]) == 0 and int(b["walk_overruns"]) == 0,
+            "the candidate permutation overran its cycle-walk limit, which drops plants")
+
+    var a_d: Dictionary = a["digest"]
+    var a_n: Dictionary = a["digest_instances"]
+    var b_d: Dictionary = b["digest"]
+    var b_n: Dictionary = b["digest_instances"]
+    # 1,000 m, because a texel is a kilometre and an instance sits up to 707 m
+    # from its texel's centre: both builds scanned every texel that could put a
+    # plant inside this ring, and the 2,000 m ring is one only the larger did.
+    var ring := "1000"
+    check(int(a_n[ring]) > 200,
+            "only %d instances landed inside %s m; too few for this to prove anything"
+            % [int(a_n[ring]), ring])
+    check(int(a_n[ring]) == int(b_n[ring]),
+            "the %s m disc holds %d plants in the small build and %d in the large one. The "
+                    % [ring, int(a_n[ring]), int(b_n[ring])]
+            + "same ground on the same day has to imply the same number.")
+    check(int(a_d[ring]) == int(b_d[ring]),
+            "the plants inside %s m are in DIFFERENT PLACES depending on how much ground was "
+                    % ring
+            + "scanned around them (digest %d against %d). Placement has gone back to "
+                    % [int(a_d[ring]), int(b_d[ring])]
+            + "depending on visit order, which is the churn measured in scatter_motion.json.")
+    print("placement: %d plants within 1,000 m, digest %d, identical whether the build "
+            % [int(a_n[ring]), int(a_d[ring])]
+            + "reached them across 1,800 m or 2,600 m")
+
+    # AND AGAIN THROUGH THE OTHER BRANCH. With no horizon rule and no schedule
+    # the texel is not subdivided at all; with one, every texel becomes 32x32
+    # sub-cells and placement runs on a different grid with a different key.
+    # The path the seam work actually uses is the second one, so testing only
+    # the first would leave the shipped path unchecked.
+    var k := 0.35 * VegetationScatter.resolution_k(400.0, 75.0)
+    var small_k := v.scatter_at(centre, 1800.0, VegetationScatter.NO_SCHEDULE, head, k,
+            "tree", false)
+    var large_k := v.scatter_at(centre, 2600.0, VegetationScatter.NO_SCHEDULE, head, k,
+            "tree", false)
+    if bool(small_k.get("ok", false)) and bool(large_k.get("ok", false)):
+        var ka: Dictionary = small_k["placement"]
+        var kb: Dictionary = large_k["placement"]
+        var kn_a: Dictionary = ka["digest_instances"]
+        var kn_b: Dictionary = kb["digest_instances"]
+        var kd_a: Dictionary = ka["digest"]
+        var kd_b: Dictionary = kb["digest"]
+        # The horizon is measured from the build centre, so the two builds cut
+        # the same ground only where BOTH reach -- 500 m, well inside the
+        # smaller build's own tree horizon at this k.
+        var kring := "500"
+        check(int(kn_a[kring]) > 200,
+                "only %d instances landed inside %s m under the horizon rule"
+                % [int(kn_a[kring]), kring])
+        check(int(kn_a[kring]) == int(kn_b[kring]) and int(kd_a[kring]) == int(kd_b[kring]),
+                "under the horizon rule the %s m disc holds %d/%d plants at digest %d/%d. "
+                        % [kring, int(kn_a[kring]), int(kn_b[kring]),
+                                int(kd_a[kring]), int(kd_b[kring])]
+                + "The subdivided path is the one the seam work uses, and it has gone back to "
+                + "depending on how much ground was scanned around it.")
+    else:
+        check(false, "the horizon-rule builds did not complete: %s / %s"
+                % [str(small_k.get("why", "")), str(large_k.get("why", ""))])
+
+    # AND THE DEFECT ITSELF: RE-CENTRING. Everything above changes how much
+    # ground was scanned and leaves the centre alone. What was measured in
+    # scatter_motion.json was a camera that MOVED, and no ring measured from a
+    # build's own centre can compare two builds around two cameras. The texel
+    # can: it is ground, so whichever build reaches it, it holds the same
+    # plants -- and a texel both builds covered whole must agree exactly.
+    var moved := v.scatter_at(centre + Vector2(21.8, 13.1), 1800.0,
+            VegetationScatter.NO_SCHEDULE, head, 0.0, "tree", false)
+    if not bool(moved.get("ok", false)):
+        check(false, "the re-centred build did not complete: %s" % str(moved.get("why", "")))
+        v.queue_free()
+        return
+    var here: Dictionary = (small["placement"] as Dictionary)["digest_by_texel"]
+    var there: Dictionary = (moved["placement"] as Dictionary)["digest_by_texel"]
+    var shared := 0
+    var disagreed: Array = []
+    for tkey in here:
+        if not there.has(tkey):
+            continue
+        var one: Array = here[tkey]
+        var two: Array = there[tkey]
+        # Only texels BOTH builds covered whole are comparable; a texel the
+        # disc clipped in one of them correctly holds fewer plants.
+        if int(one[1]) != int(two[1]):
+            continue
+        shared += 1
+        if int(one[0]) != int(two[0]):
+            disagreed.append(str(tkey))
+    check(shared >= 4,
+            "only %d texels were covered whole by both builds; a 25 m step should leave most "
+                    % shared
+            + "of an 1,800 m disc in common, so this test is not exercising re-centring")
+    check(disagreed.is_empty(),
+            "%d of %d texels hold the same NUMBER of plants in both builds and put them in "
+                    % [disagreed.size(), shared]
+            + "DIFFERENT PLACES (%s). Moving the camera 25 m re-drew the stand, which is the "
+                    % ", ".join(PackedStringArray(disagreed))
+            + "defect scatter_motion.json measured: 36,081 instances, eight survivors.")
+    print("placement: %d texels held plant for plant across a 25 m re-centring" % shared)
+
+    # ONCE MORE THROUGH THE SUBDIVIDED PATH, which is the one that draws the
+    # seam. A schedule that keeps everything forces the 32x32 sub-grid without
+    # the horizon removing any of it, so both builds hold whole texels and the
+    # counts are comparable -- which they are not under a horizon rule, because
+    # the cut is measured from the camera and correctly takes different
+    # sub-cells at different places.
+    var all_kept: Array = [{"to_m": 1.0e9, "keep": 1.0}]
+    var sub_a := v.scatter_at(centre, 1800.0, all_kept, head, 0.0, "tree", false)
+    var sub_b := v.scatter_at(centre + Vector2(21.8, 13.1), 1800.0, all_kept, head, 0.0,
+            "tree", false)
+    if bool(sub_a.get("ok", false)) and bool(sub_b.get("ok", false)):
+        var sa: Dictionary = (sub_a["placement"] as Dictionary)["digest_by_texel"]
+        var sb: Dictionary = (sub_b["placement"] as Dictionary)["digest_by_texel"]
+        var sub_shared := 0
+        var sub_bad: Array = []
+        for tkey2 in sa:
+            if not sb.has(tkey2):
+                continue
+            var p1: Array = sa[tkey2]
+            var p2: Array = sb[tkey2]
+            if int(p1[1]) != int(p2[1]):
+                continue
+            sub_shared += 1
+            if int(p1[0]) != int(p2[0]):
+                sub_bad.append(str(tkey2))
+        check(sub_shared >= 4 and sub_bad.is_empty(),
+                "on the subdivided grid, %d texels matched by count and %d of them put the "
+                        % [sub_shared, sub_bad.size()]
+                + "plants somewhere else (%s)" % ", ".join(PackedStringArray(sub_bad)))
+    else:
+        check(false, "the subdivided re-centring builds did not complete")
+    v.queue_free()
 
 
 func test_a_density_schedule_is_finer_than_the_texel_it_thins() -> void:

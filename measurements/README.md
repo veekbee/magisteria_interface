@@ -480,7 +480,8 @@ next**, and the instance set is exact, cheap, and cannot be handed a frozen fram
 | | worst churn, instance set | worst churn, weighted by pixels |
 |---|---:|---:|
 | static (one build, dollied through) | **0.0000** | 0.000 |
-| rebuilt (the control) | **1.0000** | 2.892 |
+| rebuilt, before placement-by-hash | **1.0000** | 2.892 |
+| rebuilt, after | 1.0000 | 1.478 |
 
 **`static` churning exactly zero is the calibration, not a nicety.** It is one build looked at from
 twelve places; it *cannot* churn, so any non-zero reading is the instrument counting the movement of
@@ -488,26 +489,62 @@ its own measurement window. The first version did exactly that — 0.12 instead 
 set membership by what the camera could see. Membership is existence; the camera enters only in the
 pixel weight.
 
-**And the control's 1.0000 is literal.** At a 20 m camera step: 36,081 instances before, 28,358
-after, **28,350 appeared and 33,117 gone** — eight survivors. The next pair has none at all. Mean
-churn across the dolly is 0.8838.
+**The control's 1.0000 was literal, and that is the row that has been fixed.** At a 22 m camera
+step: 36,081 instances before, 28,358 after, **28,350 appeared and 33,117 gone** — eight survivors.
+The next pair had none at all. Mean churn across the dolly was 0.8838.
 
-### Why re-centring replaces the whole stand, and what that means for backlog 198
+### Why re-centring replaced the whole stand, and what is left after the fix
 
-This is not a rim of instances crossing the horizon. It is every one of them, and the cause is in the
-placement: `VegetationScatter` seeds **one** `RandomNumberGenerator` per build and consumes it in
-`wanted` order, and `wanted` is assembled by scanning texels relative to the **centre**. Move the
-centre by twenty metres and every draw from that sequence lands on a different instance.
+That was not a rim of instances crossing the horizon; it was every one of them, and the cause was the
+placement. `VegetationScatter` seeded **one** `RandomNumberGenerator` per build and consumed it in
+`wanted` order, and `wanted` is assembled by scanning texels relative to the **centre**. Moving the
+centre by twenty metres made every draw from that sequence land on a different instance — so an
+inversion that solves the horizon from an instance budget *per place* (backlog 198) would have made
+the entire far field boil on every camera movement, which no crossfade schedule addresses.
 
-So an inversion that solves the horizon from an instance budget *per place* — backlog 198 — would, if
-it re-scatters when the place changes, **make the entire far field boil on every camera movement**.
-That is not a subtle popping defect at the seam; it is total, and no crossfade schedule addresses it.
+**Placement is now a function of the ground.** A candidate's position comes from a hash of its own
+sub-cell's quantised world coordinates, its family and its index in that sub-cell; thinning takes a
+stable prefix of a fixed per-sub-cell order, so a falling share removes plants and a rising one
+restores the same ones. `SCATTER_SEED` is a world key now, not a sequence seed, and no random stream
+is consumed anywhere in the build.
 
-**The fix is identifiable and is not in this repo's gift alone**: placement has to be a deterministic
-function of world position — hash the sub-cell's own coordinates — rather than a draw from a
-per-build sequence. Then re-centring changes only which instances fall inside the disc, the rim
-churns, and the crossfade has something bounded to hide. Recorded here rather than made: the
-scatter's placement is §19.8's, and the measurement is what this repo owes.
+The gate checks it three ways rather than inferring it from the pictures: the same ground reached
+across an 1,800 m disc and a 2,600 m one places the same plants (26,283 of them, identical fold); the
+same holds through the subdivided path the seam work actually uses; and a build re-centred 25 m away
+agrees **texel for texel** with the build it moved from. The instrument is an order-independent XOR
+fold of every placed instance's quantised position, per texel — instance transforms cannot be read
+back headless, so the report is the checkable statement, as it is for everything else here.
+
+**What re-taking `scatter_cost.json` says about the other artefacts.** Instance counts, per-family
+counts and triangle counts came back **identical** — `round(count × keep × share)` is the same
+arithmetic it was, and only *which* plants those are has changed. Screen-space rows moved by a
+resampling: shrub 38 → 30 px, succulent 595 → 553, tree 161 → 180, the frame's changed pixels 778 →
+746, the marginal 2.846 → 2.853 ms. So `scatter_seam.json` and `scatter_horizon.json` are not stale
+in their counts, shares, budgets or verdicts, and their pixel and colour rows are a different sample
+of the same stand at the scale of the numbers above. They are flagged here rather than re-taken.
+
+### What the fix does not remove, and it is the number backlog 198 needs
+
+Re-centred churn fell from a mean of 0.8838 to **0.4702**, and the residue is not placement. It is the
+**individuation horizon moving with the camera**, which is correct: the cut is `k × height` measured
+from the build's centre, so a step re-selects which sub-cells the rule admits. What survives ranks
+exactly by how large a family's disc is relative to the 21.8 m step:
+
+| family | reach | in sub-cells | survived a step | a smooth cut would allow | reached |
+|---|---:|---:|---:|---:|---:|
+| grass | 57.6 m | 1.8 | 0.260 | 0.760 | 0.34 |
+| shrub | 121.3 m | 3.9 | 0.463 | 0.886 | 0.52 |
+| tree | 991.4 m | 31.7 | **0.907** | 0.986 | **0.92** |
+
+Trees keep essentially everything a continuous disc would allow. Grass and shrub fall well short of
+it, and the reason is the same one `scatter_horizon.json` already refuses on from the static side:
+**the cut is evaluated at sub-cell centres**, so a reach of 1.8 sub-cells is a blocky handful of
+cells that a 0.7-sub-cell step re-selects wholesale. It is one defect seen twice, not two.
+
+The consequence for backlog 198 is now a bounded one rather than a total one: a per-place instance
+budget may re-centre freely for the families whose horizon is many sub-cells across, and for the
+small families it re-selects the whole population every step or two until the cut is evaluated at a
+finer grain than the placement raster — which is the same lever `k`'s floor of 0.35 already names.
 
 **What the harness cannot say.** Nothing about how a *pan* behaves — the camera translates and never
 rotates — and nothing about whether a churn of, say, 0.05 would be visible. The zero and the one are

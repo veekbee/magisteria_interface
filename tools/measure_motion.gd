@@ -93,6 +93,14 @@ var frames_by: Dictionary = {}
 ## The instance set at the previous dolly position of the current candidate,
 ## and the churn between each consecutive pair.
 var _prev_pop: Dictionary = {}
+## The per-family individuation radii the last vegetated build reported, so a
+## churn figure can be read against the disc it was measured on.
+var _horizon: Dictionary = {}
+## The share the last two vegetated builds drew. A re-centred build re-solves
+## the budget over different ground, so the share itself moves -- and a share
+## that falls removes plants everywhere, on top of anything the disc did.
+var _share := 1.0
+var _prev_share := 1.0
 var churn: Array = []
 var cand_at := 0
 var pos_at := 0
@@ -302,6 +310,10 @@ func _begin_frame() -> void:
         view.scatter_at(w2, RADIUS_MULTIPLE * seam_m, [],
                 1 if not bool(cand["veg"]) else 4000000,
                 0.0 if not bool(cand["veg"]) else k_fraction * k_res)
+        if bool(cand["veg"]):
+            _horizon = view.scatter.report.get("horizon", {})
+            _prev_share = _share
+            _share = float(view.scatter.report.get("share_drawn", 1.0))
     _aim(eye)
     _isolate(true, bool(cand["veg"]))
     frames = 0
@@ -581,6 +593,12 @@ func _population(eye: Vector3) -> Dictionary:
 
 
 ## What changed between this position and the last one of the same candidate.
+##
+## PER FAMILY AS WELL AS IN TOTAL, because the total cannot be read without it.
+## Each family is individuated inside its own disc -- `k` times its height --
+## and those discs differ by an order of magnitude, so a step that barely moves
+## the tree disc can carry the grass disc clean off its predecessor. A whole-
+## population churn mixes the two and reads as a placement defect either way.
 func _churn_against(pop: Dictionary, step: int, cand: String) -> void:
     if _prev_pop.is_empty():
         _prev_pop = pop
@@ -590,26 +608,105 @@ func _churn_against(pop: Dictionary, step: int, cand: String) -> void:
     var appeared_px := 0.0
     var gone_px := 0.0
     var here_px := 0.0
+    var per_family: Dictionary = {}
     for k in pop:
         here_px += float(pop[k])
+        var lf: String = str(k).get_slice("|", 0)
+        if not per_family.has(lf):
+            per_family[lf] = {"population": 0, "previous_population": 0,
+                              "appeared": 0, "gone": 0}
+        var f: Dictionary = per_family[lf]
+        f["population"] = int(f["population"]) + 1
         if not _prev_pop.has(k):
             appeared += 1
             appeared_px += float(pop[k])
+            f["appeared"] = int(f["appeared"]) + 1
     for k in _prev_pop:
+        var lf2: String = str(k).get_slice("|", 0)
+        if not per_family.has(lf2):
+            per_family[lf2] = {"population": 0, "previous_population": 0,
+                               "appeared": 0, "gone": 0}
+        var f2: Dictionary = per_family[lf2]
+        f2["previous_population"] = int(f2["previous_population"]) + 1
         if not pop.has(k):
             gone += 1
             gone_px += float(_prev_pop[k])
+            f2["gone"] = int(f2["gone"]) + 1
+    for lf3 in per_family:
+        var f3: Dictionary = per_family[lf3]
+        var both := int(f3["population"]) + int(f3["previous_population"])
+        f3["churn_fraction"] = (float(int(f3["appeared"]) + int(f3["gone"])) / float(both)
+                if both > 0 else 0.0)
+        f3["survived"] = int(f3["previous_population"]) - int(f3["gone"])
+        f3["reach_max_m"] = _reach_of(str(lf3), "max_m")
+        f3["reach_min_m"] = _reach_of(str(lf3), "min_m")
+        f3["sub_cell_m"] = _sub_cell_of(str(lf3))
+        f3["survival_ceiling_tallest_cell"] = _disc_overlap(float(f3["reach_max_m"]), _step_m())
+        f3["survival_ceiling_shortest_cell"] = _disc_overlap(float(f3["reach_min_m"]), _step_m())
+        per_family[lf3] = f3
     churn.append({
         "candidate": cand, "step": step,
         "population": pop.size(), "previous_population": _prev_pop.size(),
         "appeared": appeared, "gone": gone,
         "appeared_px": appeared_px, "gone_px": gone_px,
         "population_px": here_px,
+        "per_family": per_family,
+        "share_drawn": _share,
+        "previous_share_drawn": _prev_share,
         "churn_fraction": (float(appeared + gone) / float(pop.size() + _prev_pop.size())
                 if pop.size() + _prev_pop.size() > 0 else 0.0),
         "churn_px_fraction": ((appeared_px + gone_px) / here_px) if here_px > 0.0 else 0.0,
     })
     _prev_pop = pop
+
+
+## The dolly's own step, which is the distance a re-centred disc travels.
+func _step_m() -> float:
+    return SPAN_MULTIPLE * seam_m / float(STEPS - 1)
+
+
+## This family's individuation radius, as the build itself reported it.
+##
+## TWO NUMBERS, NOT ONE, and the gap between them is why. The horizon is `k`
+## times the plant's own drawn height and height comes from the cell, so one
+## family has as many horizons as the disc has cells. `max_m` is the reach of
+## the tallest cell and `min_m` of the shortest, and a survival ceiling built
+## on `max_m` alone over-predicts every family whose short cells carry the
+## population.
+func _reach_of(life_form: String, which: String = "max_m") -> float:
+    var h = _horizon.get(life_form, null)
+    if typeof(h) != TYPE_DICTIONARY:
+        return 0.0
+    return float((h as Dictionary).get(which, 0.0))
+
+
+## WHAT GEOMETRY ALONE PREDICTS, so a churn figure can be read against
+## something rather than judged by eye.
+##
+## A re-centred build draws a disc of radius `r` around the camera, and one
+## step moves it `d`. The share of the old disc the new one still covers is the
+## lens area over the disc area -- and it is ZERO once `d >= 2r`. Grass at this
+## `k` individuates to tens of metres and the dolly steps 21.8 m, so a total
+## replacement is arithmetic and not a defect. Placement stability is the
+## question of whether the MEASURED survival reaches this prediction; anything
+## well under it is the stand reshuffling inside the overlap.
+## The sub-cell the horizon cut is evaluated on, as the build reported it.
+func _sub_cell_of(life_form: String) -> float:
+    var h = _horizon.get(life_form, null)
+    if typeof(h) != TYPE_DICTIONARY:
+        return 0.0
+    return float((h as Dictionary).get("sub_cell_m", 0.0))
+
+
+func _disc_overlap(r: float, d: float) -> float:
+    if r <= 0.0:
+        return 0.0
+    if d <= 0.0:
+        return 1.0
+    if d >= 2.0 * r:
+        return 0.0
+    var x := d / (2.0 * r)
+    return (2.0 / PI) * (acos(x) - x * sqrt(maxf(0.0, 1.0 - x * x)))
 
 
 func _churn_score(name: String) -> Dictionary:
@@ -626,11 +723,82 @@ func _churn_score(name: String) -> Dictionary:
         worst = maxf(worst, float((c as Dictionary)["churn_fraction"]))
         worst_px = maxf(worst_px, float((c as Dictionary)["churn_px_fraction"]))
         total += float((c as Dictionary)["churn_fraction"])
+    # PER FAMILY, AGAINST WHAT THE DISC GEOMETRY ALONE PREDICTS. A re-centred
+    # build cannot keep more of its stand than the two discs share, so that
+    # fraction is the ceiling on survival and the number a churn has to be read
+    # against. Measured survival AT the prediction means the interior held and
+    # only the rim moved; well under it means the stand reshuffled inside the
+    # overlap, which is the defect placement-by-hash exists to remove.
+    var fam: Dictionary = {}
+    for c in rows:
+        var pf: Dictionary = (c as Dictionary).get("per_family", {})
+        for lf in pf:
+            var row: Dictionary = pf[lf]
+            if not fam.has(lf):
+                fam[lf] = {"reach_max_m": float(row["reach_max_m"]),
+                           "reach_min_m": float(row["reach_min_m"]),
+                           "sub_cell_m": float(row["sub_cell_m"]), "pairs": 0,
+                           "survived": 0, "previous_population": 0,
+                           "ceiling_weighted": 0.0, "floor_weighted": 0.0,
+                           "survival_ceiling_tallest_cell":
+                                   float(row["survival_ceiling_tallest_cell"]),
+                           "survival_ceiling_shortest_cell":
+                                   float(row["survival_ceiling_shortest_cell"])}
+            var acc: Dictionary = fam[lf]
+            acc["pairs"] = int(acc["pairs"]) + 1
+            acc["survived"] = int(acc["survived"]) + int(row["survived"])
+            acc["previous_population"] = (int(acc["previous_population"])
+                    + int(row["previous_population"]))
+            # The ceiling is per pair, because the share moves between pairs: a
+            # sub-cell in the overlap keeps min(n_before, n_after) plants, so a
+            # falling share thins the survivors even where the disc did not.
+            var share_ratio := minf(1.0, (float((c as Dictionary)["share_drawn"])
+                    / float((c as Dictionary)["previous_share_drawn"]))
+                    if float((c as Dictionary)["previous_share_drawn"]) > 0.0 else 1.0)
+            acc["ceiling_weighted"] = (float(acc["ceiling_weighted"])
+                    + float(row["survival_ceiling_tallest_cell"]) * share_ratio
+                            * float(int(row["previous_population"])))
+            acc["floor_weighted"] = (float(acc["floor_weighted"])
+                    + float(row["survival_ceiling_shortest_cell"]) * share_ratio
+                            * float(int(row["previous_population"])))
+            fam[lf] = acc
+    for lf2 in fam:
+        var acc2: Dictionary = fam[lf2]
+        var prev := int(acc2["previous_population"])
+        acc2["survival_measured"] = (float(int(acc2["survived"])) / float(prev)
+                if prev > 0 else 0.0)
+        var predicted := (float(acc2["ceiling_weighted"]) / float(prev)) if prev > 0 else 0.0
+        var floor_pred := (float(acc2["floor_weighted"]) / float(prev)) if prev > 0 else 0.0
+        acc2["survival_if_the_cut_were_continuous"] = predicted
+        acc2["survival_if_the_cut_were_continuous_shortest_cell"] = floor_pred
+        acc2["reached_that"] = (float(acc2["survival_measured"]) / predicted
+                if predicted > 0.0 else null)
+        acc2["disc_is_smaller_than_the_step"] = float(acc2["reach_max_m"]) * 2.0 <= _step_m()
+        acc2["disc_in_sub_cells"] = (float(acc2["reach_max_m"]) / float(acc2["sub_cell_m"])
+                if float(acc2["sub_cell_m"]) > 0.0 else null)
+        acc2.erase("ceiling_weighted")
+        acc2.erase("floor_weighted")
+        fam[lf2] = acc2
     return {
         "ok": true, "pairs": rows.size(),
         "worst_churn_fraction": worst,
         "mean_churn_fraction": total / float(rows.size()),
         "worst_churn_px_fraction": worst_px,
+        "step_m": _step_m(),
+        "per_family": fam,
+        "per_family_is": ("WHAT SURVIVED A RE-CENTRING, AND WHAT IT IS NOT. Under "
+                + "placement-by-hash a plant's position is a function of the ground, so "
+                + "nothing here is the stand re-drawing itself -- two builds 21.8 m apart "
+                + "with the horizon cut removed place identical stands, texel for texel, and "
+                + "the gate checks it. What churns is which SUB-CELLS the horizon admits, and "
+                + "that is measured from the camera and correctly moves with it. "
+                + "`survival_if_the_cut_were_continuous` is the overlap of two smooth discs "
+                + "of this family's reach, and a family only approaches it when its disc is "
+                + "many sub-cells across: the cut is evaluated at sub-cell centres, so a "
+                + "reach of 1.8 sub-cells is a blocky handful of cells that a 0.7-sub-cell "
+                + "step re-selects wholesale. `disc_in_sub_cells` is the number to read "
+                + "`reached_that` against, and this is the motion face of the below-the-grid "
+                + "refusal scatter_horizon.json already makes from the static side."),
         "per_pair": rows,
         "what": ("the share of instances that exist in one dolly step and not the next, and "
                 + "the same share weighted by the pixels each subtends. `static` is one build "
@@ -729,6 +897,7 @@ func _write() -> void:
             "along": "the view axis, ending at the place the scatter is centred on",
         },
         "individuation_k": k_fraction * k_res,
+        "individuation_reach": _horizon,
         "k_over_k_res": k_fraction,
         "k_resolution": k_res,
         "candidates": {
