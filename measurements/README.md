@@ -765,13 +765,37 @@ the threshold at that level and nowhere else. Measured headlessly at place B, da
 flown** — flight 02 was flown fullscreen and landed at 0.28–0.35 rather than the 0.618 its
 re-centre distance is worth at 1280×800:
 
-| re-centre | at 1280×800 | at a 1600 px-tall window |
+| re-centre | at 1280×800 | at 1600 px tall | at 1898 px tall (flight 02's window) |
+|---:|---:|---:|---:|
+| 25 m | 0.077 | 0.047 | |
+| 50 m | 0.166 | 0.090 | |
+| 100 m | 0.338 | 0.175 | |
+| 200 m | 0.618 | 0.344 | 0.293 |
+| 300 m | | | 0.434 |
+| 400 m | 0.859 | 0.648 | 0.561 |
+| 600 m | | | **1.000** |
+
+The 1898 px column predicts flight 02's two measured events — 0.284 and 0.345 against 0.293 — which
+is the ladder checking itself against a flight rather than only against arithmetic. **It also runs
+out at 600 m**: past that the two discs no longer overlap at all and every plant is a new one, so
+there is no larger churn to test than a complete replacement.
+
+### Path shape decides how many events a flight gets, and at the top of the ladder it decides whether it gets any
+
+Rebuilds fire on distance from the *last build centre*, so what matters is net displacement, not path
+length. Flight 02 walked 1,190 m of path but only 360 m end to end — a wander — and got two events.
+The same four minutes walked in a straight line is 1,200 m of net displacement:
+
+| re-centre | events on flight 02's wandering path | events walked straight |
 |---:|---:|---:|
-| 25 m | 0.077 | 0.047 |
-| 50 m | 0.166 | 0.090 |
-| 100 m | 0.338 | 0.175 |
-| 200 m | 0.618 | 0.344 |
-| 400 m | 0.859 | 0.648 |
+| 200 m | 2 *(observed)* | 6 |
+| 400 m | **0** | 3 |
+| 600 m | **0** | 2 |
+
+At the bottom of the ladder a wander costs a third of the sample. At 400 m and above it costs the
+whole flight: a path that never gets 400 m from where it started never rebuilds, and four minutes
+produce no measurement at all. So the straight line stops being a refinement and becomes the
+difference between a flight and an afternoon.
 
 **A bigger window halves the churn at the same re-centre distance**, and that is not an artefact of
 the measurement — `k_res` is a function of viewport height, so doubling the height doubles every
