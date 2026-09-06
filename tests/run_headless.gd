@@ -100,7 +100,7 @@ func _initialize() -> void:
     test_plants_stand_on_the_surface_that_is_drawn()
     test_the_shading_is_exaggerated_and_the_geometry_is_not()
     test_the_harness_guards_refuse_what_they_were_written_for()
-    test_the_motion_metric_does_not_yet_detect_popping()
+    test_the_motion_metrics_and_which_of_them_detects_popping()
     test_a_per_family_reference_holds_only_that_family()
     test_a_family_is_scored_in_its_own_annulus_or_not_at_all()
     test_the_seam_measurement_ranks_the_null_baseline_worst()
@@ -3870,8 +3870,8 @@ func test_the_harness_guards_refuse_what_they_were_written_for() -> void:
     print("guards: frozen capture, colliding signature and stalled stage all refuse")
 
 
-func test_the_motion_metric_does_not_yet_detect_popping() -> void:
-    """ROADMAP ITEM 2, AND A NEGATIVE RESULT ABOUT IT.
+func test_the_motion_metrics_and_which_of_them_detects_popping() -> void:
+    """ROADMAP ITEM 2. THE METRIC IT SPECIFIES DOES NOT WORK; A SECOND ONE DOES.
 
     The item asks for "a scripted dolly through the seam scoring worst
     frame-pair delta in the annulus". Built, run, and it does not do the job it
@@ -3887,10 +3887,15 @@ func test_the_motion_metric_does_not_yet_detect_popping() -> void:
     gets a huge score from one ordinary step); and an aggregate over thousands
     of pixels is BLIND to a local event by construction, which is what a pop is.
 
-    This asserts the finding so it cannot rot: if a future metric does separate
-    them, this fails and the note beside it is what is stale, not the metric.
-    Until then the roadmap item is built and its verdict is that it would NOT
-    have gated the inversion it exists to gate.
+    So the measurement moved off the screen and onto the instance set, where a
+    pop is exactly what it is: something that exists in one frame and not the
+    next. That separates cleanly -- 0.0000 against 1.0000 -- and carries a
+    calibration no image metric here could offer, because the static scene is
+    one build and MUST churn zero.
+
+    Both are asserted. The first is self-retiring: if a future image metric
+    does separate the control, it fails and the note beside it is what is
+    stale.
     """
     var f := FileAccess.open("res://measurements/scatter_motion.json", FileAccess.READ)
     if f == null:
@@ -3939,7 +3944,33 @@ func test_the_motion_metric_does_not_yet_detect_popping() -> void:
                     + "(%sx worst over median). That IS churn rather than two steady scenes, "
                             % String.num(float(cross["pop_ratio"]), 2)
                     + "and it would be the popping signal this harness could not find.")
-    print("motion: the dolly metric is built and does not separate the popping control")
+
+        # THE METRIC THAT DOES WORK, and the calibration that says so.
+        #
+        # A pop is an instance that exists in one frame and not the next, so
+        # the measurement belongs on the instance set rather than on the
+        # screen. `static` is ONE BUILD dollied through and cannot churn: a
+        # non-zero reading there is the instrument counting its own measurement
+        # window moving, which is exactly what the first version did (0.12
+        # instead of 0, from filtering membership by what the camera could
+        # see). Zero is not a nice-to-have here; it is the whole calibration.
+        var churn: Dictionary = run.get("population_churn", {})
+        var st: Dictionary = churn.get("static", {})
+        var rb: Dictionary = churn.get("rebuilt", {})
+        if bool(st.get("ok", false)):
+            check(float(st["worst_churn_fraction"]) == 0.0,
+                    "the static scene churned %s of its instance set across a dolly step. It "
+                    % String.num(float(st["worst_churn_fraction"]), 4)
+                    + "is one build being looked at from different places -- it CANNOT churn "
+                    + "-- so this is the instrument measuring the movement of its own window "
+                    + "and every reading beside it is inflated by the same amount.")
+        if bool(st.get("ok", false)) and bool(rb.get("ok", false)):
+            check(float(rb["worst_churn_fraction"]) > 0.5,
+                    "the re-scattering control churned only %s of its set. It re-decides which "
+                    % String.num(float(rb["worst_churn_fraction"]), 4)
+                    + "instances exist at every camera step, so a low reading means the "
+                    + "instrument stopped seeing the one thing it was built to see.")
+    print("motion: the dolly metric does not separate the control; the instance churn does")
 
 
 func test_a_per_family_reference_holds_only_that_family() -> void:

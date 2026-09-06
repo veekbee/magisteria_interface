@@ -90,6 +90,10 @@ var _stage_frames := 0
 ## compared AT THE SAME CAMERA POSITION -- which is the only comparison here
 ## with no camera motion in it.
 var frames_by: Dictionary = {}
+## The instance set at the previous dolly position of the current candidate,
+## and the churn between each consecutive pair.
+var _prev_pop: Dictionary = {}
+var churn: Array = []
 var cand_at := 0
 var pos_at := 0
 var samples: Array = []
@@ -282,6 +286,8 @@ func _begin_frame() -> void:
         return
     var cand: Dictionary = CANDIDATES[cand_at]
     var pos: Dictionary = positions[pos_at]
+    if pos_at == 0:
+        _prev_pop = {}
     var eye := _eye_at(float(pos["back_m"]), float(pos["lateral_m"]))
     view.set_naturalistic(bool(cand["tint"]))
     if bool(cand["rebuild"]) or pos_at == 0:
@@ -312,6 +318,9 @@ func _take_frame() -> void:
         frames_by[str(cand["name"])] = {}
     (frames_by[str(cand["name"])] as Dictionary)[pos_at] = img
     _record(cand, pos, img)
+    if bool(cand["veg"]) and not bool(pos["parallax"]):
+        _churn_against(_population(_eye_at(float(pos["back_m"]), float(pos["lateral_m"]))),
+                int(pos["step"]), str(cand["name"]))
     print("frame %-8s %2d/%d" % [str(cand["name"]), pos_at + 1, positions.size()])
     _isolate(false, true)
     pos_at += 1
@@ -514,6 +523,121 @@ func _parallax(name: String) -> Dictionary:
 ## motion to compensate for. Its worst step against its median is a pop; a
 ## difference that is large but steady is a different scene, not a flickering
 ## one.
+## THE POPULATION ITSELF, WHICH IS WHERE POPPING ACTUALLY LIVES.
+##
+## The image metrics above cannot see a pop and the reasons are measured: an
+## aggregate over thousands of pixels is blind to a local event, and a
+## per-pixel difference between consecutive frames is swamped by the camera
+## having moved twenty metres. Motion-compensating that difference needs the
+## DEPTH of the plants, not of the ground under them, and depth written through
+## an sRGB viewport has already cost this project one harness.
+##
+## So the measurement moves off the screen and onto the thing being measured. A
+## pop is an instance that exists in one frame and not the next; the instance
+## set is exact, cheap, and cannot be handed a frozen frame. `static` must
+## churn EXACTLY ZERO -- it is one build, dollied through -- which is a
+## calibration no image metric here could offer.
+##
+## Weighted by apparent size, because a plant that vanishes at 400 m is
+## sub-pixel and one that vanishes at 40 m is a hole in the picture: each
+## instance counts for the pixels it subtends, `height x k_res / distance`, and
+## zero where the camera cannot see it. The px fraction can exceed 1 when a
+## population turns over completely -- appeared and gone are both counted
+## against what is there now.
+func _population(eye: Vector3) -> Dictionary:
+    var out := {}
+    var at_origin := 0
+    var total := 0
+    for lf in view.scatter.meshes:
+        var mm: MultiMesh = view.scatter.meshes[lf]
+        for i in mm.instance_count:
+            var t := mm.get_instance_transform(i)
+            var o := t.origin
+            total += 1
+            if o == Vector3.ZERO:
+                at_origin += 1
+                continue
+            # MEMBERSHIP IS EXISTENCE, NOT VISIBILITY. Filtering the set by
+            # what the camera can see makes the WINDOW's movement look like
+            # churn: the first version did that and `static` -- one build,
+            # dollied through, which cannot churn at all -- came out at 0.12
+            # instead of 0. The camera enters only in the WEIGHT, so an
+            # instance behind the eye or past the dolly's reach counts as a
+            # member and contributes no pixels.
+            var d := Vector2(o.x - eye.x, o.z - eye.z).length()
+            var px := 0.0
+            if o.z < eye.z and d > 0.0 and d <= RADIUS_MULTIPLE * seam_m:
+                px = t.basis.get_scale().y * k_res / d
+            out["%s|%d|%d" % [lf, int(round(o.x * 10.0)), int(round(o.z * 10.0))]] = px
+    # THE STUB TELL. Under a renderer without a per-instance store every
+    # transform reads back as the identity, and a churn computed from that
+    # would be zero for every candidate -- a clean table meaning nothing.
+    if total > 0 and at_origin == total:
+        printerr("measure_motion: REFUSED. All %d instance transforms read back at the "
+                % total + "origin, so the per-instance store is not readable here and every "
+                + "churn below would be zero by construction rather than by measurement.")
+        quit(6)
+    return out
+
+
+## What changed between this position and the last one of the same candidate.
+func _churn_against(pop: Dictionary, step: int, cand: String) -> void:
+    if _prev_pop.is_empty():
+        _prev_pop = pop
+        return
+    var appeared := 0
+    var gone := 0
+    var appeared_px := 0.0
+    var gone_px := 0.0
+    var here_px := 0.0
+    for k in pop:
+        here_px += float(pop[k])
+        if not _prev_pop.has(k):
+            appeared += 1
+            appeared_px += float(pop[k])
+    for k in _prev_pop:
+        if not pop.has(k):
+            gone += 1
+            gone_px += float(_prev_pop[k])
+    churn.append({
+        "candidate": cand, "step": step,
+        "population": pop.size(), "previous_population": _prev_pop.size(),
+        "appeared": appeared, "gone": gone,
+        "appeared_px": appeared_px, "gone_px": gone_px,
+        "population_px": here_px,
+        "churn_fraction": (float(appeared + gone) / float(pop.size() + _prev_pop.size())
+                if pop.size() + _prev_pop.size() > 0 else 0.0),
+        "churn_px_fraction": ((appeared_px + gone_px) / here_px) if here_px > 0.0 else 0.0,
+    })
+    _prev_pop = pop
+
+
+func _churn_score(name: String) -> Dictionary:
+    var rows: Array = []
+    for c in churn:
+        if str((c as Dictionary)["candidate"]) == name:
+            rows.append(c)
+    if rows.is_empty():
+        return {"ok": false, "why": "no consecutive pair was compared for %s" % name}
+    var worst := 0.0
+    var worst_px := 0.0
+    var total := 0.0
+    for c in rows:
+        worst = maxf(worst, float((c as Dictionary)["churn_fraction"]))
+        worst_px = maxf(worst_px, float((c as Dictionary)["churn_px_fraction"]))
+        total += float((c as Dictionary)["churn_fraction"])
+    return {
+        "ok": true, "pairs": rows.size(),
+        "worst_churn_fraction": worst,
+        "mean_churn_fraction": total / float(rows.size()),
+        "worst_churn_px_fraction": worst_px,
+        "per_pair": rows,
+        "what": ("the share of instances that exist in one dolly step and not the next, and "
+                + "the same share weighted by the pixels each subtends. `static` is one build "
+                + "dollied through, so anything but zero for it is this instrument lying."),
+    }
+
+
 func _cross(a: String, b: String) -> Dictionary:
     if not (frames_by.has(a) and frames_by.has(b)):
         return {"ok": false, "why": "one of %s, %s was not captured" % [a, b]}
@@ -615,6 +739,10 @@ func _write() -> void:
             "tint": "the far-field tint alone, painted on the ground",
         },
         "scores": scored,
+        "population_churn": {
+            "static": _churn_score("static"),
+            "rebuilt": _churn_score("rebuilt"),
+        },
         "population_change": {
             "static_vs_rebuilt": _cross("static", "rebuilt"),
             "static_vs_tint": _cross("static", "tint"),
@@ -667,6 +795,13 @@ func _write() -> void:
                     % [String.num(float(par["lateral_m"]), 1),
                             String.num(float(par["colour_delta"]), 4),
                             String.num(float(par.get("coverage_delta", NAN)), 4)])
+    for name in ["static", "rebuilt"]:
+        var ch := _churn_score(name)
+        if bool(ch.get("ok", false)):
+            print("%-9s instance churn: worst %s of the set, %s of its pixels, over %d pairs"
+                    % [name, String.num(float(ch["worst_churn_fraction"]), 4),
+                            String.num(float(ch["worst_churn_px_fraction"]), 4),
+                            int(ch["pairs"])])
     for pair in [["static", "rebuilt"], ["static", "tint"]]:
         var c := _cross(str(pair[0]), str(pair[1]))
         if not bool(c.get("ok", false)):

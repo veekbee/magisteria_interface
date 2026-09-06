@@ -469,12 +469,50 @@ scenes rather than one flickering, and steadiness is what says so. It is large b
 measures its horizon from the place while `rebuilt` measures it from the camera, so at 240 m back
 they are simply not the same scene.
 
-**What the metric would have to be.** Popping is a frame-to-frame event, so it needs a per-pixel
-difference between *consecutive* frames of the same candidate — and consecutive frames differ almost
-everywhere because the camera moved 20 m, so that difference needs motion compensation before it
-means anything. Reprojecting the previous frame by the camera delta is the missing piece. The
-`tint` candidate is the natural baseline once it exists: it cannot pop, so whatever per-pixel change
-it shows over a step *is* the motion, and a candidate's excess over it is the pop. Not built.
+### The metric that does work: the population, not the picture
+
+Reprojecting the previous frame was the obvious next step and it is not the one taken. Motion
+compensation needs the depth of the **plants**, not of the ground under them, and depth written
+through an sRGB viewport has already cost this project one harness. So the measurement moved off the
+screen and onto the thing being measured: **a pop is an instance that exists in one frame and not the
+next**, and the instance set is exact, cheap, and cannot be handed a frozen frame.
+
+| | worst churn, instance set | worst churn, weighted by pixels |
+|---|---:|---:|
+| static (one build, dollied through) | **0.0000** | 0.000 |
+| rebuilt (the control) | **1.0000** | 2.892 |
+
+**`static` churning exactly zero is the calibration, not a nicety.** It is one build looked at from
+twelve places; it *cannot* churn, so any non-zero reading is the instrument counting the movement of
+its own measurement window. The first version did exactly that — 0.12 instead of 0, from filtering
+set membership by what the camera could see. Membership is existence; the camera enters only in the
+pixel weight.
+
+**And the control's 1.0000 is literal.** At a 20 m camera step: 36,081 instances before, 28,358
+after, **28,350 appeared and 33,117 gone** — eight survivors. The next pair has none at all. Mean
+churn across the dolly is 0.8838.
+
+### Why re-centring replaces the whole stand, and what that means for backlog 198
+
+This is not a rim of instances crossing the horizon. It is every one of them, and the cause is in the
+placement: `VegetationScatter` seeds **one** `RandomNumberGenerator` per build and consumes it in
+`wanted` order, and `wanted` is assembled by scanning texels relative to the **centre**. Move the
+centre by twenty metres and every draw from that sequence lands on a different instance.
+
+So an inversion that solves the horizon from an instance budget *per place* — backlog 198 — would, if
+it re-scatters when the place changes, **make the entire far field boil on every camera movement**.
+That is not a subtle popping defect at the seam; it is total, and no crossfade schedule addresses it.
+
+**The fix is identifiable and is not in this repo's gift alone**: placement has to be a deterministic
+function of world position — hash the sub-cell's own coordinates — rather than a draw from a
+per-build sequence. Then re-centring changes only which instances fall inside the disc, the rim
+churns, and the crossfade has something bounded to hide. Recorded here rather than made: the
+scatter's placement is §19.8's, and the measurement is what this repo owes.
+
+**What the harness cannot say.** Nothing about how a *pan* behaves — the camera translates and never
+rotates — and nothing about whether a churn of, say, 0.05 would be visible. The zero and the one are
+unambiguous; the threshold between them is not measured, and calling one is a design judgement this
+does not make.
 
 **A refusal that fired twice, for real.** On this platform a window that loses focus or is occluded
 stops being drawn while the main loop keeps ticking, so `get_image()` goes on returning the last
