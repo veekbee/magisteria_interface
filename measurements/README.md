@@ -701,6 +701,33 @@ fixed:
 The flight harness now says `[REBUILT: the freeze you just saw was this, 1766 ms]` on screen, because
 a person cannot mark what they cannot name.
 
+### Choosing what to fly: what each `--recentre` is worth in churn
+
+A flight at one re-centre distance produces one churn level, so a flight that marks nothing bounds
+the threshold at that level and nowhere else. Measured headlessly at place B, day 22,
+`k/k_res = 0.35`, `gone_fraction` per rebuild:
+
+| re-centre | at 1280×800 | at a 1600 px-tall window |
+|---:|---:|---:|
+| 25 m | 0.077 | 0.047 |
+| 50 m | 0.166 | 0.090 |
+| 100 m | 0.338 | 0.175 |
+| 200 m | 0.618 | 0.344 |
+| 400 m | 0.859 | 0.648 |
+
+**A bigger window halves the churn at the same re-centre distance**, and that is not an artefact of
+the measurement — `k_res` is a function of viewport height, so doubling the height doubles every
+family's individuation reach, and two discs twice as large overlap far more after the same step.
+Flying fullscreen is therefore not neutral: it is a different point on this table as well as a
+better look at the far field.
+
+**Bigger steps also cost less stall.** A rebuild blocks for ~1.75 s whatever the step, so re-centring
+every 200 m over a 1,200 m walk is six freezes rather than forty-eight, and the flight is about the
+far field rather than about the harness.
+
+The way to use the table is from the top: if the largest churn is not visible, everything below it
+is not either, and the bound is established in one flight instead of five.
+
 ### The scripted path, which is the fixture rather than the measurement
 
 A 30 s walk with a slow pan, same place and `k`, re-centring every 25 m: 1,800 frames, 5 rebuilds,
