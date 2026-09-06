@@ -12,6 +12,8 @@
 #   --trace PATH       the trace to replay
 #                      (default: measurements/flights/scripted.trace.json)
 #   --out PATH         artefact path   (default: measurements/flight_replay.json)
+#   --append           keep the runs already in the artefact and add this one,
+#                      replacing any earlier run of the same trace
 #   --synthesise PATH  write a SCRIPTED walk to PATH instead of replaying. Not a
 #                      flight: no person saw it, so it carries no marks.
 #   --seconds N        length of a synthesised walk (default: 60)

@@ -90,7 +90,11 @@ var speed_m_s := WALK_M_S
 ## is what ships: one build, flown through. Anything above zero is backlog
 ## 198's inversion, which is the thing that boils.
 var recentre_m := 0.0
-var out_path := "measurements/flights/flight.trace.json"
+## Empty until `_place` picks the next free number. A FIXED DEFAULT OVERWRITES
+## THE LAST FLIGHT, which is what happened: a second flight landed on the first
+## one's path and the only reason the first survived was that it had been
+## committed. A flight is somebody's afternoon and cannot be re-taken.
+var out_path := ""
 var minutes := 0.0
 
 var trace: FlightTrace = null
@@ -129,7 +133,7 @@ func _initialize() -> void:
     speed_m_s = float(_arg("--speed", str(speed_m_s)))
     recentre_m = float(_arg("--recentre", str(recentre_m)))
     minutes = float(_arg("--minutes", str(minutes)))
-    out_path = _arg("--out", out_path)
+    out_path = _arg("--out", "")
     var at := _arg("--at", "")
     if at != "":
         var parts := at.split(",")
@@ -273,6 +277,8 @@ func _place() -> void:
                 + "budget does"),
         "marks_mean": "SPACE, pressed when something looked wrong",
     })
+    if out_path == "":
+        out_path = _next_free_path()
     _t0 = Time.get_ticks_usec()
     _last_frame_usec = _t0
     stage = FLY
@@ -458,6 +464,11 @@ func _write() -> void:
                 + "would be about frames nobody saw. Nothing written.")
         quit(3)
         return
+    if FileAccess.file_exists(out_path):
+        var spare := _next_free_path()
+        printerr("free_flight: %s already exists and a flight cannot be re-taken. Writing to "
+                        % out_path + "%s instead." % spare)
+        out_path = spare
     var saved := trace.save(out_path)
     if not bool(saved["ok"]):
         printerr("free_flight: %s" % str(saved["why"]))
@@ -482,6 +493,18 @@ func _write() -> void:
     print("        replay it: bash tools/replay_flight.sh --trace %s" % out_path)
     stage = DONE
     quit(0)
+
+
+## The next unused `flight-NN.trace.json`, so no flight lands on another.
+func _next_free_path() -> String:
+    var dir := "measurements/flights"
+    if not DirAccess.dir_exists_absolute(dir):
+        DirAccess.make_dir_recursive_absolute(dir)
+    for i in range(1, 1000):
+        var path := "%s/flight-%02d.trace.json" % [dir, i]
+        if not FileAccess.file_exists(path):
+            return path
+    return "%s/flight-overflow.trace.json" % dir
 
 
 func _has_flag(name: String) -> bool:

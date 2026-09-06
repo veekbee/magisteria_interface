@@ -34,7 +34,9 @@
 #                  and k_res, which sets the individuation horizon, is a
 #                  function of viewport height, so a bigger window individuates
 #                  further. The trace records which it was.
-#   --out PATH     trace path               (default: measurements/flights/flight.trace.json)
+#   --out PATH     trace path (default: the next free measurements/flights/flight-NN.trace.json).
+#                  Nothing is ever overwritten: a flight is somebody's afternoon
+#                  and cannot be re-taken.
 set -uo pipefail
 GODOT="${GODOT:-/Applications/Godot.app/Contents/MacOS/Godot}"
 cd "$(dirname "$0")/.."

@@ -645,7 +645,63 @@ Three minutes, 16,184 frames, at the viewer's own 1280×800 with `k/k_res = 0.35
 Every frame's population, recomputed from the poses alone on a headless machine, matched what the
 flight recorded. One human session is now a fixture.
 
-### The finding, which is not the one this harness was built to look for
+### The second flight: nothing was visible at a third of the stand replaced
+
+Four minutes, 22,706 frames, fullscreen at 3024×1898, `--recentre 200`. Flown by the owner with the
+instruction to mark only what looked wrong.
+
+| | |
+|---|---:|
+| frames | 22,706 |
+| rebuilds | 2 |
+| `gone_fraction` per rebuild | **0.284** and **0.345** |
+| stalls | 3.1 s of 240.0 s — **1.3%** |
+| **marks** | **0** |
+| replay agreement | exact over all 22,706 frames |
+
+**A third of the stand was replaced, twice, and it was not reported.** That is a real upper bound
+and the first evidence anyone has about where the threshold sits: at this stand, at 5 m/s, a
+`gone_fraction` of 0.35 is below it. It is the number that was going to have to be ruled in the
+abstract, and it is now measured instead.
+
+Three things bound how far it can be pushed, and all three are the harness's fault rather than the
+observer's:
+
+- **Two events.** The path was 1,190 m long but only 360 m end to end — a wander, not a walk — so a
+  200 m re-centre fired twice in four minutes. Two opportunities to notice is a thin sample.
+- **The churn happens inside a freeze the flyer was told to ignore.** The rebuild blocks for 1.56 s
+  and the stand changes during it, so the new arrangement arrives on the first frame after the
+  window starts updating again. Having been told the freeze is a known harness artefact, "ignore the
+  freeze" and "ignore the moment the churn is visible" are the same instruction. That is a defect in
+  how the measurement was set up, and it is mine.
+- **Fullscreen moved the level being tested.** At 1898 px of viewport height `k` is 433, so the
+  discs are large and a 200 m step costs 0.28–0.35 rather than the 0.618 the same step costs at
+  1280×800. The bound is at the level measured, not the level intended.
+
+**So the ordering for backlog 198 is settled by these two flights together.** The stall is both the
+dominant defect *and* a confound on measuring the other one: while a rebuild blocks the renderer for
+1.5 s, no flight can say cleanly whether the churn inside it would have been seen. Fix the
+synchronous build first; then a re-measure can push the churn level up until something is reported,
+and that number will mean what it says.
+
+### The heading spread, and why the two flights disagree by 8×
+
+| flight | re-centre | in view by heading, lowest to highest |
+|---|---:|---:|
+| 01 | 25 m | 25,746 → 28,860 (**1.12×**) |
+| 02 | 200 m | 8,073 → 75,200 (**9.32×**) |
+
+Not pitch contamination — flight 02's pitch runs p50 −1°, p95 2.5°, and 94 of 22,706 frames have
+nothing in view. The spread is real and it is **the lazy re-centring, not the far field**: the
+scatter is built as a 480 m disc around a point, and at `--recentre 200` the camera wanders up to
+200 m from that point, so looking one way there is 680 m of stand ahead and looking the other way
+there is 280 m. Flight 01, which never strays more than 25 m from its own centre, is the control
+that shows it — 1.12× is what heading alone is worth.
+
+Worth having both, because the second number is what a per-place budget *with a lazy re-centre*
+would actually put on screen, and it is not small.
+
+### The finding from the first flight, which is not the one this harness was built to look for
 
 **Every one of the flight's 16 marks was within two seconds of the harness blocking its own main
 loop.** The flyer pressed SPACE not because the far field looked wrong but because the view froze
@@ -705,7 +761,9 @@ a person cannot mark what they cannot name.
 
 A flight at one re-centre distance produces one churn level, so a flight that marks nothing bounds
 the threshold at that level and nowhere else. Measured headlessly at place B, day 22,
-`k/k_res = 0.35`, `gone_fraction` per rebuild:
+`k/k_res = 0.35`, `gone_fraction` per rebuild. **Read the column for the window actually being
+flown** — flight 02 was flown fullscreen and landed at 0.28–0.35 rather than the 0.618 its
+re-centre distance is worth at 1280×800:
 
 | re-centre | at 1280×800 | at a 1600 px-tall window |
 |---:|---:|---:|
@@ -750,17 +808,15 @@ count of frames with nothing in view beside it.
 
 ### What this does not answer, and it is the reason the harness exists
 
-**The threshold is still unmeasured, and the first flight is the reason it is worth saying so
-carefully.** Sixteen marks were recorded and all sixteen were about the harness. Not one of them was
-a judgement about the far field, so nothing here narrows where between 0 and 1 a churn becomes
-visible. A count of marks is not evidence; a count of marks *that were about what the harness was
-pointed at* is, and that count is currently zero.
+**The threshold is now bounded from one side and not from the other.** Flight 02 puts it above
+0.345: a third of the stand was replaced twice and nothing was reported. Nothing yet puts a ceiling
+on it, because no flight has produced a mark that was about the far field — flight 01's sixteen were
+all about the harness stalling.
 
-The mechanism works — that much the flight proved. A person pressed a key sixteen times about a real
-defect nobody had predicted, and the trace located it to the frame. What it needs is a flight where
-the harness is not the loudest thing in the room, which means flying at `--recentre 0` for the far
-field itself, and treating the re-centring flight as a measurement of the rebuild until the rebuild
-stops blocking.
+A count of marks is not evidence. A count of marks *that were about what the harness was pointed at*
+is, and that count is still zero across two flights and 38,890 frames. What the pair does establish
+is that the mechanism works in both directions: it caught a defect nobody had predicted when there
+was one to catch, and it reported nothing when there was nothing the flyer could see.
 
 ### Whether this replaces the scripted dolly: no, and they are not substitutes
 

@@ -56,6 +56,7 @@ var _stage_frames := 0
 var trace_path := "measurements/flights/scripted.trace.json"
 var out_path := "measurements/flight_replay.json"
 var synthesise := ""
+var append_to_existing := false
 var synth_seconds := 60.0
 var synth_fps := 60.0
 var synth_recentre := 25.0
@@ -76,6 +77,7 @@ func _initialize() -> void:
     trace_path = _arg("--trace", trace_path)
     out_path = _arg("--out", out_path)
     synthesise = _arg("--synthesise", synthesise)
+    append_to_existing = OS.get_cmdline_user_args().has("--append")
     synth_seconds = float(_arg("--seconds", str(synth_seconds)))
     synth_recentre = float(_arg("--recentre", str(synth_recentre)))
     var packed: PackedScene = load("res://scenes/main.tscn")
@@ -591,6 +593,19 @@ func _write() -> void:
         "shading_exaggeration": view.terrain.shading_exaggeration,
         "runs": [run],
     }
+    # ONE ARTEFACT, ONE RUN PER FLIGHT. Two flights of the same place at two
+    # settings are one measurement in two parts -- the second only means
+    # anything against the first -- so `--append` keeps them together rather
+    # than making the newer one erase the older one's evidence.
+    if append_to_existing and FileAccess.file_exists(out_path):
+        var prior = JSON.parse_string(FileAccess.open(out_path, FileAccess.READ).get_as_text())
+        if typeof(prior) == TYPE_DICTIONARY and (prior as Dictionary).has("runs"):
+            var kept: Array = []
+            for r4 in ((prior as Dictionary)["runs"] as Array):
+                if str((r4 as Dictionary).get("trace", "")) != trace_path:
+                    kept.append(r4)
+            kept.append(run)
+            doc["runs"] = kept
     var f := FileAccess.open(out_path, FileAccess.WRITE)
     if f == null:
         printerr("replay_flight: could not write %s" % out_path)

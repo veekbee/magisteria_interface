@@ -3663,7 +3663,16 @@ func test_the_pinned_flight_replays_to_what_the_artefact_says() -> void:
         return
     var runs: Array = (parsed as Dictionary)["runs"]
     check(runs.size() > 0, "flight_replay.json records no runs")
-    var run: Dictionary = runs[0]
+    # EVERY RUN, NOT THE FIRST. The artefact holds one run per flight and the
+    # flights are a series -- a null result at one churn level only means
+    # anything against the level below it -- so a check that read runs[0] would
+    # stop checking exactly as the evidence started accumulating.
+    for r5 in runs:
+        _check_one_flight_run(r5, t)
+
+
+func _check_one_flight_run(r5: Variant, t: FlightTrace) -> void:
+    var run: Dictionary = r5
     # THE COMMITTED REPLAY IS OF WHATEVER WAS LAST FLOWN, which is the point:
     # the artefact is the real measurement, and the scripted path above is the
     # fixture that keeps the instrument testable with nobody at the machine.
