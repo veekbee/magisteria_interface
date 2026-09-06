@@ -684,22 +684,67 @@ dominant defect *and* a confound on measuring the other one: while a rebuild blo
 synchronous build first; then a re-measure can push the churn level up until something is reported,
 and that number will mean what it says.
 
-### The heading spread, and why the two flights disagree by 8×
+### The third flight found a wall, and it was the scatter's
 
-| flight | re-centre | in view by heading, lowest to highest |
+Flight 03 walked a straight line at `--recentre 400`, and the flyer reported: a well-defined point
+where the vegetation ceased entirely, then a flat empty plane, then a rebuild that repopulated
+everything. One mark, offered with *"I'm not sure how useful it is."*
+
+It was the most useful mark of the three. Measured off the trace: **62.4 seconds of a 240-second
+flight with nothing at all in front of the camera.**
+
+The cause was in `VegetationScatter`. A texel was kept when its **centre** was inside the radius —
+wrong by half a texel in every direction, since a texel centred 600 m away reaches to within 100 m of
+the camera. At the 480 m radius every far-field harness here uses, **at most one texel centre can be
+within the radius of any point**, so the scatter drew one 1 km texel and the ground past it was bare.
+`texels: 1` was sitting in every report and read as a small disc rather than as a wall.
+
+The disc is now tested against the texel's square, and the radius is a real cut at sub-cell
+resolution. After the fix the same flight has a longest empty run of **0.8 s**.
+
+**What the bug was hiding, beyond the wall.** Re-taking `scatter_motion.json` at the same place and
+`k`:
+
+| | before | after |
 |---|---:|---:|
-| 01 | 25 m | 25,746 → 28,860 (**1.12×**) |
-| 02 | 200 m | 8,073 → 75,200 (**9.32×**) |
+| worst re-centred churn | 1.0000 | 0.8537 |
+| grass survival / ceiling | 0.260 / 0.760 | 0.378 / 0.852 |
+| shrub survival / ceiling | 0.463 / 0.886 | 0.630 / 0.931 |
+| tree survival / ceiling | 0.907 / 0.986 | 0.866 / 0.991 |
+| succulent | **absent** | 1.000 / 0.977 |
 
-Not pitch contamination — flight 02's pitch runs p50 −1°, p95 2.5°, and 94 of 22,706 frames have
-nothing in view. The spread is real and it is **the lazy re-centring, not the far field**: the
-scatter is built as a 480 m disc around a point, and at `--recentre 200` the camera wanders up to
-200 m from that point, so looking one way there is 680 m of stand ahead and looking the other way
-there is 280 m. Flight 01, which never strays more than 25 m from its own centre, is the control
-that shows it — 1.12× is what heading alone is worth.
+**A whole family was missing from the metric.** Succulent lived in texels the old filter excluded, so
+every motion number quoted here was over three families where there are four. Nothing in the artefact
+said so — `placed` reported `"succulent": 0` and read as *"no succulent grows here"*, which was true
+of the one texel being drawn and false of the ground.
 
-Worth having both, because the second number is what a per-place budget *with a lazy re-centre*
-would actually put on screen, and it is not small.
+### A correction: the heading spread was mostly this bug
+
+| flight | re-centre | before the fix | after |
+|---|---:|---:|---:|
+| 01 | 25 m | 1.12× | 1.09× |
+| 02 | 200 m | **9.32×** | **3.24×** |
+| 03 | 400 m | — | 2.27× |
+
+This file previously said flight 02's 9.32× spread was *"the lazy re-centring, not the far field"* —
+the camera wandering up to 200 m off the centre of a 480 m disc. That was about a third right. Two
+thirds of it was the texel wall: heading into the missing ground showed almost nothing, and heading
+back into the drawn texel showed a stand. The residual 3.24× is the lazy re-centring, and flight 01's
+1.09× is still the control for what heading alone is worth.
+
+The general lesson is the one this file keeps re-learning: **a ratio between two numbers is only a
+finding once you know both numbers are of the same thing.**
+
+### Artefacts re-taken, and the ones still owed
+
+`scatter_cost.json` and `scatter_motion.json` are re-taken at the fix. The cost artefact barely moved
+— 119,994 → 119,963 instances, marginal 2.853 → 2.83 ms — because the build ceiling binds either way
+and the extra texels are thinned into the same budget.
+
+**`scatter_seam.json` and `scatter_horizon.json` are stale and are not re-taken here.** Both were
+measured through the old filter, so both are over fewer texels than their radius claims, and
+`scatter_horizon.json`'s five dense cells are exactly where a missing texel matters most. They need
+`bash tools/measure_seam.sh` re-runs; the numbers in them should not be quoted until then.
 
 ### The finding from the first flight, which is not the one this harness was built to look for
 

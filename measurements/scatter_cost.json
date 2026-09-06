@@ -1,9 +1,9 @@
 {
   "agreement": {
     "ok": true,
-    "ratio_observed_over_predicted": 1.33761465434362,
+    "ratio_observed_over_predicted": 1.3268152014291,
     "tolerance": 0.35,
-    "verdict": "the frame cost 1.34x what the empty-stage coefficient predicts, inside the 35% the benchmark's own reproducibility supports. Every budget sentence resting on that coefficient is conditional on a stage nobody renders, and this is the size of the conditional.",
+    "verdict": "the frame cost 1.33x what the empty-stage coefficient predicts, inside the 35% the benchmark's own reproducibility supports. Every budget sentence resting on that coefficient is conditional on a stage nobody renders, and this is the size of the conditional.",
     "within_tolerance": true
   },
   "frame_budget_ms": 33.3,
@@ -22,25 +22,24 @@
   "implied_at_this_horizon": {
     "budget_ms": 33.3,
     "budget_ms_if_corrected": 25.0375939849624,
-    "implied_ms": 921.986977200676,
-    "implied_total": 51869460.1374908,
-    "instances": 1873402.84113633,
-    "mean_ns_per_instance": 17.7751411862926,
+    "implied_ms": 726.555518302148,
+    "implied_total": 40876556.7528383,
+    "instances": 1873482.90059156,
+    "mean_ns_per_instance": 17.774381602034,
     "measured_on": "Apple M5 / gl_compatibility",
     "ok": true,
     "predicted_from": "render_cost.json's empty-stage coefficient, which is a FLOOR and not a forecast: measured against a real frame it under-predicts by about 1.33x, so a scatter thinned to fit 33.3 ms lands nearer 44.3 ms. The correction is not applied here; the coefficient is §19.8.9's."
   },
   "marginal": {
     "ok": true,
-    "p50_ms": 2.853,
+    "p50_ms": 2.829,
     "p95_ms": 2.31481481481481,
-    "p99_ms": 0.359481481481613,
-    "p99_note": "the quieter timing's own p99 is 3.34 ms against a p95 of 1.39: a stalled frame, not a tail. The p99 difference above is that outlier subtracted from the other side, and p50 is the number this run supports.",
+    "p99_ms": 1.66370370370324,
     "resolved": true,
-    "scene_spread_ms": 0.819888888888889
+    "scene_spread_ms": 0.837888888888889
   },
   "measured": true,
-  "measured_at_commit": "dd26272",
+  "measured_at_commit": "dd00a26",
   "measured_at_commit_means": "the HEAD the run was taken against; the commit that lands this artefact is its child",
   "method": {
     "attempts": 1,
@@ -54,31 +53,31 @@
     {
       "authored_triangles_per_instance": 70,
       "counter_tracked_the_instances": false,
-      "instances": 8490,
+      "instances": 8438,
       "life_form": "shrub",
-      "pixels_drawn": 30,
+      "pixels_drawn": 42,
       "primitives_counted": 20,
-      "primitives_expected": 594300,
+      "primitives_expected": 590660,
       "renders": true
     },
     {
       "authored_triangles_per_instance": 48,
       "counter_tracked_the_instances": true,
-      "instances": 110982,
+      "instances": 111007,
       "life_form": "succulent",
-      "pixels_drawn": 553,
-      "primitives_counted": 5327136,
-      "primitives_expected": 5327136,
+      "pixels_drawn": 548,
+      "primitives_counted": 5328336,
+      "primitives_expected": 5328336,
       "renders": true
     },
     {
       "authored_triangles_per_instance": 44,
       "counter_tracked_the_instances": false,
-      "instances": 522,
+      "instances": 518,
       "life_form": "tree",
-      "pixels_drawn": 180,
+      "pixels_drawn": 163,
       "primitives_counted": 14,
-      "primitives_expected": 22968,
+      "primitives_expected": 22792,
       "renders": true
     }
   ],
@@ -88,17 +87,17 @@
     "succulent": 17.5230121053839,
     "tree": 16.8679764969218
   },
-  "pixels_the_scatter_changed": 746,
+  "pixels_the_scatter_changed": 734,
   "placed": {
     "grass": 0,
-    "shrub": 8490,
-    "succulent": 110982,
-    "tree": 522
+    "shrub": 8438,
+    "succulent": 111007,
+    "tree": 518
   },
   "predicted_by_render_cost": {
-    "instances": 119994,
-    "mean_ns_per_instance": 17.7750660343264,
-    "ms": 2.13290127372296,
+    "instances": 119963,
+    "mean_ns_per_instance": 17.7735913598869,
+    "ms": 2.13217334030611,
     "ok": true
   },
   "scene": {
@@ -116,36 +115,36 @@
   },
   "shading_exaggeration": 12.0,
   "share_bound_by": "the build ceiling, which is lower here than the frame budget",
-  "share_drawn": 0.00231350007657522,
+  "share_drawn": 0.00293566800955342,
   "suspect": "",
-  "triangles_in_frame": 5944404,
+  "triangles_in_frame": 5941788,
   "vertical_exaggeration": 1.0,
   "what": "what M5's vegetation scatter costs a frame in the viewer that draws it, and whether the empty-stage coefficient in render_cost.json predicts it",
   "with_scatter": {
     "draw_calls_p50": 34.0,
     "frame_ms": {
       "max": 3.7037037037037,
-      "mean": 3.49279027777778,
+      "mean": 3.4625,
       "min": 3.33333333333333,
       "n": 80,
-      "p50": 3.422,
+      "p50": 3.38,
       "p95": 3.7037037037037,
       "p99": 3.7037037037037
     },
     "frames_drawn": 80,
     "frames_timed": 80,
-    "primitives_p50": 5538599.0
+    "primitives_p50": 5539799.0
   },
   "without_scatter": {
     "draw_calls_p50": 31.0,
     "frame_ms": {
-      "max": 3.34422222222209,
-      "mean": 0.679656944444444,
-      "min": 0.0678750002407469,
+      "max": 2.04000000000047,
+      "mean": 0.595297395817053,
+      "min": 0.0672500027576461,
       "n": 80,
-      "p50": 0.569,
+      "p50": 0.551,
       "p95": 1.38888888888889,
-      "p99": 3.34422222222209
+      "p99": 2.04000000000047
     },
     "frames_drawn": 80,
     "frames_timed": 80,
