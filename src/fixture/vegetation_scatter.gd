@@ -414,14 +414,41 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
     ## can say what one `k` actually meant in metres per family.
     var horizons_seen: Array = []
     var centre_texel := _hf.world_to_texel(centre.x, centre.y)
-    var reach := int(ceil(radius_m / _hf.pixel_size_m))
+    # A TEXEL IS A KILOMETRE AND THE DISC IS OFTEN SMALLER THAN ONE.
+    #
+    # This used to keep a texel when its CENTRE was inside the radius, which is
+    # the wrong test by half a texel in every direction: a texel centred 600 m
+    # away reaches to within 100 m of the camera and was being skipped whole.
+    # At the 480 m radius every far-field harness here uses, at most one texel
+    # centre can be within the radius of any point -- so the scatter drew ONE
+    # texel and the ground beyond it was bare.
+    #
+    # Found by flying it. A straight walk at 5 m/s crossed a texel boundary and
+    # the vegetation stopped dead: a well-defined edge, then a flat empty
+    # plane, then the next rebuild put a whole stand back. Nothing in the
+    # numbers said so -- `texels: 1` was sitting in every report and read as a
+    # small disc rather than as a wall.
+    var texel_half := 0.5 * _hf.pixel_size_m
+    var reach := int(ceil(radius_m / _hf.pixel_size_m)) + 1
     for dy in range(-reach, reach + 1):
         for dx in range(-reach, reach + 1):
             var tx := int(round(centre_texel.x)) + dx
             var ty := int(round(centre_texel.y)) + dy
             var w := _hf.texel_to_world(float(tx), float(ty))
-            if Vector2(w.x - centre.x, w.y - centre.y).length() > radius_m:
+            # The disc against the texel's SQUARE: distance to the nearest
+            # point of it, which is zero when the centre is inside.
+            var gx := maxf(0.0, absf(w.x - centre.x) - texel_half)
+            var gy := maxf(0.0, absf(w.y - centre.y) - texel_half)
+            if Vector2(gx, gy).length() > radius_m:
                 continue
+            # WHETHER THE WHOLE TEXEL IS INSIDE, which decides whether the fast
+            # path is honest. A texel the disc only clips has to be subdivided
+            # and cut, or the disc is not a disc: plants would be placed
+            # anywhere in a kilometre square whose far corner is outside the
+            # radius the caller asked for.
+            var fx := absf(w.x - centre.x) + texel_half
+            var fy := absf(w.y - centre.y) + texel_half
+            var whole := Vector2(fx, fy).length() <= radius_m
             if is_nan(_hf.height_at_texel(tx, ty)):
                 continue
             var key := _rl.key_at(tx, ty)
@@ -461,7 +488,6 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 if crown_area <= 0.0:
                     continue
                 var count := frac * texel_area / crown_area
-                implied[life_form] = float(implied[life_form]) + count
                 var phen := phenology_for(seasons[gi], cell, bio)
                 var why_phen := _fs.check(life_form, "phenology", phen)
                 if why_phen != "":
@@ -481,14 +507,15 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 var horizon_m := individuation_horizon_m(float(params["height_m"]), k)
                 if k > 0.0:
                     horizons_seen.append([life_form, horizon_m])
-                if bands.is_empty() and k <= 0.0:
-                    wanted.append({"origin": w, "half_m": half, "life_form": life_form,
-                                   "count": count, "banded": count,
-                                   "distance_m": Vector2(w.x - centre.x,
-                                           w.y - centre.y).length(), "keep": 1.0,
-                                   "height_m": float(params["height_m"]),
-                                   "crown_m": crown, "phenology": phen})
-                    continue
+                # NO FAST PATH FOR A WHOLE TEXEL ANY MORE, and the reason is
+                # placement rather than tidiness. A sub-cell's placement key
+                # carries the granularity it was emitted at, so a texel emitted
+                # whole and the same texel emitted as sub-cells are different
+                # ground to the hash. The disc clips texels differently as the
+                # camera moves, so the fast path made a texel's plants re-draw
+                # the moment the rim reached it -- the churn defect back again,
+                # at the one place a crossfade would have to hide it. The gate
+                # caught this within minutes of the clip being added.
                 # Subdivided, because the schedule works at a finer scale than
                 # the raster this is placed on. Sub-cells the schedule keeps
                 # nothing in are not emitted at all, so a tight band over a
@@ -501,6 +528,22 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                                 w.x - half + sub_half * (2.0 * float(sx) + 1.0),
                                 w.y - half + sub_half * (2.0 * float(sy) + 1.0))
                         var d_m := Vector2(o.x - centre.x, o.y - centre.y).length()
+                        # THE RADIUS IS A CUT LIKE THE OTHERS. Without it a
+                        # clipped texel would place plants past the disc the
+                        # caller asked for, which is how "within radius_m"
+                        # stops being true of the thing that comes back.
+                        if d_m > radius_m:
+                            continue
+                        # WHAT THE WIRE IMPLIES OVER THE GROUND THIS BUILD
+                        # ASKED ABOUT. Accumulated per surviving sub-cell
+                        # rather than per texel: a texel the disc only clips
+                        # would otherwise contribute its whole kilometre to a
+                        # number the caller reads as "inside the radius", and
+                        # `share x implied = placed` would stop holding. The
+                        # horizon and the schedule are NOT applied here -- they
+                        # are drawing decisions and the implication is a
+                        # measurement.
+                        implied[life_form] = float(implied[life_form]) + per_sub
                         # The horizon is a hard cut and the schedule is a fade;
                         # they compose, and neither substitutes for the other.
                         if k > 0.0 and d_m > horizon_m:
@@ -599,23 +642,9 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         by_family[g] = []
         phen_of[g] = PackedFloat32Array()
     for item in wanted:
-        var n := int(round(float(item["banded"]) * share))
-        if n <= 0:
-            continue
         var life_form: String = item["life_form"]
         var origin: Vector2 = item["origin"]
         var half: float = item["half_m"]
-        # THE CANDIDATE POPULATION IS THE UNTHINNED ONE, which is what makes
-        # the drawn set a prefix of a fixed order rather than its own draw.
-        # `count` is the sub-cell's own implication from the wire -- no camera
-        # is in it -- so this bound, and the ordering keyed below, hold across
-        # every build over this patch of ground.
-        var pool := int(round(float(item["count"])))
-        if pool < n:
-            # Unreachable while keep and share are both fractions; clamped
-            # rather than trusted, because `n > pool` would be asking for more
-            # plants than the ground has and the prefix would run off the end.
-            pool = n
         # HOISTED, ALL OF IT. Every line here is constant for the sub-cell:
         # the family key is an FNV walk over a string, and the texel a sub-cell
         # sits in is one texel by construction. Both were being recomputed per
@@ -626,6 +655,28 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 int(round(origin.x * PLACEMENT_QUANTUM)),
                 int(round(origin.y * PLACEMENT_QUANTUM)),
                 int(round(half * PLACEMENT_QUANTUM))])
+        # ROUNDING THAT KEEPS THE STAND, AND KEEPS IT IN THE SAME ORDER.
+        #
+        # A sub-cell is a thirty-metre square and a family's implication in one
+        # is often a fraction. Rounding each independently deletes any family
+        # whose density is under half a plant per sub-cell -- and since the
+        # texel is now always subdivided, that is most sparse families over
+        # most of the basin. The old whole-texel path hid this by rounding once
+        # per kilometre.
+        #
+        # So the fraction is resolved against the sub-cell's OWN hash: floor,
+        # plus one more when the draw falls inside the remainder. Over a texel
+        # the count comes out right, the choice is a function of the ground
+        # like everything else here, and ONE draw serves both the pool and the
+        # thinned count -- which is what keeps `n <= pool` true and the prefix
+        # nested as the share falls.
+        var u := hash01(stable_hash3(cell_key, 0, 7))
+        var pool := _resolve(float(item["count"]), u)
+        var n := _resolve(float(item["banded"]) * share, u)
+        if n <= 0:
+            continue
+        if pool < n:
+            pool = n
         var it := _hf.world_to_texel(origin.x, origin.y)
         var tkey := "%d|%d" % [int(round(it.x)), int(round(it.y))]
         # The folds for this sub-cell, kept in locals and written to the
@@ -857,6 +908,19 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 + "stand."),
     }
     return report
+
+
+## A fractional count made whole, against a draw that belongs to the ground.
+##
+## `floor(x)`, plus one when `u` lands inside the remainder. Monotone in `x`
+## for a fixed `u`, which is what makes a falling share remove plants rather
+## than reshuffle them, and unbiased over many sub-cells, which is what stops a
+## sparse family from rounding itself out of existence.
+static func _resolve(x: float, u: float) -> int:
+    if x <= 0.0:
+        return 0
+    var whole: float = floor(x)
+    return int(whole) + (1 if u < x - whole else 0)
 
 
 ## How much of a cell's ground one life form actually covers.

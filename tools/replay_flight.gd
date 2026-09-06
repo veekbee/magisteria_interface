@@ -46,6 +46,10 @@ const MARK_WINDOW := 12
 ## which is that sequence with a very steady hand on it.
 const STALL_REACTION_S := 4.0
 
+## Samples in the coarse timeline. Enough to see a shape in a printed column
+## and few enough that the artefact stays readable.
+const TIMELINE_SAMPLES := 60
+
 enum { SETTLE, PLACE, RUN, WRITE, DONE }
 
 var scene: Node = null
@@ -481,6 +485,30 @@ func _write() -> void:
 
     var flight_ms := (float((rows[rows.size() - 1] as Dictionary)["t_ms"])
             if not rows.is_empty() else 0.0)
+    var stride := maxi(1, rows.size() / TIMELINE_SAMPLES)
+    var timeline: Array = []
+    var longest_empty := 0
+    var longest_empty_s := 0.0
+    var run_len := 0
+    var run_from := 0.0
+    for i in rows.size():
+        var row6: Dictionary = rows[i]
+        if i % stride == 0:
+            timeline.append({
+                "t_s": float(row6["t_ms"]) / 1000.0,
+                "instances": int(row6["instances"]),
+                "in_view": int(row6["in_view_instances"]),
+                "rebuilt": bool(row6["rebuilt"]),
+            })
+        if int(row6["in_view_instances"]) == 0:
+            if run_len == 0:
+                run_from = float(row6["t_ms"])
+            run_len += 1
+            if run_len > longest_empty:
+                longest_empty = run_len
+                longest_empty_s = (float(row6["t_ms"]) - run_from) / 1000.0
+        else:
+            run_len = 0
     var run := {
         "what": ("a recorded walk through the far field, scored again from its poses alone"),
         "trace": trace_path,
@@ -494,6 +522,16 @@ func _write() -> void:
             "frames_compared": compared,
             "frames_disagreeing_on_population": disagreed,
             "worst_disagreement_instances": worst_disagreement,
+            # A DISAGREEMENT MEANS TWO DIFFERENT THINGS AND THE COMMIT SAYS
+            # WHICH. Replayed at the commit it was flown at, a disagreement is
+            # a defect: the flight was not deterministic or this replay is not
+            # faithful. Replayed at a LATER commit it is a measurement -- the
+            # scatter changed and this is by how much, over a path a person
+            # actually walked. Collapsing the two would either hide a bug or
+            # cry about an intended change.
+            "flown_at_commit": str(trace.header.get("recorded_at_commit", "unknown")),
+            "replayed_at_commit": _git_head(),
+            "same_commit": str(trace.header.get("recorded_at_commit", "")) == _git_head(),
             # A CHECK THAT COMPARED NOTHING IS NOT A CHECK THAT PASSED, and
             # this one compares nothing on a synthesised trace by construction:
             # a script builds no scatter, so it records no population to
@@ -501,6 +539,13 @@ func _write() -> void:
             # this repo keeps finding in its own harnesses.
             "ok": disagreed == 0 and compared > 0,
             "ran": compared > 0,
+            "means": ("" if compared == 0 else ("a defect: the flight and the replay ran the "
+                    + "same code and disagree anyway"
+                            if disagreed > 0
+                                    and str(trace.header.get("recorded_at_commit", "")) == _git_head()
+                            else ("the scatter changed between the flight and this replay, and "
+                                    + "this is how much it changed over a path someone walked"
+                                    if disagreed > 0 else "reproduced exactly"))),
             "why_not": ("" if compared > 0 else "this trace records no per-frame population, "
                     + "which is what a synthesised path looks like: nothing was built while "
                     + "it was written, so there is nothing to disagree with. The check goes "
@@ -537,6 +582,24 @@ func _write() -> void:
                 + "rather than a result -- the same role `static` plays in "
                 + "scatter_motion.json. Above 0 the population follows the camera and the "
                 + "churn is a measurement."),
+        # A COARSE SERIES, BECAUSE SOME DEFECTS ARE SHAPES AND NOT QUANTILES.
+        # A flight that walked out of the vegetation and back into it has a
+        # perfectly ordinary in-view distribution: a min of 0, a healthy
+        # median, nothing to see. What says it happened is the SHAPE -- a slow
+        # decline to nothing, a long flat zero, a step back up -- and no
+        # summary statistic carries a shape.
+        "timeline": timeline,
+        "timeline_is": ("every %dth frame: seconds, instances built, instances in front of "
+                        % maxi(1, rows.size() / TIMELINE_SAMPLES)
+                + "the camera, and whether that frame rebuilt. Coarse on purpose; it is for "
+                + "seeing a shape, not for scoring one."),
+        "emptiest_run": {
+            "frames": longest_empty,
+            "seconds": longest_empty_s,
+            "what": ("the longest unbroken stretch with NOTHING in front of the camera. A far "
+                    + "field that goes away and comes back is not a churn defect and no churn "
+                    + "statistic reports it."),
+        },
         "by_heading": by_heading,
         "heading_spread": {
             "lowest_mean_in_view": lo if lo >= 0.0 else null,
@@ -616,11 +679,15 @@ func _write() -> void:
     var q: Dictionary = run["per_frame"]["gone_fraction_at_rebuilds"]
     var agree: Dictionary = run["replay_agreement"]
     print("")
-    print("replay: %d frames, %d builds, agreement %s"
-            % [rows.size(), _builds,
-               ("exact over %d frames" % compared) if bool(agree["ok"])
-                        else ("NOT RUN -- the trace records no populations to compare"
-                                if compared == 0 else "BROKEN on %d frames" % disagreed)])
+    var verdict := "exact over %d frames" % compared
+    if compared == 0:
+        verdict = "NOT RUN -- the trace records no populations to compare"
+    elif disagreed > 0:
+        verdict = ("%d frames differ -- %s" % [disagreed,
+                "THE CODE MOVED since this was flown (%s -> %s)"
+                        % [str(agree["flown_at_commit"]), str(agree["replayed_at_commit"])]
+                if not bool(agree["same_commit"]) else "BROKEN, same commit"])
+    print("replay: %d frames, %d builds, agreement %s" % [rows.size(), _builds, verdict])
     if q.is_empty():
         print("        churn: no frame rebuilt, so the population never changed")
     else:
@@ -635,6 +702,9 @@ func _write() -> void:
     if not at_marks.is_empty():
         print("        %d of %d marks fell within %ss of a stall"
                 % [marks_after_a_stall, at_marks.size(), String.num(STALL_REACTION_S, 0)])
+    if longest_empty > 0:
+        print("        emptiest run: %d frames (%s s) with NOTHING in front of the camera"
+                % [longest_empty, String.num(longest_empty_s, 1)])
     print("        in view by heading: %s to %s instances (%sx)"
             % [String.num(lo, 0), String.num(hi, 0),
                "--" if lo <= 0.0 else String.num(hi / lo, 2)])

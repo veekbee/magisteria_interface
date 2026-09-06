@@ -56,17 +56,21 @@
           "mean": 70.0460962423847
         }
       },
-      "replayed_at_commit": "d4872e5",
+      "replayed_at_commit": "b31469d",
       "vertical_exaggeration": 1.0,
       "shading_exaggeration": 12.0,
       "frames": 16184.0,
       "builds": 27.0,
       "replay_agreement": {
         "frames_compared": 16184.0,
-        "frames_disagreeing_on_population": 0.0,
-        "worst_disagreement_instances": 0.0,
-        "ok": true,
+        "frames_disagreeing_on_population": 16184.0,
+        "worst_disagreement_instances": 2527.0,
+        "flown_at_commit": "27ba9b0",
+        "replayed_at_commit": "b31469d",
+        "same_commit": false,
+        "ok": false,
         "ran": true,
+        "means": "the scatter changed between the flight and this replay, and this is how much it changed over a path someone walked",
         "why_not": "",
         "what": "the flight recorded what it measured; this recomputed it from the poses alone. They have to agree exactly, because placement is a function of the ground and the rebuild rule is a function of the path. A disagreement means the flight was not deterministic or this replay is not faithful, and neither is a thing to quote a number over.",
         "not_compared": "frame time. A headless frame is not drawn and costs nothing, so the milliseconds in this artefact are the FLIGHT's measurements carried through and are never re-derived."
@@ -75,28 +79,28 @@
         "rebuilds": 26.0,
         "gone_fraction_at_rebuilds": {
           "n": 26.0,
-          "min": 0.05952007602756,
-          "p50": 0.0798878570829802,
-          "p95": 0.0975096918325777,
-          "max": 0.102691999434256,
-          "mean": 0.082311654119631
+          "min": 0.0632375689532723,
+          "p50": 0.084737707566987,
+          "p95": 0.105576250570169,
+          "max": 0.107358588880097,
+          "mean": 0.086968807502467
         },
         "gone_fraction_is": "over the frames that REBUILT, which are the only frames that can churn. 26 of 16184 here. A quantile over every frame would be a quantile over a list that is zero by construction.",
         "instances": {
           "n": 16184.0,
-          "min": 104395.0,
-          "p50": 106533.0,
-          "p95": 108520.0,
-          "max": 108696.0,
-          "mean": 106519.919982699
+          "min": 101987.0,
+          "p50": 104496.0,
+          "p95": 106090.0,
+          "max": 106207.0,
+          "mean": 104254.707488878
         },
         "in_view_instances": {
           "n": 16184.0,
           "min": 0.0,
-          "p50": 27045.0,
-          "p95": 31520.0,
-          "max": 39017.0,
-          "mean": 26970.5101334652
+          "p50": 26922.0,
+          "p95": 30959.0,
+          "max": 37407.0,
+          "mean": 26772.196799308
         },
         "frame_ms_in_flight": {
           "n": 16184.0,
@@ -111,72 +115,446 @@
       },
       "churn_is_zero_by_construction": false,
       "churn_note": "with `recentre_m` at 0 the scatter is built once and flown through, so the population cannot change and a churn of exactly 0 is the calibration rather than a result -- the same role `static` plays in scatter_motion.json. Above 0 the population follows the camera and the churn is a measurement.",
+      "timeline": [
+        {
+          "t_s": 0.0,
+          "instances": 104685.0,
+          "in_view": 27511.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 2.273108,
+          "instances": 104685.0,
+          "in_view": 28852.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 4.533744,
+          "instances": 104685.0,
+          "in_view": 28099.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 6.772769,
+          "instances": 104685.0,
+          "in_view": 26932.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 9.01545,
+          "instances": 104685.0,
+          "in_view": 26278.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 12.881443,
+          "instances": 104496.0,
+          "in_view": 32272.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 15.125527,
+          "instances": 104496.0,
+          "in_view": 23394.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 19.008814,
+          "instances": 105207.0,
+          "in_view": 28112.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 21.248732,
+          "instances": 105207.0,
+          "in_view": 22580.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 25.115397,
+          "instances": 102466.0,
+          "in_view": 27665.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 27.357038,
+          "instances": 102466.0,
+          "in_view": 26370.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 29.59798,
+          "instances": 102466.0,
+          "in_view": 29395.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 31.839796,
+          "instances": 102466.0,
+          "in_view": 25987.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 35.756996,
+          "instances": 102464.0,
+          "in_view": 27379.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 37.99879,
+          "instances": 102464.0,
+          "in_view": 29532.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 40.240347,
+          "instances": 102464.0,
+          "in_view": 23485.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 44.173761,
+          "instances": 104926.0,
+          "in_view": 26776.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 46.415304,
+          "instances": 104926.0,
+          "in_view": 24656.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 50.431954,
+          "instances": 106207.0,
+          "in_view": 27221.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 52.672877,
+          "instances": 106207.0,
+          "in_view": 23825.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 56.690294,
+          "instances": 106090.0,
+          "in_view": 24616.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 60.65701,
+          "instances": 103475.0,
+          "in_view": 27486.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 62.899191,
+          "instances": 103475.0,
+          "in_view": 22763.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 66.897424,
+          "instances": 104917.0,
+          "in_view": 27334.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 69.142179,
+          "instances": 104917.0,
+          "in_view": 26083.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 73.182092,
+          "instances": 106056.0,
+          "in_view": 28517.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 75.423536,
+          "instances": 106056.0,
+          "in_view": 28352.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 77.667067,
+          "instances": 106056.0,
+          "in_view": 25788.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 81.664318,
+          "instances": 104111.0,
+          "in_view": 24487.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 83.906544,
+          "instances": 104111.0,
+          "in_view": 23538.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 87.964995,
+          "instances": 105250.0,
+          "in_view": 29843.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 90.206878,
+          "instances": 105250.0,
+          "in_view": 26827.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 94.22345,
+          "instances": 104104.0,
+          "in_view": 25292.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 96.463959,
+          "instances": 104104.0,
+          "in_view": 29880.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 100.456909,
+          "instances": 101987.0,
+          "in_view": 28838.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 102.698393,
+          "instances": 101987.0,
+          "in_view": 31735.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 106.714589,
+          "instances": 104698.0,
+          "in_view": 26682.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 108.956204,
+          "instances": 104698.0,
+          "in_view": 24792.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 112.981132,
+          "instances": 103251.0,
+          "in_view": 29999.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 115.221732,
+          "instances": 103251.0,
+          "in_view": 0.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 117.466857,
+          "instances": 103251.0,
+          "in_view": 35064.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 119.705488,
+          "instances": 103251.0,
+          "in_view": 27043.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 121.948495,
+          "instances": 103251.0,
+          "in_view": 24854.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 126.014316,
+          "instances": 103634.0,
+          "in_view": 27364.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 128.255891,
+          "instances": 103634.0,
+          "in_view": 24945.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 132.306158,
+          "instances": 104089.0,
+          "in_view": 25441.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 136.365084,
+          "instances": 103760.0,
+          "in_view": 27801.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 138.606664,
+          "instances": 103760.0,
+          "in_view": 25649.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 142.697193,
+          "instances": 104585.0,
+          "in_view": 25832.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 144.939843,
+          "instances": 104585.0,
+          "in_view": 25125.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 149.006627,
+          "instances": 104887.0,
+          "in_view": 28803.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 151.247388,
+          "instances": 104887.0,
+          "in_view": 24774.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 155.308356,
+          "instances": 106068.0,
+          "in_view": 27656.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 157.54813,
+          "instances": 106068.0,
+          "in_view": 29183.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 159.789336,
+          "instances": 106068.0,
+          "in_view": 28311.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 162.030857,
+          "instances": 106068.0,
+          "in_view": 29651.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 166.093925,
+          "instances": 105232.0,
+          "in_view": 26459.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 170.126656,
+          "instances": 102942.0,
+          "in_view": 25834.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 172.369074,
+          "instances": 102942.0,
+          "in_view": 23959.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 176.409986,
+          "instances": 102787.0,
+          "in_view": 25476.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 178.65096,
+          "instances": 102787.0,
+          "in_view": 25751.0,
+          "rebuilt": false
+        }
+      ],
+      "timeline_is": "every 269th frame: seconds, instances built, instances in front of the camera, and whether that frame rebuilt. Coarse on purpose; it is for seeing a shape, not for scoring one.",
+      "emptiest_run": {
+        "frames": 67.0,
+        "seconds": 0.549899999999994,
+        "what": "the longest unbroken stretch with NOTHING in front of the camera. A far field that goes away and comes back is not a churn defect and no churn statistic reports it."
+      },
       "by_heading": [
         {
           "from_degrees": 0.0,
           "frames": 1968.0,
-          "in_view_mean": 27708.1082317073
+          "in_view_mean": 27472.1041666667
         },
         {
           "from_degrees": 30.0,
           "frames": 1762.0,
-          "in_view_mean": 28258.9829738933
+          "in_view_mean": 27570.1322360953
         },
         {
           "from_degrees": 60.0,
           "frames": 664.0,
-          "in_view_mean": 28381.0060240964
+          "in_view_mean": 27666.813253012
         },
         {
           "from_degrees": 90.0,
           "frames": 499.0,
-          "in_view_mean": 28144.0841683367
+          "in_view_mean": 27220.3166332665
         },
         {
           "from_degrees": 120.0,
           "frames": 436.0,
-          "in_view_mean": 28859.8899082569
+          "in_view_mean": 27821.9220183486
         },
         {
           "from_degrees": 150.0,
           "frames": 536.0,
-          "in_view_mean": 27853.6305970149
+          "in_view_mean": 26243.3638059701
         },
         {
           "from_degrees": 180.0,
           "frames": 650.0,
-          "in_view_mean": 26703.2353846154
+          "in_view_mean": 25573.1476923077
         },
         {
           "from_degrees": 210.0,
           "frames": 1205.0,
-          "in_view_mean": 27661.5269709544
+          "in_view_mean": 27394.4572614108
         },
         {
           "from_degrees": 240.0,
           "frames": 1749.0,
-          "in_view_mean": 26688.180102916
+          "in_view_mean": 26764.8907947399
         },
         {
           "from_degrees": 270.0,
           "frames": 2098.0,
-          "in_view_mean": 25801.7259294566
+          "in_view_mean": 26102.4475691134
         },
         {
           "from_degrees": 300.0,
           "frames": 1986.0,
-          "in_view_mean": 25746.1364551863
+          "in_view_mean": 26001.7059415911
         },
         {
           "from_degrees": 330.0,
           "frames": 2631.0,
-          "in_view_mean": 26277.760927404
+          "in_view_mean": 26469.0505511212
         }
       ],
       "heading_spread": {
-        "lowest_mean_in_view": 25746.1364551863,
-        "highest_mean_in_view": 28859.8899082569,
-        "ratio": 1.12094061019565,
+        "lowest_mean_in_view": 25573.1476923077,
+        "highest_mean_in_view": 27821.9220183486,
+        "ratio": 1.0879349837219,
         "frames_with_nothing_in_view": 118.0,
         "pitch_degrees": {
           "n": 16184.0,
@@ -212,9 +590,9 @@
           "that_stall_blocked_ms": 1747.817,
           "within_reaction_of_a_stall": true,
           "gone_fraction_at_mark": 0.0,
-          "worst_gone_fraction_in_the_window_before": 0.0871844275068711,
+          "worst_gone_fraction_in_the_window_before": 0.0917226383184344,
           "frame_ms_at_mark": 1772.336,
-          "in_view_at_mark": 27727.0
+          "in_view_at_mark": 27997.0
         },
         {
           "frame": 6668.0,
@@ -225,7 +603,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 8.543,
-          "in_view_at_mark": 28731.0
+          "in_view_at_mark": 29143.0
         },
         {
           "frame": 7317.0,
@@ -236,7 +614,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 9.328,
-          "in_view_at_mark": 26435.0
+          "in_view_at_mark": 26865.0
         },
         {
           "frame": 8096.0,
@@ -247,7 +625,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 8.501,
-          "in_view_at_mark": 28875.0
+          "in_view_at_mark": 29180.0
         },
         {
           "frame": 8520.0,
@@ -258,7 +636,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 8.46,
-          "in_view_at_mark": 29557.0
+          "in_view_at_mark": 27376.0
         },
         {
           "frame": 8965.0,
@@ -269,7 +647,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 7.73,
-          "in_view_at_mark": 27300.0
+          "in_view_at_mark": 25336.0
         },
         {
           "frame": 9645.0,
@@ -280,7 +658,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 7.983,
-          "in_view_at_mark": 28057.0
+          "in_view_at_mark": 26682.0
         },
         {
           "frame": 10080.0,
@@ -291,7 +669,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 8.499,
-          "in_view_at_mark": 27431.0
+          "in_view_at_mark": 27444.0
         },
         {
           "frame": 11448.0,
@@ -302,7 +680,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 7.666,
-          "in_view_at_mark": 27988.0
+          "in_view_at_mark": 27975.0
         },
         {
           "frame": 11904.0,
@@ -313,7 +691,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 9.62,
-          "in_view_at_mark": 26234.0
+          "in_view_at_mark": 26508.0
         },
         {
           "frame": 12361.0,
@@ -324,7 +702,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 8.505,
-          "in_view_at_mark": 27273.0
+          "in_view_at_mark": 28128.0
         },
         {
           "frame": 12852.0,
@@ -335,7 +713,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 8.018,
-          "in_view_at_mark": 26287.0
+          "in_view_at_mark": 27028.0
         },
         {
           "frame": 13405.0,
@@ -346,7 +724,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 9.157,
-          "in_view_at_mark": 27558.0
+          "in_view_at_mark": 28788.0
         },
         {
           "frame": 13929.0,
@@ -357,7 +735,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 8.465,
-          "in_view_at_mark": 28301.0
+          "in_view_at_mark": 27176.0
         },
         {
           "frame": 15437.0,
@@ -368,7 +746,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 8.521,
-          "in_view_at_mark": 25641.0
+          "in_view_at_mark": 25002.0
         },
         {
           "frame": 15774.0,
@@ -379,7 +757,7 @@
           "gone_fraction_at_mark": 0.0,
           "worst_gone_fraction_in_the_window_before": 0.0,
           "frame_ms_at_mark": 7.733,
-          "in_view_at_mark": 25309.0
+          "in_view_at_mark": 26343.0
         }
       ],
       "marks_after_a_stall": 16.0,
@@ -442,50 +820,54 @@
           "mean": 14.8258997763119
         }
       },
-      "replayed_at_commit": "d4872e5",
+      "replayed_at_commit": "b31469d",
       "vertical_exaggeration": 1.0,
       "shading_exaggeration": 12.0,
-      "frames": 22706,
-      "builds": 3,
+      "frames": 22706.0,
+      "builds": 3.0,
       "replay_agreement": {
-        "frames_compared": 22706,
-        "frames_disagreeing_on_population": 0,
-        "worst_disagreement_instances": 0,
-        "ok": true,
+        "frames_compared": 22706.0,
+        "frames_disagreeing_on_population": 22706.0,
+        "worst_disagreement_instances": 496.0,
+        "flown_at_commit": "d4872e5",
+        "replayed_at_commit": "b31469d",
+        "same_commit": false,
+        "ok": false,
         "ran": true,
+        "means": "the scatter changed between the flight and this replay, and this is how much it changed over a path someone walked",
         "why_not": "",
         "what": "the flight recorded what it measured; this recomputed it from the poses alone. They have to agree exactly, because placement is a function of the ground and the rebuild rule is a function of the path. A disagreement means the flight was not deterministic or this replay is not faithful, and neither is a thing to quote a number over.",
         "not_compared": "frame time. A headless frame is not drawn and costs nothing, so the milliseconds in this artefact are the FLIGHT's measurements carried through and are never re-derived."
       },
       "per_frame": {
-        "rebuilds": 2,
+        "rebuilds": 2.0,
         "gone_fraction_at_rebuilds": {
-          "n": 2,
-          "min": 0.283620913174028,
-          "p50": 0.283620913174028,
-          "p95": 0.34518887977639,
-          "max": 0.34518887977639,
-          "mean": 0.314404896475209
+          "n": 2.0,
+          "min": 0.348137344778732,
+          "p50": 0.348137344778732,
+          "p95": 0.352604383698642,
+          "max": 0.352604383698642,
+          "mean": 0.350370864238687
         },
         "gone_fraction_is": "over the frames that REBUILT, which are the only frames that can churn. 2 of 22706 here. A quantile over every frame would be a quantile over a list that is zero by construction.",
         "instances": {
-          "n": 22706,
-          "min": 119494.0,
-          "p50": 119561.0,
-          "p95": 119794.0,
-          "max": 119794.0,
-          "mean": 119654.962697084
+          "n": 22706.0,
+          "min": 119990.0,
+          "p50": 119990.0,
+          "p95": 120009.0,
+          "max": 120009.0,
+          "mean": 119998.838104466
         },
         "in_view_instances": {
-          "n": 22706,
+          "n": 22706.0,
           "min": 0.0,
-          "p50": 28130.0,
-          "p95": 76818.0,
-          "max": 83253.0,
-          "mean": 31309.4217387475
+          "p50": 28395.0,
+          "p95": 54867.0,
+          "max": 65442.0,
+          "mean": 29374.166607945
         },
         "frame_ms_in_flight": {
-          "n": 22706,
+          "n": 22706.0,
           "min": 0.0,
           "p50": 10.314,
           "p95": 11.352,
@@ -497,76 +879,450 @@
       },
       "churn_is_zero_by_construction": false,
       "churn_note": "with `recentre_m` at 0 the scatter is built once and flown through, so the population cannot change and a churn of exactly 0 is the calibration rather than a result -- the same role `static` plays in scatter_motion.json. Above 0 the population follows the camera and the churn is a measurement.",
+      "timeline": [
+        {
+          "t_s": 0.0,
+          "instances": 119990.0,
+          "in_view": 32474.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 4.228101,
+          "instances": 119990.0,
+          "in_view": 32695.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 8.145999,
+          "instances": 119990.0,
+          "in_view": 29359.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 12.083546,
+          "instances": 119990.0,
+          "in_view": 33788.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 16.019034,
+          "instances": 119990.0,
+          "in_view": 29623.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 19.872961,
+          "instances": 119990.0,
+          "in_view": 28598.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 23.744206,
+          "instances": 119990.0,
+          "in_view": 28938.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 27.654055,
+          "instances": 119990.0,
+          "in_view": 33462.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 31.587657,
+          "instances": 119990.0,
+          "in_view": 31540.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 35.465134,
+          "instances": 119990.0,
+          "in_view": 29305.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 39.421579,
+          "instances": 119990.0,
+          "in_view": 27920.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 43.293536,
+          "instances": 119990.0,
+          "in_view": 24171.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 47.154275,
+          "instances": 119990.0,
+          "in_view": 20983.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 51.017487,
+          "instances": 119990.0,
+          "in_view": 19503.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 54.891128,
+          "instances": 119990.0,
+          "in_view": 28727.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 58.75592,
+          "instances": 119990.0,
+          "in_view": 14324.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 62.562267,
+          "instances": 119990.0,
+          "in_view": 13561.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 66.416639,
+          "instances": 119990.0,
+          "in_view": 19063.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 70.287978,
+          "instances": 119990.0,
+          "in_view": 11631.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 74.093838,
+          "instances": 119990.0,
+          "in_view": 9080.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 79.606794,
+          "instances": 119990.0,
+          "in_view": 32901.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 83.600004,
+          "instances": 119990.0,
+          "in_view": 28157.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 87.617494,
+          "instances": 119990.0,
+          "in_view": 42021.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 91.629463,
+          "instances": 119990.0,
+          "in_view": 34738.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 95.554759,
+          "instances": 119990.0,
+          "in_view": 21939.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 99.394206,
+          "instances": 119990.0,
+          "in_view": 20625.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 103.264048,
+          "instances": 119990.0,
+          "in_view": 21083.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 107.094198,
+          "instances": 119990.0,
+          "in_view": 18186.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 110.932631,
+          "instances": 119990.0,
+          "in_view": 16792.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 114.719606,
+          "instances": 119990.0,
+          "in_view": 14730.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 118.472402,
+          "instances": 119990.0,
+          "in_view": 12317.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 122.192215,
+          "instances": 119990.0,
+          "in_view": 10663.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 125.890138,
+          "instances": 119990.0,
+          "in_view": 8775.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 131.1754,
+          "instances": 120009.0,
+          "in_view": 30945.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 134.868241,
+          "instances": 120009.0,
+          "in_view": 27323.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 138.539734,
+          "instances": 120009.0,
+          "in_view": 24428.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 142.143362,
+          "instances": 120009.0,
+          "in_view": 21701.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 145.690486,
+          "instances": 120009.0,
+          "in_view": 18808.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 149.20646,
+          "instances": 120009.0,
+          "in_view": 17852.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 152.921516,
+          "instances": 120009.0,
+          "in_view": 41455.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 157.058326,
+          "instances": 120009.0,
+          "in_view": 54992.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 161.297434,
+          "instances": 120009.0,
+          "in_view": 54781.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 165.518412,
+          "instances": 120009.0,
+          "in_view": 42916.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 169.53144,
+          "instances": 120009.0,
+          "in_view": 29620.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 173.403056,
+          "instances": 120009.0,
+          "in_view": 29239.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 177.497112,
+          "instances": 120009.0,
+          "in_view": 31475.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 181.629389,
+          "instances": 120009.0,
+          "in_view": 48540.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 185.913801,
+          "instances": 120009.0,
+          "in_view": 48182.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 190.172906,
+          "instances": 120009.0,
+          "in_view": 45315.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 194.368048,
+          "instances": 120009.0,
+          "in_view": 29203.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 198.379575,
+          "instances": 120009.0,
+          "in_view": 25584.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 202.359489,
+          "instances": 120009.0,
+          "in_view": 14829.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 206.178717,
+          "instances": 120009.0,
+          "in_view": 14416.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 210.093269,
+          "instances": 120009.0,
+          "in_view": 19026.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 214.291273,
+          "instances": 120009.0,
+          "in_view": 43409.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 218.522351,
+          "instances": 120009.0,
+          "in_view": 51752.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 222.816459,
+          "instances": 120009.0,
+          "in_view": 62055.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 227.067885,
+          "instances": 120009.0,
+          "in_view": 54519.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 231.325761,
+          "instances": 120009.0,
+          "in_view": 51302.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 235.553406,
+          "instances": 120009.0,
+          "in_view": 25007.0,
+          "rebuilt": false
+        },
+        {
+          "t_s": 239.730508,
+          "instances": 120009.0,
+          "in_view": 30420.0,
+          "rebuilt": false
+        }
+      ],
+      "timeline_is": "every 378th frame: seconds, instances built, instances in front of the camera, and whether that frame rebuilt. Coarse on purpose; it is for seeing a shape, not for scoring one.",
+      "emptiest_run": {
+        "frames": 21.0,
+        "seconds": 0.184195,
+        "what": "the longest unbroken stretch with NOTHING in front of the camera. A far field that goes away and comes back is not a churn defect and no churn statistic reports it."
+      },
       "by_heading": [
         {
           "from_degrees": 0.0,
-          "frames": 1546,
-          "in_view_mean": 29271.0388098318
+          "frames": 1546.0,
+          "in_view_mean": 29858.0815006468
         },
         {
           "from_degrees": 30.0,
-          "frames": 2914,
-          "in_view_mean": 32482.3280713795
+          "frames": 2914.0,
+          "in_view_mean": 28679.6678105697
         },
         {
           "from_degrees": 60.0,
-          "frames": 1350,
-          "in_view_mean": 55274.4074074074
+          "frames": 1350.0,
+          "in_view_mean": 40299.1325925926
         },
         {
           "from_degrees": 90.0,
-          "frames": 2372,
-          "in_view_mean": 66061.7854131535
+          "frames": 2372.0,
+          "in_view_mean": 45516.5354131535
         },
         {
           "from_degrees": 120.0,
-          "frames": 947,
-          "in_view_mean": 58534.8912354805
+          "frames": 947.0,
+          "in_view_mean": 37176.8289334741
         },
         {
           "from_degrees": 150.0,
-          "frames": 1220,
-          "in_view_mean": 75199.8303278689
+          "frames": 1220.0,
+          "in_view_mean": 56808.4606557377
         },
         {
           "from_degrees": 180.0,
-          "frames": 0,
+          "frames": 0.0,
           "in_view_total": 0.0,
           "in_view_mean": null
         },
         {
           "from_degrees": 210.0,
-          "frames": 405,
-          "in_view_mean": 28387.7703703704
+          "frames": 405.0,
+          "in_view_mean": 30655.3777777778
         },
         {
           "from_degrees": 240.0,
-          "frames": 5868,
-          "in_view_mean": 8072.70398773006
+          "frames": 5868.0,
+          "in_view_mean": 19704.2718132243
         },
         {
           "from_degrees": 270.0,
-          "frames": 4117,
-          "in_view_mean": 23296.8324022346
+          "frames": 4117.0,
+          "in_view_mean": 24578.1656546029
         },
         {
           "from_degrees": 300.0,
-          "frames": 1335,
-          "in_view_mean": 16325.5498127341
+          "frames": 1335.0,
+          "in_view_mean": 17526.2599250936
         },
         {
           "from_degrees": 330.0,
-          "frames": 632,
-          "in_view_mean": 25212.8449367089
+          "frames": 632.0,
+          "in_view_mean": 28052.042721519
         }
       ],
       "heading_spread": {
-        "lowest_mean_in_view": 8072.70398773006,
-        "highest_mean_in_view": 75199.8303278689,
-        "ratio": 9.31532116650967,
-        "frames_with_nothing_in_view": 94,
+        "lowest_mean_in_view": 17526.2599250936,
+        "highest_mean_in_view": 56808.4606557377,
+        "ratio": 3.24133391257087,
+        "frames_with_nothing_in_view": 21.0,
         "pitch_degrees": {
-          "n": 22706,
+          "n": 22706.0,
           "min": -21.0000036690408,
           "p50": -0.999999961512525,
           "p95": 2.50000018419457,
@@ -578,11 +1334,11 @@
         "counted_per_sub_cell": "a sub-cell is in view or out as a whole, and it is 31 m across against a seam of hundreds. This counts what a heading admits, not what a renderer would clip: no near or far plane is applied."
       },
       "stalls": {
-        "count": 2,
+        "count": 2.0,
         "blocked_ms_total": 3132.546,
         "blocked_share_of_flight": 0.0130518674010576,
         "blocked_ms": {
-          "n": 2,
+          "n": 2.0,
           "min": 1563.916,
           "p50": 1563.916,
           "p95": 1568.63,
@@ -592,7 +1348,616 @@
         "what": "time the main loop spent inside a scatter REBUILD, during which the window is not redrawn while the flight goes on. This is the cost of re-centring, and it is a different quantity from the frame cost in scatter_cost.json: that one prices DRAWING the scatter, this one prices BUILDING it."
       },
       "marks": [],
-      "marks_after_a_stall": 0,
+      "marks_after_a_stall": 0.0,
+      "marks_note": "a person pressing a key when something looked wrong. Every mark is placed against the nearest preceding stall, because the first flown trace came back with every one of its marks inside two seconds of a rebuild: the flyer was marking a freeze, not the far field. `marks_after_a_stall` equal to `marks` means this flight measured the harness and says nothing about what is visible; well under it means the marks are about the view.",
+      "not_covered": "one path, one place, one day, one k. THE NEAR FIELD HAS NO GROUND until the tile pyramid lands -- the terrain is triangulated every 4 km on the overview, so at eye level the surface under the plants is an interpolated plane and not a hillside. Eye-level judgement is limited by that and this artefact does not generalise past it. Frame time is not replayable and is carried from the flight. Nothing here says what a different walking speed does."
+    },
+    {
+      "what": "a recorded walk through the far field, scored again from its poses alone",
+      "trace": "measurements/flights/flight-03.trace.json",
+      "trace_header": {
+        "what": "a person walking through the far field at 5.0 m/s, translating and panning",
+        "recorded_at_commit": "b31469d",
+        "scene": {
+          "window": "deepest_winter",
+          "row": "band.pft.biomass",
+          "day": 22.0,
+          "at_world_epsg5070": [
+            -1212793.0,
+            1376226.0
+          ]
+        },
+        "vertical_exaggeration": 1.0,
+        "shading_exaggeration": 12.0,
+        "viewport": [
+          3024.0,
+          1898.0
+        ],
+        "fov_degrees": 75.0,
+        "eye_height_m": 1.7,
+        "asked_speed_m_s": 5.0,
+        "individuation_k": 432.866307589206,
+        "k_over_k_res": 0.35,
+        "k_resolution": 1236.7608788263,
+        "scatter_radius_m": 480.0,
+        "recentre_m": 400.0,
+        "recentre_means": "metres the camera may travel before the scatter is rebuilt around it. 0 is one build flown through, which is what ships; above 0 is a population that follows the camera, which is what a per-place instance budget does",
+        "marks_mean": "SPACE, pressed when something looked wrong",
+        "pose_fields": "position is the camera in MESH space; orientation is a quaternion (x, y, z, w)",
+        "frames": 24704.0,
+        "seconds": 240.006278,
+        "marks": 1.0,
+        "frames_not_drawn": 0.0,
+        "rebuilds": 2.0,
+        "blocked_ms_total": 3579.777,
+        "blocked_note": "time the main loop spent inside a scatter rebuild, which is time the window was not being redrawn while the flight continued. It is a cost of re-centring, not of drawing: `measurements/scatter_cost.json` prices the frame, and this is what it costs to BUILD one.",
+        "speed_m_s_measured": {
+          "n": 24703.0,
+          "min": 0.0,
+          "p50": 4.62932358864057,
+          "p95": 5.56946512242642,
+          "max": 6.77429272803571,
+          "mean": 4.68136380897042
+        },
+        "turn_degrees_s_measured": {
+          "n": 24703.0,
+          "min": 0.0,
+          "p50": 0.0,
+          "p95": 7.99771198405798,
+          "max": 480.024867506103,
+          "mean": 2.59989256197778
+        }
+      },
+      "replayed_at_commit": "b31469d",
+      "vertical_exaggeration": 1.0,
+      "shading_exaggeration": 12.0,
+      "frames": 24704,
+      "builds": 3,
+      "replay_agreement": {
+        "frames_compared": 24704,
+        "frames_disagreeing_on_population": 24704,
+        "worst_disagreement_instances": 505,
+        "flown_at_commit": "b31469d",
+        "replayed_at_commit": "b31469d",
+        "same_commit": true,
+        "ok": false,
+        "ran": true,
+        "means": "a defect: the flight and the replay ran the same code and disagree anyway",
+        "why_not": "",
+        "what": "the flight recorded what it measured; this recomputed it from the poses alone. They have to agree exactly, because placement is a function of the ground and the rebuild rule is a function of the path. A disagreement means the flight was not deterministic or this replay is not faithful, and neither is a thing to quote a number over.",
+        "not_compared": "frame time. A headless frame is not drawn and costs nothing, so the milliseconds in this artefact are the FLIGHT's measurements carried through and are never re-derived."
+      },
+      "per_frame": {
+        "rebuilds": 2,
+        "gone_fraction_at_rebuilds": {
+          "n": 2,
+          "min": 0.658921576798067,
+          "p50": 0.658921576798067,
+          "p95": 0.660671272951551,
+          "max": 0.660671272951551,
+          "mean": 0.659796424874809
+        },
+        "gone_fraction_is": "over the frames that REBUILT, which are the only frames that can churn. 2 of 24704 here. A quantile over every frame would be a quantile over a list that is zero by construction.",
+        "instances": {
+          "n": 24704,
+          "min": 119981.0,
+          "p50": 119989.0,
+          "p95": 119990.0,
+          "max": 119990.0,
+          "mean": 119986.362410946
+        },
+        "in_view_instances": {
+          "n": 24704,
+          "min": 0.0,
+          "p50": 8509.0,
+          "p95": 29387.0,
+          "max": 33621.0,
+          "mean": 11436.7719802461
+        },
+        "frame_ms_in_flight": {
+          "n": 24704,
+          "min": 0.0,
+          "p50": 10.367,
+          "p95": 12.76,
+          "max": 1901.077,
+          "mean": 9.71528003562174
+        },
+        "what": "per frame, not per step. At 5 m/s the dolly's 20 m step is four seconds of travel, and everything between two samples is invisible to a sampled metric.",
+        "frame_ms_note": "the frame timer on this platform lands on a paced ladder: read differences to about half a millisecond and do not tune against smaller ones. A spread of zero is the absence of a measurement."
+      },
+      "churn_is_zero_by_construction": false,
+      "churn_note": "with `recentre_m` at 0 the scatter is built once and flown through, so the population cannot change and a churn of exactly 0 is the calibration rather than a result -- the same role `static` plays in scatter_motion.json. Above 0 the population follows the camera and the churn is a measurement.",
+      "timeline": [
+        {
+          "t_s": 0.0,
+          "instances": 119990,
+          "in_view": 32474,
+          "rebuilt": false
+        },
+        {
+          "t_s": 4.747778,
+          "instances": 119990,
+          "in_view": 30848,
+          "rebuilt": false
+        },
+        {
+          "t_s": 9.174921,
+          "instances": 119990,
+          "in_view": 27769,
+          "rebuilt": false
+        },
+        {
+          "t_s": 13.567727,
+          "instances": 119990,
+          "in_view": 25219,
+          "rebuilt": false
+        },
+        {
+          "t_s": 17.940396,
+          "instances": 119990,
+          "in_view": 21875,
+          "rebuilt": false
+        },
+        {
+          "t_s": 22.274912,
+          "instances": 119990,
+          "in_view": 19173,
+          "rebuilt": false
+        },
+        {
+          "t_s": 26.580535,
+          "instances": 119990,
+          "in_view": 17165,
+          "rebuilt": false
+        },
+        {
+          "t_s": 30.896121,
+          "instances": 119990,
+          "in_view": 14841,
+          "rebuilt": false
+        },
+        {
+          "t_s": 35.203593,
+          "instances": 119990,
+          "in_view": 12430,
+          "rebuilt": false
+        },
+        {
+          "t_s": 39.480773,
+          "instances": 119990,
+          "in_view": 11166,
+          "rebuilt": false
+        },
+        {
+          "t_s": 43.724935,
+          "instances": 119990,
+          "in_view": 9245,
+          "rebuilt": false
+        },
+        {
+          "t_s": 47.953724,
+          "instances": 119990,
+          "in_view": 7280,
+          "rebuilt": false
+        },
+        {
+          "t_s": 52.157716,
+          "instances": 119990,
+          "in_view": 5940,
+          "rebuilt": false
+        },
+        {
+          "t_s": 56.332179,
+          "instances": 119990,
+          "in_view": 4770,
+          "rebuilt": false
+        },
+        {
+          "t_s": 60.460355,
+          "instances": 119990,
+          "in_view": 4135,
+          "rebuilt": false
+        },
+        {
+          "t_s": 64.573768,
+          "instances": 119990,
+          "in_view": 3591,
+          "rebuilt": false
+        },
+        {
+          "t_s": 68.451163,
+          "instances": 119990,
+          "in_view": 2963,
+          "rebuilt": false
+        },
+        {
+          "t_s": 71.880051,
+          "instances": 119990,
+          "in_view": 2336,
+          "rebuilt": false
+        },
+        {
+          "t_s": 75.301501,
+          "instances": 119990,
+          "in_view": 1628,
+          "rebuilt": false
+        },
+        {
+          "t_s": 78.727105,
+          "instances": 119990,
+          "in_view": 1357,
+          "rebuilt": false
+        },
+        {
+          "t_s": 82.15203,
+          "instances": 119990,
+          "in_view": 900,
+          "rebuilt": false
+        },
+        {
+          "t_s": 85.578531,
+          "instances": 119990,
+          "in_view": 628,
+          "rebuilt": false
+        },
+        {
+          "t_s": 91.337688,
+          "instances": 119981,
+          "in_view": 29520,
+          "rebuilt": false
+        },
+        {
+          "t_s": 95.39835,
+          "instances": 119981,
+          "in_view": 26590,
+          "rebuilt": false
+        },
+        {
+          "t_s": 99.38942,
+          "instances": 119981,
+          "in_view": 23983,
+          "rebuilt": false
+        },
+        {
+          "t_s": 103.322571,
+          "instances": 119981,
+          "in_view": 20684,
+          "rebuilt": false
+        },
+        {
+          "t_s": 107.197555,
+          "instances": 119981,
+          "in_view": 18627,
+          "rebuilt": false
+        },
+        {
+          "t_s": 111.056291,
+          "instances": 119981,
+          "in_view": 16522,
+          "rebuilt": false
+        },
+        {
+          "t_s": 114.910603,
+          "instances": 119981,
+          "in_view": 13754,
+          "rebuilt": false
+        },
+        {
+          "t_s": 118.359032,
+          "instances": 119981,
+          "in_view": 11612,
+          "rebuilt": false
+        },
+        {
+          "t_s": 121.785913,
+          "instances": 119981,
+          "in_view": 10168,
+          "rebuilt": false
+        },
+        {
+          "t_s": 125.210031,
+          "instances": 119981,
+          "in_view": 9447,
+          "rebuilt": false
+        },
+        {
+          "t_s": 128.635825,
+          "instances": 119981,
+          "in_view": 8284,
+          "rebuilt": false
+        },
+        {
+          "t_s": 132.059077,
+          "instances": 119981,
+          "in_view": 6675,
+          "rebuilt": false
+        },
+        {
+          "t_s": 135.484193,
+          "instances": 119981,
+          "in_view": 6171,
+          "rebuilt": false
+        },
+        {
+          "t_s": 138.905847,
+          "instances": 119981,
+          "in_view": 4846,
+          "rebuilt": false
+        },
+        {
+          "t_s": 142.335364,
+          "instances": 119981,
+          "in_view": 4044,
+          "rebuilt": false
+        },
+        {
+          "t_s": 145.760662,
+          "instances": 119981,
+          "in_view": 3414,
+          "rebuilt": false
+        },
+        {
+          "t_s": 149.185094,
+          "instances": 119981,
+          "in_view": 3224,
+          "rebuilt": false
+        },
+        {
+          "t_s": 152.609046,
+          "instances": 119981,
+          "in_view": 2163,
+          "rebuilt": false
+        },
+        {
+          "t_s": 156.030702,
+          "instances": 119981,
+          "in_view": 2065,
+          "rebuilt": false
+        },
+        {
+          "t_s": 159.468889,
+          "instances": 119981,
+          "in_view": 1620,
+          "rebuilt": false
+        },
+        {
+          "t_s": 162.917841,
+          "instances": 119981,
+          "in_view": 1257,
+          "rebuilt": false
+        },
+        {
+          "t_s": 166.343037,
+          "instances": 119981,
+          "in_view": 638,
+          "rebuilt": false
+        },
+        {
+          "t_s": 171.663568,
+          "instances": 119989,
+          "in_view": 31626,
+          "rebuilt": false
+        },
+        {
+          "t_s": 176.147755,
+          "instances": 119989,
+          "in_view": 28582,
+          "rebuilt": false
+        },
+        {
+          "t_s": 180.598675,
+          "instances": 119989,
+          "in_view": 25532,
+          "rebuilt": false
+        },
+        {
+          "t_s": 185.028497,
+          "instances": 119989,
+          "in_view": 22811,
+          "rebuilt": false
+        },
+        {
+          "t_s": 189.455727,
+          "instances": 119989,
+          "in_view": 20430,
+          "rebuilt": false
+        },
+        {
+          "t_s": 193.866923,
+          "instances": 119989,
+          "in_view": 17450,
+          "rebuilt": false
+        },
+        {
+          "t_s": 198.25845,
+          "instances": 119989,
+          "in_view": 15961,
+          "rebuilt": false
+        },
+        {
+          "t_s": 202.64608,
+          "instances": 119989,
+          "in_view": 13018,
+          "rebuilt": false
+        },
+        {
+          "t_s": 207.042317,
+          "instances": 119989,
+          "in_view": 11540,
+          "rebuilt": false
+        },
+        {
+          "t_s": 211.416492,
+          "instances": 119989,
+          "in_view": 9117,
+          "rebuilt": false
+        },
+        {
+          "t_s": 215.742633,
+          "instances": 119989,
+          "in_view": 7995,
+          "rebuilt": false
+        },
+        {
+          "t_s": 220.033782,
+          "instances": 119989,
+          "in_view": 6466,
+          "rebuilt": false
+        },
+        {
+          "t_s": 224.293617,
+          "instances": 119989,
+          "in_view": 5524,
+          "rebuilt": false
+        },
+        {
+          "t_s": 228.537871,
+          "instances": 119989,
+          "in_view": 4491,
+          "rebuilt": false
+        },
+        {
+          "t_s": 232.759315,
+          "instances": 119989,
+          "in_view": 3685,
+          "rebuilt": false
+        },
+        {
+          "t_s": 236.221358,
+          "instances": 119989,
+          "in_view": 2969,
+          "rebuilt": false
+        },
+        {
+          "t_s": 239.650027,
+          "instances": 119989,
+          "in_view": 2790,
+          "rebuilt": false
+        }
+      ],
+      "timeline_is": "every 411th frame: seconds, instances built, instances in front of the camera, and whether that frame rebuilt. Coarse on purpose; it is for seeing a shape, not for scoring one.",
+      "emptiest_run": {
+        "frames": 94,
+        "seconds": 0.771351999999999,
+        "what": "the longest unbroken stretch with NOTHING in front of the camera. A far field that goes away and comes back is not a churn defect and no churn statistic reports it."
+      },
+      "by_heading": [
+        {
+          "from_degrees": 0.0,
+          "frames": 24168,
+          "in_view_mean": 11130.8112380007
+        },
+        {
+          "from_degrees": 30.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 60.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 90.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 120.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 150.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 180.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 210.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 240.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 270.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 300.0,
+          "frames": 0,
+          "in_view_total": 0.0,
+          "in_view_mean": null
+        },
+        {
+          "from_degrees": 330.0,
+          "frames": 536,
+          "in_view_mean": 25232.4048507463
+        }
+      ],
+      "heading_spread": {
+        "lowest_mean_in_view": 11130.8112380007,
+        "highest_mean_in_view": 25232.4048507463,
+        "ratio": 2.26689720194002,
+        "frames_with_nothing_in_view": 122,
+        "pitch_degrees": {
+          "n": 24704,
+          "min": -33.4999999141227,
+          "p50": -0.9999997480366,
+          "p95": 3.99999939267078,
+          "max": 40.9999998274872,
+          "mean": 0.14390380265935
+        },
+        "read_the_ratio_against_the_pitch": "a heading is only comparable with another at a comparable attitude. A camera pitched at the sky has nothing in front of it whatever its heading, so a bucket full of those reads as an empty heading and drives the ratio to nothing. If `frames_with_nothing_in_view` is not small, or the pitch quantiles reach the clamp, the spread is about where the camera was pointing up and down and not about heading at all.",
+        "what": "what a HEADING has in front of it, which a translation-only dolly never sampled. A pan cannot churn -- the scatter is built around a centre and a rotation does not move it, so churn is exactly 0 for any pan, always, and is a metric that cannot fail on what it is pointed at. This is the statistic a pan is measured by instead.",
+        "counted_per_sub_cell": "a sub-cell is in view or out as a whole, and it is 31 m across against a seam of hundreds. This counts what a heading admits, not what a renderer would clip: no near or far plane is applied."
+      },
+      "stalls": {
+        "count": 2,
+        "blocked_ms_total": 3579.777,
+        "blocked_share_of_flight": 0.0149153473393725,
+        "blocked_ms": {
+          "n": 2,
+          "min": 1712.296,
+          "p50": 1712.296,
+          "p95": 1867.481,
+          "max": 1867.481,
+          "mean": 1789.8885
+        },
+        "what": "time the main loop spent inside a scatter REBUILD, during which the window is not redrawn while the flight goes on. This is the cost of re-centring, and it is a different quantity from the frame cost in scatter_cost.json: that one prices DRAWING the scatter, this one prices BUILDING it."
+      },
+      "marks": [
+        {
+          "frame": 18166,
+          "t_ms": 172571.78,
+          "seconds_since_the_last_stall": 3.35017799999999,
+          "that_stall_blocked_ms": 1712.296,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 11.242,
+          "in_view_at_mark": 31519
+        }
+      ],
+      "marks_after_a_stall": 1,
       "marks_note": "a person pressing a key when something looked wrong. Every mark is placed against the nearest preceding stall, because the first flown trace came back with every one of its marks inside two seconds of a rebuild: the flyer was marking a freeze, not the far field. `marks_after_a_stall` equal to `marks` means this flight measured the harness and says nothing about what is visible; well under it means the marks are about the view.",
       "not_covered": "one path, one place, one day, one k. THE NEAR FIELD HAS NO GROUND until the tile pyramid lands -- the terrain is triangulated every 4 km on the overview, so at eye level the surface under the plants is an interpolated plane and not a hillside. Eye-level judgement is limited by that and this artefact does not generalise past it. Frame time is not replayable and is carried from the flight. Nothing here says what a different walking speed does."
     }
