@@ -105,6 +105,7 @@ var _last_build_ms := 0.0
 var _rebuilt_this_frame := false
 var _mark_flash := 0
 var _build_flash := 0
+var _last_churn := 0.0
 var _marks := 0
 var _unfocused := 0
 var _builds := 0
@@ -395,6 +396,7 @@ func _fly() -> void:
 
     if _rebuilt_this_frame:
         _build_flash = MARK_FLASH_FRAMES
+        _last_churn = float(churn["gone_fraction"])
     _build_flash = maxi(0, _build_flash - 1)
     if _hud != null:
         # A PERSON CANNOT MARK WHAT THEY CANNOT NAME. The first flight came
@@ -403,9 +405,13 @@ func _fly() -> void:
         # key working perfectly on a defect nobody had told the flyer about.
         # The rebuild says so on screen now, so a mark during one is a mark
         # about a known stall and a mark elsewhere is about the view.
-        _hud.text = ("%5.1f ms   %6d in view of %6d   churn %.3f   marks %d%s%s"
+        # THE CHURN SHOWN IS THE LAST REBUILD'S, HELD. Churn is an event, not a
+        # level: it is zero on every frame that did not rebuild, so a live
+        # reading sits at 0.000 for five seconds and then flickers once. What a
+        # flyer needs to see is the size of the last thing that happened.
+        _hud.text = ("%5.1f ms   %6d in view of %6d   last churn %.3f   marks %d%s%s"
                 % [frame_ms, int(seen["instances"]),
-                   FlightTrace.population(cen), float(churn["gone_fraction"]), _marks,
+                   FlightTrace.population(cen), _last_churn, _marks,
                    "   <-- MARKED" if _mark_flash > 0 else "",
                    "   [REBUILT: the freeze you just saw was this, %.0f ms]" % _last_build_ms
                             if _build_flash > 0 else ""])
