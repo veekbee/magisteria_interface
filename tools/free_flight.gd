@@ -104,8 +104,11 @@ var _build_centre := Vector2.ZERO
 var _last_build_ms := 0.0
 var _rebuilt_this_frame := false
 var _mark_flash := 0
+var _build_flash := 0
 var _marks := 0
 var _unfocused := 0
+var _builds := 0
+var _blocked_ms := 0.0
 var _k_res := 0.0
 var _hud: Label = null
 var _look: MouseLook = null
@@ -131,9 +134,16 @@ func _initialize() -> void:
         var parts := at.split(",")
         if parts.size() == 2:
             at_world = Vector2(parts[0].to_float(), parts[1].to_float())
+    # THE FAR FIELD IS THE THING BEING LOOKED AT, and at 1280x800 a stand at
+    # two hundred metres is a few dozen pixels deep. A bigger window is not a
+    # convenience here, it is more of the measurement -- and `k_res`, which
+    # sets the individuation horizon, is a function of viewport height, so a
+    # larger window individuates further and the trace records which it was.
     var size := _arg("--size", "1280x800").split("x")
     if size.size() == 2:
         DisplayServer.window_set_size(Vector2i(int(size[0]), int(size[1])))
+    if _has_flag("--fullscreen"):
+        DisplayServer.window_set_mode(DisplayServer.WINDOW_MODE_FULLSCREEN)
     var packed: PackedScene = load("res://scenes/main.tscn")
     scene = packed.instantiate()
     get_root().add_child(scene)
@@ -283,6 +293,9 @@ func _build(centre: Vector2, first: bool) -> void:
     _build_centre = centre
     _last_build_ms = float(Time.get_ticks_usec() - t) / 1000.0
     _rebuilt_this_frame = true
+    _builds += 1
+    if not first:
+        _blocked_ms += _last_build_ms
 
 
 func _apply_look() -> void:
@@ -361,6 +374,11 @@ func _fly() -> void:
         _mark_flash = MARK_FLASH_FRAMES
     _mark_flash = maxi(0, _mark_flash - 1)
 
+    # `frame_ms` IS THE GAP SINCE THE LAST FRAME AND NOTHING ELSE, which means
+    # a rebuild below this line lands in the NEXT frame's reading. That is how
+    # a flight came back with 26 stalls of 1.8 s and 26 rebuilds and not one of
+    # them on the same row. `build_ms` is the blocked time and belongs to the
+    # frame that caused it; the two are read together and the artefact says so.
     trace.add(float(now - _t0) / 1000.0, cam.global_transform, {
         "build_centre_epsg5070": [_build_centre.x, _build_centre.y],
         "frame_ms": frame_ms,
@@ -375,11 +393,22 @@ func _fly() -> void:
         "drawn": focused,
     })
 
+    if _rebuilt_this_frame:
+        _build_flash = MARK_FLASH_FRAMES
+    _build_flash = maxi(0, _build_flash - 1)
     if _hud != null:
-        _hud.text = ("%5.1f ms   %6d in view of %6d   churn %.3f   marks %d%s"
+        # A PERSON CANNOT MARK WHAT THEY CANNOT NAME. The first flight came
+        # back with sixteen marks and every one of them was this harness
+        # rebuilding, not the far field misbehaving -- which is the annotation
+        # key working perfectly on a defect nobody had told the flyer about.
+        # The rebuild says so on screen now, so a mark during one is a mark
+        # about a known stall and a mark elsewhere is about the view.
+        _hud.text = ("%5.1f ms   %6d in view of %6d   churn %.3f   marks %d%s%s"
                 % [frame_ms, int(seen["instances"]),
                    FlightTrace.population(cen), float(churn["gone_fraction"]), _marks,
-                   "   <-- MARKED" if _mark_flash > 0 else ""])
+                   "   <-- MARKED" if _mark_flash > 0 else "",
+                   "   [REBUILT: the freeze you just saw was this, %.0f ms]" % _last_build_ms
+                            if _build_flash > 0 else ""])
 
     var over := minutes > 0.0 and float(now - _t0) / 60000000.0 >= minutes
     if Input.is_key_pressed(KEY_ESCAPE) or over:
@@ -403,6 +432,12 @@ func _write() -> void:
             if not trace.frames.is_empty() else 0.0)
     trace.header["marks"] = _marks
     trace.header["frames_not_drawn"] = _unfocused
+    trace.header["rebuilds"] = maxi(0, _builds - 1)
+    trace.header["blocked_ms_total"] = _blocked_ms
+    trace.header["blocked_note"] = ("time the main loop spent inside a scatter rebuild, which "
+            + "is time the window was not being redrawn while the flight continued. It is a "
+            + "cost of re-centring, not of drawing: `measurements/scatter_cost.json` prices "
+            + "the frame, and this is what it costs to BUILD one.")
     trace.header["speed_m_s_measured"] = FlightTrace.quantiles(speeds)
     trace.header["turn_degrees_s_measured"] = FlightTrace.quantiles(turns)
 
@@ -426,6 +461,12 @@ func _write() -> void:
     print("flight: %d frames over %s s, %d marks, %d frames not drawn"
             % [trace.frames.size(), String.num(float(trace.header["seconds"]), 1), _marks,
                _unfocused])
+    if _builds > 1:
+        print("        %d rebuilds blocked %s s of it (%s%%), %s s each"
+                % [_builds - 1, String.num(_blocked_ms / 1000.0, 1),
+                   String.num(100.0 * _blocked_ms / maxf(1.0, float(trace.header["seconds"])
+                            * 1000.0), 1),
+                   String.num(_blocked_ms / float(maxi(1, _builds - 1)) / 1000.0, 2)])
     var sp: Dictionary = trace.header["speed_m_s_measured"]
     if not sp.is_empty():
         print("        speed p50 %s m/s (asked %s), turn p50 %s deg/s"
@@ -435,6 +476,10 @@ func _write() -> void:
     print("        replay it: bash tools/replay_flight.sh --trace %s" % out_path)
     stage = DONE
     quit(0)
+
+
+func _has_flag(name: String) -> bool:
+    return OS.get_cmdline_user_args().has(name)
 
 
 func _arg(name: String, fallback: String) -> String:

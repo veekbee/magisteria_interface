@@ -3664,12 +3664,23 @@ func test_the_pinned_flight_replays_to_what_the_artefact_says() -> void:
     var runs: Array = (parsed as Dictionary)["runs"]
     check(runs.size() > 0, "flight_replay.json records no runs")
     var run: Dictionary = runs[0]
-    check(str(run["trace"]).ends_with("scripted.trace.json"),
-            "the committed replay is of %s, not of the trace committed beside it"
-            % str(run["trace"]))
-    check(int(run["frames"]) == t.frames.size(),
-            "the replay scored %d frames and the trace has %d" % [int(run["frames"]),
-                    t.frames.size()])
+    # THE COMMITTED REPLAY IS OF WHATEVER WAS LAST FLOWN, which is the point:
+    # the artefact is the real measurement, and the scripted path above is the
+    # fixture that keeps the instrument testable with nobody at the machine.
+    # What is required is that the two are consistent -- the replay has to be
+    # of a trace that is actually committed, and of the same number of frames.
+    var of_trace: String = str(run["trace"]).get_file()
+    check(FileAccess.file_exists("res://measurements/flights/" + of_trace),
+            "flight_replay.json is a replay of %s, which is not committed. An artefact whose "
+                    % of_trace
+            + "input is missing cannot be re-taken and is a screenshot of a number.")
+    var replayed: Dictionary = FlightTrace.load_from(
+            "res://measurements/flights/" + of_trace)
+    if bool(replayed["ok"]):
+        var rt: FlightTrace = replayed["trace"]
+        check(int(run["frames"]) == rt.frames.size(),
+                "the replay scored %d frames and %s has %d"
+                % [int(run["frames"]), of_trace, rt.frames.size()])
 
     # THE AGREEMENT CHECK MUST NOT READ AS PASSED WHEN IT COMPARED NOTHING.
     # A synthesised trace records no populations, so there is nothing to
@@ -3696,8 +3707,39 @@ func test_the_pinned_flight_replays_to_what_the_artefact_says() -> void:
     check(str(run["not_covered"]).find("tile pyramid") >= 0,
             "the replay does not record that the near field has no ground until the pyramid "
             + "lands, which is what limits eye-level judgement")
-    check((run["marks"] as Array).is_empty(),
-            "the committed replay reports marks, and the trace it is of has none")
+
+    # THE STALL ANALYSIS IS NOT OPTIONAL, and this is why. The first flown
+    # trace came back with sixteen marks, and a mark analysis that quoted only
+    # the churn and the population at each of them showed sixteen unremarkable
+    # rows: churn 0.0000, a normal frame, a normal population. Every one of
+    # them was in fact within two seconds of the harness blocking its own main
+    # loop for 1.8 s to rebuild the scatter. The flyer was reporting a freeze
+    # and the instrument was answering a different question.
+    #
+    # So a replay that reports marks must also report what they were near. A
+    # mark analysis that cannot distinguish "the far field looked wrong" from
+    # "the harness stopped" is not evidence about the far field.
+    check(run.has("stalls"), "the replay does not report stalls, so a mark cannot be told "
+            + "apart from the harness blocking its own loop")
+    var stalls: Dictionary = run["stalls"]
+    check(stalls.has("count") and stalls.has("blocked_share_of_flight"),
+            "the stall block does not say how much of the flight was spent inside a rebuild")
+    var flown_marks: Array = run["marks"]
+    if flown_marks.is_empty():
+        check(int(run.get("marks_after_a_stall", 0)) == 0,
+                "no marks were recorded and some were attributed to stalls")
+    else:
+        check(run.has("marks_after_a_stall"),
+                "the replay reports %d marks without saying how many were near a stall, which "
+                        % flown_marks.size()
+                + "is the difference between a finding about the far field and a finding "
+                + "about this harness")
+        for m in flown_marks:
+            var mark: Dictionary = m
+            for field2 in ["seconds_since_the_last_stall", "within_reaction_of_a_stall",
+                           "worst_gone_fraction_in_the_window_before"]:
+                check(mark.has(field2),
+                        "a mark is missing `%s`, so it cannot be read against anything" % field2)
 
 
 func test_a_density_schedule_is_finer_than_the_texel_it_thins() -> void:

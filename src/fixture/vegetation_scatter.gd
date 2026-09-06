@@ -194,6 +194,21 @@ static func stable_hash(parts: Array) -> int:
     return h
 
 
+## THE SAME HASH OVER EXACTLY THREE PARTS, WITHOUT THE ARRAY.
+##
+## Identical output to `stable_hash([a, b, c])` -- the gate checks that rather
+## than trusting it -- and it exists because the array is not free. This runs
+## three times per placed instance, so at a hundred thousand instances a build
+## it was three hundred thousand allocations to carry three integers into a
+## loop that adds them up. Measured: the whole digest and jitter path cost
+## 270 ms of a 1,670 ms build before this.
+static func stable_hash3(a: int, b: int, c: int) -> int:
+    var h: int = 0x9e3779b9
+    h = mix32(h ^ mix32(a))
+    h = mix32(h ^ mix32(b))
+    return mix32(h ^ mix32(c))
+
+
 ## The hash read as a fraction of 1, which is the form a rank and a jitter both
 ## want.
 static func hash01(h: int) -> float:
@@ -601,10 +616,23 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             # rather than trusted, because `n > pool` would be asking for more
             # plants than the ground has and the prefix would run off the end.
             pool = n
-        var cell_key := stable_hash([SCATTER_SEED, family_key(life_form),
+        # HOISTED, ALL OF IT. Every line here is constant for the sub-cell:
+        # the family key is an FNV walk over a string, and the texel a sub-cell
+        # sits in is one texel by construction. Both were being recomputed per
+        # INSTANCE, which is a hundred thousand string walks a build to learn
+        # the same answer.
+        var lf_key := family_key(life_form)
+        var cell_key := stable_hash([SCATTER_SEED, lf_key,
                 int(round(origin.x * PLACEMENT_QUANTUM)),
                 int(round(origin.y * PLACEMENT_QUANTUM)),
                 int(round(half * PLACEMENT_QUANTUM))])
+        var it := _hf.world_to_texel(origin.x, origin.y)
+        var tkey := "%d|%d" % [int(round(it.x)), int(round(it.y))]
+        # The folds for this sub-cell, kept in locals and written to the
+        # dictionaries once at the end of it rather than per instance.
+        var fold_all := 0
+        var fold_ring := [0, 0, 0]
+        var fold_ring_n := [0, 0, 0]
         var here := 0
         var here_at := Vector3.ZERO
         for i in n:
@@ -616,8 +644,8 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             # sequential draw had. §16.6 asks for blue noise and this is not
             # it: a hash-seeded uniform jitter fixes the STABILITY defect and
             # leaves the spacing one open. Recorded in the report, not implied.
-            var wx := origin.x + (2.0 * hash01(stable_hash([cell_key, candidate, 1])) - 1.0) * half
-            var wy := origin.y + (2.0 * hash01(stable_hash([cell_key, candidate, 2])) - 1.0) * half
+            var wx := origin.x + (2.0 * hash01(stable_hash3(cell_key, candidate, 1)) - 1.0) * half
+            var wy := origin.y + (2.0 * hash01(stable_hash3(cell_key, candidate, 2)) - 1.0) * half
             # ON THE SURFACE THAT IS DRAWN, not on the field it was sampled
             # from. The mesh triangulates the heightfield every `stride` texels
             # -- 4 km apart on the overview -- and the two disagree by a MEAN OF
@@ -648,24 +676,29 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             here += 1
             if here == 1:
                 here_at = pos
-            var seen := stable_hash([int(round(wx * PLACEMENT_QUANTUM)),
-                    int(round(wy * PLACEMENT_QUANTUM)), family_key(life_form)])
-            digest["all"] = int(digest["all"]) ^ seen
-            digest_n["all"] = int(digest_n["all"]) + 1
+            var seen := stable_hash3(int(round(wx * PLACEMENT_QUANTUM)),
+                    int(round(wy * PLACEMENT_QUANTUM)), lf_key)
+            fold_all ^= seen
             var d_centre := Vector2(wx - centre.x, wy - centre.y).length()
-            for ring in DIGEST_RINGS_M:
-                if d_centre <= float(ring):
-                    digest[str(ring)] = int(digest[str(ring)]) ^ seen
-                    digest_n[str(ring)] = int(digest_n[str(ring)]) + 1
-            var it := _hf.world_to_texel(wx, wy)
-            var tkey := "%d|%d" % [int(round(it.x)), int(round(it.y))]
+            for j in DIGEST_RINGS_M.size():
+                if d_centre <= float(DIGEST_RINGS_M[j]):
+                    fold_ring[j] = int(fold_ring[j]) ^ seen
+                    fold_ring_n[j] = int(fold_ring_n[j]) + 1
+        # ONCE PER SUB-CELL, not once per plant. XOR is associative, so folding
+        # into a local and then into the dictionary is the same number.
+        if here > 0:
+            digest["all"] = int(digest["all"]) ^ fold_all
+            digest_n["all"] = int(digest_n["all"]) + here
+            for j2 in DIGEST_RINGS_M.size():
+                var rk := str(DIGEST_RINGS_M[j2])
+                digest[rk] = int(digest[rk]) ^ int(fold_ring[j2])
+                digest_n[rk] = int(digest_n[rk]) + int(fold_ring_n[j2])
             if not digest_texel.has(tkey):
                 digest_texel[tkey] = [0, 0]
             var acc: Array = digest_texel[tkey]
-            acc[0] = int(acc[0]) ^ seen
-            acc[1] = int(acc[1]) + 1
+            acc[0] = int(acc[0]) ^ fold_all
+            acc[1] = int(acc[1]) + here
             digest_texel[tkey] = acc
-        if here > 0:
             # ONE ENTRY PER SUB-CELL, NOT PER PLANT. The key is the family and
             # the sub-cell's own quantised origin, so two builds name the same
             # ground with the same string and nothing about either camera is in

@@ -5,11 +5,10 @@
   "runs": [
     {
       "what": "a recorded walk through the far field, scored again from its poses alone",
-      "trace": "measurements/flights/scripted.trace.json",
+      "trace": "measurements/flights/flight.trace.json",
       "trace_header": {
-        "what": "a SCRIPTED walk with a pan in it -- not a flight. It exists so the replay and the gate have a path to score with nobody at the machine.",
-        "flown_by": "a script. No person saw these frames, so the trace carries no marks and says nothing about what is visible. That answer needs a person.",
-        "recorded_at_commit": "af3d023",
+        "what": "a person walking through the far field at 5.0 m/s, translating and panning",
+        "recorded_at_commit": "27ba9b0",
         "scene": {
           "window": "deepest_winter",
           "row": "band.pft.biomass",
@@ -34,79 +33,78 @@
         "scatter_radius_m": 480.0,
         "recentre_m": 25.0,
         "recentre_means": "metres the camera may travel before the scatter is rebuilt around it. 0 is one build flown through, which is what ships; above 0 is a population that follows the camera, which is what a per-place instance budget does",
-        "marks_mean": "none: a script cannot judge",
-        "frame_ms_is": "the script's own cadence, not a measurement of anything. A real flight's frame_ms is measured; this one is 1/fps by construction.",
+        "marks_mean": "SPACE, pressed when something looked wrong",
         "pose_fields": "position is the camera in MESH space; orientation is a quaternion (x, y, z, w)",
-        "frames": 1800.0,
-        "seconds": 30.0,
-        "marks": 0.0,
-        "frames_not_drawn": 1800.0,
+        "frames": 16184.0,
+        "seconds": 180.850159,
+        "marks": 16.0,
+        "frames_not_drawn": 0.0,
         "speed_m_s_measured": {
-          "n": 1799.0,
-          "min": 4.68750581145287,
-          "p50": 4.68770608305999,
-          "p95": 5.62500000000082,
-          "max": 5.62500000000082,
-          "mean": 5.00032059570824
+          "n": 16183.0,
+          "min": 0.0,
+          "p50": 5.03761418592533,
+          "p95": 5.74208379252559,
+          "max": 6.0467210624353,
+          "mean": 4.92557177689357
         },
         "turn_degrees_s_measured": {
-          "n": 1799.0,
+          "n": 16183.0,
           "min": 0.0,
-          "p50": 17.7645184167612,
-          "p95": 25.0104425252552,
-          "max": 25.234756609769,
-          "mean": 15.8768217668903
+          "p50": 0.0,
+          "p95": 415.874614420212,
+          "max": 2711.63250342407,
+          "mean": 70.0460962423847
         }
       },
-      "replayed_at_commit": "af3d023",
+      "replayed_at_commit": "27ba9b0",
       "vertical_exaggeration": 1.0,
       "shading_exaggeration": 12.0,
-      "frames": 1800,
-      "builds": 6,
+      "frames": 16184,
+      "builds": 27,
       "replay_agreement": {
-        "frames_compared": 0,
+        "frames_compared": 16184,
         "frames_disagreeing_on_population": 0,
         "worst_disagreement_instances": 0,
-        "ok": false,
-        "ran": false,
-        "why_not": "this trace records no per-frame population, which is what a synthesised path looks like: nothing was built while it was written, so there is nothing to disagree with. The check goes live the first time a flown trace is replayed.",
+        "ok": true,
+        "ran": true,
+        "why_not": "",
         "what": "the flight recorded what it measured; this recomputed it from the poses alone. They have to agree exactly, because placement is a function of the ground and the rebuild rule is a function of the path. A disagreement means the flight was not deterministic or this replay is not faithful, and neither is a thing to quote a number over.",
         "not_compared": "frame time. A headless frame is not drawn and costs nothing, so the milliseconds in this artefact are the FLIGHT's measurements carried through and are never re-derived."
       },
       "per_frame": {
-        "rebuilds": 5,
+        "rebuilds": 26,
         "gone_fraction_at_rebuilds": {
-          "n": 5,
-          "min": 0.0769503413796963,
-          "p50": 0.0880759307040177,
-          "p95": 0.0973461113158865,
-          "max": 0.0973461113158865,
-          "mean": 0.0878406146268338
+          "n": 26,
+          "min": 0.05952007602756,
+          "p50": 0.0798878570829802,
+          "p95": 0.0975096918325777,
+          "max": 0.102691999434256,
+          "mean": 0.082311654119631
         },
-        "gone_fraction_is": "over the frames that REBUILT, which are the only frames that can churn. 5 of 1800 here. A quantile over every frame would be a quantile over a list that is zero by construction.",
+        "gone_fraction_is": "over the frames that REBUILT, which are the only frames that can churn. 26 of 16184 here. A quantile over every frame would be a quantile over a list that is zero by construction.",
         "instances": {
-          "n": 1800,
-          "min": 107212.0,
-          "p50": 107690.0,
+          "n": 16184,
+          "min": 104395.0,
+          "p50": 106533.0,
           "p95": 108520.0,
-          "max": 108520.0,
-          "mean": 107945.666666667
+          "max": 108696.0,
+          "mean": 106519.919982699
         },
         "in_view_instances": {
-          "n": 1800,
-          "min": 20263.0,
-          "p50": 27283.0,
-          "p95": 30014.0,
-          "max": 30728.0,
-          "mean": 26944.0227777778
+          "n": 16184,
+          "min": 0.0,
+          "p50": 27045.0,
+          "p95": 31520.0,
+          "max": 39017.0,
+          "mean": 26970.5101334652
         },
         "frame_ms_in_flight": {
-          "n": 1800,
-          "min": 16.6666666666667,
-          "p50": 16.6666666666667,
-          "p95": 16.6666666666667,
-          "max": 16.6666666666667,
-          "mean": 16.6666666666671
+          "n": 16184,
+          "min": 0.0,
+          "p50": 8.235,
+          "p95": 9.53,
+          "max": 1862.453,
+          "mean": 11.1746267301038
         },
         "what": "per frame, not per step. At 5 m/s the dolly's 20 m step is four seconds of travel, and everything between two samples is invisible to a sampled metric.",
         "frame_ms_note": "the frame timer on this platform lands on a paced ladder: read differences to about half a millisecond and do not tune against smaller ones. A spread of zero is the absence of a measurement."
@@ -116,90 +114,276 @@
       "by_heading": [
         {
           "from_degrees": 0.0,
-          "frames": 302,
-          "in_view_mean": 24241.9039735099
+          "frames": 1968,
+          "in_view_mean": 27708.1082317073
         },
         {
           "from_degrees": 30.0,
-          "frames": 596,
-          "in_view_mean": 27237.8808724832
+          "frames": 1762,
+          "in_view_mean": 28258.9829738933
         },
         {
           "from_degrees": 60.0,
-          "frames": 2,
-          "in_view_mean": 28731.5
+          "frames": 664,
+          "in_view_mean": 28381.0060240964
         },
         {
           "from_degrees": 90.0,
-          "frames": 0,
-          "in_view_total": 0.0,
-          "in_view_mean": null
+          "frames": 499,
+          "in_view_mean": 28144.0841683367
         },
         {
           "from_degrees": 120.0,
-          "frames": 0,
-          "in_view_total": 0.0,
-          "in_view_mean": null
+          "frames": 436,
+          "in_view_mean": 28859.8899082569
         },
         {
           "from_degrees": 150.0,
-          "frames": 0,
-          "in_view_total": 0.0,
-          "in_view_mean": null
+          "frames": 536,
+          "in_view_mean": 27853.6305970149
         },
         {
           "from_degrees": 180.0,
-          "frames": 0,
-          "in_view_total": 0.0,
-          "in_view_mean": null
+          "frames": 650,
+          "in_view_mean": 26703.2353846154
         },
         {
           "from_degrees": 210.0,
-          "frames": 0,
-          "in_view_total": 0.0,
-          "in_view_mean": null
+          "frames": 1205,
+          "in_view_mean": 27661.5269709544
         },
         {
           "from_degrees": 240.0,
-          "frames": 0,
-          "in_view_total": 0.0,
-          "in_view_mean": null
+          "frames": 1749,
+          "in_view_mean": 26688.180102916
         },
         {
           "from_degrees": 270.0,
-          "frames": 2,
-          "in_view_mean": 28221.5
+          "frames": 2098,
+          "in_view_mean": 25801.7259294566
         },
         {
           "from_degrees": 300.0,
-          "frames": 596,
-          "in_view_mean": 27862.1224832215
+          "frames": 1986,
+          "in_view_mean": 25746.1364551863
         },
         {
           "from_degrees": 330.0,
-          "frames": 302,
-          "in_view_mean": 27234.0331125828
+          "frames": 2631,
+          "in_view_mean": 26277.760927404
         }
       ],
       "heading_spread": {
-        "lowest_mean_in_view": 24241.9039735099,
-        "highest_mean_in_view": 28731.5,
-        "ratio": 1.18519981068302,
-        "frames_with_nothing_in_view": 0,
+        "lowest_mean_in_view": 25746.1364551863,
+        "highest_mean_in_view": 28859.8899082569,
+        "ratio": 1.12094061019565,
+        "frames_with_nothing_in_view": 118,
         "pitch_degrees": {
-          "n": 1800,
-          "min": -6.00000092238322,
-          "p50": -6.00000006390675,
-          "p95": -5.99999920543028,
-          "max": -5.99999834695381,
-          "mean": -5.99999995898187
+          "n": 16184,
+          "min": -85.0000145787517,
+          "p50": -3.99999982060002,
+          "p95": 1.50000009486278,
+          "max": 85.0000537628348,
+          "mean": -4.09141753693005
         },
         "read_the_ratio_against_the_pitch": "a heading is only comparable with another at a comparable attitude. A camera pitched at the sky has nothing in front of it whatever its heading, so a bucket full of those reads as an empty heading and drives the ratio to nothing. If `frames_with_nothing_in_view` is not small, or the pitch quantiles reach the clamp, the spread is about where the camera was pointing up and down and not about heading at all.",
         "what": "what a HEADING has in front of it, which a translation-only dolly never sampled. A pan cannot churn -- the scatter is built around a centre and a rotation does not move it, so churn is exactly 0 for any pan, always, and is a metric that cannot fail on what it is pointed at. This is the statistic a pan is measured by instead.",
         "counted_per_sub_cell": "a sub-cell is in view or out as a whole, and it is 31 m across against a seam of hundreds. This counts what a heading admits, not what a renderer would clip: no near or far plane is applied."
       },
-      "marks": [],
-      "marks_note": "a person pressing a key when something looked wrong. The window BEFORE each mark is where the event is, because reaction time is not zero. With no marks, the threshold between an invisible churn and a visible one is exactly as unmeasured as it was.",
+      "stalls": {
+        "count": 26,
+        "blocked_ms_total": 45605.529,
+        "blocked_share_of_flight": 0.252173010254307,
+        "blocked_ms": {
+          "n": 26,
+          "min": 1605.752,
+          "p50": 1766.196,
+          "p95": 1824.418,
+          "max": 1840.315,
+          "mean": 1754.05880769231
+        },
+        "what": "time the main loop spent inside a scatter REBUILD, during which the window is not redrawn while the flight goes on. This is the cost of re-centring, and it is a different quantity from the frame cost in scatter_cost.json: that one prices DRAWING the scatter, this one prices BUILDING it."
+      },
+      "marks": [
+        {
+          "frame": 6104,
+          "t_ms": 66212.804,
+          "seconds_since_the_last_stall": 1.772336,
+          "that_stall_blocked_ms": 1747.817,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0871844275068711,
+          "frame_ms_at_mark": 1772.336,
+          "in_view_at_mark": 27727
+        },
+        {
+          "frame": 6668,
+          "t_ms": 72707.074,
+          "seconds_since_the_last_stall": 2.44156899999999,
+          "that_stall_blocked_ms": 1785.716,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 8.543,
+          "in_view_at_mark": 28731
+        },
+        {
+          "frame": 7317,
+          "t_ms": 79873.741,
+          "seconds_since_the_last_stall": 1.992189,
+          "that_stall_blocked_ms": 1748.079,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 9.328,
+          "in_view_at_mark": 26435
+        },
+        {
+          "frame": 8096,
+          "t_ms": 88181.974,
+          "seconds_since_the_last_stall": 2.10848700000001,
+          "that_stall_blocked_ms": 1803.004,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 8.501,
+          "in_view_at_mark": 28875
+        },
+        {
+          "frame": 8520,
+          "t_ms": 93490.252,
+          "seconds_since_the_last_stall": 2.02598599999999,
+          "that_stall_blocked_ms": 1764.645,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 8.46,
+          "in_view_at_mark": 29557
+        },
+        {
+          "frame": 8965,
+          "t_ms": 98947.815,
+          "seconds_since_the_last_stall": 2.032673,
+          "that_stall_blocked_ms": 1738.65,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 7.73,
+          "in_view_at_mark": 27300
+        },
+        {
+          "frame": 9645,
+          "t_ms": 106389.687,
+          "seconds_since_the_last_stall": 2.03297600000001,
+          "that_stall_blocked_ms": 1765.998,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 7.983,
+          "in_view_at_mark": 28057
+        },
+        {
+          "frame": 10080,
+          "t_ms": 111798.518,
+          "seconds_since_the_last_stall": 2.08349399999999,
+          "that_stall_blocked_ms": 1769.63,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 8.499,
+          "in_view_at_mark": 27431
+        },
+        {
+          "frame": 11448,
+          "t_ms": 125022.615,
+          "seconds_since_the_last_stall": 2.832523,
+          "that_stall_blocked_ms": 1809.134,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 7.666,
+          "in_view_at_mark": 27988
+        },
+        {
+          "frame": 11904,
+          "t_ms": 130631.892,
+          "seconds_since_the_last_stall": 2.0503,
+          "that_stall_blocked_ms": 1799.81,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 9.62,
+          "in_view_at_mark": 26234
+        },
+        {
+          "frame": 12361,
+          "t_ms": 136256.74,
+          "seconds_since_the_last_stall": 2.04833799999999,
+          "that_stall_blocked_ms": 1805.208,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 8.505,
+          "in_view_at_mark": 27273
+        },
+        {
+          "frame": 12852,
+          "t_ms": 142197.712,
+          "seconds_since_the_last_stall": 2.05857500000001,
+          "that_stall_blocked_ms": 1840.315,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 8.018,
+          "in_view_at_mark": 26287
+        },
+        {
+          "frame": 13405,
+          "t_ms": 148631.696,
+          "seconds_since_the_last_stall": 2.067272,
+          "that_stall_blocked_ms": 1816.39,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 9.157,
+          "in_view_at_mark": 27558
+        },
+        {
+          "frame": 13929,
+          "t_ms": 154814.309,
+          "seconds_since_the_last_stall": 2.331114,
+          "that_stall_blocked_ms": 1802.649,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 8.465,
+          "in_view_at_mark": 28301
+        },
+        {
+          "frame": 15437,
+          "t_ms": 170994.146,
+          "seconds_since_the_last_stall": 2.73355900000001,
+          "that_stall_blocked_ms": 1778.861,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 8.521,
+          "in_view_at_mark": 25641
+        },
+        {
+          "frame": 15774,
+          "t_ms": 175601.649,
+          "seconds_since_the_last_stall": 2.06454000000001,
+          "that_stall_blocked_ms": 1786.851,
+          "within_reaction_of_a_stall": true,
+          "gone_fraction_at_mark": 0.0,
+          "worst_gone_fraction_in_the_window_before": 0.0,
+          "frame_ms_at_mark": 7.733,
+          "in_view_at_mark": 25309
+        }
+      ],
+      "marks_after_a_stall": 16,
+      "marks_note": "a person pressing a key when something looked wrong. Every mark is placed against the nearest preceding stall, because the first flown trace came back with every one of its marks inside two seconds of a rebuild: the flyer was marking a freeze, not the far field. `marks_after_a_stall` equal to `marks` means this flight measured the harness and says nothing about what is visible; well under it means the marks are about the view.",
       "not_covered": "one path, one place, one day, one k. THE NEAR FIELD HAS NO GROUND until the tile pyramid lands -- the terrain is triangulated every 4 km on the overview, so at eye level the surface under the plants is an interpolated plane and not a hillside. Eye-level judgement is limited by that and this artefact does not generalise past it. Frame time is not replayable and is carried from the flight. Nothing here says what a different walking speed does."
     }
   ]

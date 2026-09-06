@@ -39,6 +39,13 @@ const HEADING_BUCKETS := 12
 ## Frames of context kept either side of a mark.
 const MARK_WINDOW := 12
 
+## Seconds after a stall within which a mark is taken to be ABOUT that stall.
+## Generous, and generous on purpose: a person notices a freeze, waits to see
+## whether it resolves, and then decides to report it. The first flown trace
+## put fifteen of its sixteen marks between 2.0 and 2.1 s after a rebuild,
+## which is that sequence with a very steady hand on it.
+const STALL_REACTION_S := 4.0
+
 enum { SETTLE, PLACE, RUN, WRITE, DONE }
 
 var scene: Node = null
@@ -211,6 +218,10 @@ func _score_frame(i: int) -> void:
         "gone_fraction_in_flight": float(row.get("gone_fraction", 0.0)),
         "churn_fraction": float(churn["churn_fraction"]),
         "frame_ms_in_flight": float(row.get("frame_ms", 0.0)),
+        # THE BUILD'S OWN DURATION, WHICH IS THE STALL. It was already being
+        # recorded before anyone knew to look for it -- what was missing was
+        # anything that read it as blocked time rather than as a cost.
+        "blocked_ms_in_flight": float(row.get("build_ms", 0.0)),
         "mark": int(row.get("mark", FlightTrace.MARK_NONE)),
         "drawn_in_flight": bool(row.get("drawn", true)),
     })
@@ -358,6 +369,8 @@ func _write() -> void:
     var pop: Array = []
     var frame_ms: Array = []
     var pitch: Array = []
+    var blocked: Array = []
+    var blocked_total := 0.0
     var empty_frames := 0
     var compared := 0
     var disagreed := 0
@@ -377,6 +390,9 @@ func _write() -> void:
         pop.append(float(row["instances"]))
         frame_ms.append(float(row["frame_ms_in_flight"]))
         pitch.append(float(row["pitch_degrees"]))
+        if float(row["blocked_ms_in_flight"]) > 0.0:
+            blocked.append(float(row["blocked_ms_in_flight"]))
+            blocked_total += float(row["blocked_ms_in_flight"])
         if int(row["in_view_instances"]) == 0:
             empty_frames += 1
         if int(row["instances_in_flight"]) >= 0:
@@ -410,8 +426,25 @@ func _write() -> void:
         hi = maxf(hi, mean)
         lo = mean if lo < 0.0 else minf(lo, mean)
 
+    # WHAT A MARK WAS ABOUT, WHICH IS NOT THE SAME QUESTION AS WHAT THE FRAME
+    # HELD. The first flown trace came back with sixteen marks, and every one
+    # of them was within about two seconds of a scatter rebuild blocking the
+    # main loop for 1.8 s. The flyer was not marking the far field; they were
+    # marking a freeze, and reported it as one. A mark analysis that only
+    # quoted the churn and the population at that frame would have shown
+    # sixteen unremarkable rows and lost the finding entirely.
+    #
+    # So every mark is placed against the nearest preceding stall, in seconds
+    # of flight rather than frames -- a person reacts in time, not in frames,
+    # and a stall makes frames stop happening.
+    var stalls: Array = []
+    for r3 in rows:
+        var row3: Dictionary = r3
+        if float(row3["blocked_ms_in_flight"]) > 0.0:
+            stalls.append(row3)
     var marks := FlightTrace.marks_in(trace.frames, MARK_WINDOW)
     var at_marks: Array = []
+    var marks_after_a_stall := 0
     for m in marks:
         var mark: Dictionary = m
         var i: int = int(mark["frame"])
@@ -419,9 +452,22 @@ func _write() -> void:
         var worst := 0.0
         for j in range(int(w[0]), mini(i + 1, rows.size())):
             worst = maxf(worst, float((rows[j] as Dictionary)["gone_fraction"]))
+        var since := -1.0
+        var stall_ms := 0.0
+        for st in stalls:
+            var stall: Dictionary = st
+            if int(stall["frame"]) <= i:
+                since = (float(mark["t_ms"]) - float(stall["t_ms"])) / 1000.0
+                stall_ms = float(stall["blocked_ms_in_flight"])
+        var near := since >= 0.0 and since <= STALL_REACTION_S
+        if near:
+            marks_after_a_stall += 1
         at_marks.append({
             "frame": i,
             "t_ms": float(mark["t_ms"]),
+            "seconds_since_the_last_stall": since if since >= 0.0 else null,
+            "that_stall_blocked_ms": stall_ms if since >= 0.0 else null,
+            "within_reaction_of_a_stall": near,
             "gone_fraction_at_mark": (float((rows[i] as Dictionary)["gone_fraction"])
                     if i < rows.size() else null),
             "worst_gone_fraction_in_the_window_before": worst,
@@ -431,6 +477,8 @@ func _write() -> void:
                     if i < rows.size() else null),
         })
 
+    var flight_ms := (float((rows[rows.size() - 1] as Dictionary)["t_ms"])
+            if not rows.is_empty() else 0.0)
     var run := {
         "what": ("a recorded walk through the far field, scored again from its poses alone"),
         "trace": trace_path,
@@ -510,11 +558,25 @@ func _write() -> void:
                     + "across against a seam of hundreds. This counts what a heading admits, "
                     + "not what a renderer would clip: no near or far plane is applied."),
         },
+        "stalls": {
+            "count": stalls.size(),
+            "blocked_ms_total": blocked_total,
+            "blocked_share_of_flight": (blocked_total / maxf(1.0, flight_ms)),
+            "blocked_ms": FlightTrace.quantiles(blocked),
+            "what": ("time the main loop spent inside a scatter REBUILD, during which the "
+                    + "window is not redrawn while the flight goes on. This is the cost of "
+                    + "re-centring, and it is a different quantity from the frame cost in "
+                    + "scatter_cost.json: that one prices DRAWING the scatter, this one "
+                    + "prices BUILDING it."),
+        },
         "marks": at_marks,
-        "marks_note": ("a person pressing a key when something looked wrong. The window BEFORE "
-                + "each mark is where the event is, because reaction time is not zero. With "
-                + "no marks, the threshold between an invisible churn and a visible one is "
-                + "exactly as unmeasured as it was."),
+        "marks_after_a_stall": marks_after_a_stall,
+        "marks_note": ("a person pressing a key when something looked wrong. Every mark is "
+                + "placed against the nearest preceding stall, because the first flown trace "
+                + "came back with every one of its marks inside two seconds of a rebuild: the "
+                + "flyer was marking a freeze, not the far field. `marks_after_a_stall` equal "
+                + "to `marks` means this flight measured the harness and says nothing about "
+                + "what is visible; well under it means the marks are about the view."),
         "not_covered": ("one path, one place, one day, one k. THE NEAR FIELD HAS NO GROUND "
                 + "until the tile pyramid lands -- the terrain is triangulated every 4 km on "
                 + "the overview, so at eye level the surface under the plants is an "
@@ -549,6 +611,15 @@ func _write() -> void:
     else:
         print("        churn over %d rebuilds: p50 %s  max %s"
                 % [rebuilds, String.num(float(q["p50"]), 4), String.num(float(q["max"]), 4)])
+    if stalls.size() > 0:
+        print("        %d stalls blocked %s s of %s s flown (%s%%), p50 %s ms each"
+                % [stalls.size(), String.num(blocked_total / 1000.0, 1),
+                   String.num(flight_ms / 1000.0, 1),
+                   String.num(100.0 * blocked_total / maxf(1.0, flight_ms), 1),
+                   String.num(float((run["stalls"]["blocked_ms"] as Dictionary)["p50"]), 0)])
+    if not at_marks.is_empty():
+        print("        %d of %d marks fell within %ss of a stall"
+                % [marks_after_a_stall, at_marks.size(), String.num(STALL_REACTION_S, 0)])
     print("        in view by heading: %s to %s instances (%sx)"
             % [String.num(lo, 0), String.num(hi, 0),
                "--" if lo <= 0.0 else String.num(hi / lo, 2)])

@@ -626,18 +626,87 @@ platform lands on a paced ladder.
 - **`churn_fraction`** — the symmetric difference over both populations summed. This is what
   `scatter_motion.json` reports, and roughly **twice** the first when the populations are similar.
 
-### What the pinned path says
+### What the first flown path says
 
-A scripted 30 s walk with a slow pan, at the viewer's own 1280×800 and `k/k_res = 0.35`, re-centring
-every 25 m:
+Three minutes, 16,184 frames, at the viewer's own 1280×800 with `k/k_res = 0.35`, re-centring every
+25 m. Flown by the owner.
 
 | | |
 |---|---:|
-| frames | 1,800 |
-| rebuilds | 5 |
-| `gone_fraction` per rebuild, p50 / max | **0.088** / 0.097 |
-| instances in view, p50 | 27,283 of 107,690 |
-| in view by heading, lowest to highest mean | 24,242 → 28,732 (**1.19×**) |
+| frames | 16,184 |
+| measured speed, p50 | 5.04 m/s |
+| rebuilds | 26 |
+| `gone_fraction` per rebuild, p50 / max | **0.080** / 0.103 |
+| instances in view, p50 | 27,283 of ~107,000 |
+| in view by heading, lowest to highest mean | 25,746 → 28,860 (**1.12×**) |
+| replay agreement | **exact over all 16,184 frames** |
+
+**The replay agreement is the design's own claim, checked on a real flight rather than on a script.**
+Every frame's population, recomputed from the poses alone on a headless machine, matched what the
+flight recorded. One human session is now a fixture.
+
+### The finding, which is not the one this harness was built to look for
+
+**Every one of the flight's 16 marks was within two seconds of the harness blocking its own main
+loop.** The flyer pressed SPACE not because the far field looked wrong but because the view froze
+every few seconds while the camera kept moving — and reported it as such.
+
+| | |
+|---|---:|
+| stalls | 26 |
+| each | 1,606–1,840 ms (p50 **1,766 ms**) |
+| total | 45.6 s of 180.9 s flown — **25.2%** |
+| marks within 4 s of a stall | **16 of 16** |
+
+The stalls are the scatter rebuilds. At 5 m/s a 25 m re-centre comes round every five seconds, and a
+build of ~107,000 instances takes **1.75 s of blocked main loop** on this machine. So a quarter of
+the flight was spent inside a rebuild, and what a person experiences is a freeze followed by the
+camera having jumped several metres.
+
+**This is a bigger objection to backlog 198 than churn is.** The churn at those same rebuilds is
+0.080 — a twelfth of the stand, at the rim, which is what the placement fix bought. Nobody marked
+it. What is unlivable is the 1.75 s stop, and no crossfade schedule addresses a stopped renderer.
+The inversion needs the build to stop being synchronous — incremental over frames, or off the main
+thread with only the MultiMesh upload on it — before a per-place budget is flyable at all. That is
+`VegetationScatter`'s to solve and it is not solved here.
+
+**Build cost is not frame cost and the two are now both measured.** `scatter_cost.json` prices
+*drawing* the scatter: 2.85 ms marginal. This prices *building* it: 1,754 ms mean, about 73,000
+instances per second. They are different quantities about the same instances and only one of them
+was ever measured before.
+
+**Part of that was mine and is now returned.** The per-instance digest added with the placement fix
+was recomputing loop invariants inside the instance loop — the family key as an FNV walk over a
+string, the texel a sub-cell sits in, and a `str()` per ring — about 107,000 times a build. Hoisting
+them took the build from 1,670 ms to 1,470 ms; the digest now costs ~65 ms rather than ~270 ms.
+Inlining the mixer would have bought another 11% and was **not** taken: it makes the one function in
+this file whose values are pinned unreadable, and a 1.3 s stall is not meaningfully better than a
+1.5 s one. The fix for a stall is not to shave it.
+
+### And the instrumentation that hid it, which is worth recording
+
+The flight recorded everything needed to see this and reported none of it. Two defects, both now
+fixed:
+
+- **`frame_ms` is measured at the top of the frame**, so a rebuild below that line lands in the
+  *next* frame's reading. The trace came back with 26 stalls of 1.8 s and 26 rebuilds and **not one
+  of them on the same row**. `build_ms` was on the right row all along; nothing read it as blocked
+  time.
+- **The mark analysis quoted the churn and the population at each mark**, which for these sixteen
+  marks reads: churn 0.0000, a normal population, an unremarkable frame. Sixteen rows saying nothing
+  is what an instrument looks like when it is answering a different question from the one being
+  asked of it. A replay that reports marks must now also report what they were near, and the gate
+  requires it.
+
+The flight harness now says `[REBUILT: the freeze you just saw was this, 1766 ms]` on screen, because
+a person cannot mark what they cannot name.
+
+### The scripted path, which is the fixture rather than the measurement
+
+A 30 s walk with a slow pan, same place and `k`, re-centring every 25 m: 1,800 frames, 5 rebuilds,
+`gone_fraction` p50 0.088 / max 0.097, in view by heading 24,242 → 28,732 (1.19×). It carries **no
+marks** — a script cannot judge — and it exists so the replay and the gate have a path to score with
+nobody at the machine.
 
 **A quantile over every frame would have been a lie of arithmetic.** Only a rebuild can change the
 population, so 1,795 of those 1,800 frames are zero by construction; a p95 over all of them reads
@@ -654,15 +723,17 @@ count of frames with nothing in view beside it.
 
 ### What this does not answer, and it is the reason the harness exists
 
-**The scripted path carries no marks, so the threshold is exactly as unmeasured as it was.** A
-script cannot judge. The mechanism is built and waiting: SPACE, bound to *"that looked wrong"*,
-lands on a frame that already carries the churn, the population and the frame time, so a judgement
-becomes a row and several presses give a distribution rather than a number. Until someone flies it,
-`marks` is an empty array and the gate asserts that it is.
+**The threshold is still unmeasured, and the first flight is the reason it is worth saying so
+carefully.** Sixteen marks were recorded and all sixteen were about the harness. Not one of them was
+a judgement about the far field, so nothing here narrows where between 0 and 1 a churn becomes
+visible. A count of marks is not evidence; a count of marks *that were about what the harness was
+pointed at* is, and that count is currently zero.
 
-The pinned trace exists so the instrument is testable with nobody at the machine — and so that the
-day a person does fly, the harness has already been shown to work rather than being debugged around
-a human session.
+The mechanism works — that much the flight proved. A person pressed a key sixteen times about a real
+defect nobody had predicted, and the trace located it to the frame. What it needs is a flight where
+the harness is not the loudest thing in the room, which means flying at `--recentre 0` for the far
+field itself, and treating the re-centring flight as a measurement of the rebuild until the rebuild
+stops blocking.
 
 ### Whether this replaces the scripted dolly: no, and they are not substitutes
 

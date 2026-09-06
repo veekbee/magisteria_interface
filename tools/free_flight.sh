@@ -17,6 +17,11 @@
 #                  (default: 0 -- one build, flown through, which is what ships.
 #                   Above 0 is the population following the camera, which is
 #                   what a per-place instance budget does and what boils.)
+#                  MEASURED: a rebuild blocks the main loop for about 1.75 s at
+#                  ~107,000 instances, so at 5 m/s a 25 m re-centre freezes the
+#                  view every five seconds and a quarter of the flight is spent
+#                  inside one. Use 0 to look at the far field; use a value to
+#                  measure the re-centring itself.
 #   --k FRACTION   k as a fraction of k_res (default: 0.35, decision 949)
 #   --window NAME  fixture window           (default: the first)
 #   --row NAME     row the scatter reads    (default: band.pft.biomass)
@@ -24,6 +29,11 @@
 #   --at X,Y       EPSG:5070 point to start at
 #   --minutes N    land automatically after N minutes (default: 0, fly until ESC)
 #   --size WxH     window size              (default: 1280x800)
+#   --fullscreen   fill the display. The far field is what is being judged and
+#                  at 1280x800 a stand at 200 m is a few dozen pixels deep --
+#                  and k_res, which sets the individuation horizon, is a
+#                  function of viewport height, so a bigger window individuates
+#                  further. The trace records which it was.
 #   --out PATH     trace path               (default: measurements/flights/flight.trace.json)
 set -uo pipefail
 GODOT="${GODOT:-/Applications/Godot.app/Contents/MacOS/Godot}"
