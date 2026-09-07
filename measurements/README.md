@@ -741,10 +741,19 @@ finding once you know both numbers are of the same thing.**
 — 119,994 → 119,963 instances, marginal 2.853 → 2.83 ms — because the build ceiling binds either way
 and the extra texels are thinned into the same budget.
 
-**`scatter_seam.json` and `scatter_horizon.json` are stale and are not re-taken here.** Both were
-measured through the old filter, so both are over fewer texels than their radius claims, and
-`scatter_horizon.json`'s five dense cells are exactly where a missing texel matters most. They need
-`bash tools/measure_seam.sh` re-runs; the numbers in them should not be quoted until then.
+**`scatter_seam.json` and `scatter_horizon.json` were re-taken too, and the result is not what the
+staleness flag predicted.**
+
+`scatter_horizon.json` barely moved: every frame time at every `k` came back within 1 ms, so decision
+949's evidence stands unchanged — three of the five densest cells over 33.3 ms at `k/k_res = 0.35`,
+and one cell with no `k` that is both above the placement-raster floor and inside budget. The texel
+defect's blast radius was the **small-radius** harnesses. Both of these build at 1,500 m, where
+reach is 2 and the centre test already caught nearly every contributing texel; the wall only appears
+when the radius is under a texel, which is the 480 m the motion and flight harnesses use. That is
+also why it survived so long: every artefact anyone checked carefully was built at a big radius.
+
+`scatter_seam.json` moved a great deal, but for an unrelated reason the re-take exposed — see the
+withdrawn sufficiency verdict below.
 
 ### The finding from the first flight, which is not the one this harness was built to look for
 
@@ -1093,31 +1102,59 @@ reach the frame, and those are unchanged. `test_the_shading_is_exaggerated_and_t
 holds the two apart: vertices within 0.006 m of the field they are sampled from, normals turning up
 to 52° away from the ones those heights would give.
 
-### The result: the tint is sufficient on both conserved quantities
+### The result, corrected: the tint is NOT sufficient, and the evidence that it was is withdrawn
 
-Seam 120 m, annulus 84–180 m, eye level on the drawn surface, two places and three day-window
-pairs:
+**This section previously said the tint was sufficient on both conserved quantities, with margins of
+6.6× to 53× over the null baseline. That was wrong, and it was wrong because the harness was scoring
+the oracle and calling it the tint.**
 
-| window | day | place | oracle cover | tint cover | tint ΔE | null ΔE | margin |
-|---|---:|---|---:|---:|---:|---:|---:|
-| deepest_winter | 22 | A | 1.000 | 1.000 | 0.0223 | 0.1471 | 6.6× |
-| deepest_winter | 85 | A | 1.000 | 1.000 | 0.0224 | 0.1476 | 6.6× |
-| largest_fire | 0 | A | 1.000 | 1.000 | 0.0140 | 0.1873 | 13.4× |
-| deepest_winter | 22 | B | 1.000 | 1.000 | 0.0030 | 0.1588 | **53.4×** |
+`measure_seam`'s isolation hid the terrain and the flowlines and never the instances. A tint
+candidate still *builds* a scatter — it needs one to bind the day — so the tint's **isolated** frame
+was the tint with the plants drawn on top of it. In the near field the plants leave gaps and the tint
+showed through, which is why the numbers looked plausible rather than absurd.
 
-**The tint sits 0.003 to 0.022 from the stand in RGB and matches its coverage exactly, everywhere
-it was run.** The null baseline — what ships today — sits 0.147 to 0.187 away and reaches 0.02 to
-0.09 of the coverage. The margin runs from 6.6× to 53×.
+It surfaced during a routine re-take, when the gate refused an exactly-zero colour error: three
+candidates were reporting one mean colour to six decimals and identical luminance histograms across
+six bins. Once mid-field coverage reached 1.0, the plants covered the tint completely and the tint's
+frame *became* the oracle's frame. The refusal that caught it was written after the last time two
+things that must differ came out the same.
 
-Across range bands at place A it tracks the oracle the whole way out:
+Scored with the tint alone, seam 120 m, annulus ≈80–180 m, eye level:
 
-| band | ground px | oracle colour | tint colour |
-|---|---:|---|---|
-| 30–60 m | 188,544 | (0.248, 0.309, 0.160) | (0.233, 0.286, 0.148) |
-| 84–120 m | 53,460 | (0.227, 0.322, 0.153) | (0.210, 0.309, 0.142) |
-| 120–180 m | 42,299 | (0.209, 0.337, 0.147) | (0.198, 0.324, 0.139) |
-| 240–360 m | 21,580 | (0.188, 0.380, 0.145) | (0.177, 0.367, 0.137) |
-| 360–480 m | 10,837 | (0.186, 0.387, 0.145) | (0.176, 0.376, 0.138) |
+| window | day | place | tint ΔE **as published** | tint ΔE **isolated** | null ΔE | margin |
+|---|---:|---|---:|---:|---:|---:|
+| deepest_winter | 22 | A | 0.0223 | **0.1150** | 0.1365 | 1.19× |
+| deepest_winter | 85 | A | 0.0224 | **0.1150** | 0.1363 | 1.18× |
+| largest_fire | 0 | A | 0.0140 | **0.0907** | 0.1630 | 1.80× |
+| deepest_winter | 22 | B | 0.0030 | **0.1617** | 0.1305 | **0.81× — it loses** |
+
+**At place B the tint is worse than drawing nothing.** At place A it beats the null by a fifth, not
+by six-fold. The brief chose the cheapest candidate first on the argument that *"the harness gets to
+say no cheaply"*. It is saying no.
+
+### And the coverage half fails for a reason worth keeping
+
+| window | day | place | oracle cover | tint cover | null cover |
+|---|---:|---|---:|---:|---:|
+| deepest_winter | 22 | A | 1.000 | 0.195 | 0.077 |
+| deepest_winter | 85 | A | 1.000 | 0.195 | 0.077 |
+| largest_fire | 0 | A | 1.000 | 0.101 | 0.060 |
+| deepest_winter | 22 | B | 1.000 | 0.747 | 0.210 |
+
+The oracle covers the whole annulus. The tint covers a fifth of it at place A — and that is the tint
+doing exactly what the brief asked for, which is the finding.
+
+**Ground cover and screen cover are not the same quantity, and the seam is where they come apart.**
+The tint reproduces the wire's cover fraction: the share of *ground area* a life form occupies. At
+80–180 m the stand's plants overlap in *screen space*, so a fifth of the ground covers all of the
+pixels. A tint painted to the conserved quantity will therefore always under-cover the stand it
+replaces, and the shortfall grows with range because the overlap does.
+
+So the requirement in the brief — *"the requirement is the measured coverage fraction, not the
+mask"* — is under-specified, and this is the measurement that says which fraction. A far-field
+candidate has to hit the **screen** coverage at range, which is a function of ground cover, crown
+size and distance, not the ground cover alone. Whether that is a different mask or a different
+candidate is not decided here.
 
 ### The range dependence is geography, not optics
 
@@ -1134,7 +1171,8 @@ attenuation.
 
 So `range_matched` and `constant` are the same candidate here, with identical uniforms and
 identical frames. The two tying is arithmetic, not a metric that cannot separate them — the metric
-separates the null baseline by 2.4× at its worst.
+still puts 0.02 to 0.07 between the tint and the null baseline, which is what the gate now holds:
+that the instrument can tell two visibly different frames apart, not that either of them wins.
 
 ### The horizon rule: one constant, and where size stops doing the rest
 

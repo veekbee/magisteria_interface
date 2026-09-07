@@ -441,7 +441,11 @@ func _run_candidate(delta: float) -> void:
                 return
             job["frame_ms"] = FrameStats.summarise(_wall)
             job["in_situ"] = _capture(job, "insitu")
-            _isolate(true)
+            # A TINT IS SCORED INSTEAD OF THE INSTANCES, NOT ON TOP OF THEM.
+            # The in-situ frame above keeps everything, which is what in-situ
+            # means; the isolated one has to be the candidate alone or it is
+            # grading the oracle against itself.
+            _isolate(true, str(job.get("kind", "")) != "tint")
             if str(job.get("kind", "")) == "family_oracle":
                 _only_family(str(job["family"]))
             frames = 0
@@ -716,14 +720,31 @@ func _only_family(life_form: String) -> void:
             c.visible = life_form == "" or n == "Vegetation_" + life_form
 
 
-func _isolate(on: bool) -> void:
-    # Instances are isolated by hiding the ground they stand on; a tint IS the
-    # ground, so the shader blacks out everything the coverage mask did not pick.
+## `veg` is what the isolated frame is OF, and leaving it out cost this harness
+## every tint score it has ever taken.
+##
+## Instances are isolated by hiding the ground they stand on; a tint IS the
+## ground, so the shader blacks out everything the coverage mask did not pick.
+## But a tint candidate still BUILDS a scatter -- it needs one to bind the day
+## -- and nothing here was hiding it, so the tint's isolated frame was the tint
+## with the instances drawn on top. In the near field the plants leave gaps and
+## the tint showed through, which is why the scores looked plausible for a year.
+##
+## FOUND WHEN THE MID-FIELD SATURATED. Once coverage in the 30-180 m annuli
+## reached 1.0, the plants covered the tint completely and the tint's frame
+## became the ORACLE's frame -- three candidates reporting one mean colour to
+## six decimals and identical luminance histograms across six bins. The gate's
+## refusal of an exactly-zero colour error is what caught it, on the run that
+## was meant to be a routine re-take.
+func _isolate(on: bool, veg: bool = true) -> void:
     view.get_node("Terrain").visible = not on or view.naturalistic
     view.set_isolate_vegetation(on)
     for c in view.get_children():
-        if String(c.name).begins_with("Flow") or String(c.name) == "Contours":
+        var n := String(c.name)
+        if n.begins_with("Flow") or n == "Contours":
             c.visible = not on
+        elif n.begins_with("Vegetation_"):
+            c.visible = veg and view.scatter.meshes.has(n.substr("Vegetation_".length()))
 
 
 ## Everything back on, INCLUDING the instances. The mask pass hides them and an
