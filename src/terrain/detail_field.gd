@@ -58,6 +58,34 @@ var parent_spacing_m: float = 0.0
 ## is actually evaluated.
 var finest_m: float = 0.0
 
+## THE PARENT SPACING THE ROWS' AMPLITUDES WERE MEASURED AT.
+##
+## `amplitude_m` IS NOT SCALE FREE, and the units block in the rows file has
+## always said so -- "standard deviation of the detail term AT THE PARENT
+## SPACING". What it did not say was which parent, and nothing read it.
+##
+## That is fine while there is one parent and fails the moment there are two,
+## which is what streaming introduces. Refining a 100 m lattice, the data
+## already carries everything between 1,000 m and 100 m, so the function must
+## supply only what is below 100 m -- and that is a SMALLER standard deviation
+## than the same row supplies under a 1,000 m parent. Taking the number
+## literally at both spacings puts the full 1,000 m roughness into the last
+## 100 m: measured, 3.5x too much, and it arrives exactly when a level
+## switches, which is the one moment a viewer is looking at the ground change.
+##
+## So the amplitude is rescaled by the row's own exponent. For fBm the RMS
+## increment over a lag scales as lag^H, and `spectral_slope` IS that exponent
+## here -- the per-octave amplitude ratio is 0.5^slope -- so the same row under
+## a different parent is the same surface, sampled over a different band.
+##
+## Per-row, with a file-level default, the same shape decision 972 made for
+## `host_base`: one number where one is enough, an override where a class was
+## measured on a different window.
+var calibrated_at_parent_m: float = 0.0
+## Empty when the rows declared it, and a sentence when they did not. Separate
+## from `why_absent`, which means the field does not work at all.
+var calibration_note: String = ""
+
 var _hf: Heightfield = null
 ## The 16 parent-node noise values of the cell last asked about, per landform:
 ## `landform -> [x0, y0, stencil]`.
@@ -89,6 +117,16 @@ static func load_from(hf: Heightfield, path: String = ROWS_PATH,
         df.why_absent = "%s is not a JSON object" % path
         return df
     df.rows = parsed
+    df.calibrated_at_parent_m = float(df.rows.get("calibrated_at_parent_m", 0.0))
+    if df.calibrated_at_parent_m <= 0.0:
+        # NOT A SILENT 1:1. A rows file that does not say which parent its
+        # amplitudes were measured at cannot be rescaled to another one, so
+        # the honest reading is that they belong to the parent in front of
+        # them and no level switch is safe until the file says otherwise.
+        df.calibrated_at_parent_m = df.parent_spacing_m
+        df.calibration_note = ("the rows do not declare `calibrated_at_parent_m`, so their "
+                + "amplitudes are read as belonging to whatever parent they are used "
+                + "with. That is right for one level and wrong for two.")
     df.finest_m = INF
     for name in df.landforms():
         df.finest_m = minf(df.finest_m,
@@ -111,6 +149,20 @@ func octaves_for(landform: String) -> int:
     if finest <= 0.0 or parent_spacing_m <= 0.0:
         return 1
     return clampi(int(ceil(log(parent_spacing_m / finest) / log(2.0))), 1, MAX_OCTAVES)
+
+
+## THIS CLASS ROW'S AMPLITUDE UNDER THE PARENT ACTUALLY BEING REFINED.
+##
+## Exactly the declared number when the parent is the one it was calibrated
+## at, so a single-level client is unchanged to the bit; a power law in the
+## row's own exponent otherwise. See `calibrated_at_parent_m`.
+func amplitude_for(landform: String) -> float:
+    var p := row(landform)
+    var a := float(p.get("amplitude_m", 0.0))
+    var ref := float(p.get("calibrated_at_parent_m", calibrated_at_parent_m))
+    if ref <= 0.0 or parent_spacing_m <= 0.0 or is_equal_approx(ref, parent_spacing_m):
+        return a
+    return a * pow(parent_spacing_m / ref, float(p.get("spectral_slope", 1.0)))
 
 
 func is_loaded() -> bool:
@@ -148,7 +200,7 @@ func detail_at(w: Vector2, landform: String = "") -> float:
     var p := row(name)
     if p.is_empty():
         return 0.0
-    var amp := float(p.get("amplitude_m", 0.0)) * taper_at(w)
+    var amp := amplitude_for(name) * taper_at(w)
     if amp <= 0.0:
         return 0.0
     # f(x) minus its own coarse component. See the header: this is what makes

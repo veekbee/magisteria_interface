@@ -3,8 +3,10 @@
   "_FAKE": "EVERY NUMBER IN THIS FILE IS INVENTED. Not measured, not fitted, not derived -- chosen so the function has something to run on and so the shapes of the rows are settled before the data arrives. They are replaced wholesale by calibration rows measured from real metre ground, not adjusted. A reader quoting a figure from here is quoting a placeholder.",
   "_replaced_by": "per-landform variograms, roughness spectra and drainage anisotropy measured from a real 1 m test window, plus the HAND taper. Sim-session side.",
   "_the_shape_is_the_deliverable": "what is real here is the row SCHEMA -- which quantities a landform class carries and how the function consumes them. The values land into these slots.",
+  "calibrated_at_parent_m": 1000.0,
+  "_calibrated_at_is": "which parent lattice these amplitudes belong to. `amplitude_m` is the standard deviation of what the function ADDS BELOW the parent, so the same ground calibrated against a 1000 m lattice and against a 100 m one carries two different numbers -- the finer parent already holds the 1000-100 m band. DetailField rescales by the row's own `spectral_slope`, which is the fBm exponent, so one row serves every level. A row may override this; the file-level value is the default, the same shape decision 972 gave `host_base`. Placeholder like everything else here: these amplitudes were invented against the shipped 1 km overview, so that is what they are declared at.",
   "units": {
-    "amplitude_m": "standard deviation of the detail term at the parent spacing, metres",
+    "amplitude_m": "standard deviation of the detail term at the parent spacing it was calibrated at, metres. See `_calibrated_at_is`: this number is NOT scale free and a calibration that does not say which parent it measured is unusable at a second level",
     "spectral_slope": "fBm Hurst-like exponent; higher is smoother between octaves",
     "anisotropy": "ratio of along-orientation wavelength to across; 1.0 is isotropic",
     "orientation_source": "which field orients the anisotropy. `aspect` is downslope; `none` is isotropic",

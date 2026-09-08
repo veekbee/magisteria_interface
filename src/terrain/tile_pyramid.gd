@@ -48,10 +48,27 @@ const PRESENT := "PRESENT"
 
 ## How many decoded tiles to hold. Each is a 512x512 code plane plus its
 ## validity mask, about 1.3 MB, and a walk crosses a handful.
+##
+## A DEFAULT AND NOT A POLICY. Which tiles are worth holding is a question
+## about where a body is standing and how fast it is moving, and this class
+## does not know either -- `TileResidency` does, and raises this to whatever
+## its own footprint needs. Left here as the number a measurement gets when
+## nothing is streaming.
 const CACHE_TILES := 8
 
 var levels: Array = []               ## [{z, pixel_size_m, tiles_x, tiles_y, written}]
 var origin: Vector2 = Vector2.ZERO   ## world position of the grid's top-left CORNER
+## THE SAME CORNER IN DOUBLE PRECISION, and it is not a convenience. These
+## eastings pass 1.8 million metres, where a float32 step is 0.125 m, so
+## `origin` is the corner rounded to the nearest eighth of a metre. A consumer
+## that derives a texel CENTRE from it -- and the near-field patch does, then
+## compares that position against the one `DetailField.parent_node` computes
+## from the overview's float64 corner -- gets a different float from the same
+## grid. Two names because both are wanted: the Vector2 for arithmetic that
+## ends up on screen, these for arithmetic that has to agree with someone
+## else's.
+var origin_x: float = 0.0
+var origin_y: float = 0.0
 var offset_m: float = 0.0
 var scale_m: float = 0.0
 var keys: Dictionary = {}            ## "z/x_y.png" -> true, from the pin
@@ -60,6 +77,12 @@ var why_absent: String = ""
 
 var _cache: Dictionary = {}          ## key -> {"codes":.., "valid":..}
 var _order: Array = []
+var _capacity: int = CACHE_TILES
+## How many tiles this pyramid has decoded since it was loaded. Decoding is
+## the expensive half -- 262,144 per-pixel reads through GDScript -- so a
+## streaming layer that wants to spend a bounded amount per rebuild needs to
+## know how much it actually spent rather than how much it asked for.
+var decodes: int = 0
 
 
 ## Read the pin. The pin is the manifest; nothing here walks a directory,
@@ -83,7 +106,9 @@ static func load_from(pin_path: String = PIN_PATH) -> TilePyramid:
     tp.levels = grid.get("levels", [])
     var o: Array = grid.get("origin", [])
     if o.size() >= 2:
-        tp.origin = Vector2(float(o[0]), float(o[1]))
+        tp.origin_x = float(o[0])
+        tp.origin_y = float(o[1])
+        tp.origin = Vector2(tp.origin_x, tp.origin_y)
     var enc: Dictionary = pin.get("encoding", {})
     tp.offset_m = float(enc.get("offset_m", NAN))
     tp.scale_m = float(enc.get("scale_m_per_step", NAN))
@@ -124,8 +149,8 @@ func locate(wx: float, wy: float, z: int = 0) -> Dictionary:
     var px_m := pixel_size_of(z)
     if is_nan(px_m):
         return {"ok": false, "why": "no level %d" % z}
-    var fx := (wx - origin.x) / px_m - 0.5
-    var fy := (origin.y - wy) / px_m - 0.5
+    var fx := (wx - origin_x) / px_m - 0.5
+    var fy := (origin_y - wy) / px_m - 0.5
     var ix := int(round(fx))
     var iy := int(round(fy))
     if ix < 0 or iy < 0:
@@ -197,12 +222,46 @@ func _tile(key: String) -> Dictionary:
             codes[i] = float(int(round(c.r * 255.0)) * 256 + int(round(c.g * 255.0)))
             valid[i] = 1 if c.b > 0.5 else 0
     var out := {"codes": codes, "valid": valid, "width": w, "height": h}
+    decodes += 1
     _cache[key] = out
     _order.append(key)
-    while _order.size() > CACHE_TILES:
+    while _order.size() > _capacity:
         var drop: String = _order.pop_front()
         _cache.erase(drop)
     return out
+
+
+## DECODE ONE TILE NOW, or say why not. The whole of the cost is here: a
+## 512x512 tile is 262,144 `get_pixel` calls, which is a frame's worth of work
+## in GDScript, and it is why a streaming layer needs a budget rather than a
+## loop over whatever it wants.
+##
+## Returns false for every absence, and does not distinguish them -- a caller
+## that needs to tell "no ground was ever here" from "this clone has not
+## fetched it" asks `availability`, which is the method whose whole job that
+## is.
+func warm(key: String) -> bool:
+    return not _tile(key).is_empty()
+
+
+## Whether a tile is decoded and in hand RIGHT NOW. Not one of the three
+## absences: those are facts about the basin and about this clone, and this is
+## a fact about this moment, which is a different kind of thing and is why
+## `TileResidency` names it separately rather than adding a fourth value here.
+func is_warm(key: String) -> bool:
+    return _cache.has(key)
+
+
+## How many decoded tiles to hold. Raised by whoever knows the working set.
+func set_capacity(n: int) -> void:
+    _capacity = maxi(1, n)
+    while _order.size() > _capacity:
+        var drop: String = _order.pop_front()
+        _cache.erase(drop)
+
+
+func capacity() -> int:
+    return _capacity
 
 
 ## What the pyramid holds and what this clone has of it. For a report that has

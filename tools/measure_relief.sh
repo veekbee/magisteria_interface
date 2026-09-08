@@ -8,6 +8,12 @@
 #
 #   bash tools/measure_relief.sh
 #   bash tools/measure_relief.sh --radius 480 --samples 64
+#   bash tools/measure_relief.sh --stream 0     # the coarse mesh alone
+#
+# The `streamed` block is the acceptance metric for streaming: how far a plant
+# on the drawn surface stands from the ground the data holds, before and after
+# a near-field patch. `--stream 0` reproduces the pre-streaming artefact rather
+# than leaving anyone to argue about what it used to say.
 #
 # Needs the pyramid fetched: `python3 tools/fetch_artefacts.py`. Without it the
 # tool refuses rather than reporting zeros, which would be a measurement of

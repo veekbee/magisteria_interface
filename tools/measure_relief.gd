@@ -79,12 +79,24 @@ func _init() -> void:
     var drawn_sample_m := hf.pixel_size_m * float(tm.stride)
     var native_m := tp.finest_pixel_size_m()
 
+    # STREAMING, MEASURED IN THE SAME DISCS. `--stream 0` turns it off, which
+    # is how a run reproduces the pre-streaming artefact rather than arguing
+    # about what it used to say.
+    var streaming := str(args.get("stream", "1")) != "0"
+    var res := TileResidency.over(tp)
+
     var places: Array = []
     var residuals: Array = []
     var native_reliefs: Array = []
     var drawn_reliefs: Array = []
     var native_texels: Array = []
     var mesh_vertices: Array = []
+    var patch_vertices: Array = []
+    var patch_residuals: Array = []
+    var patch_any: Array = []
+    var coarse_any: Array = []
+    var patch_levels: Dictionary = {}
+    var patch_ms: Array = []
     var i := 0
     var skipped_unfetched := 0
     while i < valid.size() and places.size() < wanted:
@@ -108,6 +120,23 @@ func _init() -> void:
         drawn_reliefs.append(float(here["drawn_relief_m"]))
         native_texels.append(float(here["native_texels_in_disc"]))
         mesh_vertices.append(float(here["mesh_vertices_in_disc"]))
+        if streaming:
+            var t0 := Time.get_ticks_msec()
+            var st := _streamed(res, tp, tm, hf, centre, radius, native_m)
+            patch_ms.append(float(Time.get_ticks_msec() - t0))
+            if bool(st["ok"]):
+                here["patch_vertices_in_disc"] = int(st["vertices_in_disc"])
+                here["patch_residual_m"] = float(st["worst_residual_m"])
+                here["patch_z"] = int(st["z"])
+                here["patch_residual_anywhere_m"] = float(st["worst_residual_anywhere_m"])
+                patch_vertices.append(float(st["vertices_in_disc"]))
+                patch_residuals.append(float(st["worst_residual_m"]))
+                patch_any.append(float(st["worst_residual_anywhere_m"]))
+                coarse_any.append(float(st["coarse_residual_anywhere_m"]))
+                var zk := "z=%d" % int(st["z"])
+                patch_levels[zk] = int(patch_levels.get(zk, 0)) + 1
+            else:
+                here["patch_refused"] = str(st["why"])
 
     if places.is_empty():
         _refuse(out_path, "no place could be measured against both grids")
@@ -226,10 +255,22 @@ func _init() -> void:
                     + "changes the height is a question about where the step started."),
             "by_speed": underfoot,
         },
+        "streamed": _streamed_block(streaming, patch_vertices, patch_residuals,
+                patch_any, coarse_any, patch_levels, patch_ms),
         "detail_surface": detail,
         "places": places,
     }
     _write(out_path, doc)
+    var sb: Dictionary = doc["streamed"]
+    if bool(sb.get("streaming", false)):
+        print("relief: STREAMED near field holds %s mesh vertices (p50), residual p50 %s m, "
+                % [String.num(float((sb["patch_vertices_in_disc"] as Dictionary)
+                        .get("p50", NAN)), 0),
+                        String.num(float((sb["worst_residual_m"] as Dictionary)
+                                .get("p50", NAN)), 2)]
+                + "worst %s m, patch built in %s ms (p50)"
+                % [String.num(float((sb["worst_residual_m"] as Dictionary).get("max", NAN)), 2),
+                        String.num(float((sb["build_ms"] as Dictionary).get("p50", NAN)), 0)])
     print("relief: near field holds %s mesh vertices and %s native texels (p50)"
             % [String.num(float((doc["macro_relief"]["mesh_vertices_in_disc"] as Dictionary)
                     .get("p50", NAN)), 0),
@@ -382,6 +423,135 @@ func _snap(tp: TilePyramid, p: Vector2, native_m: float) -> Vector2:
     var t: Vector2i = at["texel"]
     return Vector2(tp.origin.x + (float(t.x) + 0.5) * native_m,
             tp.origin.y - (float(t.y) + 0.5) * native_m)
+
+
+## THE SAME DISC, AGAINST A NEAR-FIELD PATCH STREAMED TO ITS CENTRE.
+##
+## THE PATCH IS BUILT WITHOUT A DETAIL TERM, deliberately. What is measured
+## here is whether the native grid reached the drawn mesh, and a synthesised
+## metre-scale term would add its own amplitude to every residual and report
+## streaming as slightly worse than it is. The synthesis has its own artefact
+## in `detail_variogram.json`.
+func _streamed(res: TileResidency, tp: TilePyramid, tm: TerrainMesh, hf: Heightfield,
+               centre: Vector2, radius: float, native_m: float) -> Dictionary:
+    var z := res.level_for(centre)
+    if z < 0:
+        return {"ok": false, "why": "no level here has all its tiles fetched"}
+    var snapped := res.snap(centre, z)
+    var pumped := res.pump(snapped, z, 16)
+    if not bool(pumped["ready"]):
+        return {"ok": false, "why": "%d tiles still loading" % int(pumped["not_loaded"])}
+    var np := NearFieldPatch.build(res, snapped, z, hf, tm, null)
+    if not np.is_built():
+        return {"ok": false, "why": np.why_refused}
+    # TWO RESIDUALS, AND THE FIRST ONE IS ZERO BY CONSTRUCTION.
+    #
+    # At the native texel centres the patch's vertices ARE the data, so the
+    # gap there is exactly nothing and reporting only that would be reporting
+    # the design rather than measuring it. It is still the right comparison to
+    # keep -- it is the same question, at the same points, that the coarse
+    # mesh answers with 42.5 m -- but it needs its off-lattice sibling beside
+    # it or the artefact overstates what streaming bought.
+    #
+    # The second samples on a QUARTER-TEXEL grid, where the patch is
+    # interpolating between data and the answer is not decided in advance. It
+    # measures the drawn surface against the nearest datum, which is what a
+    # foot standing between two samples is actually on.
+    var worst := 0.0
+    var worst_any := 0.0
+    var coarse_any := 0.0
+    var taken := 0
+    var reach := int(radius / native_m)
+    for dy in range(-reach, reach + 1):
+        for dx in range(-reach, reach + 1):
+            var q := Vector2(centre.x + float(dx) * native_m, centre.y + float(dy) * native_m)
+            if (q - centre).length() > radius:
+                continue
+            var n := tp.height_at_world(q.x, q.y)
+            if is_nan(n):
+                continue
+            var d := np.surface_y(q)
+            if is_nan(d):
+                continue
+            taken += 1
+            worst = maxf(worst, absf(n - d))
+    var fine := native_m * 0.25
+    var freach := int(radius / fine)
+    for dy in range(-freach, freach + 1):
+        for dx in range(-freach, freach + 1):
+            var q := Vector2(centre.x + float(dx) * fine, centre.y + float(dy) * fine)
+            if (q - centre).length() > radius:
+                continue
+            var n := tp.height_at_world(q.x, q.y)
+            if is_nan(n):
+                continue
+            var d := np.surface_y(q)
+            if not is_nan(d):
+                worst_any = maxf(worst_any, absf(n - d))
+            var c := tm.drawn_surface_y(q, hf)
+            if not is_nan(c):
+                coarse_any = maxf(coarse_any, absf(n - c))
+    if taken < 8:
+        return {"ok": false, "why": "only %d samples" % taken}
+    return {"ok": true, "z": z, "worst_residual_m": worst,
+            "worst_residual_anywhere_m": worst_any,
+            "coarse_residual_anywhere_m": coarse_any,
+            "vertices_in_disc": np.nodes_within(centre, radius)}
+
+
+func _streamed_block(on: bool, verts: Array, residuals: Array, anywhere: Array,
+                     coarse_anywhere: Array, levels: Dictionary, ms: Array) -> Dictionary:
+    if not on:
+        return {"streaming": false,
+                "_why": "run with --stream 0; this artefact reports the coarse mesh alone"}
+    return {
+        "streaming": true,
+        "_what": ("the same discs measured against a near-field patch of the tile pyramid, "
+                + "built and seamed to the coarse mesh at each place. THIS IS THE ACCEPTANCE "
+                + "METRIC: the residual is how far a plant on the drawn surface stands from "
+                + "the ground the data holds, and it is what streaming buys down. Frame time "
+                + "is a budget to stay inside rather than the thing being bought."),
+        "patch_half_extent_m": TileResidency.PATCH_HALF_M,
+        "patch_blend_m": TileResidency.BLEND_M,
+        "rebuild_at_m": TileResidency.KEEP_M,
+        "_rebuild_is": ("what is left of the half extent once the blend ring and the body's "
+                + "own %s m near field are taken out of it: stand anywhere inside it and the "
+                % String.num(TileResidency.NEAR_FIELD_M, 0)
+                + "whole near field is on fully refined ground."),
+        "levels_used": levels,
+        "patch_vertices_in_disc": FlightTrace.quantiles(verts),
+        "worst_residual_m": FlightTrace.quantiles(residuals),
+        "_worst_residual_is_zero_because": ("the patch's vertices ARE the pyramid's texel "
+                + "centres, so at the points the data actually holds a value the drawn "
+                + "surface reproduces it exactly. That is the design and this is it stated, "
+                + "not a measurement of it -- read the next two figures for that."),
+        "worst_residual_anywhere_m": FlightTrace.quantiles(anywhere),
+        "coarse_residual_anywhere_m": FlightTrace.quantiles(coarse_anywhere),
+        "_anywhere_is": ("the same discs sampled on a quarter-texel grid, where the drawn "
+                + "surface is interpolating and nothing is exact by construction: how far "
+                + "the plane a foot is standing on sits from the nearest datum. The coarse "
+                + "figure beside it is the same question asked of the mesh that was there "
+                + "before, at the same points."),
+        "_read_anywhere_carefully": ("`height_at_world` is NEAREST TEXEL, so between samples "
+                + "this compares a plane against a staircase and part of what it reports is "
+                + "the staircase rather than the drawn surface being wrong. That is fair "
+                + "only because BOTH columns are measured the same way: the patch's plane "
+                + "spans 100 m of ground and the coarse mesh's spans 4,000 m, and the ratio "
+                + "between the two columns is what streaming bought."),
+        "_residual_floor_is_float32": ("`worst_residual_m` does not reach exactly zero, and "
+                + "0.08 m is not the pyramid. A world position is a `Vector2`, which is "
+                + "single precision, and at 1.8 million metres its step is 0.125 m -- so a "
+                + "sample nominally at a texel centre lands up to half a step off it, the "
+                + "nearest-texel lookup returns the datum and the patch interpolates a "
+                + "thousandth of the way to its neighbour. Same root cause as the "
+                + "exact-at-parent guard's, and the same conclusion: it is the coordinate "
+                + "that is quantised, not the ground."),
+        "build_ms": FlightTrace.quantiles(ms),
+        "_build_ms_is": ("wall clock for one patch: pump, decode whatever was not resident, "
+                + "sample and triangulate. A rebuild happens once per %s m of walking, not "
+                % String.num(TileResidency.KEEP_M, 0)
+                + "per frame."),
+    }
 
 
 ## One disc: what the native grid has in it, and what the drawn surface says.

@@ -1009,11 +1009,12 @@ A 1,500 m horizon is **nine texels**, sitting inside one or two cells. Three con
 - **The near field has no ground.** At 4 km per terrain triangle, a viewer standing in the scatter
   is in the middle of one flat triangle. Near-field vegetation would stand on a plane. Tuning a
   200 m boundary by eye is not really possible until the tile pyramid lands.
-  **Measured since, and the pyramid has landed**: the drawn mesh has a median of **0** vertices
+  **Measured since, and the pyramid has landed**: the drawn mesh had a median of **0** vertices
   inside the 480 m disc a standing body sees, against **69** ground samples at the pyramid's
-  100 m, and a plant placed on the drawn plane stands a median **42.5 m** — worst 427 m — from the
-  ground the data actually has. See `ground_relief.json`. What the pyramid does **not** fix is
-  below.
+  100 m, and a plant placed on the drawn plane stood a median **42.5 m** — worst 427 m — from the
+  ground the data actually has. **Streamed since**: the near field is 69 drawn ground samples and
+  the median gap is 0.01 m at the data's own samples, 11.0 m anywhere. Tuning a 200 m boundary by
+  eye is now possible. See `ground_relief.json`. What the pyramid does **not** fix is below.
 
 ### One plant on screen
 
@@ -1617,23 +1618,66 @@ Measured headlessly at 60 places across the basin, each a 480 m disc — what
 `tools/free_flight.sh` builds a scatter within, so it is the ground a standing body has near field.
 Both grids decoded with **their own** constants; see below for why that sentence is load-bearing.
 
-### The near field was one flat triangle, and now it is relief
+### The near field was one flat triangle, and streaming closed it
 
-| inside a 480 m disc | drawn today | tile pyramid z=0 |
-|---|---:|---:|
-| ground sample spacing | 4,000 m | **100 m** |
-| ground samples in the disc (p50) | **0** | **69** |
-| relief the grid holds (p50) | 20.2 m | **48.0 m** |
+| inside a 480 m disc | coarse mesh | tile pyramid z=0 | **streamed patch** |
+|---|---:|---:|---:|
+| ground sample spacing | 4,000 m | 100 m | **100 m** |
+| ground samples in the disc (p50) | **0** | 69 | **69** |
+| relief the grid holds (p50) | 20.2 m | 48.0 m | — |
 
 Zero is not a rounding of one. At stride 4 over a 1 km overview the drawn mesh triangulates every
 4 km, so the whole near field of a standing body falls **inside a single triangle** — the blocker
-this file has named since M5, stated as a count rather than as a complaint.
+this file has named since M5, stated as a count rather than as a complaint. The middle column was
+what the data held and the mesh did not draw; the right-hand one is `NearFieldPatch` drawing it.
 
-**What that costs today, in metres.** The gap between the drawn surface and the native grid inside
-one disc: **p50 42.5 m, p95 252 m, worst 427 m**. That is how far a plant standing on the drawn
-plane sits from the ground the data has. It is the same defect `vegetation_scatter.gd` already
-places *against the drawn surface* to avoid — plants floating or buried — measured against the
-data instead of against the mesh.
+**What it cost, and what it costs now.** The gap between the drawn surface and the ground the data
+holds, inside one disc, measured two ways:
+
+| worst gap in a 480 m disc | coarse mesh | streamed | |
+|---|---:|---:|---|
+| at the data's own samples (p50) | **42.5 m** | **0.01 m** | zero by construction — see below |
+| at the data's own samples (worst) | 427.5 m | 0.08 m | |
+| anywhere in the disc (p50) | **48.0 m** | **11.0 m** | 4.4× |
+| anywhere in the disc (worst) | 429.5 m | 68.6 m | 6.3× |
+
+**The first row is the design and not a measurement of it.** A patch's vertices *are* the pyramid's
+texel centres, so wherever the data holds a value the drawn surface reproduces it exactly. It is
+still the right comparison to keep — it is the same question at the same points that the coarse mesh
+answers with 42.5 m — but it needs its off-lattice sibling beside it or the artefact overstates what
+streaming bought.
+
+**The second pair is the honest one.** Sampled on a quarter-texel grid where nothing is exact by
+construction, and read carefully: `height_at_world` is nearest-texel, so between samples this
+compares a plane against a staircase, and part of the 11 m is the staircase. That is fair only
+because *both* columns are measured the same way — the patch's plane spans 100 m of ground and the
+coarse mesh's spans 4,000 m — and the ratio between the columns is what streaming bought.
+
+**0.08 m is not the pyramid.** A world position is a `Vector2`, which is single precision, and at
+1.8 million metres its step is 0.125 m: a sample nominally at a texel centre lands up to half a step
+off it, the nearest-texel lookup returns the datum and the patch interpolates a thousandth of the
+way toward its neighbour. Same root cause as the exact-at-parent guard's, and the same conclusion —
+it is the coordinate that is quantised, not the ground.
+
+### What the patch costs, and when it is paid
+
+| | |
+|---|---:|
+| half extent | 4,000 m — one coarse quad |
+| blend ring | 1,000 m — the overview's own pixel |
+| rebuild when the body passes | **2,520 m** from the centre |
+| nodes | 81 × 81 = 6,561, of which 2,840 (44%) are in the blend ring |
+| build (p50 / worst) | **36 ms** / 68 ms |
+
+The rebuild distance is **derived, not tuned**: what is left of the half extent once the blend ring
+and the body's own 480 m near field are taken out of it. Stand anywhere inside it and the whole near
+field is on fully refined ground. Moving the half extent moves it without anything else needing to
+be re-fitted, and the gate asserts the identity rather than the number.
+
+36 ms is a rebuild, not a frame — one per 2,520 m of walking, which is 3,600 s at a load-bearing
+0.7 m/s. The 44% spent on the blend ring is the price of a seam that is an equality rather than a
+tolerance: the outermost ring of vertices lies *exactly* on the coarse plane, weight zero, so there
+is no crack to close and no z-fighting to tune.
 
 ### The ground still does not change underfoot, and no pyramid will fix that
 

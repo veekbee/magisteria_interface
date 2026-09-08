@@ -19,6 +19,15 @@ extends RefCounted
 ##
 ## SO DETAIL IS ON FOR BOTH CONSUMERS OR FOR NEITHER. There is no arrangement
 ## in which one of them has it.
+##
+## AND THE SAME THING ONE LEVEL UP, WHICH IS WHAT STREAMING ADDS. A near-field
+## patch is a second drawn surface over part of the basin. A mesh built at one
+## level while the scatter samples another is the identical defect at LEVEL
+## granularity rather than at metre granularity -- and a worse version of it,
+## because the two surfaces differ by a median 42.5 m rather than by
+## centimetres. So a patch is `stream`ed in rather than assigned, and the
+## setter refuses one that does not belong to the mesh in front of it: holding
+## a patch at all is then proof that it is the patch being drawn.
 
 ## The mesh's own triangulated surface, and the field it was built from.
 var _hf: Heightfield = null
@@ -26,6 +35,9 @@ var _tm: TerrainMesh = null
 ## The detail term, or null. Held rather than looked up so that "which detail
 ## did the mesh use" is a single comparable reference.
 var detail: DetailField = null
+## The near-field patch, when one is standing. Read through `stream`, never
+## assigned: see `stream` for what it refuses and why that is the guard.
+var patch: NearFieldPatch = null
 
 var why_refused: String = ""
 
@@ -54,6 +66,33 @@ func agrees_with_mesh() -> bool:
     return detail == theirs
 
 
+## ACCEPT A NEAR-FIELD PATCH, or refuse it and say which half did not match.
+##
+## THE CHECK IS THE POINT AND THE ASSIGNMENT IS NOT. A patch carries the mesh
+## it was seamed to and the detail term it was built with, so both halves of
+## "is this the ground being drawn" are answerable here rather than by whoever
+## remembered to call in the right order.
+func stream(p: NearFieldPatch) -> bool:
+    if p == null:
+        patch = null
+        return true
+    if not p.is_built():
+        why_refused = ("the patch did not build: %s" % p.why_refused)
+        return false
+    if p.seamed_to != _tm:
+        why_refused = ("the patch was seamed to a different mesh from the one this surface "
+                + "holds. Plants would stand on a level nobody is drawing, which is the "
+                + "wrong-ground defect at level granularity.")
+        return false
+    if p.detail != detail:
+        why_refused = ("the patch was built with a different detail term from this surface. "
+                + "One ground, every consumer -- and that has to survive a level arriving.")
+        return false
+    patch = p
+    why_refused = ""
+    return true
+
+
 ## WHAT A PLANT STANDS ON, and what the mesh draws, which must be the same
 ## number or neither is answered.
 ##
@@ -72,6 +111,18 @@ func surface_at(w: Vector2) -> float:
                 + "scale, so this refuses rather than answering plausibly.")
         return NAN
     why_refused = ""
+    # THE PATCH WINS WHERE IT COVERS, AND NOWHERE ELSE. Its rim lies exactly on
+    # the coarse plane, so the two agree at the boundary and this is a choice
+    # between equal answers there rather than a step.
+    if patch != null and patch.contains(w):
+        var y := patch.surface_y(w)
+        # A hole in the patch over ground the coarse surface has is the one
+        # case that must not fall through to the coarse answer: the patch is
+        # DRAWN there or it is not, and if it is not then neither is the
+        # ground. `NearFieldPatch` is built so this cannot arise -- it never
+        # subtracts -- and this says so rather than assuming it.
+        if not is_nan(y):
+            return y
     return _tm.drawn_surface_y(w, _hf)
 
 

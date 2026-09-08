@@ -140,6 +140,16 @@ func _initialize() -> void:
     test_the_detail_tells_a_playa_from_a_talus_slope()
     test_one_ground_for_every_consumer_or_none_at_all()
     test_the_detail_rows_say_that_they_are_invented()
+    test_the_finest_level_is_the_one_chosen_and_z_zero_is_it()
+    test_a_tile_in_flight_is_not_empty_ground()
+    test_the_patch_rim_lies_on_the_coarse_plane_exactly()
+    test_a_rebuild_moves_no_shared_vertex()
+    test_the_patch_never_takes_ground_away()
+    test_the_ground_refuses_a_patch_it_is_not_standing_on()
+    test_the_near_field_gains_the_data_s_own_samples()
+    test_the_detail_vanishes_on_the_patch_and_appears_below_it()
+    test_one_row_serves_two_parents()
+    test_a_level_switch_moves_no_plant()
     stage_the_main_scene()
 
 
@@ -5853,11 +5863,64 @@ func test_the_console_answers_headless_from_a_named_point() -> void:
     check(usage.size() == 1 and str(usage[0]).begins_with("world.measure <"),
             "an unknown measurement did not answer with a usage line: %s" % str(usage))
 
+    # THE STREAMING VERBS, DRIVEN THE SAME WAY. `probe.tile` has to name the
+    # four states apart -- a tile in flight reported as empty ground is the
+    # near field flattening while every count says healthy -- and `view.stream`
+    # is `view.*` because it changes what this client holds and draws and
+    # touches no fixture, which is where the three prefixes are partitioned.
+    check(Array(console.names()).has("view.stream"), "the console cannot stream")
+    check(Array(console.names()).has("probe.tile"), "the console cannot read a tile's state")
+    var tile := console.run("probe.tile " + at)
+    var tile_text := ""
+    for l in tile:
+        tile_text += str(l) + "\n"
+    check(tile_text.contains("z=0"), "probe.tile does not report the finest level: %s"
+            % tile_text)
+    check(tile_text.contains("FINEST") or tile_text.contains("valid clone"),
+            "probe.tile does not say which end of the pyramid z=0 is: %s" % tile_text)
+    var streamed := console.run("view.stream " + at)
+    var stream_text := ""
+    for l in streamed:
+        stream_text += str(l) + "\n"
+    # EITHER OUTCOME IS CORRECT AND ONLY ONE OF THEM IS A NUMBER. A clone with
+    # no tiles fetched must say so rather than draw a patch of nothing.
+    check(stream_text.contains("patch at z=") or stream_text.contains("no patch:"),
+            "view.stream neither built a patch nor said why not: %s" % stream_text)
+    if stream_text.contains("patch at z="):
+        check(stream_text.contains("rebuilds when the body passes"),
+                "view.stream does not say when it will rebuild: %s" % stream_text)
+        check(v.ground.patch != null,
+                "a patch was drawn that the ground the scatter stands on does not hold")
+        console.run("view.stream off")
+        check(v.ground.patch == null, "the patch came down on screen and not underfoot")
+
+    # STANDING A BODY STREAMS THE GROUND IT IS ABOUT TO STAND ON, and does
+    # NOT open walk mode. The near-field half of the criterion was refusing on
+    # a flat triangle that is no longer there; the underfoot half still refuses
+    # at 100 m -- 20 s of walking between one height and the next at the stub's
+    # speed -- and the guard is unchanged. This is the check that the second
+    # sentence stays true now that the first one has moved.
+    var emb := console.run("view.embody " + at)
+    var emb_text := ""
+    for l in emb:
+        emb_text += str(l) + "\n"
+    check(emb_text.contains("ground: sampled every"),
+            "view.embody does not say how finely the ground under the body is drawn: %s"
+            % emb_text)
+    check(emb_text.contains("walk mode: "), "view.embody does not report walk mode: %s"
+            % emb_text)
+    check(not emb_text.contains("walk mode: available"),
+            "streaming the near field opened walk mode. It must not: the underfoot half of "
+            + "the criterion is about metre-scale ground and 100 m tiles are not that. %s"
+            % emb_text)
+    console.run("view.stream off")
+
     # An unknown verb is a sentence, not a stack trace.
     var miss := console.run("probe.nonsense")
     check(miss.size() >= 1 and str(miss[0]).contains("no verb"),
             "an unknown verb answered %s" % str(miss))
-    print("console: %d verbs answering headless from a named point" % console.names().size())
+    print("console: %d verbs answering headless from a named point; view.stream says \"%s\""
+            % [console.names().size(), (str(streamed[0]) if streamed.size() > 0 else "nothing")])
     console.free()
     v.queue_free()
 
@@ -6540,3 +6603,654 @@ func test_the_detail_rows_say_that_they_are_invented() -> void:
             "the orientation source is not recorded as unimplemented")
     print("detail rows: invented and saying so in four places, playa and talus are literal "
             + "rows, and every class synthesises below a metre")
+
+
+# ============================================================================
+# Streaming: the pyramid into the drawn mesh.
+# ============================================================================
+
+## A place with the pyramid under it, and everything a patch needs to be built
+## there. Empty when the tiles are not fetched, which is a valid clone.
+func streaming_place() -> Dictionary:
+    var tp := TilePyramid.load_from()
+    if not tp.is_loaded() or int(tp.inventory()["present"]) == 0:
+        return {}
+    var hf := heightfield()
+    var tm := TerrainMesh.new()
+    tm.build(hf, 4, 1.0)
+    var res := TileResidency.over(tp)
+    # SOMEWHERE THE COARSE MESH DRAWS AND THE PYRAMID HAS TILES. Both, because
+    # a patch over a hole in either is a patch with nothing in it, and a test
+    # that built one would pass by comparing nothing.
+    for ty in range(300, 1200, 29):
+        for tx in range(200, 900, 31):
+            var w := hf.texel_to_world(float(tx), float(ty))
+            if is_nan(tm.drawn_surface_y(w, hf)):
+                continue
+            var z := res.level_for(w)
+            if z != 0:
+                continue
+            var c := res.snap(w, z)
+            if not bool(res.pump(c, z, 16)["ready"]):
+                continue
+            if is_nan(tp.height_at_world(c.x, c.y, z)):
+                continue
+            return {"tp": tp, "hf": hf, "tm": tm, "res": res, "centre": c, "z": z}
+    return {}
+
+
+func test_the_finest_level_is_the_one_chosen_and_z_zero_is_it() -> void:
+    """THE INVERTED POLARITY, ASSERTED RATHER THAN COMMENTED.
+
+    `z = 0` is the FINEST level here and the coarsest in a web map. A streaming
+    layer that has it backwards loads 3,200 m tiles into the near field, which
+    looks exactly like a pyramid that did not help -- so it would be read as
+    the pyramid failing rather than as being read upside down.
+
+    The control is the one that matters: a search from the other end returns a
+    different level, so this check is discriminating and not agreeing with
+    everything."""
+    var p := streaming_place()
+    if p.is_empty():
+        print("streaming: no fetched pyramid -- skipping, and saying so")
+        return
+    var tp: TilePyramid = p["tp"]
+    var res: TileResidency = p["res"]
+    var w: Vector2 = p["centre"]
+    check(tp.pixel_size_of(0) < tp.pixel_size_of(5),
+            "z=0 is not finer than z=5, so the pin's polarity is not what the pyramid claims")
+    var chosen := res.level_for(w)
+    check(chosen == 0, "the finest fetched level here is z=%d and not z=0" % chosen)
+    # THE CONTROL. Whatever a coarse-first search would have returned, it is
+    # not this -- so "z=0" is a result rather than the only possible answer.
+    var coarsest := -1
+    for lv in tp.levels:
+        coarsest = maxi(coarsest, int((lv as Dictionary)["z"]))
+    check(coarsest != chosen,
+            "every level is the same level, so choosing the finest cannot be checked")
+    check(tp.pixel_size_of(chosen) * 30.0 < tp.pixel_size_of(coarsest) * 1.0 + 3200.0,
+            "the chosen level is not finer than the coarsest one")
+    print("streaming: level chosen here is z=%d at %s m, against z=%d at %s m at the other end"
+            % [chosen, String.num(tp.pixel_size_of(chosen), 0), coarsest,
+                    String.num(tp.pixel_size_of(coarsest), 0)])
+
+
+func test_a_tile_in_flight_is_not_empty_ground() -> void:
+    """FOUR STATES, AND THE FOURTH IS THE ONE STREAMING ADDS.
+
+    EMPTY_GROUND is a fact about the basin, NOT_FETCHED a fact about this
+    clone, NOT_LOADED a fact about this moment -- and only the last resolves on
+    its own. A tile in flight that reads as empty ground puts the coarse
+    surface across part of the near field and reports a healthy build: the
+    picture flattens while every count says fine.
+
+    So the patch is not built at all until every tile is resident, and `pump`
+    is what says when."""
+    var tp := TilePyramid.load_from()
+    if not tp.is_loaded():
+        print("streaming: %s -- skipping" % tp.why_absent)
+        return
+    check(tp.availability("0/0_0.png") == TilePyramid.EMPTY_GROUND,
+            "a corner the emitter never wrote is not empty ground")
+    var p := streaming_place()
+    if p.is_empty():
+        print("streaming: no fetched pyramid -- skipping, and saying so")
+        return
+    # A FRESH PYRAMID, so nothing is decoded yet and NOT_LOADED is real rather
+    # than arranged.
+    var cold := TilePyramid.load_from()
+    var res := TileResidency.over(cold)
+    var c: Vector2 = p["centre"]
+    var keys := res.keys_for(c, 0)
+    check(keys.size() >= 1, "a patch here touches no tiles at all")
+    var present := ""
+    for k in keys:
+        if cold.availability(k) == TilePyramid.PRESENT:
+            present = k
+            break
+    check(present != "", "no tile under this patch is fetched, so the state cannot be checked")
+    if present == "":
+        return
+    check(res.state(present) == TileResidency.NOT_LOADED,
+            "a fetched but undecoded tile reports %s rather than NOT_LOADED" % res.state(present))
+    check(res.state(present) != TilePyramid.EMPTY_GROUND,
+            "a tile in flight is being reported as ground that was never there")
+    # BUDGET ZERO: nothing decodes, and the patch is refused rather than built
+    # over what has not arrived.
+    var starved := res.pump(c, 0, 0)
+    check(not bool(starved["ready"]),
+            "a pump that decoded nothing reported itself ready to build")
+    check(int(starved["not_loaded"]) >= 1, "the in-flight tile was not counted")
+    check(int(starved["decoded_now"]) == 0, "a zero budget decoded %d tiles"
+            % int(starved["decoded_now"]))
+    var fed := res.pump(c, 0, 16)
+    check(bool(fed["ready"]), "a pump with a budget did not reach ready")
+    check(res.state(present) == TileResidency.RESIDENT,
+            "a decoded tile is not reported resident")
+    check(cold.decodes >= 1, "the pyramid reports no decodes after warming one")
+    print("streaming: four states -- empty ground, not fetched, %d in flight before the pump "
+            % int(starved["not_loaded"]) + "and resident after it")
+
+
+func test_the_patch_rim_lies_on_the_coarse_plane_exactly() -> void:
+    """THE SEAM, AND IT IS AN EQUALITY RATHER THAN A TOLERANCE.
+
+    The blend weight is exactly zero on the outermost ring, so a rim vertex is
+    the coarse surface's own value at that position -- not close to it. The
+    coarse surface between its samples is planar, so a rim vertex evaluated
+    there lies exactly on the triangle it overlaps and there is no crack.
+
+    Chebyshev and not radial, which is the half of this that is easy to get
+    wrong: a radial weight reaches zero at the four edge midpoints and not at
+    the corners, so the seam holds along four lines and gaps at four points.
+
+    The control is that the interior is NOT the coarse surface. A patch that
+    reproduced it everywhere would pass the rim check and refine nothing."""
+    var p := streaming_place()
+    if p.is_empty():
+        print("streaming: no fetched pyramid -- skipping, and saying so")
+        return
+    var res: TileResidency = p["res"]
+    var hf: Heightfield = p["hf"]
+    var tm: TerrainMesh = p["tm"]
+    var np := NearFieldPatch.build(res, p["centre"], 0, hf, tm, null)
+    check(np.is_built(), "the patch did not build: %s" % np.why_refused)
+    if not np.is_built():
+        return
+    check(absf(np.weight_at(0, 0)) == 0.0, "the corner of the rim is not weighted zero")
+    check(absf(np.weight_at((np.n - 1) / 2, 0)) == 0.0,
+            "the middle of an edge is not weighted zero")
+    check(np.weight_at((np.n - 1) / 2, (np.n - 1) / 2) == 1.0,
+            "the centre of the patch is not fully refined")
+    var rim_checked := 0
+    var rim_off := 0
+    for i in np.n:
+        for j in [0, np.n - 1]:
+            for pair in [[i, int(j)], [int(j), i]]:
+                var a: int = pair[0]
+                var b: int = pair[1]
+                var y := np.height_at_node(a, b)
+                var c := tm.drawn_surface_y(np.world_of(a, b), hf)
+                if is_nan(y) or is_nan(c):
+                    continue
+                rim_checked += 1
+                if y != c:
+                    rim_off += 1
+    check(rim_checked > 100, "only %d rim vertices could be compared" % rim_checked)
+    check(rim_off == 0, "%d of %d rim vertices are not exactly on the coarse plane"
+            % [rim_off, rim_checked])
+    # THE CONTROL: the interior is somewhere else, or the patch refines nothing.
+    var mid := (np.n - 1) / 2
+    var moved := 0
+    for k in range(mid - 20, mid + 20):
+        var y2 := np.height_at_node(k, mid)
+        var c2 := tm.drawn_surface_y(np.world_of(k, mid), hf)
+        if not is_nan(y2) and not is_nan(c2) and absf(y2 - c2) > 1.0:
+            moved += 1
+    check(moved > 5, "the patch's interior sits on the coarse plane at %d of 40 nodes, so it "
+            % (40 - moved) + "is reproducing the surface rather than refining it")
+    print("streaming: %d rim vertices exactly on the coarse plane, %d of 40 interior nodes "
+            % [rim_checked, moved] + "off it by more than a metre")
+
+
+func test_a_rebuild_moves_no_shared_vertex() -> void:
+    """WHEN TO REBUILD, ANSWERED SO THAT IT DOES NOT MATTER.
+
+    Every patch's centre is snapped to the level's own texel grid, so two
+    patches built around two observer positions sample the SAME world
+    positions. What they share, they share exactly -- a rebuild adds rim and
+    drops rim and moves nothing in between. Without the snap each rebuild
+    resamples half a texel over and the near field shimmers on every step.
+
+    The hysteresis distance is derived rather than tuned: what is left of the
+    half extent once the blend ring and the body's own near field are taken out
+    of it. Stand anywhere inside it and the whole near field is on fully
+    refined ground."""
+    var p := streaming_place()
+    if p.is_empty():
+        print("streaming: no fetched pyramid -- skipping, and saying so")
+        return
+    var res: TileResidency = p["res"]
+    var hf: Heightfield = p["hf"]
+    var tm: TerrainMesh = p["tm"]
+    var c0: Vector2 = p["centre"]
+    var c1 := res.snap(c0 + Vector2(700.0, -400.0), 0)
+    check(c1 != c0, "the second observer position snapped to the same node, so two patches "
+            + "cannot be compared")
+    res.pump(c1, 0, 16)
+    var a := NearFieldPatch.build(res, c0, 0, hf, tm, null)
+    var b := NearFieldPatch.build(res, c1, 0, hf, tm, null)
+    check(a.is_built() and b.is_built(), "one of the two patches did not build")
+    if not (a.is_built() and b.is_built()):
+        return
+    var shared := 0
+    var differing := 0
+    for j in a.n:
+        for i in a.n:
+            # ONLY WHERE BOTH ARE FULLY REFINED. A node in one patch's blend
+            # ring and the other's interior is SUPPOSED to differ; that is the
+            # ramp working, not a rebuild moving ground.
+            if a.weight_at(i, j) < 1.0:
+                continue
+            var w := a.world_of(i, j)
+            if not b.contains(w):
+                continue
+            var g := b._grid_of(w)
+            var bi := int(round(g.x))
+            var bj := int(round(g.y))
+            if b.weight_at(bi, bj) < 1.0:
+                continue
+            if b.world_of(bi, bj) != w:
+                continue
+            var ya := a.height_at_node(i, j)
+            var yb := b.height_at_node(bi, bj)
+            if is_nan(ya) and is_nan(yb):
+                continue
+            shared += 1
+            if is_nan(ya) or is_nan(yb) or ya != yb:
+                differing += 1
+    check(shared > 500, "only %d vertices are shared by the two patches" % shared)
+    check(differing == 0, "%d of %d shared vertices moved when the patch was rebuilt"
+            % [differing, shared])
+    # THE REBUILD RULE ITSELF.
+    res.settled(c0, 0)
+    check(not res.needs_rebuild(c0), "a patch centred here wants rebuilding where it stands")
+    check(not res.needs_rebuild(c0 + Vector2(TileResidency.KEEP_M - 1.0, 0.0)),
+            "a rebuild is asked for while the near field is still on refined ground")
+    check(res.needs_rebuild(c0 + Vector2(TileResidency.KEEP_M + 1.0, 0.0)),
+            "no rebuild is asked for once the near field has left the refined interior")
+    check(TileResidency.KEEP_M + TileResidency.BLEND_M + TileResidency.NEAR_FIELD_M
+                    == TileResidency.PATCH_HALF_M,
+            "the rebuild distance is not the half extent less the blend ring and the near "
+            + "field, so it is a tuned number rather than a derived one")
+    print("streaming: %d shared vertices, none moved by a rebuild; rebuilds at %s m of the "
+            % [shared, String.num(TileResidency.KEEP_M, 0)] + "%s m half extent"
+            % String.num(TileResidency.PATCH_HALF_M, 0))
+
+
+func test_the_patch_never_takes_ground_away() -> void:
+    """A REBUILD THAT REMOVES A PLANT IS A WORSE REBUILD THAN ONE THAT MOVES IT.
+
+    The native grid's holes are not the overview's holes -- both come from one
+    DEM, but `average` over a 10x10 block is valid wherever part of the block
+    was. Where the patch has nothing to say it reproduces the coarse surface,
+    so it never opens a hole where the coarse mesh had ground, and the plants
+    standing there keep standing."""
+    var p := streaming_place()
+    if p.is_empty():
+        print("streaming: no fetched pyramid -- skipping, and saying so")
+        return
+    var res: TileResidency = p["res"]
+    var hf: Heightfield = p["hf"]
+    var tm: TerrainMesh = p["tm"]
+    var np := NearFieldPatch.build(res, p["centre"], 0, hf, tm, null)
+    if not np.is_built():
+        print("streaming: the patch did not build -- skipping")
+        return
+    var had := 0
+    var lost := 0
+    for j in np.n:
+        for i in np.n:
+            var w := np.world_of(i, j)
+            if is_nan(tm.drawn_surface_y(w, hf)):
+                continue
+            had += 1
+            if is_nan(np.height_at_node(i, j)):
+                lost += 1
+    check(had > 1000, "only %d nodes had coarse ground under them" % had)
+    check(lost == 0, "the patch opened %d holes in ground the coarse mesh was drawing" % lost)
+    check(np.no_native == 0 or np.no_native < np.n * np.n / 4,
+            "%d of %d nodes have no native datum, so this place is mostly not refined and is "
+            % [np.no_native, np.n * np.n] + "a poor one to be measuring streaming at")
+    print("streaming: %d nodes over coarse ground, %d holes opened, %d ramped in the blend "
+            % [had, lost, np.from_ramp] + "ring and %d with no native datum" % np.no_native)
+
+
+func test_the_ground_refuses_a_patch_it_is_not_standing_on() -> void:
+    """THE WRONG-GROUND DEFECT AT LEVEL GRANULARITY.
+
+    Metre scale was stage 0's version of this; a mesh drawn at one level while
+    the scatter samples another is the same defect with a median 42.5 m gap
+    rather than a centimetre one. So a patch is `stream`ed in rather than
+    assigned, and holding one at all is proof it belongs to the mesh in front
+    of it."""
+    var p := streaming_place()
+    if p.is_empty():
+        print("streaming: no fetched pyramid -- skipping, and saying so")
+        return
+    var res: TileResidency = p["res"]
+    var hf: Heightfield = p["hf"]
+    var tm: TerrainMesh = p["tm"]
+    var np := NearFieldPatch.build(res, p["centre"], 0, hf, tm, null)
+    if not np.is_built():
+        return
+    var mine := GroundSurface.over(hf, tm, null)
+    check(mine.stream(np), "the surface refused a patch seamed to its own mesh: %s"
+            % mine.why_refused)
+    # A DIFFERENT MESH. Same field, same stride, same everything except
+    # identity -- which is the case a value comparison would let through.
+    var other := TerrainMesh.new()
+    other.build(hf, 4, 1.0)
+    var theirs := GroundSurface.over(hf, other, null)
+    check(not theirs.stream(np), "a surface accepted a patch built against another mesh")
+    check(theirs.why_refused.contains("wrong-ground"),
+            "the refusal does not name the defect: %s" % theirs.why_refused)
+    check(theirs.patch == null, "a refused patch was held anyway")
+    # AND A DETAIL MISMATCH, the other half of the pair.
+    var withdetail := GroundSurface.over(hf, tm, detail_field())
+    check(not withdetail.stream(np),
+            "a surface holding a detail term accepted a patch built without one")
+    # THE PATCH ANSWERS INSIDE ITS FOOTPRINT AND THE COARSE MESH OUTSIDE IT.
+    var c: Vector2 = p["centre"]
+    check(mine.patch != null, "the accepted patch was not held")
+    var inside := mine.surface_at(c)
+    check(not is_nan(inside), "the streamed surface refused at its own centre")
+    check(inside == np.surface_y(c), "inside the patch the ground is not the patch")
+    var far := c + Vector2(TileResidency.PATCH_HALF_M * 3.0, 0.0)
+    if not is_nan(tm.drawn_surface_y(far, hf)):
+        check(mine.surface_at(far) == tm.drawn_surface_y(far, hf),
+                "outside the patch the ground is not the coarse mesh")
+    print("streaming: the surface takes its own patch, refuses another mesh's and a "
+            + "mismatched detail term, and answers from the patch only where it covers")
+
+
+func test_the_near_field_gains_the_data_s_own_samples() -> void:
+    """THE ACCEPTANCE METRIC, IN THE GATE.
+
+    `measurements/ground_relief.json` reports it over sixty places; this
+    asserts it at one, so a regression is caught by the gate rather than by
+    somebody re-reading an artefact. The disc a standing body sees held ZERO of
+    the drawn mesh's ground samples -- the whole near field inside one 4 km
+    triangle -- and the native grid has 69 in the same disc."""
+    var p := streaming_place()
+    if p.is_empty():
+        print("streaming: no fetched pyramid -- skipping, and saying so")
+        return
+    var res: TileResidency = p["res"]
+    var hf: Heightfield = p["hf"]
+    var tm: TerrainMesh = p["tm"]
+    var c: Vector2 = p["centre"]
+    var np := NearFieldPatch.build(res, c, 0, hf, tm, null)
+    if not np.is_built():
+        return
+    var r := TileResidency.NEAR_FIELD_M
+    var coarse_samples := 0
+    var step := float(tm.stride) * hf.pixel_size_m
+    var reach := int(r / step) + 2
+    for dj in range(-reach, reach + 1):
+        for di in range(-reach, reach + 1):
+            var w := c + Vector2(float(di) * step, float(dj) * step)
+            var t := hf.world_to_texel(w.x, w.y)
+            # A COARSE MESH VERTEX, which is a texel at a multiple of the
+            # stride and not any texel.
+            if absf(t.x - round(t.x)) > 0.01 or absf(t.y - round(t.y)) > 0.01:
+                continue
+            if int(round(t.x)) % tm.stride != 0 or int(round(t.y)) % tm.stride != 0:
+                continue
+            if (w - c).length() <= r and not is_nan(hf.height_at_world(w.x, w.y)):
+                coarse_samples += 1
+    var streamed := np.nodes_within(c, r)
+    check(coarse_samples <= 1, "the coarse mesh already has %d ground samples in the near "
+            % coarse_samples + "field, so the blocker this is measured against is gone")
+    check(streamed >= 60, "the streamed near field holds %d ground samples" % streamed)
+    check(streamed > coarse_samples * 20, "streaming did not multiply the near field's ground "
+            + "samples: %d against %d" % [streamed, coarse_samples])
+    print("streaming: near field holds %d ground samples streamed against %d coarse -- the "
+            % [streamed, coarse_samples] + "disc is %s m and the patch samples it at %s m"
+            % [String.num(r, 0), String.num(np.step_m, 0)])
+
+
+func test_the_detail_vanishes_on_the_patch_and_appears_below_it() -> void:
+    """WHERE STAGE 0 AND STREAMING MEET, AND IT IS A ZERO.
+
+    The detail term is exactly zero at every parent lattice node. Refining the
+    pyramid's 100 m lattice makes its nodes the patch's own vertices, so at
+    `refine = 1` the synthesis contributes EXACTLY NOTHING to the drawn mesh --
+    the heights are the data. That is the stage-0 guard working, and it is
+    worth asserting because "the synthesis is on and changed nothing" and "the
+    synthesis is off" are indistinguishable from anywhere else.
+
+    And the other half: tessellate finer than the data and it appears."""
+    var p := streaming_place()
+    if p.is_empty():
+        print("streaming: no fetched pyramid -- skipping, and saying so")
+        return
+    var res: TileResidency = p["res"]
+    var hf: Heightfield = p["hf"]
+    var tm: TerrainMesh = p["tm"]
+    var tp: TilePyramid = p["tp"]
+    var df := DetailField.load_from(hf, DetailField.ROWS_PATH, tp.pixel_size_of(0))
+    check(df.is_loaded(), "the detail field did not load at a 100 m parent")
+    if not df.is_loaded():
+        return
+    check(df.parent_spacing_m == 100.0, "the parent spacing is %s m and not the level's 100 m"
+            % String.num(df.parent_spacing_m, 1))
+    var plain := NearFieldPatch.build(res, p["centre"], 0, hf, tm, null)
+    var withd := NearFieldPatch.build(res, p["centre"], 0, hf, tm, df)
+    check(plain.is_built() and withd.is_built(), "a patch did not build")
+    if not (plain.is_built() and withd.is_built()):
+        return
+    var nonzero := 0
+    var compared := 0
+    for j in range(0, plain.n, 3):
+        for i in range(0, plain.n, 3):
+            var a := plain.height_at_node(i, j)
+            var b := withd.height_at_node(i, j)
+            if is_nan(a) or is_nan(b):
+                continue
+            compared += 1
+            if a != b:
+                nonzero += 1
+    check(compared > 300, "only %d nodes could be compared" % compared)
+    check(nonzero == 0, "the detail term moved %d of %d patch vertices, so the patch's "
+            % [nonzero, compared] + "vertices are not the lattice it is exact on")
+    # THE OTHER HALF: below the data, it is there.
+    var fine := NearFieldPatch.build(res, p["centre"], 0, hf, tm, df, 2)
+    check(fine.is_built(), "the tessellated patch did not build")
+    if not fine.is_built():
+        return
+    var moved := 0
+    var swing := 0.0
+    for j in range(1, fine.n - 1, 7):
+        for i in range(1, fine.n - 1, 7):
+            # ONLY THE NODES BETWEEN DATA SAMPLES. The ones ON them are the
+            # zeros just asserted.
+            if i % 2 == 0 and j % 2 == 0:
+                continue
+            var y := fine.height_at_node(i, j)
+            var lat := tp.height_at_world(fine.world_of(i, j).x, fine.world_of(i, j).y)
+            if is_nan(y) or is_nan(lat):
+                continue
+            if fine.weight_at(i, j) < 1.0:
+                continue
+            moved += 1
+            swing = maxf(swing, absf(y - lat))
+    check(moved > 50, "only %d sub-lattice nodes could be measured" % moved)
+    check(swing > 0.0, "tessellating below the data produced no metre-scale relief at all")
+    print("streaming: the detail is exactly zero at all %d patch vertices at refine 1, and "
+            % compared + "moves the surface up to %s m at refine 2" % String.num(swing, 3))
+
+
+func test_one_row_serves_two_parents() -> void:
+    """`amplitude_m` IS NOT SCALE FREE, AND THE ROWS ALWAYS SAID SO.
+
+    The units block has always read "standard deviation of the detail term at
+    the parent spacing". What it did not say was WHICH parent, and nothing read
+    it -- which is fine with one level and wrong the moment streaming
+    introduces a second. Refining a 100 m lattice, the data already carries
+    1,000 m down to 100 m; the function must supply only what is below, which
+    is a smaller standard deviation than the same row supplies under a 1,000 m
+    parent.
+
+    So the file declares the parent its amplitudes were measured at and the
+    field rescales by the row's own exponent -- for fBm the RMS increment over
+    a lag goes as lag^H, and `spectral_slope` is that exponent here.
+
+    The control is the number this is worth: taken literally at both spacings
+    the same row puts the full kilometre-scale roughness into the last hundred
+    metres, and it arrives exactly when a level switches."""
+    var hf := heightfield()
+    var coarse := DetailField.load_from(hf, DetailField.ROWS_PATH, 1000.0)
+    var fine := DetailField.load_from(hf, DetailField.ROWS_PATH, 100.0)
+    check(coarse.is_loaded() and fine.is_loaded(), "the rows did not load at both spacings")
+    if not (coarse.is_loaded() and fine.is_loaded()):
+        return
+    check(coarse.calibration_note == "",
+            "the rows do not declare which parent their amplitudes belong to: %s"
+            % coarse.calibration_note)
+    check(coarse.calibrated_at_parent_m == 1000.0,
+            "the rows say they were calibrated at %s m" % String.num(coarse.calibrated_at_parent_m, 0))
+
+    # THE DECLARED NUMBER IS UNCHANGED AT THE PARENT IT WAS CALIBRATED AT, to
+    # the bit. A single-level client must not move.
+    for name in coarse.landforms():
+        check(coarse.amplitude_for(str(name)) == float(coarse.row(str(name))["amplitude_m"]),
+                "%s's amplitude moved at the parent it was calibrated at" % str(name))
+
+    # AND THE ROW STATES A WAVELENGTH, so the octave count follows the parent
+    # rather than the answer following the count.
+    for name in coarse.landforms():
+        var want := float(coarse.row(str(name))["finest_wavelength_m"])
+        for df in [coarse, fine]:
+            var got: float = df.parent_spacing_m / pow(2.0, float(df.octaves_for(str(name))))
+            check(got <= want and got > want * 0.5,
+                    "%s synthesises to %s m under a %s m parent, and the row asks for %s m"
+                    % [str(name), String.num(got, 4), String.num(df.parent_spacing_m, 0),
+                            String.num(want, 3)])
+
+    # THE SURFACE ITSELF, over the band both parents cover.
+    var w0 := hf.texel_to_world(500.0, 700.0)
+    var lag := 8.0
+    var g_coarse := _detail_variance(coarse, w0, lag)
+    var g_fine := _detail_variance(fine, w0, lag)
+    check(g_coarse > 0.0 and g_fine > 0.0, "one of the two surfaces is flat")
+    var ratio: float = maxf(g_coarse, g_fine) / maxf(minf(g_coarse, g_fine), 1.0e-12)
+    check(ratio < 2.0, "the same row under a 1,000 m and a 100 m parent differs by %sx in "
+            % String.num(ratio, 2) + "roughness at %s m, so a level switch changes the ground"
+            % String.num(lag, 0))
+    # THE CONTROL: without the rescale it would have. Loose, because a discrete
+    # octave ladder is not a continuum -- the two parents put their finest
+    # octave at 0.24 m and 0.20 m, which is a 25% difference in the last band
+    # before anything else is counted.
+    var talus := fine.row("talus")
+    var raw := float(talus["amplitude_m"])
+    var scaled := fine.amplitude_for("talus")
+    check(raw / scaled > 2.0, "the rescale is worth %sx, which is small enough that this "
+            % String.num(raw / scaled, 2) + "check would pass without it")
+    print("one row, two parents: roughness at %s m agrees within %sx, and the rescale it "
+            % [String.num(lag, 0), String.num(ratio, 2)]
+            + "took is %sx on talus (%s m at a 1,000 m parent, %s m at 100 m)"
+            % [String.num(raw / scaled, 2), String.num(raw, 3), String.num(scaled, 3)])
+
+
+## Mean squared difference of the detail term over a fixed lag -- a variogram
+## at one distance, which is all this comparison needs.
+func _detail_variance(df: DetailField, at: Vector2, lag: float) -> float:
+    var total := 0.0
+    var n := 0
+    for k in 200:
+        var p := at + Vector2(float(k % 20) * 37.0, float(k / 20) * 41.0)
+        var a := df.detail_at(p, "talus")
+        var b := df.detail_at(p + Vector2(lag, 0.0), "talus")
+        if is_nan(a) or is_nan(b):
+            continue
+        total += (a - b) * (a - b)
+        n += 1
+    return 0.0 if n == 0 else 0.5 * total / float(n)
+
+
+func test_a_level_switch_moves_no_plant() -> void:
+    """DECISION 952 THROUGH THE ONE DOOR STREAMING LEAVES OPEN.
+
+    §16.6 keys placement on quantised ground position x family x candidate
+    index, and 952 binds that to anything turning cover into objects. A
+    streaming rebuild is exactly the event that could re-key it -- a tile
+    arriving, a level switching, a re-centre -- and the churn defect would come
+    back through it.
+
+    It does not, because placement is a function of the ground a plant stands
+    ON and never of the height it stands AT: the level decides the second and
+    the digest folds the first. So the XOR digest is identical across a level
+    change and the plants are at different heights, and BOTH halves are
+    asserted -- a patch that changed no height would pass the first on its own
+    by doing nothing.
+
+    A plant DROPPED would also be a plant moved, and worse. The patch never
+    subtracts, so the instance count is asserted too."""
+    var p := streaming_place()
+    if p.is_empty():
+        print("streaming: no fetched pyramid -- skipping, and saying so")
+        return
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    v.bind_families()
+    v.show_field("deepest_winter", "band.pft_fractions", 45)
+    var c: Vector2 = p["centre"]
+    # WELL INSIDE THE REFINED INTERIOR. A radius reaching the blend ring would
+    # compare plants on ramped ground, which is a fair comparison of the wrong
+    # thing.
+    var radius := 1200.0
+    var before := v.scatter_at(c, radius)
+    if not bool(before.get("ok", false)):
+        print("streaming: the coarse scatter refused (%s) -- skipping"
+                % str(before.get("why", "?")))
+        v.queue_free()
+        return
+    var d0: Dictionary = (before["placement"] as Dictionary)["digest"]
+    var n0: Dictionary = (before["placement"] as Dictionary)["digest_instances"]
+    var census0 := v.scatter.census.duplicate(true)
+
+    var streamed := v.stream_to(c)
+    check(bool(streamed.get("ok", false)), "the patch did not stream: %s"
+            % str(streamed.get("why", "?")))
+    if not bool(streamed.get("ok", false)):
+        v.queue_free()
+        return
+    check(v.ground.patch != null, "the ground is not standing on the streamed patch")
+    var after := v.scatter_at(c, radius)
+    check(bool(after.get("ok", false)), "the scatter refused after the level changed: %s"
+            % str(after.get("why", "?")))
+    if not bool(after.get("ok", false)):
+        v.queue_free()
+        return
+    var d1: Dictionary = (after["placement"] as Dictionary)["digest"]
+    var n1: Dictionary = (after["placement"] as Dictionary)["digest_instances"]
+
+    check(int(d0["all"]) == int(d1["all"]),
+            "the placement digest changed across a level switch: %d then %d -- a rebuild moved "
+            % [int(d0["all"]), int(d1["all"])] + "a plant, which is the churn defect returning "
+            + "through the one door streaming leaves open")
+    check(int(n0["all"]) == int(n1["all"]),
+            "%d plants were placed on the coarse surface and %d on the streamed one; a rebuild "
+            % [int(n0["all"]), int(n1["all"])] + "that removes a plant is a worse rebuild than "
+            + "one that moves it")
+    check(int(n0["all"]) > 100, "only %d plants were placed, so the digest is comparing almost "
+            % int(n0["all"]) + "nothing")
+    for ring in d0:
+        check(int(d0[ring]) == int(d1[ring]), "ring %s of the digest changed across the level "
+                % str(ring) + "switch")
+
+    # AND THE CONTROL: the heights DID change, so the first half is not passing
+    # because streaming did nothing.
+    var census1: Dictionary = v.scatter.census
+    var compared := 0
+    var lifted := 0
+    var worst := 0.0
+    for k in census0:
+        if not census1.has(k):
+            continue
+        var a: Array = census0[k]
+        var b: Array = census1[k]
+        compared += 1
+        if float(a[2]) != float(b[2]):
+            lifted += 1
+            worst = maxf(worst, absf(float(a[2]) - float(b[2])))
+    check(compared > 20, "only %d sub-cells could be compared" % compared)
+    check(lifted > compared / 2, "only %d of %d sub-cells changed height, so the patch is not "
+            % [lifted, compared] + "the ground the plants are standing on")
+    print("streaming: the placement digest is identical across the level switch over %d "
+            % int(n0["all"]) + "plants, and %d of %d sub-cells moved vertically, by up to %s m"
+            % [lifted, compared, String.num(worst, 1)])
+    v.queue_free()

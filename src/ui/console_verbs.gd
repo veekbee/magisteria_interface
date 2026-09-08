@@ -47,6 +47,8 @@ func bind(console_: DevConsole, view_: TerrainView) -> void:
     console.register("view.capture", "<name> -- a png in shots/", _view_capture)
     console.register("view.embody", "stand a debug body at the reticle", _view_embody)
     console.register("view.disembody", "back to the free dev camera", _view_disembody)
+    console.register("view.stream", "[x y] | off -- stream the native ground to a point",
+            _view_stream)
 
 
     console.register("probe.cell", "[x y] -- the cell under the reticle", _probe_cell)
@@ -57,6 +59,8 @@ func bind(console_: DevConsole, view_: TerrainView) -> void:
             _probe_survive)
     console.register("probe.percept", "<family> [x y] -- the min(), two columns", _probe_percept)
     console.register("probe.pin", "what this client is standing on", _probe_pin)
+    console.register("probe.tile", "[x y] -- which tile, which level, and which absence",
+            _probe_tile)
 
     # POSTURE IS A `world.*` VERB AND NOT A `view.*` ONE, on a discriminator
     # worth keeping: in a production player, changing posture is an ACTION THE
@@ -143,8 +147,14 @@ func _view_embody(args: PackedStringArray) -> PackedStringArray:
     body.ground = PackedFloat64Array([w.x, 0.0 if is_nan(elevation) else elevation, w.y])
     body.flying = true
     view.observer = body.observer()
-    var walk := DebugPlayer.walk_available(view.bundle,
-            view.heightfield.pixel_size_m * float(view.terrain.stride),
+    # STREAM THE GROUND THE BODY IS ABOUT TO STAND ON, BEFORE ASKING ABOUT IT.
+    # `walk_available` is answering about the drawn surface, and standing a
+    # body somewhere is exactly the moment that surface should be the native
+    # one. It does not open walk mode -- the underfoot half still refuses at
+    # 100 m -- it stops the near-field half reporting a flat triangle that is
+    # no longer there.
+    var streamed := view.stream_to(w)
+    var walk := DebugPlayer.walk_available(view.bundle, view.ground_sample_m(w),
             TerrainView.SCATTER_HORIZON_M)
     var out := PackedStringArray()
     out.append("a %s body stands at (%s, %s)" % [body.posture,
@@ -158,6 +168,89 @@ func _view_embody(args: PackedStringArray) -> PackedStringArray:
             % [String.num(float(relief["samples_in_near_field"]), 0),
                     String.num(float(relief["near_field_radius_m"]), 0)]
             if bool(relief["ok"]) else str(relief["why"])))
+    out.append("ground: sampled every %s m here%s" % [String.num(view.ground_sample_m(w), 0),
+            (" (a streamed patch at z=%d)" % int(streamed.get("z", -1))
+                    if bool(streamed.get("ok", false))
+                    else " (the coarse mesh: %s)" % str(streamed.get("why", "not streamed")))])
+    return out
+
+
+## STREAM THE NATIVE GROUND HERE, or say what is stopping it.
+##
+## `view.*` AND NOT `world.*`. It changes what this client holds and draws and
+## touches no fixture, which is the line the three prefixes are drawn on. A
+## production build keeps it.
+func _view_stream(args: PackedStringArray) -> PackedStringArray:
+    var out := PackedStringArray()
+    if args.size() >= 1 and str(args[0]) == "off":
+        view.clear_stream()
+        out.append("near-field patch down; the coarse mesh is the whole surface again")
+        return out
+    var p := _point(args)
+    if not bool(p["ok"]):
+        return PackedStringArray([str(p["why"])])
+    var w: Vector2 = p["world"]
+    var r := view.stream_to(w)
+    if not bool(r.get("ok", false)):
+        out.append("no patch: %s" % str(r.get("why", "?")))
+        if r.has("not_loaded"):
+            # NAMED, NOT COUNTED WITH THE OTHER TWO. A tile in flight resolves
+            # on its own; empty ground and an unfetched tile do not.
+            out.append("  %d tile(s) NOT_LOADED -- in flight, not absent. Run it again."
+                    % int(r["not_loaded"]))
+        return out
+    if not bool(r.get("rebuilt", false)):
+        out.append("patch held at z=%d: %s" % [int(r.get("z", -1)), str(r.get("why", ""))])
+        return out
+    out.append("patch at z=%d, %s m texels, %d nodes a side over %s m half extent"
+            % [int(r["z"]), String.num(float(r["pixel_size_m"]), 0), int(r["nodes_per_side"]),
+                    String.num(float(r["half_extent_m"]), 0)])
+    out.append("  %d vertices, %d quads; %d heights from the native grid, %d ramped in the "
+            % [int(r["vertices"]), int(r["quads"]), int(r["from_native"]), int(r["from_ramp"])]
+            + "blend ring, %d with no native datum, %d holes"
+            % [int(r["no_native"]), int(r["holes"])])
+    out.append("  %d tile(s), %d decoded now, %d empty ground"
+            % [(r["keys"] as PackedStringArray).size(), int(r["decoded_now"]),
+                    int(r["empty_ground"])])
+    out.append("  rebuilds when the body passes %s m from the centre -- the half extent less "
+            % String.num(TileResidency.KEEP_M, 0)
+            + "the blend ring and the near field, so the near field is never on ramped ground")
+    return out
+
+
+## WHICH TILE, WHICH LEVEL, AND WHICH OF THE FOUR STATES.
+##
+## FOUR AND NOT THREE. Empty ground is a fact about the basin, not fetched is a
+## fact about this clone, not loaded is a fact about this moment and resolves
+## on its own, resident is here. A readout that collapsed the last two would
+## report the near field as flat ground while tiles were still arriving.
+func _probe_tile(args: PackedStringArray) -> PackedStringArray:
+    var out := PackedStringArray()
+    var p := _point(args)
+    if not bool(p["ok"]):
+        return PackedStringArray([str(p["why"])])
+    var w: Vector2 = p["world"]
+    var tp: TilePyramid = view.pyramid if view.pyramid != null else TilePyramid.load_from()
+    if not tp.is_loaded():
+        return PackedStringArray(["no pyramid: %s" % tp.why_absent])
+    var res: TileResidency = (view.residency if view.residency != null
+            else TileResidency.over(tp))
+    out.append("at (%s, %s)" % [String.num(w.x, 0), String.num(w.y, 0)])
+    for lv in tp.levels:
+        var d: Dictionary = lv
+        var zi := int(d["z"])
+        var at := tp.locate(w.x, w.y, zi)
+        if not bool(at.get("ok", false)):
+            out.append("  z=%d  %s m  %s" % [zi, String.num(float(d["pixel_size_m"]), 0),
+                    str(at.get("why", "off grid"))])
+            continue
+        out.append("  z=%d  %s m  %s  %s" % [zi, String.num(float(d["pixel_size_m"]), 0),
+                str(at["key"]), res.state(str(at["key"]))])
+    var chosen := res.level_for(w)
+    out.append("finest level with every tile fetched: %s"
+            % ("none -- a valid clone, `python3 tools/fetch_artefacts.py`" if chosen < 0
+                    else "z=%d (%s m). z=0 is the FINEST; the polarity is inverted from a web map"
+                            % [chosen, String.num(tp.pixel_size_of(chosen), 0)]))
     return out
 
 

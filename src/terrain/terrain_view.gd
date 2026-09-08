@@ -154,6 +154,19 @@ var field_report: Dictionary = {}
 var _cell_centres: Dictionary = {}
 var ground: GroundSurface = null
 
+## STREAMING: the pyramid, what is held of it, and the patch standing now.
+##
+## OFF UNTIL ASKED. The basin view is what M1 built and a near-field patch is
+## invisible from it -- 8 km of ground inside a 1,500 km frame -- so building
+## one on every `build()` would spend a tile decode and a mesh on nothing. It
+## is `stream_to` that starts it, which is what an embodied viewer calls and
+## what `view.stream` calls by hand.
+var pyramid: TilePyramid = null
+var residency: TileResidency = null
+var patch: NearFieldPatch = null
+var stream_report: Dictionary = {}
+var _patch_mi: MeshInstance3D = null
+
 var probe: CellProbe = null
 ## What `show_field` last painted. The probe reads the row that is DRAWN
 ## rather than one it was told about separately, so the number in the readout
@@ -705,6 +718,112 @@ func bind_families() -> Dictionary:
         "cost_model": ("" if frame_cost.is_loaded()
                 else "no frame-cost measurement: " + frame_cost.why_absent),
     }
+
+
+## STREAM THE NATIVE GROUND TO A WORLD POSITION.
+##
+## WHAT IT IS GRADED ON. A plant on the coarse plane stands a median 42.5 m
+## from the ground the data holds, worst 427 m, and the disc a standing body
+## sees holds ZERO of the drawn mesh's ground samples. Those two numbers are
+## the acceptance metric -- `tools/measure_relief.sh` reports both against the
+## streamed surface -- and frame time is a budget to stay inside rather than
+## the thing being bought.
+##
+## RETURNS WITHOUT BUILDING when a tile it needs is still in flight, and says
+## so. That is the case worth having a name for: a patch built over a tile
+## that has not arrived would fall back to the coarse surface across a quarter
+## of the near field and report a healthy build, so the near field flattens
+## while every count says fine.
+func stream_to(w: Vector2, budget: int = TileResidency.DECODE_BUDGET) -> Dictionary:
+    if terrain == null or heightfield == null:
+        stream_report = {"ok": false, "why": "no terrain mesh to seam to"}
+        return stream_report
+    if pyramid == null:
+        pyramid = TilePyramid.load_from()
+        residency = TileResidency.over(pyramid)
+    if not pyramid.is_loaded():
+        stream_report = {"ok": false, "why": pyramid.why_absent}
+        return stream_report
+    var z := residency.level_for(w)
+    if z < 0:
+        stream_report = {"ok": false, "why": ("no level here has all its tiles fetched. "
+                + "That is a valid clone: `python3 tools/fetch_artefacts.py`.")}
+        return stream_report
+    var centre := residency.snap(w, z)
+    if patch != null and residency.has_centre and residency.z == z             and not residency.needs_rebuild(w):
+        stream_report = {"ok": true, "rebuilt": false, "z": z,
+                "why": "the patch standing still covers this near field"}
+        return stream_report
+    var pumped := residency.pump(centre, z, budget)
+    if not bool(pumped["ready"]):
+        # NOT DRAWN AS ANYTHING. The patch that was standing stays standing --
+        # stale ground is honest ground, and it is the ground that was correct
+        # a moment ago rather than a hole invented now.
+        stream_report = {"ok": false, "rebuilt": false, "why": "tiles still loading",
+                "not_loaded": int(pumped["not_loaded"]), "decoded_now": int(pumped["decoded_now"]),
+                "z": z}
+        return stream_report
+    var np := NearFieldPatch.build(residency, centre, z, heightfield, terrain, terrain.detail)
+    if not np.is_built():
+        stream_report = {"ok": false, "why": np.why_refused, "z": z}
+        return stream_report
+    # THE GROUND FIRST, THE MESH SECOND, and the order is the guard. If
+    # `GroundSurface` refuses the patch there is nothing to draw either: a
+    # patch on screen that the scatter is not standing on is the wrong-ground
+    # defect at level granularity.
+    if ground != null and not ground.stream(np):
+        stream_report = {"ok": false, "why": ground.why_refused, "z": z}
+        return stream_report
+    patch = np
+    residency.settled(centre, z)
+    if _patch_mi == null:
+        _patch_mi = MeshInstance3D.new()
+        _patch_mi.name = "NearFieldPatch"
+        # THE TERRAIN'S OWN MATERIAL, not a copy. A field painted on the basin
+        # has to be painted on the patch or the near field is a grey hole in a
+        # coloured map, and two materials is two places for that to drift.
+        _patch_mi.material_override = _terrain_mat
+        add_child(_patch_mi)
+    _patch_mi.mesh = np.mesh
+    stream_report = np.report()
+    stream_report["ok"] = true
+    stream_report["rebuilt"] = true
+    stream_report["centre"] = centre
+    stream_report["keys"] = pumped["keys"]
+    stream_report["decoded_now"] = pumped["decoded_now"]
+    stream_report["empty_ground"] = pumped["empty_ground"]
+    return stream_report
+
+
+## HOW FINELY THE DRAWN GROUND IS SAMPLED WHERE A BODY IS STANDING.
+##
+## THE ONE INPUT `walk_available` NEEDS AND COULD NOT ASK FOR. It was handed
+## the overview's spacing times the stride -- 4,000 m -- because that was the
+## only surface there was. With a patch under the body it is the patch's, and
+## the criterion is answering about the ground actually drawn rather than about
+## a mesh the body is no longer standing on.
+##
+## IT DOES NOT OPEN WALK MODE AND IS NOT MEANT TO. 100 m is 20 seconds of
+## walking between one height and the next at the stub's speed and 143 at a
+## load-bearing envelope's; the underfoot half of the criterion refuses at both
+## and the guard is unchanged. What this fixes is the OTHER half, which was
+## reporting a flat near field that is no longer flat.
+func ground_sample_m(w: Vector2) -> float:
+    if patch != null and patch.is_built() and patch.contains(w):
+        return patch.step_m
+    return heightfield.pixel_size_m * float(terrain.stride)
+
+
+## Take the patch down, and take it out of the ground with it.
+func clear_stream() -> void:
+    if ground != null:
+        ground.stream(null)
+    patch = null
+    if residency != null:
+        residency.forget()
+    if _patch_mi != null:
+        _patch_mi.mesh = null
+    stream_report = {}
 
 
 ## M5: scatter vegetation within the horizon of a world position, for the day
