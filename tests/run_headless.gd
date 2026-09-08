@@ -124,6 +124,11 @@ func _initialize() -> void:
     test_the_body_moves_at_the_speed_the_bundle_reports()
     test_walk_mode_is_refused_while_the_ground_is_a_plane()
     test_a_recorded_walk_replays_and_cannot_outrun_its_own_locomotion()
+    test_the_console_partitions_its_verbs_from_birth()
+    test_the_percept_min_names_what_binds_and_never_folds_art_debt()
+    test_the_probe_re_derives_what_the_build_placed()
+    test_a_re_centre_that_moved_a_key_is_a_defect_and_not_churn()
+    test_the_console_answers_headless_from_a_named_point()
     stage_the_main_scene()
 
 
@@ -5462,3 +5467,309 @@ func test_a_recorded_walk_replays_and_cannot_outrun_its_own_locomotion() -> void
     print("stream: %d frames, %d moments, %d bytes%s, no frame outran its locomotion"
             % [stream.frames.size(), stream.moments.size(), int(size["bytes"]),
                     ", OVER the committable size" if bool(size["over"]) else ""])
+
+
+# ============================================================================
+# Phase 8 lane B3: the console and the probe set.
+# ============================================================================
+
+func test_the_console_partitions_its_verbs_from_birth() -> void:
+    """THE PARTITION IS THE ITEM, AND THE VERBS ARE ITS SHAPE. What a console
+    does is easy to add later; which of its verbs may exist in which build is
+    not, and a flat namespace makes that unanswerable without reading all of
+    them.
+
+    The enforcement is at REGISTRATION and not at execution. A verb that exists
+    and declines is a verb somebody finds a way to call; a verb that was never
+    registered cannot be reached. So the test asks a console built against a
+    live producer for its probe verbs and requires them to be MISSING, with a
+    sentence saying they are absent by construction rather than switched off.
+    """
+    var dev := DevConsole.new()
+    dev.producer_kind = "fixture_passthrough"
+    dev.dev_build = true
+    check(dev.register("view.x", "", func(_a): return ""), "a view verb was refused")
+    check(dev.register("probe.x", "", func(_a): return ""), "a probe verb was refused")
+    check(dev.register("world.x", "", func(_a): return ""), "a world verb was refused")
+    for n in dev.names():
+        var ok := false
+        for p in DevConsole.PREFIXES:
+            if str(n).begins_with(p):
+                ok = true
+        check(ok, "verb `%s` belongs to no prefix" % str(n))
+
+    # Against a live producer there is no artefact, so there is nothing to probe.
+    var live := DevConsole.new()
+    live.producer_kind = "live"
+    live.dev_build = true
+    check(not live.register("probe.cell", "", func(_a): return ""),
+            "probe.cell registered against a live producer")
+    check(live.names().is_empty() or not Array(live.names()).has("probe.cell"),
+            "probe.cell exists against a live wire")
+    var why := str(live.absent_prefixes().get("probe.", ""))
+    check(why.contains("truth never arrives"),
+            "the absence is not explained as one: %s" % why)
+    var answer := live.run("probe.cell")
+    check(answer.size() >= 2 and str(answer[1]).length() > 20,
+            "running an absent verb does not say why it is absent: %s" % str(answer))
+
+    # A production build has no world.* at all.
+    var prod := DevConsole.new()
+    prod.producer_kind = "fixture_passthrough"
+    prod.dev_build = false
+    check(not prod.register("world.reload", "", func(_a): return ""),
+            "world.reload registered in a production build")
+    check(str(prod.absent_prefixes().get("world.", "")).contains("never a transducer function"),
+            "the world.* absence does not say what it is not")
+
+    # And an unprefixed verb is refused outright.
+    check(not dev.register("reload", "", func(_a): return ""),
+            "an unprefixed verb was accepted, so the namespace is flat after all")
+    # Controls are Nodes and these never entered the tree, so they are freed
+    # here rather than left to the leak report at exit.
+    dev.free()
+    live.free()
+    prod.free()
+    print("console: three prefixes, probe.* absent against live, world.* absent in production")
+
+
+func test_the_percept_min_names_what_binds_and_never_folds_art_debt() -> void:
+    """`probe.percept` IS TWO COLUMNS AND ONE min(), and two things about the
+    format are load-bearing rather than cosmetic.
+
+    The earned column reads "no B: fixture is truth" because there is no
+    producer earning anything yet -- which is the state a privilege leak looks
+    exactly like. A faked number there would make this instrument useless on
+    the day it matters.
+
+    And a missing asset is ART DEBT, never a min() term. The asset lookup is
+    required to be the identity, so its absence is a gap in the models; folding
+    it in would convert a modelling gap into a claim about what an observer
+    earned."""
+    var no_b := PerceptProbe.evaluate("life_form", null, true, "life_form")
+    check(bool(no_b["earned_is_placeholder"]), "the earned column claims to be a measurement")
+    check(str(no_b["earned"]).contains("no B"), "the placeholder does not say what it stands in "
+            + "for: %s" % str(no_b["earned"]))
+    check(str(no_b["binding_term"]) == PerceptProbe.NOT_AFFORDABLE,
+            "with no earned term, something other than the budget is binding: %s"
+            % str(no_b["binding_term"]))
+
+    # An earned term below the affordable one binds, and says so.
+    var earned := PerceptProbe.evaluate("specific", "functional", true, "functional")
+    check(str(earned["drawn"]) == "functional" and str(earned["binding_term"])
+                    == PerceptProbe.NOT_EARNED,
+            "an earned rung below the affordable one did not bind: %s" % str(earned))
+
+    # Art debt is reported and is NOT the binding term of a percept claim.
+    var debt := PerceptProbe.evaluate("specific", "specific", false, "life_form")
+    check(bool(debt["art_debt"]), "a missing asset is not reported")
+    check(str(debt["art_debt_note"]).contains("ART DEBT"),
+            "art debt does not print as art debt")
+    var lines := PerceptProbe.lines(debt)
+    var joined := ""
+    for l in lines:
+        joined += str(l) + "\n"
+    check(joined.contains("earned") and joined.contains("affordable") and joined.contains("drawn"),
+            "the format is not two columns and a min(): %s" % joined)
+    check(joined.contains("ART DEBT"), "the art-debt line does not reach the output")
+    print("percept: earned | affordable | drawn = min, with art debt printed beside it")
+
+
+func test_the_probe_re_derives_what_the_build_placed() -> void:
+    """SELECTION BY RE-DERIVATION IS THE WHOLE DISCIPLINE, and this is what it
+    buys. The probe never picks an instance -- it cannot, since transforms do
+    not read back headless -- it recomputes the sub-cell's candidates from the
+    hash, calling the same statics the build called.
+
+    So a disagreement between the probe and the build can only mean a build
+    defect, and this test is what turns that property into a check: for every
+    sub-cell the build recorded a census entry for, the probe is asked how many
+    plants belong there, and the answers have to be the same number."""
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    v.bind_families()
+    v.show_field("deepest_winter", "band.pft_fractions", 45)
+    var verts: PackedVector3Array = v.terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var centre := v.terrain.mesh_to_world(verts[5000], v.heightfield)
+    var r := v.scatter_at(centre)
+    check(bool(r.get("ok", false)), "no scatter to probe: %s" % str(r.get("why", "")))
+    if not bool(r.get("ok", false)):
+        v.queue_free()
+        return
+
+    var probe := InstanceProbe.new()
+    probe.bind(v.scatter, v.heightfield, v.fixture, v.cell_probe())
+    check(probe.is_bound(), "the instance probe did not bind to the build")
+
+    var q := VegetationScatter.PLACEMENT_QUANTUM
+    var checked := 0
+    var agreed := 0
+    var states := {}
+    for key in v.scatter.census:
+        if checked >= 40:
+            break
+        var parts := str(key).split("|")
+        if parts.size() != 3:
+            continue
+        var family := str(parts[0])
+        var at := Vector2(float(parts[1].to_int()) / q, float(parts[2].to_int()) / q)
+        var sub := probe.sub_at(at, family)
+        if not bool(sub.get("ok", false)):
+            continue
+        checked += 1
+        states[str(sub["state"])] = int(states.get(str(sub["state"]), 0)) + 1
+        var built := int((v.scatter.census[key] as Array)[0])
+        if int(sub.get("drawn", -1)) == built:
+            agreed += 1
+        else:
+            check(false, "the build placed %d plants in %s and the probe re-derives %d"
+                    % [built, str(key), int(sub.get("drawn", -1))])
+    check(checked >= 10, "only %d census sub-cells could be probed" % checked)
+    check(agreed == checked, "%d of %d sub-cells disagreed" % [checked - agreed, checked])
+
+    # The nearest plant is named by ground and rank, and its re-derived
+    # position is inside the sub-cell it belongs to.
+    var any := ""
+    for key2 in v.scatter.census:
+        any = str(key2)
+        break
+    var p2 := str(any).split("|")
+    var pt := Vector2(float(p2[1].to_int()) / q, float(p2[2].to_int()) / q)
+    var near := probe.nearest(pt, str(p2[0]))
+    check(bool(near.get("ok", false)) and near.has("position_m"),
+            "the probe named no plant at a sub-cell the build placed in: %s"
+            % str(near.get("why", near.get("state", "?"))))
+    if near.has("position_m"):
+        var pos: Vector2 = near["position_m"]
+        var origin: Vector2 = near["origin_m"]
+        var half := float(near["half_m"])
+        check(absf(pos.x - origin.x) <= half + 1.0e-6 and absf(pos.y - origin.y) <= half + 1.0e-6,
+                "a re-derived plant stands outside its own sub-cell")
+
+    # AND THE ABSENCES ARE NAMED THINGS. Ground the build never reached is
+    # NOT_BUILT and says so, rather than reading as a plant that is not there.
+    var far := Vector2(centre.x + 400000.0, centre.y)
+    var outside := probe.sub_at(far, "tree")
+    if bool(outside.get("ok", false)):
+        check(str(outside["state"]) == InstanceProbe.NOT_BUILT,
+                "ground outside the build radius reports %s" % str(outside["state"]))
+    print("probe: %d census sub-cells re-derived, all agreeing with the build; states %s"
+            % [checked, str(states)])
+    v.queue_free()
+
+
+func test_a_re_centre_that_moved_a_key_is_a_defect_and_not_churn() -> void:
+    """`probe.survive` IS THE INTERACTIVE TWIN OF THE CHURN METRIC: which
+    plant, and why, rather than how many.
+
+    Its three exits are three different findings, and only one is a bug.
+    Thinning and the horizon are drawing decisions doing their job. A MOVED KEY
+    is not churn at all -- placement is a function of ground, so the same
+    ground under a different camera must produce the same key -- and it is
+    reported as the defect it would be."""
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    v.bind_families()
+    v.show_field("deepest_winter", "band.pft_fractions", 45)
+    var verts: PackedVector3Array = v.terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var centre := v.terrain.mesh_to_world(verts[5000], v.heightfield)
+    var r := v.scatter_at(centre)
+    if not bool(r.get("ok", false)):
+        v.queue_free()
+        return
+    var probe := InstanceProbe.new()
+    probe.bind(v.scatter, v.heightfield, v.fixture, v.cell_probe())
+
+    var q := VegetationScatter.PLACEMENT_QUANTUM
+    var verdicts := {}
+    var tested := 0
+    for key in v.scatter.census:
+        if tested >= 12:
+            break
+        var parts := str(key).split("|")
+        if parts.size() != 3:
+            continue
+        var at := Vector2(float(parts[1].to_int()) / q, float(parts[2].to_int()) / q)
+        var s := probe.survives(at, str(parts[0]), 25.0, 25.0)
+        if not bool(s.get("ok", false)):
+            continue
+        tested += 1
+        verdicts[str(s["verdict"])] = int(verdicts.get(str(s["verdict"]), 0)) + 1
+        check(str(s["verdict"]) != InstanceProbe.EXITS_KEY_MOVED,
+                "a 25 m re-centre moved the placement key at %s. Placement is a function of "
+                        % str(key)
+                + "ground (§16.6); this is the defect the whole scheme exists to remove.")
+        check(int(s["key_before"]) == int(s["key_after"]),
+                "the key changed with the camera at %s" % str(key))
+    check(tested >= 5, "only %d instances could be followed across a re-centre" % tested)
+    print("survive: %d instances across a 25 m re-centre, verdicts %s" % [tested, str(verdicts)])
+    v.queue_free()
+
+
+func test_the_console_answers_headless_from_a_named_point() -> void:
+    """A CONSOLE-LAUNCHED MEASUREMENT HAS TO BE THE SAME MEASUREMENT, or the
+    console is a second implementation of every tool it binds. The way that is
+    kept true is that every probe verb takes its point from the reticle OR from
+    arguments -- and with a point in the arguments the whole set runs
+    headlessly, which is how the gate drives it rather than trusting it."""
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    v.bind_families()
+    v.show_field("deepest_winter", "band.pft_fractions", 45)
+    var verts: PackedVector3Array = v.terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var centre := v.terrain.mesh_to_world(verts[5000], v.heightfield)
+    v.scatter_at(centre)
+
+    var console := DevConsole.new()
+    console.producer_kind = str(v.bundle.producer.get("kind", ""))
+    console.dev_build = true
+    var verbs := ConsoleVerbs.new()
+    verbs.bind(console, v)
+    for expected in ["view.help", "probe.cell", "probe.instance", "probe.sub", "probe.row",
+            "probe.survive", "probe.percept", "probe.pin", "world.day", "world.rebuild"]:
+        check(Array(console.names()).has(expected), "the console has no %s" % expected)
+
+    var at := "%f %f" % [centre.x, centre.y]
+    var cell := console.run("probe.cell " + at)
+    check(cell.size() >= 3, "probe.cell answered %d lines" % cell.size())
+    var joined := ""
+    for l in cell:
+        joined += str(l) + "\n"
+    check(joined.contains("cell") and joined.contains("node axis"),
+            "probe.cell does not name the cell it resolved: %s" % joined)
+
+    var sub := console.run("probe.sub tree " + at)
+    var sub_text := ""
+    for l in sub:
+        sub_text += str(l) + "\n"
+    check(sub_text.contains("share") and sub_text.contains("bare"),
+            "probe.sub does not print the composition arithmetic, which is the one thing that "
+            + "format exists for: %s" % sub_text)
+
+    var per := console.run("probe.percept tree " + at)
+    var per_text := ""
+    for l in per:
+        per_text += str(l) + "\n"
+    check(per_text.contains("no B: fixture is truth"),
+            "probe.percept does not print the honest earned placeholder: %s" % per_text)
+
+    var pin := console.run("probe.pin")
+    var pin_text := ""
+    for l in pin:
+        pin_text += str(l) + "\n"
+    check(pin_text.contains("contract v2.0"), "probe.pin does not read the contract pin: %s"
+            % pin_text)
+
+    # An unknown verb is a sentence, not a stack trace.
+    var miss := console.run("probe.nonsense")
+    check(miss.size() >= 1 and str(miss[0]).contains("no verb"),
+            "an unknown verb answered %s" % str(miss))
+    print("console: %d verbs answering headless from a named point" % console.names().size())
+    console.free()
+    v.queue_free()

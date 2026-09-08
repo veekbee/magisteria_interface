@@ -280,6 +280,55 @@ static func candidate_at(index: int, n: int, key: int) -> int:
     # a fallback that looks like an answer is how a broken permutation ships.
     return -1
 
+
+## THE SUB-CELL GRID, AS ONE FUNCTION. A texel centred at `centre` with
+## half-width `half`, split `BAND_SUBDIVISION` ways per side; this is the
+## origin of the (sx, sy)-th sub-cell. The probe walks the same grid the build
+## emitted, and a grid computed twice is a grid that comes to differ.
+static func sub_cell_origin(centre: Vector2, half: float, sx: int, sy: int) -> Vector2:
+    var sub_half := half / float(BAND_SUBDIVISION)
+    return Vector2(centre.x - half + sub_half * (2.0 * float(sx) + 1.0),
+            centre.y - half + sub_half * (2.0 * float(sy) + 1.0))
+
+
+## Which sub-cell of its texel a world point falls in, as `(sx, sy)`. The
+## inverse of `sub_cell_origin`, and clamped rather than wrapped: a point on
+## the far edge of the texel belongs to the last sub-cell, not the first of the
+## next texel.
+static func sub_cell_of(centre: Vector2, half: float, world: Vector2) -> Vector2i:
+    var sub := 2.0 * half / float(BAND_SUBDIVISION)
+    return Vector2i(
+            clampi(int(floor((world.x - (centre.x - half)) / sub)), 0, BAND_SUBDIVISION - 1),
+            clampi(int(floor((world.y - (centre.y - half)) / sub)), 0, BAND_SUBDIVISION - 1))
+
+
+## THE KEY A SUB-CELL'S PLANTS ARE DRAWN FROM. Ground and granularity, and
+## nothing about any camera -- which is the whole of §16.6's stability claim.
+## The half-width is IN the key on purpose: a texel emitted whole and the same
+## texel emitted as sub-cells are different ground to the hash, so a build that
+## changed its mind about subdivision would re-place rather than silently
+## agree.
+static func placement_key(life_form_key: int, origin: Vector2, half_m: float) -> int:
+    return stable_hash([SCATTER_SEED, life_form_key,
+            int(round(origin.x * PLACEMENT_QUANTUM)),
+            int(round(origin.y * PLACEMENT_QUANTUM)),
+            int(round(half_m * PLACEMENT_QUANTUM))])
+
+
+## WHERE ONE CANDIDATE STANDS. Uniform in the sub-cell square, seeded on the
+## key and the candidate's own number. §16.6 asks for blue noise and this is
+## not it; the spacing question is open and the stability one is closed.
+##
+## This is the function a probe re-derives a plant's position with. One
+## implementation, two callers: a probe that disagreed with the drawn instance
+## could then only mean a build defect, which is the property worth paying a
+## function call per instance for.
+static func candidate_position(key: int, candidate: int, origin: Vector2,
+                               half_m: float) -> Vector2:
+    return Vector2(
+            origin.x + (2.0 * hash01(stable_hash3(key, candidate, 1)) - 1.0) * half_m,
+            origin.y + (2.0 * hash01(stable_hash3(key, candidate, 2)) - 1.0) * half_m)
+
 ## A TEXEL IS A KILOMETRE, AND A BAND BOUNDARY IS A HUNDRED METRES. The
 ## residence and height rasters this scatter places against are the 1,000 m
 ## overview -- the export declares a tile pyramid and does not emit it -- so a
@@ -405,7 +454,7 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
     for g in groups.size():
         fractions.append(_fl.day_values(window, "band.pft_fractions", day, g))
         biomass.append(_fl.day_values(window, "band.pft.biomass", day, g))
-    var biomass_hi := _row_hi(window, "band.pft.biomass")
+    var biomass_hi := row_hi(window, "band.pft.biomass")
     var seasons: Array = []
     for g in groups.size():
         seasons.append(_season_range(window, "band.pft.biomass", g))
@@ -485,19 +534,20 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 # The COMPOSITION share scaled by how much ground is vegetated
                 # at all. Reading the share as a cover is what put every cell
                 # at full canopy; see `ground_cover`.
-                var frac := ground_cover(vals_f[cell],
-                        NAN if cell >= bare.size() else bare[cell])
                 var bio := vals_b[cell]
-                if is_nan(frac) or is_nan(bio) or frac <= 0.0:
+                # ONE HOME FOR WHAT A CELL IMPLIES. The probe asks the same
+                # question interactively and must get the same answer from the
+                # same code -- a second copy of this arithmetic would let a
+                # probe agree with a defect.
+                var imp := implication(life_form, vals_f[cell],
+                        NAN if cell >= bare.size() else bare[cell], bio,
+                        biomass_hi, texel_area)
+                if not bool(imp["ok"]):
                     continue
-                var params := parameters_for(life_form, frac, bio, biomass_hi)
-                if not bool(params["ok"]):
-                    continue
-                var crown := float(params["crown_m"])
-                var crown_area: float = PI * (0.5 * crown) * (0.5 * crown)
-                if crown_area <= 0.0:
-                    continue
-                var count := frac * texel_area / crown_area
+                var frac := float(imp["cover"])
+                var params: Dictionary = imp["parameters"]
+                var crown := float(imp["crown_m"])
+                var count := float(imp["count"])
                 var phen := phenology_for(seasons[gi], cell, bio)
                 var why_phen := _fs.check(life_form, "phenology", phen)
                 if why_phen != "":
@@ -531,12 +581,10 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 # nothing in are not emitted at all, so a tight band over a
                 # wide horizon costs a loop and not a scatter.
                 var sub_half := half / float(BAND_SUBDIVISION)
-                var per_sub := count / float(BAND_SUBDIVISION * BAND_SUBDIVISION)
+                var per_sub := float(imp["per_sub"])
                 for sy in BAND_SUBDIVISION:
                     for sx in BAND_SUBDIVISION:
-                        var o := Vector2(
-                                w.x - half + sub_half * (2.0 * float(sx) + 1.0),
-                                w.y - half + sub_half * (2.0 * float(sy) + 1.0))
+                        var o := sub_cell_origin(w, half, sx, sy)
                         var d_m := Vector2(o.x - centre.x, o.y - centre.y).length()
                         # THE RADIUS IS A CUT LIKE THE OTHERS. Without it a
                         # clipped texel would place plants past the disc the
@@ -661,10 +709,7 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         # INSTANCE, which is a hundred thousand string walks a build to learn
         # the same answer.
         var lf_key := family_key(life_form)
-        var cell_key := stable_hash([SCATTER_SEED, lf_key,
-                int(round(origin.x * PLACEMENT_QUANTUM)),
-                int(round(origin.y * PLACEMENT_QUANTUM)),
-                int(round(half * PLACEMENT_QUANTUM))])
+        var cell_key := placement_key(lf_key, origin, half)
         # ROUNDING THAT KEEPS THE STAND, AND KEEPS IT IN THE SAME ORDER.
         #
         # A sub-cell is a thirty-metre square and a family's implication in one
@@ -681,8 +726,8 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         # thinned count -- which is what keeps `n <= pool` true and the prefix
         # nested as the share falls.
         var u := hash01(stable_hash3(cell_key, 0, 7))
-        var pool := _resolve(float(item["count"]), u)
-        var n := _resolve(float(item["banded"]) * share, u)
+        var pool := resolve_count(float(item["count"]), u)
+        var n := resolve_count(float(item["banded"]) * share, u)
         if n <= 0:
             continue
         if pool < n:
@@ -705,8 +750,9 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             # sequential draw had. §16.6 asks for blue noise and this is not
             # it: a hash-seeded uniform jitter fixes the STABILITY defect and
             # leaves the spacing one open. Recorded in the report, not implied.
-            var wx := origin.x + (2.0 * hash01(stable_hash3(cell_key, candidate, 1)) - 1.0) * half
-            var wy := origin.y + (2.0 * hash01(stable_hash3(cell_key, candidate, 2)) - 1.0) * half
+            var pos2 := candidate_position(cell_key, candidate, origin, half)
+            var wx := pos2.x
+            var wy := pos2.y
             # ON THE SURFACE THAT IS DRAWN, not on the field it was sampled
             # from. The mesh triangulates the heightfield every `stride` texels
             # -- 4 km apart on the overview -- and the two disagree by a MEAN OF
@@ -926,7 +972,7 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
 ## for a fixed `u`, which is what makes a falling share remove plants rather
 ## than reshuffle them, and unbiased over many sub-cells, which is what stops a
 ## sparse family from rounding itself out of existence.
-static func _resolve(x: float, u: float) -> int:
+static func resolve_count(x: float, u: float) -> int:
     if x <= 0.0:
         return 0
     var whole: float = floor(x)
@@ -1068,6 +1114,42 @@ func _affordable(groups: PackedStringArray, implied: Dictionary) -> Dictionary:
     }
 
 
+## WHAT ONE CELL IMPLIES FOR ONE FAMILY, before any drawing decision.
+##
+## The composition share is scaled by how much ground is vegetated at all --
+## reading the share as a cover is what once put every cell at full canopy --
+## and the count follows from crown area, so a family of wide crowns implies
+## fewer plants over the same cover than a family of narrow ones.
+##
+## PUBLIC AND CALLED BY BOTH the build and the interactive probe. The probe's
+## worth rests on it agreeing with the build for one reason only: it is the
+## build. A second copy of this arithmetic would produce a probe that could
+## confirm a defect.
+func implication(life_form: String, share: float, bare: float, biomass: float,
+                 biomass_hi: float, texel_area_m2: float) -> Dictionary:
+    var cover := ground_cover(share, bare)
+    if is_nan(cover) or is_nan(biomass) or cover <= 0.0:
+        return {"ok": false, "why": "no cover here for %s" % life_form, "cover": cover}
+    var params := parameters_for(life_form, cover, biomass, biomass_hi)
+    if not bool(params["ok"]):
+        return {"ok": false, "why": str(params.get("why", "no parameters")), "cover": cover}
+    var crown := float(params["crown_m"])
+    var crown_area: float = PI * (0.5 * crown) * (0.5 * crown)
+    if crown_area <= 0.0:
+        return {"ok": false, "why": "%s has no crown area" % life_form, "cover": cover}
+    var count := cover * texel_area_m2 / crown_area
+    return {
+        "ok": true,
+        "why": "",
+        "cover": cover,
+        "parameters": params,
+        "height_m": float(params["height_m"]),
+        "crown_m": crown,
+        "count": count,
+        "per_sub": count / float(BAND_SUBDIVISION * BAND_SUBDIVISION),
+    }
+
+
 ## A cell's own yearly trough and peak for one life form's biomass.
 ##
 ## PHENOLOGY IS RELATIVE TO THE CELL, NOT TO THE ROW. Normalised over the row's
@@ -1128,7 +1210,7 @@ func phenology_for(season: Dictionary, cell: int, today: float) -> float:
     return clampf((today - lo[cell]) / span, 0.0, 1.0)
 
 
-func _row_hi(window: String, row: String) -> float:
+func row_hi(window: String, row: String) -> float:
     var rows: Dictionary = _fl.manifest.get("client_form", {}).get("rows", {})
     var d: Variant = rows.get("%s/%s" % [window, row], null)
     return 0.0 if d == null else float(d["hi"])

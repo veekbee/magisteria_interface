@@ -500,11 +500,19 @@ func _surface_y(p: Vector3) -> float:
     return NAN if is_nan(h) else h * terrain.exaggeration
 
 
-## M4: what a world position resolves to, read against the row now painted.
-func probe_world(wx: float, wy: float) -> Dictionary:
-    if probe == null:
+## The cell probe, built on first ask. Public because the console's probe set
+## and `probe_world` are the same instrument asked from two places, and a
+## second one bound to the same three artefacts would be a second answer.
+func cell_probe() -> CellProbe:
+    if probe == null and heightfield != null and residence != null and fixture != null:
         probe = CellProbe.new()
         probe.bind(heightfield, residence, fixture)
+    return probe
+
+
+## M4: what a world position resolves to, read against the row now painted.
+func probe_world(wx: float, wy: float) -> Dictionary:
+    var _p := cell_probe()
     var vals := PackedFloat64Array()
     if not shown.is_empty() and fixture != null:
         vals = fixture.day_values(shown["window"], shown["row"], shown["day"], shown["group"])

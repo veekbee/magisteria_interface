@@ -112,6 +112,25 @@ func _ready() -> void:
     else:
         push_warning("fields: %s" % field_report.get("why", "unknown"))
 
+    # THE `~` CONSOLE, built last because it binds over everything above it.
+    # Its three prefixes are partitioned from birth -- see `dev_console.gd`;
+    # `probe.*` reads the artefact and is absent by construction against a live
+    # producer, `world.*` is a development verb and does not exist client-side
+    # in production. The console decides that at REGISTRATION, so a verb this
+    # build may not have is a verb that was never created.
+    if field_report.get("ok", false):
+        console = DevConsole.new()
+        console.producer_kind = str(_terrain.bundle.producer.get("kind", "")) \
+                if _terrain.bundle != null else ""
+        console.dev_build = OS.is_debug_build()
+        console.setup()
+        $UI.add_child(console)
+        verbs = ConsoleVerbs.new()
+        verbs.bind(console, _terrain)
+        print("console: %d verbs%s" % [console.names().size(),
+                "" if console.absent_prefixes().is_empty()
+                        else ", absent " + str(console.absent_prefixes().keys())])
+
     var doc := _inspector.document
     if doc == null:
         doc = SchemaLoader.load_from_file(InspectorPanel.ARTEFACT_PATH)
@@ -134,6 +153,8 @@ var family_report: Dictionary = {}
 var scatter_report: Dictionary = {}
 var verdict: AncestorVerdict = null
 var verdict_banner: VerdictBanner = null
+var console: DevConsole = null
+var verbs: ConsoleVerbs = null
 
 
 func _on_field_changed(window: String, row: String, day: int, group: int) -> void:
