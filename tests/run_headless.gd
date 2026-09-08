@@ -5766,6 +5766,18 @@ func test_the_console_answers_headless_from_a_named_point() -> void:
     check(pin_text.contains("contract v2.0"), "probe.pin does not read the contract pin: %s"
             % pin_text)
 
+    # A CONSOLE-LAUNCHED MEASUREMENT IS THE SHELL TOOL. Not run here -- these
+    # need a window and minutes -- but the binding is checked: every named tool
+    # exists on disk, and an unknown name is a usage line rather than a launch.
+    check(Array(console.names()).has("world.measure"), "the console cannot launch a measurement")
+    for tool_name in ConsoleVerbs.MEASUREMENTS:
+        var entry: Array = ConsoleVerbs.MEASUREMENTS[tool_name]
+        check(FileAccess.file_exists("res://" + str(entry[0])),
+                "world.measure %s names %s, which is not there" % [str(tool_name), str(entry[0])])
+    var usage := console.run("world.measure nonsense")
+    check(usage.size() == 1 and str(usage[0]).begins_with("world.measure <"),
+            "an unknown measurement did not answer with a usage line: %s" % str(usage))
+
     # An unknown verb is a sentence, not a stack trace.
     var miss := console.run("probe.nonsense")
     check(miss.size() >= 1 and str(miss[0]).contains("no verb"),

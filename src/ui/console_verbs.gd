@@ -16,6 +16,24 @@ var console: DevConsole = null
 var body: DebugPlayer = null
 var instances: InstanceProbe = null
 
+## THE MEASUREMENT TOOLS, LAUNCHED AND NOT REIMPLEMENTED.
+##
+## A console-launched measurement has to emit the same artefact as the shell
+## tool, and the only way to be certain of that is to run the same program.
+## Every one of these is an `extends SceneTree` script that cannot be called
+## in-process, so a console binding would otherwise be a second implementation
+## of the measurement -- which is how two numbers with one name come to exist.
+## Shelling out is not a shortcut here; it is the strongest available form of
+## "the same measurement".
+const MEASUREMENTS := {
+    "seam": ["tools/measure_seam.sh", "measurements/scatter_seam.json"],
+    "motion": ["tools/measure_motion.sh", "measurements/scatter_motion.json"],
+    "scatter": ["tools/measure_scatter.sh", "measurements/scatter_horizon.json"],
+    "bands": ["tools/measure_bands.sh", "measurements/scatter_bands.json"],
+    "flight": ["tools/free_flight.sh", "measurements/flights/"],
+    "replay": ["tools/replay_flight.sh", "measurements/flight_replay.json"],
+}
+
 
 func bind(console_: DevConsole, view_: TerrainView) -> void:
     console = console_
@@ -42,6 +60,8 @@ func bind(console_: DevConsole, view_: TerrainView) -> void:
     console.register("world.day", "<n> -- move the moment", _world_day)
     console.register("world.rebuild", "[radius] -- rebuild the scatter here", _world_rebuild)
     console.register("world.reload", "re-read the fixture from disk", _world_reload)
+    console.register("world.measure", "<%s> -- run a measurement tool"
+            % "|".join(Array(MEASUREMENTS.keys())), _world_measure)
 
 
 ## The point a verb is about: the two arguments if they are there, otherwise
@@ -360,6 +380,28 @@ func _world_rebuild(args: PackedStringArray) -> PackedStringArray:
     return PackedStringArray(["rebuilt: %d texels, share %s, bound by %s" % [
             int(r.get("texels", 0)), String.num(float(r.get("share_drawn", 0.0)), 6),
             str(r.get("share_bound_by", "?"))]])
+
+
+func _world_measure(args: PackedStringArray) -> PackedStringArray:
+    if args.is_empty() or not MEASUREMENTS.has(str(args[0])):
+        return PackedStringArray(["world.measure <%s>"
+                % "|".join(Array(MEASUREMENTS.keys()))])
+    var entry: Array = MEASUREMENTS[str(args[0])]
+    var script := ProjectSettings.globalize_path("res://" + str(entry[0]))
+    if not FileAccess.file_exists(str(entry[0]).replace("tools/", "res://tools/")):
+        return PackedStringArray(["no tool at %s" % str(entry[0])])
+    var rest: PackedStringArray = PackedStringArray()
+    for i in range(1, args.size()):
+        rest.append(str(args[i]))
+    var pid := OS.create_process("/bin/bash", PackedStringArray([script]) + rest)
+    if pid <= 0:
+        return PackedStringArray(["could not launch %s" % str(entry[0])])
+    return PackedStringArray([
+            "launched %s as pid %d" % [str(entry[0]), pid],
+            "it writes %s -- the same artefact the shell tool writes, because it IS the "
+                    % str(entry[1]) + "shell tool",
+            "the console does not re-implement a measurement: two numbers under one name is "
+            + "what that would buy"])
 
 
 func _world_reload(_args: PackedStringArray) -> PackedStringArray:
