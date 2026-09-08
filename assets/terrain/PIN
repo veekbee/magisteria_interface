@@ -11,18 +11,18 @@
     "repo": "git@github.com:veekbee/magisteria.git",
     "path": "data/terrain_export_output"
   },
-  "source_commit": "6e3ea4784045dc29e0a7be3cb383e680217c37d1",
+  "source_commit": "e00e1db3baea00b05214429ac37bca4f2b176976",
   "generated_by": "tools/build_terrain_export.py",
-  "generated_at_utc": "2026-09-02T23:03:10Z",
+  "generated_at_utc": "2026-09-08T04:56:03Z",
   "files": {
     "heightfield_overview.png": "69507643c31337a1195256faf008492ffca3efcb89ca8eb4f1ab0bf2ffc0cd62",
     "flowlines.json": "42c5da1120b4a7be87afe67184ceb38e46dc827ac10f6d2828f0437fdbcbe366",
     "edges.json": "46653916cc075620708dcbdef468239db1e62c0fd4d4256940cceac66a3a2132",
-    "terrain_export.json": "8a39dd3515fe7c128713593979e66b402f2ec9e664456fa8fd2827806615ca50",
+    "terrain_export.json": "e5be98cdf2a1632174b8951345745bbb5692d31e52f438fd238b893b54e002eb",
     "residence_overview.png": "907809d974c8f2f7e2709723d1ed1741d7d0880ed1bba430be00e1b006a1751a",
     "residence_overview.json": "3296336831b2c13204fc52eb223a879c0c7ac0ab2b66bbef0a8bb4acf680b9a2"
   },
-  "_tiles_note": "The full-resolution tile pyramid is declared in terrain_export.json and NOT emitted; when it lands it is fetched, not committed, and gets its own pin.",
+  "_tiles_note": "CORRECTED at e00e1db: the pyramid IS emitted. `terrain_export.json`'s tiles block still reads `emitted: false` and that is not stale -- the block is the same in every clone whether or not a run emitted, because a tracked manifest must not claim bytes the tree does not hold. What it now carries is `levels[]`, six of them from 100 m to 3200 m, and `z_polarity`: z=0 is the FINEST level, inverted from the web-map convention. The bytes are fetched and never committed (decision 948) and have their own pin at assets/terrain/tiles/PIN, which also carries the ENCODING -- the tiles do not decode with the constants in this file's heightfield block.",
   "cross_repo": {
     "_what": "how each file above is checkable against `source_commit` in a simulation checkout. Declared per file because the answer differs per file, and a single rule would be wrong for three of these.",
     "files": {

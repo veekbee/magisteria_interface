@@ -119,33 +119,94 @@ static func camera_position(bundle: PerceptBundle) -> Vector3:
     return Vector3.ZERO if bundle == null else bundle.as_vector3()
 
 
-## WHETHER WALK MODE IS HONEST YET, given the ground that actually exists.
+## WHAT THE GROUND UNDER THIS BODY ACTUALLY IS -- two findings, not one.
 ##
-## The blocker is A1 and it is not this repo's to lift: the terrain export
-## triangulates the heightfield every 4 km, so a body standing in the scatter
-## stands in the middle of one flat triangle and near-field vegetation stands
-## on a plane. Walking on that is not walking on ground, and anything tuned
-## against it is tuned against a plane.
+## THIS WAS ONE CRITERION AND IT WAS ANSWERING TWO QUESTIONS. Written as "the
+## ground must change at least once per second of walking", it refused at
+## 4,000 m sampling and would have gone on refusing at 100 m, reporting the
+## same word for two states that are nothing alike. The tile pyramid is what
+## made that visible: it moves one of the two blockers by a factor of forty and
+## does not touch the other, so a single verdict would have hidden the change
+## entirely. Measured in `measurements/ground_relief.json`.
 ##
-## THE CRITERION IS DERIVED, NOT AUTHORED: the ground must change at least once
-## per second of walking, so the sample spacing has to be no coarser than the
-## distance the body's own sustainable speed covers in a second. Both numbers
-## come from outside this file -- one from the terrain, one from the bundle --
-## which is what stops this being a threshold somebody picked. It is the
-## client's own criterion and not a ruling; what resolution the tile pyramid
-## lands at is what decides whether it opens.
-static func walk_available(bundle: PerceptBundle, ground_sample_m: float) -> Dictionary:
+##   NEAR FIELD IS RELIEF -- is the ground a body sees around it more than one
+##   flat triangle? Derived: the near field must hold more than one ground
+##   sample, so the sample spacing must be no coarser than the radius the near
+##   field is built to. This is the blocker `measurements/README.md` names, and
+##   the measurement states it as a count: at 4,000 m sampling a 480 m disc
+##   holds ZERO mesh vertices; at 100 m it holds sixty-nine.
+##
+##   CHANGES UNDERFOOT -- does the ground change as the body walks over it? The
+##   criterion is unchanged: sample spacing no coarser than the distance this
+##   body's own sustainable speed covers in a second. It is a proprioceptive
+##   question and it implies metre-scale relief.
+##
+## WALK MODE GATES ON THE SECOND, and the number was not moved to make it open.
+## At 100 m the ground changes every hundred metres of walking -- twenty
+## seconds at the ruled 5 m/s, and a hundred and forty at the 0.7 m/s a real
+## load-bearing envelope would report. The DEM under the pyramid is 92.6 m
+## native, so no pyramid built from it can meet this; what walk mode wants is a
+## SECOND PRODUCT -- synthesised micro-relief, or a detail mesh -- and inventing
+## relief that is not in the data is adding rather than subtracting, which is a
+## question for the corpus and not for this file.
+##
+## So the refusal stands, and it has changed character rather than degree: from
+## "there is no ground here" to "there is ground, and it is smooth at the scale
+## a body feels".
+static func ground_findings(bundle: PerceptBundle, ground_sample_m: float,
+                            near_field_radius_m: float) -> Dictionary:
     var speed := speed_from(bundle)
+    var reach := float(speed["m_s"]) if bool(speed["ok"]) else NAN
+    var relief_ok := ground_sample_m > 0.0 and ground_sample_m <= near_field_radius_m
+    var samples := 0.0
+    if ground_sample_m > 0.0:
+        # The disc's area over one sample's, which is the count a measurement
+        # of the same disc reports.
+        samples = PI * near_field_radius_m * near_field_radius_m \
+                / (ground_sample_m * ground_sample_m)
+    var near_field := {
+        "ok": relief_ok,
+        "ground_sample_m": ground_sample_m,
+        "near_field_radius_m": near_field_radius_m,
+        "samples_in_near_field": samples,
+        "why": ("" if relief_ok else
+                ("the near field is %s m across and the ground is sampled every %s m, so a "
+                        % [String.num(2.0 * near_field_radius_m, 0),
+                                String.num(ground_sample_m, 0)]
+                        + "body stands in the middle of one triangle and everything around it "
+                        + "stands on a plane")),
+    }
     if not bool(speed["ok"]):
-        return {"ok": false, "why": str(speed["why"])}
-    var reach := float(speed["m_s"])
-    if ground_sample_m <= reach:
-        return {"ok": true, "why": "", "ground_sample_m": ground_sample_m,
-                "one_second_m": reach}
-    return {"ok": false, "ground_sample_m": ground_sample_m, "one_second_m": reach,
-            "why": ("the ground is sampled every %s m and this body covers %s m in a second, "
-                    % [String.num(ground_sample_m, 1), String.num(reach, 1)]
-                    + "so it would walk for %s seconds between one ground sample and the next. "
-                            % String.num(ground_sample_m / reach, 0)
-                    + "That is a plane, not terrain, and nothing measured on it is a "
-                    + "measurement of walking. Waits on the tile pyramid.")}
+        return {"near_field_is_relief": near_field,
+                "changes_underfoot": {"ok": false, "why": str(speed["why"])}}
+    var underfoot_ok := ground_sample_m > 0.0 and ground_sample_m <= reach
+    var underfoot := {
+        "ok": underfoot_ok,
+        "ground_sample_m": ground_sample_m,
+        "one_second_m": reach,
+        "seconds_between_changes": ground_sample_m / reach if reach > 0.0 else INF,
+        "why": ("" if underfoot_ok else
+                ("the ground is sampled every %s m and this body covers %s m in a second, so "
+                        % [String.num(ground_sample_m, 1), String.num(reach, 1)]
+                        + "it walks for %s seconds between one ground sample and the next. "
+                                % String.num(ground_sample_m / reach, 0)
+                        + "Metre-scale relief is not a terrain product: the DEM under the "
+                        + "pyramid is 92.6 m native, so this waits on a SECOND product and "
+                        + "not on a finer pyramid.")),
+    }
+    return {"near_field_is_relief": near_field, "changes_underfoot": underfoot}
+
+
+## Whether walk mode is honest yet. Gates on the underfoot finding; reports the
+## other, because the two moved apart and a caller that saw one word would not
+## know that the ground stopped being a plane.
+static func walk_available(bundle: PerceptBundle, ground_sample_m: float,
+                           near_field_radius_m: float) -> Dictionary:
+    var f := ground_findings(bundle, ground_sample_m, near_field_radius_m)
+    var under: Dictionary = f["changes_underfoot"]
+    var out := f.duplicate()
+    out["ok"] = bool(under["ok"])
+    out["ground_sample_m"] = ground_sample_m
+    out["one_second_m"] = under.get("one_second_m", NAN)
+    out["why"] = str(under.get("why", ""))
+    return out

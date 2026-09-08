@@ -1,0 +1,701 @@
+{
+  "_exaggeration_is": "1:1, and it has to be for this artefact to mean anything: every number here is a vertical distance compared with a horizontal one, and an exaggerated mesh would inflate the residual against ground that had not moved.",
+  "disc": {
+    "_why": "what tools/free_flight.gd builds a scatter within, so it is the ground a standing body has near field",
+    "places_measured": 60,
+    "places_skipped_unfetched": 0,
+    "radius_m": 480.0
+  },
+  "grids": {
+    "_why_two_encodings": "the pyramid decodes with its own offset and scale, not the overview's. Both grids resample with `average`, which pulls extremes in by an amount that depends on pixel footprint; the native grid measures about 53 m higher at the top. A clipped code is a valid code, so decoding a tile with the overview's pair fails silently.",
+    "drawn_today": {
+      "sample_m": 4000.0,
+      "source": "heightfield_overview.png triangulated at stride 4"
+    },
+    "native": {
+      "sample_m": 100.0,
+      "source": "tile pyramid z=0",
+      "tiles_keyed": 496,
+      "tiles_present": 496
+    }
+  },
+  "macro_relief": {
+    "_question": "is the near field one flat triangle?",
+    "_residual_is": "the largest gap between the drawn surface and the native grid inside one disc: how far a plant placed on the drawn plane stands from the ground the data actually has",
+    "_vertices_is": "how many ground samples the DRAWN mesh has inside the disc a standing body sees near field. Zero or one means the whole near field is inside a single triangle, which is `measurements/README.md`'s blocker stated as a count rather than as a complaint.",
+    "drawn_relief_m": {
+      "max": 109.937814991689,
+      "mean": 28.7719511133235,
+      "min": 2.96397563982649,
+      "n": 60,
+      "p50": 20.1785891241182,
+      "p95": 73.9619881514427
+    },
+    "mesh_vertices_in_disc": {
+      "max": 1.0,
+      "mean": 0.0333333333333333,
+      "min": 0.0,
+      "n": 60,
+      "p50": 0.0,
+      "p95": 0.0
+    },
+    "native_relief_m": {
+      "max": 319.173872442406,
+      "mean": 68.469653537131,
+      "min": 0.0,
+      "n": 60,
+      "p50": 47.9721577015366,
+      "p95": 225.548653060816
+    },
+    "native_texels_in_disc": {
+      "max": 69.0,
+      "mean": 69.0,
+      "min": 69.0,
+      "n": 60,
+      "p50": 69.0,
+      "p95": 69.0
+    },
+    "worst_residual_m": {
+      "max": 427.535294305943,
+      "mean": 69.4063426625432,
+      "min": 1.62985833350174,
+      "n": 60,
+      "p50": 42.4527315729802,
+      "p95": 252.284542625278
+    }
+  },
+  "measured_at_utc": "2026-09-08T06:15:16",
+  "measurement": "ground relief at the overview and at the tile pyramid",
+  "places": [
+    {
+      "centre": "(-1149743, 2231176)",
+      "drawn_relief_m": 19.0204794370329,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 48.1046774741931,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 90.6333371951951
+    },
+    {
+      "centre": "(-1123743, 2180176)",
+      "drawn_relief_m": 4.05420177886913,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 11.993039425384,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 6.01892967131221
+    },
+    {
+      "centre": "(-1212743, 2143176)",
+      "drawn_relief_m": 23.1327502750723,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 31.4071861195143,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 23.33868735132
+    },
+    {
+      "centre": "(-1173743, 2104176)",
+      "drawn_relief_m": 36.4534652987636,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 99.5223492647901,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 42.4527315729802
+    },
+    {
+      "centre": "(-996842.9, 2067176)",
+      "drawn_relief_m": 26.459862003223,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 69.4403608718376,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 43.8873295091066
+    },
+    {
+      "centre": "(-1226743, 2034176)",
+      "drawn_relief_m": 33.8092784214009,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 284.718731551799,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 287.108093801619
+    },
+    {
+      "centre": "(-1275743, 2005176)",
+      "drawn_relief_m": 10.0434936139827,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 105.949558238615,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 66.7462520599797
+    },
+    {
+      "centre": "(-1141743, 1953176)",
+      "drawn_relief_m": 20.1785891241182,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 50.3575136093477,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 27.4029188382676
+    },
+    {
+      "centre": "(-1001843, 1932176)",
+      "drawn_relief_m": 44.029432835106,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 319.173872442406,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 284.677676441307
+    },
+    {
+      "centre": "(-1034843, 1889176)",
+      "drawn_relief_m": 55.608893957809,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 159.288766732727,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 427.535294305943
+    },
+    {
+      "centre": "(-966842.9, 1868176)",
+      "drawn_relief_m": 107.485010647365,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 155.975772416322,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 82.0323687596501
+    },
+    {
+      "centre": "(-1241743, 1845176)",
+      "drawn_relief_m": 52.7757781696328,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 36.9730165710739,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 68.3859057895838
+    },
+    {
+      "centre": "(-967842.9, 1824176)",
+      "drawn_relief_m": 109.937814991689,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 72.753355188242,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 112.339696721013
+    },
+    {
+      "centre": "(-1268743, 1803176)",
+      "drawn_relief_m": 3.76303860895223,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 32.9311635050603,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 29.6100645832157
+    },
+    {
+      "centre": "(-1098743, 1783176)",
+      "drawn_relief_m": 40.8151877290074,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 60.5615361038736,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 96.4561518455789
+    },
+    {
+      "centre": "(-1170743, 1763176)",
+      "drawn_relief_m": 56.1257903718215,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 145.3079307175,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 105.217125381905
+    },
+    {
+      "centre": "(-1124743, 1745176)",
+      "drawn_relief_m": 33.4682249330456,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 59.8326773542644,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 124.520467003859
+    },
+    {
+      "centre": "(-1341743, 1729176)",
+      "drawn_relief_m": 11.895160514802,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 14.0470959015549,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 21.2423576916817
+    },
+    {
+      "centre": "(-1145743, 1714176)",
+      "drawn_relief_m": 34.7563765977059,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 75.5362704140216,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 59.6121721616726
+    },
+    {
+      "centre": "(-1646743, 1697176)",
+      "drawn_relief_m": 40.3964362037339,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 149.283523897185,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 74.2503341929698
+    },
+    {
+      "centre": "(-1098743, 1682176)",
+      "drawn_relief_m": 29.446738117088,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 36.7079770257615,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 15.3873313985905
+    },
+    {
+      "centre": "(-1267743, 1667176)",
+      "drawn_relief_m": 8.93772786755744,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 47.9721577015366,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 118.389985634874
+    },
+    {
+      "centre": "(-1093743, 1653176)",
+      "drawn_relief_m": 73.9619881514427,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 156.505851506947,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 175.25501502422
+    },
+    {
+      "centre": "(-1049743, 1639176)",
+      "drawn_relief_m": 58.1786542945492,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 143.916473104609,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 112.42818817108
+    },
+    {
+      "centre": "(-1710743, 1624176)",
+      "drawn_relief_m": 19.9471307615157,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 22.0645421472536,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 11.7355085672768
+    },
+    {
+      "centre": "(-1609743, 1610176)",
+      "drawn_relief_m": 33.2776602740834,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 225.548653060816,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 252.284542625278
+    },
+    {
+      "centre": "(-1082743, 1596176)",
+      "drawn_relief_m": 16.844934403387,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 27.1002935081885,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 46.1646001183583
+    },
+    {
+      "centre": "(-1325743, 1580176)",
+      "drawn_relief_m": 12.0685498182347,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 20.9381240796763,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 18.4563358697358
+    },
+    {
+      "centre": "(-1434743, 1564176)",
+      "drawn_relief_m": 64.4983672550732,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 19.6129263531143,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 52.0308300899912
+    },
+    {
+      "centre": "(-1078743, 1549176)",
+      "drawn_relief_m": 10.279041346949,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 16.3661919230378,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 13.2522663532925
+    },
+    {
+      "centre": "(-1710743, 1533176)",
+      "drawn_relief_m": 10.154724487883,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 70.1029597351185,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 111.579579950057
+    },
+    {
+      "centre": "(-1050743, 1519176)",
+      "drawn_relief_m": 6.6018795156408,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 23.4559997601436,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 16.0664661098419
+    },
+    {
+      "centre": "(-1579743, 1503176)",
+      "drawn_relief_m": 26.7150387139338,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 24.3173782824088,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 4.14839948787449
+    },
+    {
+      "centre": "(-1492743, 1487176)",
+      "drawn_relief_m": 5.34153556945625,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 18.0226890812403,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 12.5005756250571
+    },
+    {
+      "centre": "(-1452743, 1470176)",
+      "drawn_relief_m": 7.71745975093927,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 51.6827113359095,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 55.5643562151486
+    },
+    {
+      "centre": "(-1482743, 1452176)",
+      "drawn_relief_m": 45.2529724480187,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 83.4211968870643,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 59.8454060630031
+    },
+    {
+      "centre": "(-1660743, 1433176)",
+      "drawn_relief_m": 24.8911795315903,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 35.3165194128716,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 10.3179841587131
+    },
+    {
+      "centre": "(-1143743, 1415176)",
+      "drawn_relief_m": 18.7064157930795,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 34.1901013452941,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 22.6714587349097
+    },
+    {
+      "centre": "(-1470743, 1396176)",
+      "drawn_relief_m": 30.6081193004622,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 77.0602477995678,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 83.2134511727411
+    },
+    {
+      "centre": "(-1560743, 1377176)",
+      "drawn_relief_m": 9.5274150740463,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 31.6722256648266,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 38.1458505448494
+    },
+    {
+      "centre": "(-1303743, 1340176)",
+      "drawn_relief_m": 8.64002170505773,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 38.8945532745884,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 28.4376202952358
+    },
+    {
+      "centre": "(-1416743, 1322176)",
+      "drawn_relief_m": 75.6157295266344,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 235.222596464717,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 185.509819593097
+    },
+    {
+      "centre": "(-1397743, 1305176)",
+      "drawn_relief_m": 56.0211024905011,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 66.9887450776981,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 67.4017254621219
+    },
+    {
+      "centre": "(-1471743, 1287176)",
+      "drawn_relief_m": 36.1304050400078,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 27.7628923714694,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 27.0018429388565
+    },
+    {
+      "centre": "(-1513743, 1268176)",
+      "drawn_relief_m": 3.34101558738752,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 6.62598863280891,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 5.86160658176925
+    },
+    {
+      "centre": "(-1575743, 1249176)",
+      "drawn_relief_m": 6.5740717971652,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 2.84917511210782,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 8.07543372992353
+    },
+    {
+      "centre": "(-1356743, 1232176)",
+      "drawn_relief_m": 33.6865973104832,
+      "mesh_vertices_in_disc": 1,
+      "native_relief_m": 84.6138748409701,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 51.4384827753911
+    },
+    {
+      "centre": "(-1108743, 1216176)",
+      "drawn_relief_m": 20.9482086266235,
+      "mesh_vertices_in_disc": 1,
+      "native_relief_m": 48.8335362238017,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 34.8002245704674
+    },
+    {
+      "centre": "(-1254743, 1200176)",
+      "drawn_relief_m": 9.04568724516707,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 104.0280215351,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 192.365183562531
+    },
+    {
+      "centre": "(-1299743, 1184176)",
+      "drawn_relief_m": 19.9504022578083,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 45.8518413390377,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 36.4250773616698
+    },
+    {
+      "centre": "(-1707743, 1167176)",
+      "drawn_relief_m": 4.64552473350327,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 5.43331067890333,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 13.2476246405185
+    },
+    {
+      "centre": "(-1606743, 1150176)",
+      "drawn_relief_m": 5.79709142800499,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 12.0592993117122,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 7.10778484714729
+    },
+    {
+      "centre": "(-1685743, 1132176)",
+      "drawn_relief_m": 2.96397563982649,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 11.131660903119,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 11.8451234193606
+    },
+    {
+      "centre": "(-1416743, 1113176)",
+      "drawn_relief_m": 17.9228924313351,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 22.4621014652222,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 8.06343943346099
+    },
+    {
+      "centre": "(-1307743, 1093176)",
+      "drawn_relief_m": 9.94862022153802,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 10.8666213578065,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 5.54029675219772
+    },
+    {
+      "centre": "(-1311743, 1071176)",
+      "drawn_relief_m": 49.0593583828293,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 63.2781914433251,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 30.1239290662475
+    },
+    {
+      "centre": "(-1390743, 1046276)",
+      "drawn_relief_m": 71.472379473824,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 100.715027218695,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 84.8839331784654
+    },
+    {
+      "centre": "(-1572743, 1019276)",
+      "drawn_relief_m": 10.3788219838302,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 68.1151631452757,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 59.7657409876493
+    },
+    {
+      "centre": "(-1614743, 992276.2)",
+      "drawn_relief_m": 3.71560191272984,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 0.0,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 1.94978542992523
+    },
+    {
+      "centre": "(-1541743, 960276.2)",
+      "drawn_relief_m": 3.29276101709243,
+      "mesh_vertices_in_disc": 0,
+      "native_relief_m": 3.31299431640451,
+      "native_texels_in_disc": 69,
+      "ok": true,
+      "samples": 69,
+      "worst_residual_m": 1.62985833350174
+    }
+  ],
+  "underfoot": {
+    "_criterion": "DebugPlayer.walk_available: the ground must change at least once per second of walking, so its sample spacing must be no coarser than the distance the body's own sustainable speed covers in a second",
+    "_measured_by": "walking %s m from each place on three headings at 1 m steps and recording the distance between one reported height and the next. A distance rather than a yes-or-no at one step length: whether a 5 m step changes the height is a question about where the step started.",
+    "_question": "does the ground change as a body walks over it?",
+    "by_speed": {
+      "pandolf_0_7_m_s": {
+        "meets_the_criterion": false,
+        "metres_per_second_of_walking": 0.7,
+        "seconds_between_ground_changes_p50": 142.857142857143,
+        "sustainable_speed_m_s": 0.7,
+        "verdict": "the ground changes every 100.0 m, which at 0.7 m/s is 142.9 seconds of walking between one height and the next"
+      },
+      "ruled_5_0_m_s": {
+        "meets_the_criterion": false,
+        "metres_per_second_of_walking": 5.0,
+        "seconds_between_ground_changes_p50": 20.0,
+        "sustainable_speed_m_s": 5.0,
+        "verdict": "the ground changes every 100.0 m, which at 5.0 m/s is 20.0 seconds of walking between one height and the next"
+      }
+    },
+    "metres_between_ground_changes": {
+      "max": 251.0,
+      "mean": 94.8629441624365,
+      "min": 1.0,
+      "n": 985,
+      "p50": 100.0,
+      "p95": 142.0
+    }
+  },
+  "vertical_exaggeration": 1.0
+}

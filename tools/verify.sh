@@ -14,6 +14,19 @@ fail=0
 echo "== contract pin =="
 python3 tools/check_contract.py || fail=1
 
+echo "== transport (decision 948/972) =="
+python3 tools/fetch_artefacts.py --selftest || fail=1
+# THE BYTES MUST NOT BE COMMITTABLE BY ACCIDENT. 141 MB of tile pyramid sits
+# under assets/terrain/tiles/ once fetched, against a ~10 MB threshold. The
+# .gitignore keeps it out; this is the check that the .gitignore still does,
+# because a rule nobody verifies is a rule that survives exactly until someone
+# adds a negation to it.
+tracked=$(git ls-files assets/terrain/tiles \
+  | grep -vE '^assets/terrain/tiles/(PIN|\.gdignore)$' || true)
+if [ -n "$tracked" ]; then
+  echo "fetched tile bytes are tracked by git:"; echo "$tracked" | head -5; fail=1
+else echo "ok -- only the pin and the .gdignore are tracked"; fi
+
 echo "== no addons =="
 [ -d addons ] && { echo "addons/ exists"; fail=1; } || echo "ok"
 

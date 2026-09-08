@@ -1,0 +1,2117 @@
+{
+  "_form": "The claim about the terrain tile pyramid. Same shape as the other pins: the files are DATA, this is the claim about them. Every file here is FETCHED and none is committed (decision 948) -- 141 MB against a ~10 MB threshold -- so `files` is what verifies the bytes and `fetched` is where they can currently be found.",
+  "artefact": "terrain tile pyramid: the drawn substrate at native resolution",
+  "ruled_by": [
+    "decision 890",
+    "decision 948",
+    "decision 972",
+    "\u00a716.5"
+  ],
+  "source": {
+    "repo": "git@github.com:veekbee/magisteria.git",
+    "path": "data/terrain_export_output/tiles",
+    "_not": "data/terrain_export_output/heightfield_overview.png -- the 1 km overview, which is COMMITTED and decodes with different constants. See `encoding`."
+  },
+  "produced_by": "tools/build_terrain_export.py --tiles",
+  "source_commit": "e00e1db3baea00b05214429ac37bca4f2b176976",
+  "emitted_at_utc": "2026-09-08T04:56:03Z",
+  "vendored_by": "tools/vendor_tiles.py",
+  "grid": {
+    "naming": "tiles/{z}/{x}_{y}.png",
+    "z_polarity": "z=0 is the FINEST level (native_pixel_size_m); each higher z halves the resolution. This is inverted from the web-map convention where z=0 is the whole world in one tile. Read `levels[]` rather than assuming either.",
+    "origin": [
+      -1809292.9365744274,
+      2356726.304046243
+    ],
+    "crs": "EPSG:5070",
+    "native_pixel_size_m": 100.0,
+    "levels": [
+      {
+        "z": 0,
+        "pixel_size_m": 100.0,
+        "width_px": 9980,
+        "height_px": 14860,
+        "tiles_x": 20,
+        "tiles_y": 30,
+        "tile_px": 512,
+        "written": 346,
+        "empty_skipped": 254
+      },
+      {
+        "z": 1,
+        "pixel_size_m": 200.0,
+        "width_px": 4990,
+        "height_px": 7430,
+        "tiles_x": 10,
+        "tiles_y": 15,
+        "tile_px": 512,
+        "written": 102,
+        "empty_skipped": 48
+      },
+      {
+        "z": 2,
+        "pixel_size_m": 400.0,
+        "width_px": 2495,
+        "height_px": 3715,
+        "tiles_x": 5,
+        "tiles_y": 8,
+        "tile_px": 512,
+        "written": 32,
+        "empty_skipped": 8
+      },
+      {
+        "z": 3,
+        "pixel_size_m": 800.0,
+        "width_px": 1248,
+        "height_px": 1858,
+        "tiles_x": 3,
+        "tiles_y": 4,
+        "tile_px": 512,
+        "written": 11,
+        "empty_skipped": 1
+      },
+      {
+        "z": 4,
+        "pixel_size_m": 1600.0,
+        "width_px": 624,
+        "height_px": 929,
+        "tiles_x": 2,
+        "tiles_y": 2,
+        "tile_px": 512,
+        "written": 4,
+        "empty_skipped": 0
+      },
+      {
+        "z": 5,
+        "pixel_size_m": 3200.0,
+        "width_px": 312,
+        "height_px": 465,
+        "tiles_x": 1,
+        "tiles_y": 1,
+        "tile_px": 512,
+        "written": 1,
+        "empty_skipped": 0
+      }
+    ],
+    "_keys_are": "the pin's own `files` keys are `{z}/{x}_{y}.png`, relative to this pin. A level's tile that is entirely nodata was never written and is not keyed here, so absent-and-unkeyed is empty ground while absent-and-keyed is a fetch that has not happened."
+  },
+  "encoding": {
+    "dtype": "uint8 x 3",
+    "channels": {
+      "R": "height high byte",
+      "G": "height low byte",
+      "B": "validity: 255 = ground, 0 = no data"
+    },
+    "height_m": "offset_m + (R * 256 + G) * scale_m_per_step, where B > 0",
+    "offset_m": -6.04052734375,
+    "scale_m_per_step": 0.06625988632808924,
+    "levels": 65535,
+    "max_round_trip_error_m": 0.03344096969249222,
+    "shared_across_levels": true,
+    "not_the_overview_s": "the overview is resampled with `average`, which pulls the extremes in; this pair is taken from the native grid and is wider at both ends. Decoding a tile with the overview's constants clips the real peaks and floors, silently, because a clipped code is a valid code.",
+    "range_vs_overview_m": [
+      -0.9101629257202148,
+      53.48046875
+    ]
+  },
+  "_encoding_note": "CARRIED HERE BECAUSE THE CLIENT NEEDS IT AND THE COMMITTED EXPORT DOES NOT HAVE IT. `terrain_export.json`'s tiles block is the same in every clone whether or not a run emitted, so it states the grid and not the constants. Decoding a tile with the overview's `offset_m`/`scale_m_per_step` clips the basin's real peaks SILENTLY, because a clipped code is a valid code.",
+  "cross_repo": {
+    "_what": "how each file above could be checked against `source_commit` in a simulation checkout. For this artefact the answer is that it cannot be, and that is DECLARED rather than left as an empty block a checker would read as a missing vendor run.",
+    "files": {},
+    "not_checkable_because": "the pyramid is 141 MB and is not committed in the producing repo either -- it is fetched from a host on both sides of the boundary. `git show <commit>:<path>` has nothing to show, so there is no upstream blob to compare against. What verifies these bytes is the digest in `files`, which is the whole of the check decision 948 rules and needs no checkout at all."
+  },
+  "files": {
+    "0/12_0.png": "2a4ae95c55dd27ec378ff9ba638ee8dcd76627778a23e99d29714500e77ff016",
+    "0/13_0.png": "03a0e5aa40f8d700ac78f374070b79078a559af1e0436be53dd5f5c3a8337c84",
+    "0/11_1.png": "b3dc283b112ced06f24f9a1394af01433ed4a284aa3c64ed20b5d370985cfa42",
+    "0/12_1.png": "5d80e37e6bc1976718c9e6a900142d1be521531ff7175013d14d10dec58856ad",
+    "0/13_1.png": "4a986fb49f0355882c9cc850fb0639d27c2a873144e95cd9f663f65e3b736559",
+    "0/14_1.png": "60eb92dc45e2d2eb8d03d01ab2cc40a49c453451d14d87a4b50244f9ec49113d",
+    "0/11_2.png": "50ffeffa2d92a77d00a2b75e63ad4e71991492bdea3153c8537ef9f4caa93091",
+    "0/12_2.png": "6953c16f9c2bed5beb659a7999526d81121a1c16293e9284b6ed49bc8e98df3e",
+    "0/13_2.png": "3fb4e74b529ac4743e7540689d620fd0f48975872c69849376d0f7c7b7dab943",
+    "0/14_2.png": "b23e1746620b993ab1261fe3b8ce60ee12d2759cac35d257c77caf65819a4194",
+    "0/15_2.png": "2fba62af52ef54123ec8799d11238b67a667064078d06ff9b2fd8d97afd97271",
+    "0/16_2.png": "b93336a078a9059a41f1237d546735c5b6c14cde6ca325f63d674c96cbf3cb15",
+    "0/11_3.png": "a03bb417520dd181cb9ff266047c9784e7c5138a41e4bccdb822dd9186d2f2cb",
+    "0/12_3.png": "83f2932890ff8125fe6d76a1e8b249e2b7e3feaf1933d7ce2084fb4ae9690570",
+    "0/13_3.png": "c32b4b688165a8abdb5565f0a2fb71f3377e716d20c3b3b3da01bc3510898c81",
+    "0/14_3.png": "a471369219fa29786397eb6780249ec85043bd0f852ec0dc3e2f2dad583c824d",
+    "0/15_3.png": "4ffa93f648434e4811d3684d7dccf4dba3ce1ffa9b879a3be40012be01a8473b",
+    "0/16_3.png": "5e42acb66878351239f54331b9ed99f1ba4de077ed369ff6d7407c96366c9f14",
+    "0/17_3.png": "7163cf448f760838e0d8d45d25cbf14d921e76292df43ed07d1555ff8eb97b52",
+    "0/11_4.png": "dabfd69223f093bb1497f226d1239d6b03872fb289bf4ab6eaf6ef20ea935540",
+    "0/12_4.png": "7bdd3ccabb42b0646549d748e56cb77595715dc89f4b5e3a6f7cdc81902127db",
+    "0/13_4.png": "1dbbbd4c8085e9696c5bfb2b2447b9a4e2824b517a57e770a661f7e9a706171d",
+    "0/14_4.png": "7e543c088cd7196f74fdfb8fb64c9a96498701bf26e782b9abc12382a14bd221",
+    "0/15_4.png": "fa4daa4f7b9c08e264c4589f8b3b963506f1f6b9f5e3e1d4afb8c227014a18be",
+    "0/16_4.png": "fc01ace3b6865cb0afd5fa68903ac777fcbc3fa8720179e908588a7db296c049",
+    "0/17_4.png": "175728aa846ac36d9f9518d47ca1e9a201116217fe5a57b909c29bab714c2b78",
+    "0/10_5.png": "9dafe26509db2d3de2b6b7698e15468cd9a88b23db8094759f709e8908444243",
+    "0/11_5.png": "700a797b657b9a2ed0b7a4214c58020f645de2a909b6fa87c4c8908a06c8c852",
+    "0/12_5.png": "241b742842b56f913c154c9f99930c0d8706e63242f1d3d9cb5554e15ec14bef",
+    "0/13_5.png": "093faeb1eeaf22e93ecd8a2386ed1e569dacb4d4f483f12ed8e8d22bc5614247",
+    "0/14_5.png": "8318f0855c61bca8dcdeedf68fd02b2eaa7c0e53bbd33969b77ef8ae4daf8ceb",
+    "0/15_5.png": "44e85771e8cccd90f50c7f302a3df273ed7b681b6d60f8a098b34982a38ba5e0",
+    "0/16_5.png": "90e648239f4cb5d0d1d349b722bfbc6d32e7bfc4b03900df07fa2b46235e4b74",
+    "0/17_5.png": "10c36ef1e1992ecdc5e2bae4625a578d3a0874288dd1e0a12061bf09be0c8108",
+    "0/10_6.png": "2bd067755c74f9b453b885b86722aa2d65fd52ce1611d5dcb0bcd18529f7d4b8",
+    "0/11_6.png": "6dad66e5e5e93bd73258b74f2f9fb4d2414907c2b8c0b60bfec02a8c345727e1",
+    "0/12_6.png": "84dee1a21c29746e7f44ddf91e66ad3a12dae3c196e656ad89b46feabb434225",
+    "0/13_6.png": "4ca34507e84bebecd6d624804ffeeaec3a2f35558f4a07bcd5dafb6d481c1072",
+    "0/14_6.png": "5dda9ef3c21dba07f35b7878d19e42f52d44ec1037ba110490100a2614d294de",
+    "0/15_6.png": "09c1fb361983a20f25bc92bb478b6d393245d1492177f04c1d72433c6b19ecbe",
+    "0/16_6.png": "1525ec388ffbb3442fbd7f44dce9bc375a74ace2f3fd4ca31ff358a4a78437f6",
+    "0/17_6.png": "0b119180f344887b752ec698a549eb3c34d327098c96c08efd2126b396f60c0d",
+    "0/3_7.png": "799af64a49a795fcef83fdaa563fcca9c936aea5f319d2dcd457037c76742b0a",
+    "0/9_7.png": "6e172eddb7a37becc495ea9da12c4396f2cfe06cc66368c9aed204e6554132d1",
+    "0/10_7.png": "3ff0c6e9d3dba5449bc13c7ad82c46bde88e217710f251cca0a822ddcde1e865",
+    "0/11_7.png": "6f404169a242bbd8fdad39f69ddc12cf13068eb408bb5f99301c2f5d18e14086",
+    "0/12_7.png": "af8834ca19190211b93eed3054eef103624de45653127519f25586d4daac9ce6",
+    "0/13_7.png": "251ec6d461d976497bb6e073e2287e885bfb5d822eeed410c63bd0c0df047bc4",
+    "0/14_7.png": "b3f9e94584c4a78939a07a4e9ccc9924301ec09030a06e2b911a4e3d99481728",
+    "0/15_7.png": "e0d3e3ab25d3c81d797112723b8538ed11739e2574355d2bee86880693c90bdc",
+    "0/16_7.png": "21a720384cb11ef6ee3e75b0560735bac37ff94a75bb60b4e5fc53cbb7147d8c",
+    "0/17_7.png": "e3fa38fe0715390bb8bab1741393a0933d47012afc360e4d7a87834d0b03d294",
+    "0/18_7.png": "0eeabcfacf938534ef90bd92020a55c976009fb5b85d53e7f9489f1e54f6d89d",
+    "0/19_7.png": "d25e4a6779e802e102719e275f0574a7c2ad56a87d36d022c47b97d2f2689575",
+    "0/2_8.png": "3385a78ec9a261993cfd3b36cded61ee86ab829d1792b8a8bff9785be7c80fea",
+    "0/3_8.png": "1a55d7e4a9ebaa2582d713926260e69bb291e7dc016d785d82239a1ac247a18a",
+    "0/9_8.png": "bed1f8601ddbc6a3fa95a12892d81090974517d27d99078a5319a1eb538425ef",
+    "0/10_8.png": "6eb80a4c6209406da6aaf726cf5ab1cd6ed8c9de7ecba916287ca365e7b809b4",
+    "0/11_8.png": "e67df4ff8fc68e59fac1675bfb2876ff2744be0bda05668855432c7bdfe6c6d1",
+    "0/12_8.png": "c4536dd7b1c541063340091d460648dda561a472ee57f768fa03041ecdee31d9",
+    "0/13_8.png": "a406ddb19b8d29cca31b71877cce6b3412c0ee91c8388998656a712b18f83a6c",
+    "0/14_8.png": "d0e38d55f214aa39cf67134bd79fb79b8b9a06cca96b8afda848a37b7cc5db96",
+    "0/15_8.png": "48ca84e6110fec7377ce71a8d6b17f4a58a7baf0c71ead9dd8cedf79447d8965",
+    "0/16_8.png": "05970c03a1cdceb001d2212ba771ae8b3bc7bf3a5cb3d15f5457f2e36db808e8",
+    "0/17_8.png": "324d76ba9f6d5552119cf3e2889577d017a91795c3b4d21ac21ffd76b019e5f5",
+    "0/18_8.png": "674c2cc655bed79a0ad94972b26c96d661cc02f7b0c4a00ee6950b48c32c0b61",
+    "0/19_8.png": "e1d43df52c229ebf08870932589f68b77ab0178e3da039cd4bab4f67fb600b6a",
+    "0/2_9.png": "507ff8a56dc59206032343da81b43b6f21fb411710259f7685b13b4708a02667",
+    "0/3_9.png": "5f5304777c6fb604c9cfa1c8d9a4b6cb62d1be2ee6f64b8925dfbdfa1d99672d",
+    "0/4_9.png": "d9dfef380fed50680ae0b09ef445882845b84296c9bbeb45ec4c6e612cfa041e",
+    "0/8_9.png": "7a28ac65aee37d6b663c5e4bdb6c605fb95f3453346b8e6a65f0147acd5fa5ca",
+    "0/9_9.png": "06fdc8e53eab89a0fe98146f6ff4ea4f8cbb10a7e869bc05463c7b746a8f928a",
+    "0/10_9.png": "dcd43ea7b3761fb18c21e2bf4288ff5316804f296884bb32b55880dc3d765bd2",
+    "0/11_9.png": "3421c189c157f14288f409fe3af9979520eb849a7453a8a73c7e6101c5c3efd1",
+    "0/12_9.png": "6136050e7fd181c7ee94374328157be9a091ed90cc72837dc3834c1cd0c13698",
+    "0/13_9.png": "c77c939a597e4bf4ce0d2f5e8ee3fd344866c7bdf9be2a15f24e1c0ef45f1381",
+    "0/14_9.png": "7d916ecde4494ac747c5deed874147ca43dfd9655b92a2b036b19fd8bd8adb9a",
+    "0/15_9.png": "914353e8c19ee3c262507d7469de792f031fe2d460f1ffaf203c1d4f88c6f0a1",
+    "0/16_9.png": "276984aae0b31b0afc77295e0a4ec746ab216ba5ec914b872de94e38e84b2962",
+    "0/17_9.png": "ba17f69bd394421ca8ba45e452acf48e8fc31376f5dc1031afcdee8c2bd79e15",
+    "0/18_9.png": "9157ab245b6a090f150797dbdb17b660e20efea7fa067c9c99fc910d79b44d48",
+    "0/19_9.png": "12c0a1c2ee1708674403edea7b15cf7318438b64cebf152721e3f81e770b0543",
+    "0/2_10.png": "961b68a9a90d3a6c315576cefd41698327b8df697b04b50a15931146679d5830",
+    "0/3_10.png": "e1022e922d94a089e573f22b77f004a7890a4ddb1ae2c5f9271722ae6cd3433b",
+    "0/4_10.png": "af05390d0cf1140149a980cefae6dc79298b6ca5d83f7694799c0ada95a93408",
+    "0/8_10.png": "10b249c09b8ae87ac14e2a55e87b570bf932da92f9291cf5a61be8b15fe39222",
+    "0/9_10.png": "b7b6279aa495938a372793ba04ead65e3c09ad5807a2dddc21d22fec71e3ff05",
+    "0/10_10.png": "a6d915228caab2e714c2beb81b2e8dbf19828d39daccf051d7dffe61b646659a",
+    "0/11_10.png": "2c57ef0eee9b20843e9b05f866cdc1ae2f6a6389c8186249e667447b051e81ee",
+    "0/12_10.png": "9eb797ca798b7c1fca6d2453a9c541b0c4a5d4f5904379b477774bd23c92cb9b",
+    "0/13_10.png": "e56b1d23130730af0afec8b3c431a29f34d909a76f9bda36bee1fbaa01026484",
+    "0/14_10.png": "8aea40fa21d1b3a83229ff19cbfb1fe94dca65ec2618319973dc00df6f2fd533",
+    "0/15_10.png": "25e89abfc970999e948033c0c3ae3fdc9d8fc8b2d353033dd32167d6662632e5",
+    "0/16_10.png": "90482027d52943102247aa36e22eaf1299ae23c1f25cbd4460ee7dc396856807",
+    "0/17_10.png": "395ffe685fbdd409c39993b928d3d9b4567e0a60e1c3a4692ee914a075d21400",
+    "0/18_10.png": "17d4dbe9f4a3abfd898fc6e8ff78dd838fda96c03f0b22c96b51cbecf33669bf",
+    "0/2_11.png": "ea24f2fd18261df9b8a0a8f5f9b520233bfb5bd41be97b2d11c8b92554037a78",
+    "0/3_11.png": "b7a7becaa24a3fd80b026a90b49f590103b63277db59935ba29bfbde2893c724",
+    "0/4_11.png": "56e078c3f4b11485f6fd0c641ae145eca82e95a96f54321b8b48e1c12180562b",
+    "0/5_11.png": "a4eef123a5dc62b72c5c827308edabefa2940439e58c4481f1f301016dbee516",
+    "0/6_11.png": "6bcc16416f818c0dd5eb85949fe97edba4b4773dcf6d28e7504814464c256ee8",
+    "0/7_11.png": "fd3c998e899e78b8ade0b4ba83d6bd66a7399fe18d89ab8050bd3b1257ddd714",
+    "0/8_11.png": "60b810df9b100023fc2acb4c9b777dfcfd91fcadeb2f249f857cd9e59487775c",
+    "0/9_11.png": "3671b45859b93723d80c1b842c75599eaca76af87d451b88f33d16727c06ef46",
+    "0/10_11.png": "26ff09f4ebf51c1dd8233376d667ea3c740a4a764bf5fec7c29398b4b05e8572",
+    "0/11_11.png": "333bb27aec968cc589ae234e8d27602c23a794e6030cebfd0bb556742ea126f2",
+    "0/12_11.png": "5b12d97fb7f69f016950b47899e778ce77f7d1a32978261971a5bcc9482c4f19",
+    "0/13_11.png": "50e6c103b4f383121b25f9be7d45ee4eae167109ac6849cbb9e3da0116eda96f",
+    "0/14_11.png": "10106dbac7464fc25732ba6c95fbaedec0da4a17bfb61fa50bbb497cea4aa686",
+    "0/15_11.png": "27df9905fbd6d5bc92d6b620c7edd4dc6ef82def9bde8d2d44f8857775f1f271",
+    "0/16_11.png": "3ecaf1b4f235118ec440dda860775a0df1ba7e48a4352964238d0ee709f6c37c",
+    "0/17_11.png": "40ff607feb6e8951163de6d4f8c4f55eb97a69ecda6889d3f81e50d420e89dfc",
+    "0/18_11.png": "49796f6006e2645490945f193677461f5a1696b21b9b55ef14d8f6d7e0d2b2c3",
+    "0/1_12.png": "64279309be0a164c9e6af2d3ae490e0eaa7c9ee6e3ea1a50459fd16c9351c49b",
+    "0/2_12.png": "58f40d15daaed21bf28c2024cb81c8848ce8cfb6fbc34de41b1ef026129befe1",
+    "0/3_12.png": "3f83e9a38d2be882759ab89909a86c855af25ec69c41456f861feaaa1c00c44e",
+    "0/4_12.png": "1bcad96e0ad46b2e7e84a0a63d0a1f4891b85471882decaf65e04f759ddc5106",
+    "0/5_12.png": "13526fa7e636df6195f6971d6dbec2cc98a44f1e6842b0ed35cc81616b21171a",
+    "0/6_12.png": "a3dba8d56c70c3021e73adde9b1c23944f5ef8006e3a24a03cf27443db1f06c5",
+    "0/7_12.png": "b4a3bd312983be1f0019677542cad5153b8e3518d3cd72c6e3e8209ddecd67f1",
+    "0/8_12.png": "5e185e839a0bba4a74c276bf4bbb46a140f7afa3d03629e2f0f6dfee1b086c5f",
+    "0/9_12.png": "77c5a3884a02ca4336162e745eb485ff2890f0ec0616f6004230ac6ead732e0f",
+    "0/10_12.png": "626ea0c415118850ae591ba68055f309463a8e006467536b587073b63adf7991",
+    "0/11_12.png": "f975bcd7f3a9c51b5517c1b366f2ca52a6b0e766a8be249df4334be8c79313fc",
+    "0/12_12.png": "dce421a205e8135da462903718e58c9b5cd013eb340726398a47e6a526b64154",
+    "0/13_12.png": "82166b4463d9e3ee736390f6162fe1bccc1f93dba2723f36de2d29afddc67484",
+    "0/14_12.png": "3d39e731200eb8432a4d057e7f316a4324962148d2936bde6c0d46fafc27ed83",
+    "0/15_12.png": "c3280249a177536428ea103465dd1b43a6b2f7c6e028737505dd8eb0734c9448",
+    "0/16_12.png": "2994205bfcc702aeeee980f1cb41113b56da56421351eb14b212ffc980df6f3a",
+    "0/17_12.png": "c9265f9ae0301fa8d2585829fc761ca63c394589d69151ef12c8ef8a34d7d201",
+    "0/1_13.png": "239e21e2580a76659831d2967ac37515528f476143c9431242fcaa8dbfd8d2f5",
+    "0/2_13.png": "9e13ed13df45d77a42953eca281c6a0f7796f4a10031d474f2dfaca7c7245a05",
+    "0/3_13.png": "7af1242e7d40bf9929d102d73f59a208ce75ee0e5318b95d2aac586a503b4140",
+    "0/4_13.png": "38daf48ec4a4dd06abcee1abdfe150363a9a477412a80bba5bc40a677714c9f6",
+    "0/5_13.png": "976b782ec6661f819207978e2ee0b68b269580c683fe15769b6cec9fcc0e1a3a",
+    "0/6_13.png": "7b24a473a0fc1c073f0c0ffbb5eba6d71eae09d9d3e48d8bd81713923a24a08b",
+    "0/7_13.png": "c95f437006a4a833a3b63e03ecd196114e6d6bc0dcc1829d3e6cde4c3db8f9ee",
+    "0/8_13.png": "507eae6cfe1741c0a95ff1e930b290f8e7d7a80688396c50b1c47ea7ff194fa9",
+    "0/9_13.png": "d6eb800d5be521ecadc08849ed8711e10276aa6c7179987504fa4624800c2505",
+    "0/10_13.png": "d7a5150d7a11ec55621dc8a535039be73511b54be103bf08e7dcced72b42e7ec",
+    "0/11_13.png": "60d34712602bcf900c9923749c28afa542e192f9d746fd45674793477d16e2e9",
+    "0/12_13.png": "c428c8f5b3500308f441ec1e43f348d3d32f98d8726f5008e5549caf73eae8f1",
+    "0/13_13.png": "78424af36674d9d0481ad2695a292d184c452438e95ed103c39c150b8f138fc4",
+    "0/14_13.png": "b01807c444ebf1259f5ef93c60581fcbd894ab39e6f7eb7b45a457f9ae0c9ab9",
+    "0/15_13.png": "eac2f60a9a8a8c2048cabf12cbc075fc47c83a6c403249f7f38cf2ca0bc3fc8c",
+    "0/16_13.png": "de1acb5482f399aee197ec18dd64afff70b12c38c9994ede7af67808ae90021b",
+    "0/17_13.png": "4e928a48c58ce71ccbecd0f9b13e029f52502b7a80c8b9670e0822bafcb4feaf",
+    "0/1_14.png": "5cd893a531b958b9978ea0e9a9516b0ab406810e321fb7ca9b6fe59f7d1d3486",
+    "0/2_14.png": "d722d6750d99e4969afcad0ac8b5333cfb4fa96ce1246b790b12772ff40af406",
+    "0/3_14.png": "1b9609a0250e4fcf70f8b9765c47d9ec7bad05ea98d1dba39d26f28ffcfe7aab",
+    "0/4_14.png": "8fd880ba7c2ceb0c56e21398e08f823d221e96bb779906e07702d6e5e4b4634f",
+    "0/5_14.png": "8f75bc917236186a9330d8b95d5236d9eb69c0fa3c95633fd05704db133ff434",
+    "0/6_14.png": "ba2fbb7458996bcb796e2176aa403959a906f7c87bb26f1f3a404b923e48b1ba",
+    "0/7_14.png": "9ddd1bf8f5a2a7c0152455ccbe761822df455dbb8af5fb6a4fea89558fcc85e1",
+    "0/8_14.png": "d05a8a929a9496f84a7229f770a22888a592d1bdb07b8577cfe614c0a441eca5",
+    "0/9_14.png": "d333e165ea008ae76e5488d930721e65abcc61b60634641e7777741d78147a70",
+    "0/10_14.png": "a3ef5757376242472c0b5f90d494043f9680469249cedfe4868c025e1bd09be4",
+    "0/11_14.png": "82763249308f344a81fa2f87707782250e1e4e905d28c87cb78fe06dfce2f2ab",
+    "0/12_14.png": "915e70d21846f79757f6f0384dd0008aa561ceb8506bb51940c10ea9696b11a1",
+    "0/13_14.png": "abeaa737e300e3ca38933f9f987a2dfdda4b7770690b6f592b1c9b3d7085e51b",
+    "0/14_14.png": "1ab5e1de238db85a3a169adca56c81a58948cc92937077da9adbf17036038b45",
+    "0/15_14.png": "f3386f39b6dcbd7a73216a9ca9dd5e22d191a8ce6c36237303f6b8b700dc3d46",
+    "0/16_14.png": "dd1bc8e396546b5b4531fe9565dc66bc43cbf4e4dcb1e5b9e959ac78d969f217",
+    "0/17_14.png": "8ae65f797838a000260389722c077c6b554fc6cd0d4abb375450964e90c6c7c8",
+    "0/1_15.png": "459045f5d46ff32806813c126b7d91a288e3ba592ac6d30ea6cc39185a85d7ad",
+    "0/2_15.png": "1c49ef1364fc28bb68cc353a71c3fb0f0df971b7d9f0c03a175b45a952101482",
+    "0/3_15.png": "4031feb64f60a5d4caa7e173be86f587d1a1771971f4ea522021a0072a699c21",
+    "0/4_15.png": "3c8da0e3cbcc6c188ba1e019366caf0b0844335c7390814c29af619ee25b8181",
+    "0/5_15.png": "07eb0c46232f0e4baa9eaa2a90d5237c200b2f67ab33d5036a3bf1a578229a4b",
+    "0/6_15.png": "95ac561766c9bcf3d2a4c2fded1403ca8d331b1ba1380e3314f6cccc9ffaf2fe",
+    "0/7_15.png": "67d06ccdd5fd21aa6255c2bce0a1f9176431d64ff8056a5e7748b8439029ecda",
+    "0/8_15.png": "4b912c560cccc55e91cf221d179cca0730829e93079bc04953356a05f618db5b",
+    "0/9_15.png": "638e572bf5c4ba588d2ed95bc659b989746dd8b7c8f2aa220e0a5c7263b3a075",
+    "0/10_15.png": "d73f0ae449231bf8383aab83d307c905cba52c9bd07e22500aa934b73b7ae814",
+    "0/11_15.png": "ab6a36a1cad3e0c6c7d3ebf828f7a171eeb8adfb124cefd9b8f9e12755797740",
+    "0/12_15.png": "c56f0a4dc10685aab26879a8b6e6326b2495f5a617d8819e34559678eb809251",
+    "0/13_15.png": "eb6a0b72680fe9c76d50a5d294a17975676add7b65e41b19014b0ea3b62362ef",
+    "0/14_15.png": "e0351e874319ccfe9565dd845b40a9941e3187bca49cd6a5e0796ab701d180ff",
+    "0/15_15.png": "ae4fb03c33ad998f54e65bd84ea75f2f7283e7050d00a50a99e6a60489a99d23",
+    "0/16_15.png": "d27e3cd730bc09e462af1f8b01933ad137977ab2f68b0a0734d0d8c5b2613881",
+    "0/1_16.png": "70c0ba3b80e1d25a4a85d79ae9ea344474f2ceb344d9edac31c8948d79312ab1",
+    "0/2_16.png": "783830a10a6aed95bb34901683534c8fa3eac7a8e26f39d63bccfaa9ae153d54",
+    "0/3_16.png": "9c460e4b869c139ccd06613a0928e35b721d1e7a9a4489471673f2da889782e8",
+    "0/4_16.png": "803e966e319a095e4ced97c36bbfa75750f30e1b5c72c99f4351833981d7a7ee",
+    "0/5_16.png": "9a9d88379b125123a2545ed509a3dd7c3af2b78260843afbffa6a44e98833d06",
+    "0/6_16.png": "ff2f65e084dd50299e4709160a1a9ce1aff612a632c3b8a99ef1882a01c0db72",
+    "0/7_16.png": "c6676da807eed46abc354563bf1e18b07096bf03e2b258896eab1b81d610959d",
+    "0/8_16.png": "c0fe9cba27c9e7d685906593edc1535f9a86ac2df30505ff81be8c8d9e40e2b5",
+    "0/9_16.png": "d577c701fffbc71c9d935c2e95fdb10cbf7959a7fc39248612ea3d0fd52f520a",
+    "0/10_16.png": "2d281aea1645dded7a8b94a709c3515a568497b8e9cfebb28c9adf423c6e949d",
+    "0/11_16.png": "696e396a051c3f6c568285fd1f9499532d511c6c10adeb9229c5a6bca8de064b",
+    "0/12_16.png": "c42cfc21b6d345940edf18348e0b5e63af2f9c1ea5c6cbee650341a93e705034",
+    "0/13_16.png": "1079d7ca3160fb2921c1e5436749e31ec15b2c0e898195b51d1b0efa29bf18b0",
+    "0/14_16.png": "bc4bce29a7a4ca600a5c4392d334cea2db68a3bc2752c1b3d0004e295b6a465e",
+    "0/15_16.png": "db27731028d9ffdb51c19be478744a959c7a9cec0e5699a8921debbb59d9d35b",
+    "0/16_16.png": "dabf4873e11d4881933d25d8d886702738e2410497b177e385cab9bc8151be29",
+    "0/1_17.png": "2d889bdc8cb3b8d8d780928a204aa26d9d0c1e801fdb629c8f133655e10d1163",
+    "0/2_17.png": "1017a7ba4bbefbdfe2e9bb980910f6cd156cb48a811ded7182a1c5c0d9fd0b0a",
+    "0/3_17.png": "1e6bb89f7968ef6de903128b3363ef5184be821448d19a6ea025fad2d3074525",
+    "0/4_17.png": "c24656180a56ecc2edc40bf3575036fcf5a86ab2a6d2b649e2ed75a360717709",
+    "0/5_17.png": "18de34e18e17ce6b7dfa0b7d86e0a8cb2d88177c8719b781274d044c09945865",
+    "0/6_17.png": "36d3102a971b7ec0fcc4667e4bd3b8aa82e29210ce03c006d432272eaeb2503a",
+    "0/7_17.png": "02195117903d2c1faa6d992c101fa89a6a9d11802e351fce9510c9a8c86f1a61",
+    "0/8_17.png": "e6824d497885ab4ee39f54d6679326c115eec8d8f2b323d65857ba103e281667",
+    "0/9_17.png": "843fc6cf317a537a99c07bfef8a4a49c14b24a9f4e3fa248a10f68603035176e",
+    "0/10_17.png": "2c36bec3c10d840853b841e2a6bd52d8d5045ceca2f8cee34959acd60eaed36f",
+    "0/11_17.png": "945a07147d62b14e12cb3f41c35f57a450ba3e52e61f6693067e20ecce98a4fe",
+    "0/12_17.png": "d876ab92a91677c3e5c0dff0837d1fa27482d6c2864a2660908a4ca82c878394",
+    "0/13_17.png": "f321fdda5900ab66a2c33c12350981eb59ffd9c82c21683b6c8c11713e429bf6",
+    "0/14_17.png": "d98a079fa810b17541aadb36cb7e2f3d3be72dc32d70240439cfa7f6567e598e",
+    "0/15_17.png": "c9d44a9c632c171e2d0f0b2ebafbc5824d3f8f8b964927345149a7a796c9272d",
+    "0/1_18.png": "889990844478ab537df70769b3400c2e9148aeb1a315d7c9d8f0bb3bde9bf936",
+    "0/2_18.png": "2cac3190c1720e207b3a97a513e27e921f3b9e6c44df4b08757d51504543f676",
+    "0/3_18.png": "1feb31994eeb22929e169b2eb67df095a65c802764c1316e8c417c8bac653542",
+    "0/4_18.png": "39e721fad7fa916d4ce31b2cdbe16b759d769f6f1d4c9c682d7db05371708fab",
+    "0/5_18.png": "5849bfe86880d38b56486add5cb3e49dbeac4de0c40ad249ef9a06eb5b08cc8a",
+    "0/6_18.png": "4e5b513367b95b72fe608e122af5a95032e523bc4ae1578dba664d94f2d54ff0",
+    "0/7_18.png": "1b7e18aae74312d640734641f0a6766fea39c77c68f9c6a6ed6887377fbcbbd4",
+    "0/8_18.png": "c9330799d7225525f192de3187c466cca09828f439e6bffd79fbf83a614e6fd6",
+    "0/9_18.png": "0c514543a646f9b22e767ff612c90824a799005e0b724c66b1fa27e689674d21",
+    "0/10_18.png": "c3eccbac2253a7b7a395ba4883f3f20f3eb8a725aa012fb7dc69d6de24425673",
+    "0/11_18.png": "04b3816eb72271bb28dc42f96890a736493ef13716ffe8b75a61373502dca936",
+    "0/12_18.png": "ca0989e59b81c8733e2ec85eab0bbe665556812f72c6c69f42e5bc8ae9614176",
+    "0/13_18.png": "0b50f89d063322701d5243d3163de744b2db225ed1e8dfb58a41fc35d83604c8",
+    "0/14_18.png": "6262c138a60cd569ab38a32a67b20cbb5c01818381ed9ec6eacbc0e7b9969563",
+    "0/0_19.png": "d7806ad9b8b93107c904c6abecb59fae1effaa83e0fee16c23dbae4ce359e872",
+    "0/1_19.png": "3561fd880540493f14d48fc92ffade686ca8442b533b8f1ad1aaa5210aed4409",
+    "0/2_19.png": "30534baab77708ade1e2966023a62eef5e87ac25c1be81f52c0a0ff2d8f0e345",
+    "0/3_19.png": "184845a36e5cc76ace25ac7b9e61046727bf0743940ba7ac659c5f74f68a714f",
+    "0/4_19.png": "8bd613499b8fbc117eba040d139501905f0d37c2c12e754aec9a9da80b51920e",
+    "0/5_19.png": "5f2ad413616adc41d20fbc35ef8919d6c0e07cabce15a0a00089e05a2117ca03",
+    "0/6_19.png": "de6854237e9524099d2e7c42379e79852ce852255bd39126e516910208ce4b6a",
+    "0/7_19.png": "4e779c2e32138961d47634cc1a82913e984a33bdc0e6b49c7ebc07bf90ec91d6",
+    "0/8_19.png": "2af85fe005541b28667ae2de0caa22e25d7e2afc767410bdf2c1b44f492db7e2",
+    "0/9_19.png": "0a4a8f07bad389c469cb7f1d00b900b6131a0c46ecf74e437d5ada1a5a89c315",
+    "0/10_19.png": "d5f856fc0a9f1c043c10444cb15f0e2e31763c8e0f8c5c26388cbdd7887a4753",
+    "0/11_19.png": "102f48551e02e2cd54bbab9e4cfeef48d248a7dc665f375354d7dc2d75a9267e",
+    "0/12_19.png": "b74130cddeb8f3ad02301d3d1e2cc618aaf989c3e38e4ad89fcee2e84e746d96",
+    "0/13_19.png": "794daf40821bc93d0466e49edc3e539cb60c96ad03f170653da47f1a3ea86d2f",
+    "0/0_20.png": "961ee829e47038e373b8875c2765da0ab8fc54babf1f13d1e0b89e269ec4db24",
+    "0/1_20.png": "8f49a0fdc1666af49a2dbb85e475f1b2ba8c93d4c45703c8af43b9aa3d11a52d",
+    "0/2_20.png": "006e7d9da6501cd8ba8eba1c5de23e4f85bda2a78b7847639c1652d7829aed6f",
+    "0/3_20.png": "e72c21b926edab7cac8f6e52acf24405a681d291e684df244748f0ccc4e64365",
+    "0/4_20.png": "7659a124bdf18ecb0fd481c530ecf5f324960932a2d05e9c076e3d1ab4f35af8",
+    "0/5_20.png": "0bf4ec560b54ed93e157445b90b2fe406d29c0d98e70e6f92967ddbd937e0044",
+    "0/6_20.png": "7c7552c00865d44f9fa74975c87d4ab65649ebdc573c857d03590a19229bbcf2",
+    "0/7_20.png": "95ca7fb61014832ab16650d304286813bbf54e0288beef0b7faa124a7d26d351",
+    "0/8_20.png": "596feb8aa95ef65cfa9c090fad0bdc4f69ba091756bf5b0312b9648e29e8ab6d",
+    "0/9_20.png": "b36eb62d1af0a032ea06af9a10502740046fec8346a3fce500a77800ba94eade",
+    "0/10_20.png": "d139fb352c7c9f3f7bbef9f4a88135eb4ddc4318175dd035ae5d5fd2b5596668",
+    "0/11_20.png": "ab9a6b54f43d477597eb4761832680d258a90b0ec464c17ae7a95e977ad339fe",
+    "0/12_20.png": "8c868d13de6e0f74a466048c16e140f970a7bcd6cac58e4945a74dfda4642fdd",
+    "0/13_20.png": "9a743eada1d3531bf6fd0da1737b464056ed758dd18c0975af91c6f9b2b7d672",
+    "0/1_21.png": "a2285fceefecca5417aab9ba559f86597ee3b08456f00651dd97038589ec7de4",
+    "0/2_21.png": "fd036b63337e1b51b67ce42a97b66252d82d3af93615ffc7d86828d6a8b45f3c",
+    "0/3_21.png": "4b12be36b3747ca5020f2ccdd633e8dd2764a368c740a4c8e58c00186b1f1c42",
+    "0/4_21.png": "2b912782e0b0cceb74d315c953514a3f67426a5364d0ccaf09ebc3644d01b40c",
+    "0/5_21.png": "0ff7dcc455b05c83ba53f207b506e44d18f0bf85b4c15bf2da35f6b68d8051f2",
+    "0/6_21.png": "67f5ced6e3acf658d4de3ab980f48d9f86c8e1882126c71eb8600b12ecd2aa3d",
+    "0/7_21.png": "37de1cb97deb83aa2fa36ae590b710907a0c2da033adf2e627d8ca37b4560159",
+    "0/8_21.png": "f88fffad38adec5ef8430f6b49a45bfafdde0490e43e7e4cc6c5a0e19ad39f9c",
+    "0/9_21.png": "a0741472364f3658b7cb8e572345d6a67c03183dd0c2122a81a8ba5a88b72233",
+    "0/10_21.png": "577ba12568567a947899a865e369b6764bac9beab27579debef54ac03dab1c30",
+    "0/11_21.png": "22cdcd39b5200cd20f2b41ac8ca0b35b9fabd64e6922ac48fd7b22853810d7e5",
+    "0/12_21.png": "04f79683fd23b7a484308f3435c7ba140a8dfab5200124bc0091168f40d17706",
+    "0/13_21.png": "b308bad6b1e5b6bbb9b775064f481908a95438747506208b654ed8b3f0c079ab",
+    "0/14_21.png": "2f8acdd169179fcbabd7be0ead1e11abdd5efbdf183fef4e83fa36c93bc023b9",
+    "0/0_22.png": "7c8607b3fd22abe51510e83a161e77ca89f41643f01e45a47e6910889536d9e5",
+    "0/1_22.png": "a10ca2ded10d78eb5131166614285aab7bbf158176440fb1d181da4d541ab4ec",
+    "0/2_22.png": "09a10fffc4697ec10f20e576ea8547f49654faecc22b4ff109bca178e7488043",
+    "0/3_22.png": "c6bcee801a600ea8525b1b12e1980e80ed7d9932084c1506d95edb6e9d28482c",
+    "0/4_22.png": "57ab157934d329294ff79dc21392d0a38bbe79c0e35399c06ec108efb20a95ac",
+    "0/5_22.png": "c8039c228ec26e765b4fdb9d8fbb75bff6cfd95593e4ccb116982d14a5c63791",
+    "0/6_22.png": "a15e6b58021168081aeff3bf5a73b4fb92f11a0c319c2d64e3223280c856853f",
+    "0/7_22.png": "f0bec0d11f46fce5bc16084010444cb2af096d7da087e09112775a1ce38f0665",
+    "0/8_22.png": "b333da7415e9cf49a76347d9ea4f8f9da4b2f4a6945a463c333e807daaff868e",
+    "0/9_22.png": "ccbcdc6ec679336c77b95b1ade7afea0c08399d515d808dd7eafb91cb83ebfea",
+    "0/10_22.png": "2a853c4cf3d552943de3648141420766ed35796686ab782bbb3c29450590ed99",
+    "0/11_22.png": "210302e4764064c90f10679df1d545c79c33ac3943ec76ce0b1dba2cd5556ac8",
+    "0/12_22.png": "bc8f10f88654cf1a644a17826c9d921027193b58342e85babd0a1283150c063c",
+    "0/13_22.png": "fe499efd30a741f4407ad4e363d178dcf48e149098fd5cc09014afc5cdee47d0",
+    "0/14_22.png": "27499d630394ab452b63ddcbac0dfa5970bbd448a0761d46e152431964495f8a",
+    "0/0_23.png": "93df56060ab8edbbe99fcc91913b23e69381c4c6e83e477eef94a3fae88db714",
+    "0/1_23.png": "76126c20b338c16d553eb4e5287f5c1be8054ce935bed4301d0cbb0d200292fc",
+    "0/2_23.png": "0de032717030ad5d07db3a71082cce619d90624f6e3dcd8ba54141b04e34c4bf",
+    "0/3_23.png": "f07dc49471af6c07b9e98fae6a7aee06c17ed7f6d4d69cebb734d77a7c672b14",
+    "0/4_23.png": "d6b50f72fca703d0997c6e5ef83405cead310146b0c0f9764498ce79418cd147",
+    "0/5_23.png": "613d770cd8ce8113838089ae50952b3ed4a3742a8913df078af02773450efc06",
+    "0/6_23.png": "6ec357c6fdef38064a5c0600cccf4637b9e86dffda4b9bc71cbea6992f451de6",
+    "0/7_23.png": "c5b710eabae87495f583b0836ab901f8c17f123008623b51f3e322339f59e860",
+    "0/8_23.png": "a87d639a93072db2a258850c70eefcd2db332e20adced0194a172d3655c47fe6",
+    "0/9_23.png": "138bc6c1d7dd332af6daad487c3933c50561d920ccf93e9118340da5ddd8dcd2",
+    "0/10_23.png": "552bfcbff4b4ee43e95e1893662767050d95f3692ca9a47dd02aaab15b7eacf0",
+    "0/11_23.png": "8e311f286669bb6decbc622e99a68e63a32e92e56290129d8277371692f53596",
+    "0/12_23.png": "b9b4db08bda4272317d92035592bdf78f3b11c94ebfda418e50a20f775b0022d",
+    "0/13_23.png": "39b30bc6e52e7c5cba445a1557b484ebf41f654dc3b6f68874b74ec3d1e932c2",
+    "0/1_24.png": "11d95c976b0646e0718090ac550b5b42e4183faaa4e68ca05b61e42078c44c67",
+    "0/2_24.png": "240375870e5090f77defabd8897a59296fbc95494f29401525b62cba8a491a9d",
+    "0/3_24.png": "07ea68650ec16766ae32473cedc316900cbfae71eb934ceb17971b353f321074",
+    "0/4_24.png": "55917c9d6edcb21dac29fc7e6d5326dbd45ddf372005e79bac04bc22a7a72cca",
+    "0/5_24.png": "1f71dd6b5a1bc2a7651d9ec3c06cd7cf582c379faadb588e63e9d45ef9fc7832",
+    "0/6_24.png": "93b5273ac6f3c7e351c2c01e7712e6cf6c1d8ea1043f10007598bf3498183806",
+    "0/7_24.png": "e20266c48b0d00b2926c2857192c5e363a4a8eed8ce2bd5d6c582ac0ad7c2b6f",
+    "0/8_24.png": "ff8f8603e7556785cf3bb80330647567b7fb1afc29134694de06d68922f8b901",
+    "0/9_24.png": "0ff0cf81be2eb84ae8833837d0f3968bfcc0ef7220c9e3134abf90f1f805346c",
+    "0/10_24.png": "8167ab77e44bd3fc0fe7f5c7ec1f5bbddb9a53f6e17d9f9ee05ba3fd1db5b666",
+    "0/11_24.png": "e9cb99d962ed0b1cd976c9ac5053ddcf75d916d14b32da6cc9ec4aaded64c141",
+    "0/12_24.png": "66c46d113ef54759ca58e3228c3fda56bf6304f75ea2a0a0f82436f73cbb62a9",
+    "0/13_24.png": "c1f643f61d103f0725fed2e51461e206a5d5bc8fc0329e38a9e76e59b6627522",
+    "0/2_25.png": "af7033a09a2382b7525fb8b3a66b0bb7d6a5d81dbf9dac1cd3cc6c7be09662c6",
+    "0/3_25.png": "272c948c453656c7e043b53d893096f3e493a0f3e8d8b1775029f74aab983d26",
+    "0/4_25.png": "c6061444df6fb610c0b2e650cfdee620317e748dc153621157e624a6c2b823c9",
+    "0/5_25.png": "ccb30f2313a05b49089e511aa7caf9b817d67c8cacd4ccdcdeea9bc1f630b8e8",
+    "0/6_25.png": "8fe6f5a777192693788ee798d7923d024d613a591c2ee037de6c2618fa00d38c",
+    "0/7_25.png": "d8c51a3a9f514e31b4f229915b118be19a2c8a6317c141bee9c15d35c38243b1",
+    "0/8_25.png": "5c8b44b3bb5c7115ce6c9d3606f18ebd4f3ec7e9b9c163e683158435b4ab6550",
+    "0/9_25.png": "ec66e707bfd3fb771bc04ab5aef4cd95a08d577deca45b570936a0357f8e8b0a",
+    "0/10_25.png": "5fe086ea862916496cf6a806c3bfe1507a67c20266c887cc0812e34f1ad123cc",
+    "0/11_25.png": "bc66a486997e4568c2e66e7d4358ea970544590c5415e0e79263ba82f0531aaf",
+    "0/12_25.png": "fff4ba2ebeb2e236bc297eded34d7c7fd647da0a937570c4767eb77af57aa7ff",
+    "0/13_25.png": "6a62a1f0f27541a40f7735ed9a9d89942fe08870cf2c1f078183549dcdaa2060",
+    "0/3_26.png": "a1f54f8d166c20eed9cdf970d75fccc2e1859af105e8d42c20f144bc88d775dc",
+    "0/4_26.png": "0b2ffb393fd96bba71debf5cab742b5b8d2fa704f28f3edb165576c532b66ce6",
+    "0/5_26.png": "482f09dd17cb101454b20e0f638f558e6a4339eb6ea6abbd3a39f4a96fda74b2",
+    "0/6_26.png": "4371ac74726838a75b9afe7adfb5a859b22a31697d03dd247f947cc2e6242190",
+    "0/7_26.png": "00afbc17710fdc529380d8253ac37825d67d1aff88db09e46049dbfcd61638a3",
+    "0/8_26.png": "a0757f48259029263cd53936da84916dfb14884d45b91c774c9246662152434f",
+    "0/9_26.png": "c99b4a1897a6d0bf513a11ece282ab1bc2292458b269a9b0dbfab8afc73314cd",
+    "0/10_26.png": "49f87ac6493782673a927c4b4bb8589703ee182118f011219437c166ac407604",
+    "0/11_26.png": "a5c6091223b9c3bafe42d3f6a1d5b41c386f12c32f250f9021068d9eaa032aae",
+    "0/3_27.png": "c6a5cdf3d8616fb470be0fbbaa8e155b96b7be4fec4be4b5411c260457150eae",
+    "0/4_27.png": "f84e339466fd226f2492b28629ea39e221984f9b0b1645d02a7fcb0d5a0df6e8",
+    "0/5_27.png": "6ac3565901c3e2ba5af453fd5e6f1626471750fe0be06a464668b3f2b470e701",
+    "0/6_27.png": "ed6bd33e7fd09f3dd5dbb7eaa909f11459881cfc7dc0a1dbcc7e9e4dd832b909",
+    "0/7_27.png": "a1444affbfcf19195239657b618d8f453d5b1b09a920f5a05a4cec899f14fc43",
+    "0/8_27.png": "1b0f18ef0d6779495ed4bbbd3d38f43359cc45285a076c1ff22e377ab32417f9",
+    "0/9_27.png": "a36984f02c386c2baa25fc66c305def762e1ed487baeb7ea5c2dca87e5b8105e",
+    "0/10_27.png": "f1c29dae9da9a9777dea18e11334aa139cd18bc3b6186a46b527c3b1f6ffcc2f",
+    "0/11_27.png": "fceb1a144022696d469fe23273ad339f77658fbb0f73700c2baf308d8822034f",
+    "0/4_28.png": "38387002f299b9ab76603ae464e5dca85f4309cd0155e86d8c676a737ac0b778",
+    "0/5_28.png": "6dd7be516efd715a521b21c5b54f24b694332ab0c4db6b22f3f80a38dfe47ca9",
+    "0/6_28.png": "6900fbb3c6d9f7b00bbc7f1428b51d95879eced00bcd85bd49872cbff90da77d",
+    "0/7_28.png": "1d6131d0c47e40e389568ddc80b8fc188d467ec61eb896c87dae388f30edef95",
+    "0/9_28.png": "dd3cb103b23f313ce5924bdb7bfc4a39eeebefefb8ee8113c1d3b33d0f09832b",
+    "0/10_28.png": "7bd07a265c6295a042f2390de1c4f520c38a6355f68547ad430d360e28df03dc",
+    "0/6_29.png": "e2922ce96678e29060dd00c3812f9059a8520711b164657dbfdd78647571f14c",
+    "1/5_0.png": "01066a53331139a53a6e1ec5b02447dce0bd8ec3f7378dad0c83854901267a07",
+    "1/6_0.png": "2976d539bc0fed43e08f5e149d64cbae0082a3f77b6efee3e288eabaad749bda",
+    "1/7_0.png": "e9065cf54a228ce37fc1224eb84be22d6f32b696d73f45a210ecaa32bd76ea1b",
+    "1/5_1.png": "f33aa65d83d9f42575ae151224f658571318a34198efaad6bbf7941efaa07f79",
+    "1/6_1.png": "fd1d8fccdf08b1bad8f6915216ab2af621595517d29661e383c8b16cdeb9d20b",
+    "1/7_1.png": "a3b36cfd6643ccc71d3e993c9d90f36cb4f4d15510ec94d0bc095e9923b02339",
+    "1/8_1.png": "27ac8f86d34dccc0aec9675a95cc8fb5f0cd427784db1d41873007fc7c642562",
+    "1/5_2.png": "1fdf597961149e37324315b703104edaedd33afdd60a34773c8924ca1f186d1d",
+    "1/6_2.png": "9306236ea4f5772f659a8680f5252b5d932b89b014a55b54cc8aefa4ac0e40f8",
+    "1/7_2.png": "1dd809ede9a6c2dcf49038c13abfb9a286d1a1496b085dce78ba745917d44755",
+    "1/8_2.png": "3852a324e96b88914176b56742fde6a6282009ced1b25b5797badb04af9d304e",
+    "1/1_3.png": "3a5de81ba1e47589a8aa42f7100aa9de33e4df65b26462ea8f3ed07758a4ae72",
+    "1/4_3.png": "8508dfed61ffce881d034a272725f433f3c24f4936f6da1fddd3790b1e412b9c",
+    "1/5_3.png": "af161d3c13dea64cbfba27258de9d3b858055da6d641c2af87aab08746c99d04",
+    "1/6_3.png": "edb3110b8ddb3591ee7f475d9fa34a41510e3f03f35c8e3ca0c954b7df312aa0",
+    "1/7_3.png": "685ee8446123f685cd8ce6f8bdcad55053f5879f4aba555cdacfdd62ee47f877",
+    "1/8_3.png": "328ae53c7b19966f8ee218ebfe99d1082bd7928260486fd9d88ecd965e7a73ce",
+    "1/9_3.png": "e4f9efbe7b94da7958060f80fce928bd4b91ed97c9baa5c510c2eba08b9ea8e8",
+    "1/1_4.png": "296be1e4b9cafc4561b6af1b357273eb23811f8c74c998da6167d46acf690129",
+    "1/2_4.png": "877a143526fde5f84c530c45332559b5da4534ba59ff6e80a9e17db7eef41b08",
+    "1/4_4.png": "c1cc3488eface9915662f843bc5f700d13aa4838dea4cb51b240d918052df2af",
+    "1/5_4.png": "3a5a9fb4b4490a506bcf05a018c79270283ceb6d19a92b44db833bdab016be7a",
+    "1/6_4.png": "6280fb13e4a62018abe6e0d7d594b4940418c8a3676d9feedb198456a5989b8c",
+    "1/7_4.png": "38a89917ac4caf21ffe353cab60149c52ed858a542a346e8615fc661ca43e9bb",
+    "1/8_4.png": "0d00215d49a0d20aac835c8e4b21b0c23b0bbf5b8e5d2894e2a15334c184ccc7",
+    "1/9_4.png": "b8f82398696bb67469c6dbcaafd7122b3f7df2c50ecfee941d678e8baa4c4313",
+    "1/1_5.png": "15e063c79e36006a62219dd9801b5acef733d9e39da788df12f3732f4612330c",
+    "1/2_5.png": "46d368abbb4d37f49dd647d31f53b7f1618b1b4df958cd7d47ceb89283ccfb44",
+    "1/3_5.png": "a4c9448f03b4f12fa8022a070223a7c6c580f7d8237633e98b4f0cb26439cf81",
+    "1/4_5.png": "1a652c1cfc2dd0d0b3305390d301a4acdae9c64c7e4c8c4155a78c78f386ad8e",
+    "1/5_5.png": "34e29d02a045f40542b107443503569775e06990c493f68699bc0cff2b8d8f5b",
+    "1/6_5.png": "72b4cf8778df6acf3991383d12b34ab8f2ca81cc7aa8d8f274265bf25cc2701a",
+    "1/7_5.png": "46949ef1cb0d4a20711fdd5216ce352a05dcd852d728294eda9015e92f407166",
+    "1/8_5.png": "ee6431e8044cfdd1e21a34f3456fc16b3c7064c3f585eb105ff247e5993bef8d",
+    "1/9_5.png": "1d7659dbeea3b2f53a1f0ce0a538e5a11c92ea0057675aaaa6b32c0cda914fb3",
+    "1/0_6.png": "0fafc7151d84373649e2d35d0ca0853599927337870a7082275a10e397b36c14",
+    "1/1_6.png": "844060be7f38f5482c4c7e89ea42f0435c98fe04d391ea71d6ee02f2601e39ab",
+    "1/2_6.png": "d7b28ab1d4372e1f61a5d915e30ece7700e289818fba2339149760c687649140",
+    "1/3_6.png": "f2b65f739e5b2e39a002da389167bd41e77f9db1be79cf23d989b922ed4c164c",
+    "1/4_6.png": "2c82fa7ea480f1ba28bbfb5ff4749eb1448ae3cf8b404f89578a123dff836471",
+    "1/5_6.png": "8ad579b2ff9d393087286b36c0971f55f25a3758f3035dc324997d3813bf78d5",
+    "1/6_6.png": "92b7bb1a482693349cfbc059a6a773b4700a0c1fe68efb340ee155f8cfaa54ac",
+    "1/7_6.png": "ce199aaa9d989cfcc7108130811eba01828c2d2a2e141c6a366b8d96260ec14a",
+    "1/8_6.png": "d2a71b28bfe99d96a4065f6c33b9343a00516a79d0d3909c905607b9dcde3e65",
+    "1/0_7.png": "db9a09039d242bb79eea473e4a895b6dd39c702cc260db2662351c8fed45a24d",
+    "1/1_7.png": "68702916182d0362cad123c1e314522e6d53cae042c4106f3bd18e0130fbd0a1",
+    "1/2_7.png": "0ebfa43a8d657d0e28972a142503787736873be25f7378307c6d95c62127e19c",
+    "1/3_7.png": "48306700cf00efddfd66ab9cfbc677981c239c10c659b5810ed12deb934844ad",
+    "1/4_7.png": "8ff8280a577f98dde7b005aa3a07d11a5a35716d766ccdf2224944d84a2d8db2",
+    "1/5_7.png": "2438634fdf369708131d4970f0c8faae7357e8f266a042f24319e8fcfbe52815",
+    "1/6_7.png": "460ef28193569e7a7fa59872641b4d9f7fd928a34203868e00c8a2a362288755",
+    "1/7_7.png": "1b57332d1f97816fe0395e722eede5f192fa88af354f5699789b9564885ad283",
+    "1/8_7.png": "e667151df7c5769516ee82b95f6f28da193127c188ae9a50be947a13a4f07a0b",
+    "1/0_8.png": "0f8e77878cf27540f3804f2462a30604007e2454eaa2272e1714ff42a2e0eeb8",
+    "1/1_8.png": "fd10ce9f98a95b270ebd6360ba3ea8a3166b08f3b0911e292019a1b66ee23599",
+    "1/2_8.png": "6523c28a87476ec6f037eef173ce7ac4b73014d8049bb442d77b22b11063d050",
+    "1/3_8.png": "c5cc5f875f762a86937933aef79560dc5d5ea794a1924f3db080e86034ff4c1b",
+    "1/4_8.png": "1af895eee8860d4065dd76532587bcb421321445325db4e21d43f5f99569e342",
+    "1/5_8.png": "8cb9fd3f766f1969ee26fb7e93474c361228367adfe13cccdb59a31f277cddce",
+    "1/6_8.png": "97c4ec3f8b07c5b3f75a22497b810b09db8e497af5738252d8d0ef8f71072d9f",
+    "1/7_8.png": "ee0d654a31e32cbcb963f38ff8f4fad9cdda07058f21071116734bc53913ad8c",
+    "1/8_8.png": "12605fa470afc6918bbb74e633827cc1fd139ce93f0b8e653d9e9e135821de6f",
+    "1/0_9.png": "cda34828112bc112ad86faa870bb1851c67670bd8a1653a7104733cca760016a",
+    "1/1_9.png": "7da3667ff2cd73a3b94a8bf7023b45d7904ce944961e3198b157294beb0672ed",
+    "1/2_9.png": "b35db9287e20757d4a0ec49edc7c1c1336bde0eee652875021ab30987948474e",
+    "1/3_9.png": "1a88e5aa75ae04de360e914a436e977295ab7cad5c5dac03e04676ac678eeb46",
+    "1/4_9.png": "70af839b0f9585a8e9c52690e2792cc6dba2fd98edbd960a7cf31c484f078f0d",
+    "1/5_9.png": "3bc4992829c91ec988bc3bb206408b306013b009fe9afe1dacd002a3d03ffd13",
+    "1/6_9.png": "f0b6425625310d24d00a11107d4f5b0b43a8374fe00b716d89fe44df958719fd",
+    "1/7_9.png": "be6db9dc51cf5ac9e2818d43c702f4853e8990769058b870b7f7e6973d95b587",
+    "1/0_10.png": "36e45b00179d7fb88692e1e1709a6f32d5119d65b4d32b51ead2ac90506919b2",
+    "1/1_10.png": "02dceb1dcf1a345daaa304f467704e493af828420e7aaf226826716b0fc2585d",
+    "1/2_10.png": "966cdc0a25762a6c27828bc5ec76354aec03fd35b91156760ddb1a5b985dbdf5",
+    "1/3_10.png": "ec856d14b7cb71e875b09d3413373e233263679ec353b395412b271ca824c99c",
+    "1/4_10.png": "fb7d1426b0b33a3f5b2340b93114eddbf7c08f943c4113f87daa54932ca20ce9",
+    "1/5_10.png": "84e4f8dd3566bf276ade5c28f7a3493488afc73351828b12e624d22fa4f5f346",
+    "1/6_10.png": "3689442b0ef1d592276446b8f2028fa7aee05990d236b3bb8c007a231e3886c1",
+    "1/7_10.png": "369faba6c58a46f9d80a9c157ba754ce012b71bafd5172fa5c2c4da1265e5755",
+    "1/0_11.png": "b5472c2af3fdab70b52cdbf0f2995ef5b5e1df0c8cee1effbea30a69ce7edd35",
+    "1/1_11.png": "ffaa3d7efae05b5229f809fda8169d807e68c7e468f0d3a13e5d05be72f35f07",
+    "1/2_11.png": "dcf1bbb8d8f7b85bf5986e8de14bc037976c9ff7a24a61b3956c9fd511596d26",
+    "1/3_11.png": "add77f394835f89e3ff85aff2613180eb5cc553452b574b6b2caa0be6a4fd1ff",
+    "1/4_11.png": "676113ed958f4c71f4d2d4991427bf2c9b9c0c8eb9cb95934c3d401f43c7c57c",
+    "1/5_11.png": "71b300ff17246aa69bea0de89fc4745edddbf0226fb7abb744e058fc3340c3e9",
+    "1/6_11.png": "7ec20bb5a88042b896e2a262c679429009e92c4c5265aa2f41f736bebfe4d004",
+    "1/7_11.png": "77f6be32360c12ee847e1e664ae266b2e713bcf5d2b6e76d567d3f205958b5f1",
+    "1/0_12.png": "657280ca8aed1a1f6abd86ea2588fb62272af14acf86ec5f8e35c38265251e43",
+    "1/1_12.png": "07617efccd83676ab97ba0e1624d22472db8658c8f44cf01e747e6cd4ba5ba46",
+    "1/2_12.png": "40c8862bca2c18d9b3d3c9b86a51b46f37942a1dd5474311fda73904047e1ba8",
+    "1/3_12.png": "400b1cb6b305cb7c8b4990bded2a3033d7e6f21abcd98175c7a09b3d0020be96",
+    "1/4_12.png": "106d3b37dbbed0c27f8eceede93a994ee842c73caf2d7ec1f57ba26d9edc5021",
+    "1/5_12.png": "43302a3f8fd7a2ea98a2e49bc703a86b1bfbb3a0fbc4b5fa098e48b51f13c2a4",
+    "1/6_12.png": "8625bb18d81a1959be32c27d00635886cddea62825958c2cccc182fc107dddc0",
+    "1/1_13.png": "5a0164849f1110d36d8cc34127ae5f5f603f328f84d253251610e30d42c262cd",
+    "1/2_13.png": "afc78bc5bf2b5bbea3c4e77fbe9e4b89961d56c12bc32d2edb4a101494f37a7f",
+    "1/3_13.png": "98480af6c91a0ac2c2a8d3685b98eeeb2f679a94b0461dfa74103f12b920514d",
+    "1/4_13.png": "36b3a499e4684392baca1fba8e6efeec18837fd2b296f985d63db6199cbe6fa1",
+    "1/5_13.png": "52c4c486d66075eab5fa52b737d1ebbea627de776af0860e70167f7f985b5a54",
+    "1/2_14.png": "0112fb2ccd734c0a70a1c11bc096e2863aaa29400d5786d502e75722f1e5605c",
+    "1/3_14.png": "cc68e7d4d5731d1406bf7c96e9cdc7276103b39263ea7588ca99df8bb414686f",
+    "1/4_14.png": "792321bfc47ab6290fd47648804ce050e8ac18ec2a03cbfc7342c25be4fc57d9",
+    "1/5_14.png": "5eb5a6da965c59eba671d4063e9527fd50c491531fa1e7d5365f96537732c047",
+    "2/2_0.png": "2c3f88c86933adde49db798ca0a5aaf8e85dca0a9321de7b0cab9a8e057df909",
+    "2/3_0.png": "008f9cffe2eff37695ebe5601744c80a3e07dca5ff1347fef5d054e098158b36",
+    "2/4_0.png": "1baf98478b5685a310d7a1ddcbb659c1e0945c20f3be41b755be8735b38c3d39",
+    "2/0_1.png": "4305a8503460b6447101e8de4e44e48e521329986333e1796bb9a13f918752f1",
+    "2/2_1.png": "c4049116e41817a7a3f6cb32338e3669e6333d7d2149b9be5f472c9f347fa543",
+    "2/3_1.png": "0054da3e6257058bc56528e17ad04cf771b0ef5fd963c668efc8c8929c2c9dd7",
+    "2/4_1.png": "791bc725d737b61fdc74d42f5972a40f3748f0bfadd9720fe0b9d101b2c0afc2",
+    "2/0_2.png": "b0e83ca2ce692ab2503dc962bbd9487b851abf6b2d697f1bfc453f2b5c24a0cd",
+    "2/1_2.png": "889e087a2c9ef76144c643e6f9efe460af3a684dd416de045fdb0635d5d46f44",
+    "2/2_2.png": "5de296b69c6b8c7f9cf85db560698c7765515ee3ba6207d7803a699868b8642e",
+    "2/3_2.png": "d8a4bba618847d1f7aef3a4ce3a97e28188245b74e23678d1ff7e3e50ac32b92",
+    "2/4_2.png": "c0189bc5affb12032494ed8b410dfe74ccfa6fe36a0c356524eb821950894878",
+    "2/0_3.png": "75f4bb1ae408fbd2f412989add6bf254c883d1dd83d0b5a88d94901f84168e60",
+    "2/1_3.png": "06c60c2cb753a06f4d2199e7a49fa0138dbf292cb758415c380458a537f6f15b",
+    "2/2_3.png": "fa7ca539ad40dc29a1ced32e969b7fd89cce3fc2af785f3241ce4094ca6c8350",
+    "2/3_3.png": "04d95b54e74632cbfc643b84d7dc65b6e6b3d2292175cee756f54960bedde01e",
+    "2/4_3.png": "e2f0f21fcf1cd8352a3ab58817d1e1cd0d1109b1555cd90b648475dc302d2e99",
+    "2/0_4.png": "70ad558fc0c7409acde159472f65ae092606978eb95b1517eaf6b67ecc1405ee",
+    "2/1_4.png": "f565c0ee129bf9fbbb4ad7748bc198e0be3e6dabe7c3034a2d822c2113f64464",
+    "2/2_4.png": "0397a6e1a6bc798606927076a3ec2867dd96be4736eafeeacf974005aa59fd99",
+    "2/3_4.png": "5cbcec381dfa7537086371aacd7385474663cd68cc66576834a12225d4279390",
+    "2/4_4.png": "85bb53a1c25011d44b1868930a40d42db35817dbf80793ed849fa3854a8c1425",
+    "2/0_5.png": "f48f39fc3ef2da0a068352ef9a7ac3885f59c83c9ceeeafb05ded0fe42ec5d88",
+    "2/1_5.png": "789ae4e18a8bbef730a9535d1a7b9e029404cf2f7cd34ac99910be0c507e6d89",
+    "2/2_5.png": "fc91110a0e9e691d98779e98640c99380e9f0c8fb52483c4be095c0f057c9049",
+    "2/3_5.png": "9c51e71377da3855bf7feeb81b744cc4baf82b9ad8a01314fb747fc3e0aad441",
+    "2/0_6.png": "e9ca4effd170f9c34a6661e9b296b112659292aeaf34738c995b1f3b98d44a30",
+    "2/1_6.png": "fc6000460dd93fd1bc82a1392a5d0f65b8a379638805369a1c6203979a00eabb",
+    "2/2_6.png": "05d35202ea2d1c8755747d24e629a0790af3cba8000dedf32b57623318e38fda",
+    "2/3_6.png": "1e37078818ad19195da427dfe27a8a579aa5d25b5bd7855d6a77b32d4696c6dc",
+    "2/1_7.png": "9d9834db5c4b406f24cb1af9bb0e678073f6bd8aa2c67998f892a2da6795d860",
+    "2/2_7.png": "1e5075c0f3e3f676c152cc3d17c86cdfe2de8f45edd7e50749f262e39b7c3246",
+    "3/0_0.png": "1091d8854d20fe8e739a055f969867476826e8feb22ca6ffdb50018bac05ca40",
+    "3/1_0.png": "5c83bfea8e21effe88e086294a34d43926be1783842a4d0836b5dd6f2363d66a",
+    "3/2_0.png": "a2865f7a99a005583ac1bf403b00354c166465fa03abfa8f097209894510edbc",
+    "3/0_1.png": "7942d373f82f0895b23dc3c32512235d6068421402b2a05cf05228bb07fbd493",
+    "3/1_1.png": "fbbd1e26c5194a5f51be16cc42f9f6a6c2927680bfeb92b07774d518d62e4aad",
+    "3/2_1.png": "cec82866ef6d589c977761c16d8d3fe709d16413229b8fcb6f1479f6b6ed53d7",
+    "3/0_2.png": "1a531806a5711041a4341128140ba65fdcaa28eafd53921c7baa78d3416a8fde",
+    "3/1_2.png": "395d3f65be8ea8580ee8dd3ef96d99c8b3dc9bf1ead8a1d5e3b7762cfc792c04",
+    "3/2_2.png": "2853d0e8e8ff7c6165d2df84ab5cb0adce0f7381bde0675955ce1316d2ca5c3d",
+    "3/0_3.png": "9055fae016dcd7dcd8cac2670099a7a7a21c019c9b93b3889a4a7af45c86e1f7",
+    "3/1_3.png": "83aed6d80cb6b6b73668f3074086f2ae1d56e44b54d05cf4b8b94ab2c2d0f97a",
+    "4/0_0.png": "423616f4e74824e422203b6dc88e86598e9a6ce74b06b182613d82cbcbb33461",
+    "4/1_0.png": "49a1b4cfcacb5c6adaf3331e69b80f8d8e8054991aaa2103c02c3e3ab07f75a0",
+    "4/0_1.png": "2ee2b53a3bb8417fd22921f78d9573021311e2088754f679a379418dbacbf538",
+    "4/1_1.png": "eda53d8ebdfa6209a3c0317be08bc577890cb53798eefe44ceafe4b9ae993e9b",
+    "5/0_0.png": "421e9b4302522f4575f1d68270086d0a235a11ca33d2da8be9ab105447dff978"
+  },
+  "fetched": {
+    "_what": "every row above. None of these bytes is committed; tools/fetch_artefacts.py is the only sanctioned way they arrive, and a clone with none of them is a working clone.",
+    "host_base": "file:///Users/victoriabarnes/project_magisteria/artefact_host/terrain-tiles-v1/tiles/",
+    "_host_base_is": "decision 972: a prefix each row's key appends to. NOT authoritative -- the digest is the whole of the check -- and a row's own `host` overrides it. It exists so that a move of hosting stays the one-field edit decision 948 rules, which 496 absolute URLs would have quietly stopped being.",
+    "total_bytes": 141371651,
+    "files": {
+      "0/12_0.png": {
+        "bytes": 69776
+      },
+      "0/13_0.png": {
+        "bytes": 315576
+      },
+      "0/11_1.png": {
+        "bytes": 5289
+      },
+      "0/12_1.png": {
+        "bytes": 324521
+      },
+      "0/13_1.png": {
+        "bytes": 355924
+      },
+      "0/14_1.png": {
+        "bytes": 139631
+      },
+      "0/11_2.png": {
+        "bytes": 99138
+      },
+      "0/12_2.png": {
+        "bytes": 390997
+      },
+      "0/13_2.png": {
+        "bytes": 324675
+      },
+      "0/14_2.png": {
+        "bytes": 238219
+      },
+      "0/15_2.png": {
+        "bytes": 35355
+      },
+      "0/16_2.png": {
+        "bytes": 21546
+      },
+      "0/11_3.png": {
+        "bytes": 148077
+      },
+      "0/12_3.png": {
+        "bytes": 337042
+      },
+      "0/13_3.png": {
+        "bytes": 312691
+      },
+      "0/14_3.png": {
+        "bytes": 363002
+      },
+      "0/15_3.png": {
+        "bytes": 274720
+      },
+      "0/16_3.png": {
+        "bytes": 287786
+      },
+      "0/17_3.png": {
+        "bytes": 138575
+      },
+      "0/11_4.png": {
+        "bytes": 235347
+      },
+      "0/12_4.png": {
+        "bytes": 337402
+      },
+      "0/13_4.png": {
+        "bytes": 377200
+      },
+      "0/14_4.png": {
+        "bytes": 376155
+      },
+      "0/15_4.png": {
+        "bytes": 318884
+      },
+      "0/16_4.png": {
+        "bytes": 335894
+      },
+      "0/17_4.png": {
+        "bytes": 22631
+      },
+      "0/10_5.png": {
+        "bytes": 4342
+      },
+      "0/11_5.png": {
+        "bytes": 290213
+      },
+      "0/12_5.png": {
+        "bytes": 404962
+      },
+      "0/13_5.png": {
+        "bytes": 403101
+      },
+      "0/14_5.png": {
+        "bytes": 391086
+      },
+      "0/15_5.png": {
+        "bytes": 356408
+      },
+      "0/16_5.png": {
+        "bytes": 379641
+      },
+      "0/17_5.png": {
+        "bytes": 176686
+      },
+      "0/10_6.png": {
+        "bytes": 236412
+      },
+      "0/11_6.png": {
+        "bytes": 406319
+      },
+      "0/12_6.png": {
+        "bytes": 373174
+      },
+      "0/13_6.png": {
+        "bytes": 403417
+      },
+      "0/14_6.png": {
+        "bytes": 416208
+      },
+      "0/15_6.png": {
+        "bytes": 382745
+      },
+      "0/16_6.png": {
+        "bytes": 397985
+      },
+      "0/17_6.png": {
+        "bytes": 367302
+      },
+      "0/3_7.png": {
+        "bytes": 81218
+      },
+      "0/9_7.png": {
+        "bytes": 2286
+      },
+      "0/10_7.png": {
+        "bytes": 356869
+      },
+      "0/11_7.png": {
+        "bytes": 439048
+      },
+      "0/12_7.png": {
+        "bytes": 368035
+      },
+      "0/13_7.png": {
+        "bytes": 386041
+      },
+      "0/14_7.png": {
+        "bytes": 409938
+      },
+      "0/15_7.png": {
+        "bytes": 420092
+      },
+      "0/16_7.png": {
+        "bytes": 423617
+      },
+      "0/17_7.png": {
+        "bytes": 401216
+      },
+      "0/18_7.png": {
+        "bytes": 221840
+      },
+      "0/19_7.png": {
+        "bytes": 108108
+      },
+      "0/2_8.png": {
+        "bytes": 4251
+      },
+      "0/3_8.png": {
+        "bytes": 273981
+      },
+      "0/9_8.png": {
+        "bytes": 105340
+      },
+      "0/10_8.png": {
+        "bytes": 397847
+      },
+      "0/11_8.png": {
+        "bytes": 426289
+      },
+      "0/12_8.png": {
+        "bytes": 441391
+      },
+      "0/13_8.png": {
+        "bytes": 433366
+      },
+      "0/14_8.png": {
+        "bytes": 451199
+      },
+      "0/15_8.png": {
+        "bytes": 438437
+      },
+      "0/16_8.png": {
+        "bytes": 434514
+      },
+      "0/17_8.png": {
+        "bytes": 426485
+      },
+      "0/18_8.png": {
+        "bytes": 426595
+      },
+      "0/19_8.png": {
+        "bytes": 133570
+      },
+      "0/2_9.png": {
+        "bytes": 74265
+      },
+      "0/3_9.png": {
+        "bytes": 201344
+      },
+      "0/4_9.png": {
+        "bytes": 37138
+      },
+      "0/8_9.png": {
+        "bytes": 1401
+      },
+      "0/9_9.png": {
+        "bytes": 262986
+      },
+      "0/10_9.png": {
+        "bytes": 398021
+      },
+      "0/11_9.png": {
+        "bytes": 397323
+      },
+      "0/12_9.png": {
+        "bytes": 423705
+      },
+      "0/13_9.png": {
+        "bytes": 394153
+      },
+      "0/14_9.png": {
+        "bytes": 410271
+      },
+      "0/15_9.png": {
+        "bytes": 422650
+      },
+      "0/16_9.png": {
+        "bytes": 435297
+      },
+      "0/17_9.png": {
+        "bytes": 432043
+      },
+      "0/18_9.png": {
+        "bytes": 267382
+      },
+      "0/19_9.png": {
+        "bytes": 10421
+      },
+      "0/2_10.png": {
+        "bytes": 65528
+      },
+      "0/3_10.png": {
+        "bytes": 172639
+      },
+      "0/4_10.png": {
+        "bytes": 333269
+      },
+      "0/8_10.png": {
+        "bytes": 124425
+      },
+      "0/9_10.png": {
+        "bytes": 409253
+      },
+      "0/10_10.png": {
+        "bytes": 389950
+      },
+      "0/11_10.png": {
+        "bytes": 375417
+      },
+      "0/12_10.png": {
+        "bytes": 404732
+      },
+      "0/13_10.png": {
+        "bytes": 428249
+      },
+      "0/14_10.png": {
+        "bytes": 417430
+      },
+      "0/15_10.png": {
+        "bytes": 395883
+      },
+      "0/16_10.png": {
+        "bytes": 448747
+      },
+      "0/17_10.png": {
+        "bytes": 358809
+      },
+      "0/18_10.png": {
+        "bytes": 3296
+      },
+      "0/2_11.png": {
+        "bytes": 236823
+      },
+      "0/3_11.png": {
+        "bytes": 220767
+      },
+      "0/4_11.png": {
+        "bytes": 298736
+      },
+      "0/5_11.png": {
+        "bytes": 56661
+      },
+      "0/6_11.png": {
+        "bytes": 32540
+      },
+      "0/7_11.png": {
+        "bytes": 5398
+      },
+      "0/8_11.png": {
+        "bytes": 220058
+      },
+      "0/9_11.png": {
+        "bytes": 418606
+      },
+      "0/10_11.png": {
+        "bytes": 416211
+      },
+      "0/11_11.png": {
+        "bytes": 427993
+      },
+      "0/12_11.png": {
+        "bytes": 409951
+      },
+      "0/13_11.png": {
+        "bytes": 411368
+      },
+      "0/14_11.png": {
+        "bytes": 406758
+      },
+      "0/15_11.png": {
+        "bytes": 406817
+      },
+      "0/16_11.png": {
+        "bytes": 421115
+      },
+      "0/17_11.png": {
+        "bytes": 387777
+      },
+      "0/18_11.png": {
+        "bytes": 8624
+      },
+      "0/1_12.png": {
+        "bytes": 15709
+      },
+      "0/2_12.png": {
+        "bytes": 173045
+      },
+      "0/3_12.png": {
+        "bytes": 413905
+      },
+      "0/4_12.png": {
+        "bytes": 400501
+      },
+      "0/5_12.png": {
+        "bytes": 409321
+      },
+      "0/6_12.png": {
+        "bytes": 413634
+      },
+      "0/7_12.png": {
+        "bytes": 327207
+      },
+      "0/8_12.png": {
+        "bytes": 421468
+      },
+      "0/9_12.png": {
+        "bytes": 420430
+      },
+      "0/10_12.png": {
+        "bytes": 409288
+      },
+      "0/11_12.png": {
+        "bytes": 422830
+      },
+      "0/12_12.png": {
+        "bytes": 404739
+      },
+      "0/13_12.png": {
+        "bytes": 383005
+      },
+      "0/14_12.png": {
+        "bytes": 417244
+      },
+      "0/15_12.png": {
+        "bytes": 424573
+      },
+      "0/16_12.png": {
+        "bytes": 261384
+      },
+      "0/17_12.png": {
+        "bytes": 66453
+      },
+      "0/1_13.png": {
+        "bytes": 207853
+      },
+      "0/2_13.png": {
+        "bytes": 393666
+      },
+      "0/3_13.png": {
+        "bytes": 369006
+      },
+      "0/4_13.png": {
+        "bytes": 412141
+      },
+      "0/5_13.png": {
+        "bytes": 374086
+      },
+      "0/6_13.png": {
+        "bytes": 352005
+      },
+      "0/7_13.png": {
+        "bytes": 378171
+      },
+      "0/8_13.png": {
+        "bytes": 394516
+      },
+      "0/9_13.png": {
+        "bytes": 416665
+      },
+      "0/10_13.png": {
+        "bytes": 404739
+      },
+      "0/11_13.png": {
+        "bytes": 389602
+      },
+      "0/12_13.png": {
+        "bytes": 377910
+      },
+      "0/13_13.png": {
+        "bytes": 395583
+      },
+      "0/14_13.png": {
+        "bytes": 425393
+      },
+      "0/15_13.png": {
+        "bytes": 431968
+      },
+      "0/16_13.png": {
+        "bytes": 279143
+      },
+      "0/17_13.png": {
+        "bytes": 13490
+      },
+      "0/1_14.png": {
+        "bytes": 134517
+      },
+      "0/2_14.png": {
+        "bytes": 299627
+      },
+      "0/3_14.png": {
+        "bytes": 389121
+      },
+      "0/4_14.png": {
+        "bytes": 416650
+      },
+      "0/5_14.png": {
+        "bytes": 404268
+      },
+      "0/6_14.png": {
+        "bytes": 429136
+      },
+      "0/7_14.png": {
+        "bytes": 414240
+      },
+      "0/8_14.png": {
+        "bytes": 366357
+      },
+      "0/9_14.png": {
+        "bytes": 375267
+      },
+      "0/10_14.png": {
+        "bytes": 401446
+      },
+      "0/11_14.png": {
+        "bytes": 338540
+      },
+      "0/12_14.png": {
+        "bytes": 383619
+      },
+      "0/13_14.png": {
+        "bytes": 362087
+      },
+      "0/14_14.png": {
+        "bytes": 384831
+      },
+      "0/15_14.png": {
+        "bytes": 401814
+      },
+      "0/16_14.png": {
+        "bytes": 411251
+      },
+      "0/17_14.png": {
+        "bytes": 38855
+      },
+      "0/1_15.png": {
+        "bytes": 21769
+      },
+      "0/2_15.png": {
+        "bytes": 243808
+      },
+      "0/3_15.png": {
+        "bytes": 354323
+      },
+      "0/4_15.png": {
+        "bytes": 427572
+      },
+      "0/5_15.png": {
+        "bytes": 420988
+      },
+      "0/6_15.png": {
+        "bytes": 342324
+      },
+      "0/7_15.png": {
+        "bytes": 420294
+      },
+      "0/8_15.png": {
+        "bytes": 367009
+      },
+      "0/9_15.png": {
+        "bytes": 356966
+      },
+      "0/10_15.png": {
+        "bytes": 384933
+      },
+      "0/11_15.png": {
+        "bytes": 366018
+      },
+      "0/12_15.png": {
+        "bytes": 399036
+      },
+      "0/13_15.png": {
+        "bytes": 325422
+      },
+      "0/14_15.png": {
+        "bytes": 343640
+      },
+      "0/15_15.png": {
+        "bytes": 401153
+      },
+      "0/16_15.png": {
+        "bytes": 167751
+      },
+      "0/1_16.png": {
+        "bytes": 103654
+      },
+      "0/2_16.png": {
+        "bytes": 357515
+      },
+      "0/3_16.png": {
+        "bytes": 376365
+      },
+      "0/4_16.png": {
+        "bytes": 383059
+      },
+      "0/5_16.png": {
+        "bytes": 358806
+      },
+      "0/6_16.png": {
+        "bytes": 354886
+      },
+      "0/7_16.png": {
+        "bytes": 338896
+      },
+      "0/8_16.png": {
+        "bytes": 341562
+      },
+      "0/9_16.png": {
+        "bytes": 329291
+      },
+      "0/10_16.png": {
+        "bytes": 346824
+      },
+      "0/11_16.png": {
+        "bytes": 353329
+      },
+      "0/12_16.png": {
+        "bytes": 389818
+      },
+      "0/13_16.png": {
+        "bytes": 338276
+      },
+      "0/14_16.png": {
+        "bytes": 339873
+      },
+      "0/15_16.png": {
+        "bytes": 287771
+      },
+      "0/16_16.png": {
+        "bytes": 63920
+      },
+      "0/1_17.png": {
+        "bytes": 4347
+      },
+      "0/2_17.png": {
+        "bytes": 327524
+      },
+      "0/3_17.png": {
+        "bytes": 376333
+      },
+      "0/4_17.png": {
+        "bytes": 419027
+      },
+      "0/5_17.png": {
+        "bytes": 391979
+      },
+      "0/6_17.png": {
+        "bytes": 380654
+      },
+      "0/7_17.png": {
+        "bytes": 396052
+      },
+      "0/8_17.png": {
+        "bytes": 337461
+      },
+      "0/9_17.png": {
+        "bytes": 291673
+      },
+      "0/10_17.png": {
+        "bytes": 348294
+      },
+      "0/11_17.png": {
+        "bytes": 346698
+      },
+      "0/12_17.png": {
+        "bytes": 370546
+      },
+      "0/13_17.png": {
+        "bytes": 351462
+      },
+      "0/14_17.png": {
+        "bytes": 140976
+      },
+      "0/15_17.png": {
+        "bytes": 11315
+      },
+      "0/1_18.png": {
+        "bytes": 13047
+      },
+      "0/2_18.png": {
+        "bytes": 331642
+      },
+      "0/3_18.png": {
+        "bytes": 391707
+      },
+      "0/4_18.png": {
+        "bytes": 410825
+      },
+      "0/5_18.png": {
+        "bytes": 407831
+      },
+      "0/6_18.png": {
+        "bytes": 403514
+      },
+      "0/7_18.png": {
+        "bytes": 404337
+      },
+      "0/8_18.png": {
+        "bytes": 361356
+      },
+      "0/9_18.png": {
+        "bytes": 305521
+      },
+      "0/10_18.png": {
+        "bytes": 303895
+      },
+      "0/11_18.png": {
+        "bytes": 317224
+      },
+      "0/12_18.png": {
+        "bytes": 351877
+      },
+      "0/13_18.png": {
+        "bytes": 297319
+      },
+      "0/14_18.png": {
+        "bytes": 2522
+      },
+      "0/0_19.png": {
+        "bytes": 7522
+      },
+      "0/1_19.png": {
+        "bytes": 80026
+      },
+      "0/2_19.png": {
+        "bytes": 298895
+      },
+      "0/3_19.png": {
+        "bytes": 315222
+      },
+      "0/4_19.png": {
+        "bytes": 326578
+      },
+      "0/5_19.png": {
+        "bytes": 386512
+      },
+      "0/6_19.png": {
+        "bytes": 430449
+      },
+      "0/7_19.png": {
+        "bytes": 436680
+      },
+      "0/8_19.png": {
+        "bytes": 420699
+      },
+      "0/9_19.png": {
+        "bytes": 389034
+      },
+      "0/10_19.png": {
+        "bytes": 340303
+      },
+      "0/11_19.png": {
+        "bytes": 333527
+      },
+      "0/12_19.png": {
+        "bytes": 346116
+      },
+      "0/13_19.png": {
+        "bytes": 188734
+      },
+      "0/0_20.png": {
+        "bytes": 32314
+      },
+      "0/1_20.png": {
+        "bytes": 270769
+      },
+      "0/2_20.png": {
+        "bytes": 357633
+      },
+      "0/3_20.png": {
+        "bytes": 342122
+      },
+      "0/4_20.png": {
+        "bytes": 309383
+      },
+      "0/5_20.png": {
+        "bytes": 290511
+      },
+      "0/6_20.png": {
+        "bytes": 309966
+      },
+      "0/7_20.png": {
+        "bytes": 420942
+      },
+      "0/8_20.png": {
+        "bytes": 424824
+      },
+      "0/9_20.png": {
+        "bytes": 432669
+      },
+      "0/10_20.png": {
+        "bytes": 408674
+      },
+      "0/11_20.png": {
+        "bytes": 386523
+      },
+      "0/12_20.png": {
+        "bytes": 378626
+      },
+      "0/13_20.png": {
+        "bytes": 219004
+      },
+      "0/1_21.png": {
+        "bytes": 183710
+      },
+      "0/2_21.png": {
+        "bytes": 343230
+      },
+      "0/3_21.png": {
+        "bytes": 269428
+      },
+      "0/4_21.png": {
+        "bytes": 309007
+      },
+      "0/5_21.png": {
+        "bytes": 295935
+      },
+      "0/6_21.png": {
+        "bytes": 250585
+      },
+      "0/7_21.png": {
+        "bytes": 338267
+      },
+      "0/8_21.png": {
+        "bytes": 439831
+      },
+      "0/9_21.png": {
+        "bytes": 412904
+      },
+      "0/10_21.png": {
+        "bytes": 402724
+      },
+      "0/11_21.png": {
+        "bytes": 434191
+      },
+      "0/12_21.png": {
+        "bytes": 422141
+      },
+      "0/13_21.png": {
+        "bytes": 155934
+      },
+      "0/14_21.png": {
+        "bytes": 27495
+      },
+      "0/0_22.png": {
+        "bytes": 197796
+      },
+      "0/1_22.png": {
+        "bytes": 226550
+      },
+      "0/2_22.png": {
+        "bytes": 288286
+      },
+      "0/3_22.png": {
+        "bytes": 246023
+      },
+      "0/4_22.png": {
+        "bytes": 259163
+      },
+      "0/5_22.png": {
+        "bytes": 353932
+      },
+      "0/6_22.png": {
+        "bytes": 263015
+      },
+      "0/7_22.png": {
+        "bytes": 250166
+      },
+      "0/8_22.png": {
+        "bytes": 404313
+      },
+      "0/9_22.png": {
+        "bytes": 420064
+      },
+      "0/10_22.png": {
+        "bytes": 404261
+      },
+      "0/11_22.png": {
+        "bytes": 440629
+      },
+      "0/12_22.png": {
+        "bytes": 436191
+      },
+      "0/13_22.png": {
+        "bytes": 409313
+      },
+      "0/14_22.png": {
+        "bytes": 10316
+      },
+      "0/0_23.png": {
+        "bytes": 74355
+      },
+      "0/1_23.png": {
+        "bytes": 227537
+      },
+      "0/2_23.png": {
+        "bytes": 268164
+      },
+      "0/3_23.png": {
+        "bytes": 285324
+      },
+      "0/4_23.png": {
+        "bytes": 318846
+      },
+      "0/5_23.png": {
+        "bytes": 295950
+      },
+      "0/6_23.png": {
+        "bytes": 259309
+      },
+      "0/7_23.png": {
+        "bytes": 297098
+      },
+      "0/8_23.png": {
+        "bytes": 401446
+      },
+      "0/9_23.png": {
+        "bytes": 403172
+      },
+      "0/10_23.png": {
+        "bytes": 363142
+      },
+      "0/11_23.png": {
+        "bytes": 375344
+      },
+      "0/12_23.png": {
+        "bytes": 378707
+      },
+      "0/13_23.png": {
+        "bytes": 73369
+      },
+      "0/1_24.png": {
+        "bytes": 42871
+      },
+      "0/2_24.png": {
+        "bytes": 113965
+      },
+      "0/3_24.png": {
+        "bytes": 265736
+      },
+      "0/4_24.png": {
+        "bytes": 308737
+      },
+      "0/5_24.png": {
+        "bytes": 249249
+      },
+      "0/6_24.png": {
+        "bytes": 328741
+      },
+      "0/7_24.png": {
+        "bytes": 325526
+      },
+      "0/8_24.png": {
+        "bytes": 371332
+      },
+      "0/9_24.png": {
+        "bytes": 362667
+      },
+      "0/10_24.png": {
+        "bytes": 306573
+      },
+      "0/11_24.png": {
+        "bytes": 297561
+      },
+      "0/12_24.png": {
+        "bytes": 290457
+      },
+      "0/13_24.png": {
+        "bytes": 10323
+      },
+      "0/2_25.png": {
+        "bytes": 4905
+      },
+      "0/3_25.png": {
+        "bytes": 116337
+      },
+      "0/4_25.png": {
+        "bytes": 270833
+      },
+      "0/5_25.png": {
+        "bytes": 321919
+      },
+      "0/6_25.png": {
+        "bytes": 323142
+      },
+      "0/7_25.png": {
+        "bytes": 410915
+      },
+      "0/8_25.png": {
+        "bytes": 407662
+      },
+      "0/9_25.png": {
+        "bytes": 349772
+      },
+      "0/10_25.png": {
+        "bytes": 342002
+      },
+      "0/11_25.png": {
+        "bytes": 365942
+      },
+      "0/12_25.png": {
+        "bytes": 58110
+      },
+      "0/13_25.png": {
+        "bytes": 3653
+      },
+      "0/3_26.png": {
+        "bytes": 49018
+      },
+      "0/4_26.png": {
+        "bytes": 232133
+      },
+      "0/5_26.png": {
+        "bytes": 295358
+      },
+      "0/6_26.png": {
+        "bytes": 334289
+      },
+      "0/7_26.png": {
+        "bytes": 411785
+      },
+      "0/8_26.png": {
+        "bytes": 374234
+      },
+      "0/9_26.png": {
+        "bytes": 333047
+      },
+      "0/10_26.png": {
+        "bytes": 334814
+      },
+      "0/11_26.png": {
+        "bytes": 300762
+      },
+      "0/3_27.png": {
+        "bytes": 3957
+      },
+      "0/4_27.png": {
+        "bytes": 68375
+      },
+      "0/5_27.png": {
+        "bytes": 275519
+      },
+      "0/6_27.png": {
+        "bytes": 294540
+      },
+      "0/7_27.png": {
+        "bytes": 328782
+      },
+      "0/8_27.png": {
+        "bytes": 75774
+      },
+      "0/9_27.png": {
+        "bytes": 155638
+      },
+      "0/10_27.png": {
+        "bytes": 198318
+      },
+      "0/11_27.png": {
+        "bytes": 60603
+      },
+      "0/4_28.png": {
+        "bytes": 23826
+      },
+      "0/5_28.png": {
+        "bytes": 135536
+      },
+      "0/6_28.png": {
+        "bytes": 213816
+      },
+      "0/7_28.png": {
+        "bytes": 62745
+      },
+      "0/9_28.png": {
+        "bytes": 10660
+      },
+      "0/10_28.png": {
+        "bytes": 7205
+      },
+      "0/6_29.png": {
+        "bytes": 1063
+      },
+      "1/5_0.png": {
+        "bytes": 2325
+      },
+      "1/6_0.png": {
+        "bytes": 296302
+      },
+      "1/7_0.png": {
+        "bytes": 40675
+      },
+      "1/5_1.png": {
+        "bytes": 69965
+      },
+      "1/6_1.png": {
+        "bytes": 383017
+      },
+      "1/7_1.png": {
+        "bytes": 260380
+      },
+      "1/8_1.png": {
+        "bytes": 131095
+      },
+      "1/5_2.png": {
+        "bytes": 149359
+      },
+      "1/6_2.png": {
+        "bytes": 419454
+      },
+      "1/7_2.png": {
+        "bytes": 399008
+      },
+      "1/8_2.png": {
+        "bytes": 255891
+      },
+      "1/1_3.png": {
+        "bytes": 24201
+      },
+      "1/4_3.png": {
+        "bytes": 1375
+      },
+      "1/5_3.png": {
+        "bytes": 394138
+      },
+      "1/6_3.png": {
+        "bytes": 417663
+      },
+      "1/7_3.png": {
+        "bytes": 441518
+      },
+      "1/8_3.png": {
+        "bytes": 434696
+      },
+      "1/9_3.png": {
+        "bytes": 92797
+      },
+      "1/1_4.png": {
+        "bytes": 158507
+      },
+      "1/2_4.png": {
+        "bytes": 12085
+      },
+      "1/4_4.png": {
+        "bytes": 104364
+      },
+      "1/5_4.png": {
+        "bytes": 440031
+      },
+      "1/6_4.png": {
+        "bytes": 459917
+      },
+      "1/7_4.png": {
+        "bytes": 467170
+      },
+      "1/8_4.png": {
+        "bytes": 474608
+      },
+      "1/9_4.png": {
+        "bytes": 234670
+      },
+      "1/1_5.png": {
+        "bytes": 191391
+      },
+      "1/2_5.png": {
+        "bytes": 189598
+      },
+      "1/3_5.png": {
+        "bytes": 11827
+      },
+      "1/4_5.png": {
+        "bytes": 319572
+      },
+      "1/5_5.png": {
+        "bytes": 437845
+      },
+      "1/6_5.png": {
+        "bytes": 448981
+      },
+      "1/7_5.png": {
+        "bytes": 441918
+      },
+      "1/8_5.png": {
+        "bytes": 446038
+      },
+      "1/9_5.png": {
+        "bytes": 4086
+      },
+      "1/0_6.png": {
+        "bytes": 64576
+      },
+      "1/1_6.png": {
+        "bytes": 369135
+      },
+      "1/2_6.png": {
+        "bytes": 433848
+      },
+      "1/3_6.png": {
+        "bytes": 403209
+      },
+      "1/4_6.png": {
+        "bytes": 448208
+      },
+      "1/5_6.png": {
+        "bytes": 443206
+      },
+      "1/6_6.png": {
+        "bytes": 425009
+      },
+      "1/7_6.png": {
+        "bytes": 465322
+      },
+      "1/8_6.png": {
+        "bytes": 173314
+      },
+      "1/0_7.png": {
+        "bytes": 44533
+      },
+      "1/1_7.png": {
+        "bytes": 355874
+      },
+      "1/2_7.png": {
+        "bytes": 452822
+      },
+      "1/3_7.png": {
+        "bytes": 439938
+      },
+      "1/4_7.png": {
+        "bytes": 401701
+      },
+      "1/5_7.png": {
+        "bytes": 409699
+      },
+      "1/6_7.png": {
+        "bytes": 407471
+      },
+      "1/7_7.png": {
+        "bytes": 418790
+      },
+      "1/8_7.png": {
+        "bytes": 170408
+      },
+      "1/0_8.png": {
+        "bytes": 32955
+      },
+      "1/1_8.png": {
+        "bytes": 399497
+      },
+      "1/2_8.png": {
+        "bytes": 423345
+      },
+      "1/3_8.png": {
+        "bytes": 405360
+      },
+      "1/4_8.png": {
+        "bytes": 367869
+      },
+      "1/5_8.png": {
+        "bytes": 386525
+      },
+      "1/6_8.png": {
+        "bytes": 397606
+      },
+      "1/7_8.png": {
+        "bytes": 220303
+      },
+      "1/8_8.png": {
+        "bytes": 18998
+      },
+      "1/0_9.png": {
+        "bytes": 30918
+      },
+      "1/1_9.png": {
+        "bytes": 372910
+      },
+      "1/2_9.png": {
+        "bytes": 419197
+      },
+      "1/3_9.png": {
+        "bytes": 453371
+      },
+      "1/4_9.png": {
+        "bytes": 407610
+      },
+      "1/5_9.png": {
+        "bytes": 366413
+      },
+      "1/6_9.png": {
+        "bytes": 329651
+      },
+      "1/7_9.png": {
+        "bytes": 1399
+      },
+      "1/0_10.png": {
+        "bytes": 138530
+      },
+      "1/1_10.png": {
+        "bytes": 366975
+      },
+      "1/2_10.png": {
+        "bytes": 341897
+      },
+      "1/3_10.png": {
+        "bytes": 371903
+      },
+      "1/4_10.png": {
+        "bytes": 463178
+      },
+      "1/5_10.png": {
+        "bytes": 444334
+      },
+      "1/6_10.png": {
+        "bytes": 323466
+      },
+      "1/7_10.png": {
+        "bytes": 9096
+      },
+      "1/0_11.png": {
+        "bytes": 214957
+      },
+      "1/1_11.png": {
+        "bytes": 322528
+      },
+      "1/2_11.png": {
+        "bytes": 352068
+      },
+      "1/3_11.png": {
+        "bytes": 314201
+      },
+      "1/4_11.png": {
+        "bytes": 439638
+      },
+      "1/5_11.png": {
+        "bytes": 432763
+      },
+      "1/6_11.png": {
+        "bytes": 352720
+      },
+      "1/7_11.png": {
+        "bytes": 3990
+      },
+      "1/0_12.png": {
+        "bytes": 14348
+      },
+      "1/1_12.png": {
+        "bytes": 157279
+      },
+      "1/2_12.png": {
+        "bytes": 336334
+      },
+      "1/3_12.png": {
+        "bytes": 387198
+      },
+      "1/4_12.png": {
+        "bytes": 410220
+      },
+      "1/5_12.png": {
+        "bytes": 372707
+      },
+      "1/6_12.png": {
+        "bytes": 107991
+      },
+      "1/1_13.png": {
+        "bytes": 18574
+      },
+      "1/2_13.png": {
+        "bytes": 258352
+      },
+      "1/3_13.png": {
+        "bytes": 387995
+      },
+      "1/4_13.png": {
+        "bytes": 262004
+      },
+      "1/5_13.png": {
+        "bytes": 253496
+      },
+      "1/2_14.png": {
+        "bytes": 48864
+      },
+      "1/3_14.png": {
+        "bytes": 81942
+      },
+      "1/4_14.png": {
+        "bytes": 4144
+      },
+      "1/5_14.png": {
+        "bytes": 2823
+      },
+      "2/2_0.png": {
+        "bytes": 21378
+      },
+      "2/3_0.png": {
+        "bytes": 267557
+      },
+      "2/4_0.png": {
+        "bytes": 38511
+      },
+      "2/0_1.png": {
+        "bytes": 8073
+      },
+      "2/2_1.png": {
+        "bytes": 149407
+      },
+      "2/3_1.png": {
+        "bytes": 449072
+      },
+      "2/4_1.png": {
+        "bytes": 213910
+      },
+      "2/0_2.png": {
+        "bytes": 98522
+      },
+      "2/1_2.png": {
+        "bytes": 58827
+      },
+      "2/2_2.png": {
+        "bytes": 349065
+      },
+      "2/3_2.png": {
+        "bytes": 484865
+      },
+      "2/4_2.png": {
+        "bytes": 313015
+      },
+      "2/0_3.png": {
+        "bytes": 225918
+      },
+      "2/1_3.png": {
+        "bytes": 460374
+      },
+      "2/2_3.png": {
+        "bytes": 455736
+      },
+      "2/3_3.png": {
+        "bytes": 459356
+      },
+      "2/4_3.png": {
+        "bytes": 95021
+      },
+      "2/0_4.png": {
+        "bytes": 229961
+      },
+      "2/1_4.png": {
+        "bytes": 454085
+      },
+      "2/2_4.png": {
+        "bytes": 413235
+      },
+      "2/3_4.png": {
+        "bytes": 257334
+      },
+      "2/4_4.png": {
+        "bytes": 6527
+      },
+      "2/0_5.png": {
+        "bytes": 294746
+      },
+      "2/1_5.png": {
+        "bytes": 384384
+      },
+      "2/2_5.png": {
+        "bytes": 472233
+      },
+      "2/3_5.png": {
+        "bytes": 186212
+      },
+      "2/0_6.png": {
+        "bytes": 59786
+      },
+      "2/1_6.png": {
+        "bytes": 382120
+      },
+      "2/2_6.png": {
+        "bytes": 353020
+      },
+      "2/3_6.png": {
+        "bytes": 32552
+      },
+      "2/1_7.png": {
+        "bytes": 37904
+      },
+      "2/2_7.png": {
+        "bytes": 2470
+      },
+      "3/0_0.png": {
+        "bytes": 3145
+      },
+      "3/1_0.png": {
+        "bytes": 238232
+      },
+      "3/2_0.png": {
+        "bytes": 69778
+      },
+      "3/0_1.png": {
+        "bytes": 227279
+      },
+      "3/1_1.png": {
+        "bytes": 462596
+      },
+      "3/2_1.png": {
+        "bytes": 110630
+      },
+      "3/0_2.png": {
+        "bytes": 368522
+      },
+      "3/1_2.png": {
+        "bytes": 353051
+      },
+      "3/2_2.png": {
+        "bytes": 2551
+      },
+      "3/0_3.png": {
+        "bytes": 133081
+      },
+      "3/1_3.png": {
+        "bytes": 105489
+      },
+      "4/0_0.png": {
+        "bytes": 248873
+      },
+      "4/1_0.png": {
+        "bytes": 49916
+      },
+      "4/0_1.png": {
+        "bytes": 258398
+      },
+      "4/1_1.png": {
+        "bytes": 1392
+      },
+      "5/0_0.png": {
+        "bytes": 151458
+      }
+    }
+  }
+}

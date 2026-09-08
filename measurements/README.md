@@ -41,6 +41,9 @@ claims a `PIN` does: what was measured, how, on what, and what it does not cover
   pace. Fixtures, not results. Record one with `bash tools/free_flight.sh`.
 - `flight_replay.json` — a trace scored again from its poses alone, headlessly. Re-take it with
   `bash tools/replay_flight.sh --trace measurements/flights/<name>.trace.json`.
+- `ground_relief.json` — what the ground actually has, at the overview the client draws and at
+  the tile pyramid's native 100 m, and which of two blockers walk mode was refusing on. Headless.
+  Re-take it with `bash tools/measure_relief.sh` (needs `python3 tools/fetch_artefacts.py` first).
 - `visual_audit.md` — what each milestone's claim looks like when photographed, and the five
   defects that came out of looking. Re-take it with `bash tools/audit.sh`.
 
@@ -1006,6 +1009,11 @@ A 1,500 m horizon is **nine texels**, sitting inside one or two cells. Three con
 - **The near field has no ground.** At 4 km per terrain triangle, a viewer standing in the scatter
   is in the middle of one flat triangle. Near-field vegetation would stand on a plane. Tuning a
   200 m boundary by eye is not really possible until the tile pyramid lands.
+  **Measured since, and the pyramid has landed**: the drawn mesh has a median of **0** vertices
+  inside the 480 m disc a standing body sees, against **69** ground samples at the pyramid's
+  100 m, and a plant placed on the drawn plane stands a median **42.5 m** — worst 427 m — from the
+  ground the data actually has. See `ground_relief.json`. What the pyramid does **not** fix is
+  below.
 
 ### One plant on screen
 
@@ -1598,3 +1606,74 @@ discriminates**; a basin band where the stand did not close would test it harder
 measured: each candidate is scored as if it were the whole far field. A run whose annulus contains
 no ground is recorded as unmeasured rather than as a four-way tie at zero error, which is what the
 first attempt at place B produced.
+
+## `ground_relief.json` — two blockers that were wearing one gate
+
+`DebugPlayer.walk_available` refused walk mode while the ground was sampled more coarsely than the
+distance a body covers in a second. It was written as one criterion and it was answering two
+questions, which only became visible when the tile pyramid moved one of them and not the other.
+
+Measured headlessly at 60 places across the basin, each a 480 m disc — what
+`tools/free_flight.sh` builds a scatter within, so it is the ground a standing body has near field.
+Both grids decoded with **their own** constants; see below for why that sentence is load-bearing.
+
+### The near field was one flat triangle, and now it is relief
+
+| inside a 480 m disc | drawn today | tile pyramid z=0 |
+|---|---:|---:|
+| ground sample spacing | 4,000 m | **100 m** |
+| ground samples in the disc (p50) | **0** | **69** |
+| relief the grid holds (p50) | 20.2 m | **48.0 m** |
+
+Zero is not a rounding of one. At stride 4 over a 1 km overview the drawn mesh triangulates every
+4 km, so the whole near field of a standing body falls **inside a single triangle** — the blocker
+this file has named since M5, stated as a count rather than as a complaint.
+
+**What that costs today, in metres.** The gap between the drawn surface and the native grid inside
+one disc: **p50 42.5 m, p95 252 m, worst 427 m**. That is how far a plant standing on the drawn
+plane sits from the ground the data has. It is the same defect `vegetation_scatter.gd` already
+places *against the drawn surface* to avoid — plants floating or buried — measured against the
+data instead of against the mesh.
+
+### The ground still does not change underfoot, and no pyramid will fix that
+
+The underfoot question is not "does a 5 m step change the height" — that is a question about where
+the step started. So it is measured as a **distance**: walk from each place on three headings at
+1 m steps, and record how far the body goes between one reported height and the next.
+
+| | metres between height changes |
+|---|---:|
+| p50 | **100.0 m** |
+| p95 | 142 m |
+| min | 1 m |
+
+| at this sustainable speed | seconds of walking between one height and the next | meets the criterion |
+|---|---:|---|
+| 5.0 m/s (§3.1c, the stub) | 20.0 s | **no** |
+| 0.7 m/s (a load-bearing envelope) | 142.9 s | **no** |
+
+The criterion asks for ≤5 m at the stub's speed and ≤0.7 m at a real envelope's. The DEM under the
+pyramid is **92.6 m native**, so **no pyramid built from this DEM can meet it** — and the real
+envelope makes it stricter rather than looser, which is worth saying because the usual direction of
+travel for a threshold under pressure is the other one.
+
+**The number was not moved.** `test_the_pyramid_makes_the_near_field_relief_and_does_not_open_walk_mode`
+fails if the underfoot measurement ever passes at 100 m, and the gate holds a control asserting that
+a *slower* body cannot open a gate a faster one closed.
+
+**So the finding is that walk mode wants a product that does not exist**: metre-scale relief, which
+is a detail mesh or a synthesis rather than a terrain export. Synthesising it is *adding* to what
+the data says, which is a design question and not this repo's to answer. Fly mode is unaffected, and
+a rung-boundary sweep does not need walk mode.
+
+### The tiles do not decode with the overview's constants
+
+Both grids resample with `average`, which pulls extremes in by an amount that depends on pixel
+footprint; the native grid measures about 53 m higher at the top. **Decoding a tile with the
+overview's `offset_m` / `scale_m_per_step` misreads it by up to 39.9 m** on real ground here,
+silently, because a clipped code is a valid code.
+
+So the encoding travels in the tiles' **own** pin (`assets/terrain/tiles/PIN`), `TilePyramid`
+refuses to run without one rather than falling back on the pair it can see, and
+`test_the_tiles_do_not_decode_with_the_overviews_constants` measures what the wrong pair would have
+cost rather than asserting that it would have cost something.

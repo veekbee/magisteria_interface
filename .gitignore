@@ -29,9 +29,19 @@
 # The terrain export COMMITS. At 6.0 MB -- a 1 km overview plus manifests --
 # it is the "small overview + manifests" half of appendix (e)'s split, and
 # committing it is what lets a fresh clone build the viewer from the repo
-# alone. What does NOT commit is the full-resolution tile pyramid, which the
-# export declares and does not emit for exactly that reason.
-/assets/terrain/tiles/
+# alone. What does NOT commit is the full-resolution tile pyramid: 496 files
+# and 141 MB, fetched by manifest per decision 948.
+#
+# THE CONTENTS ARE IGNORED AND THE DIRECTORY IS NOT, which is the difference
+# between `tiles/` and `tiles/**`. Git cannot re-include a file whose parent
+# directory is excluded, and the pyramid's PIN lives inside the directory it
+# describes -- as every other pin does. Excluding the directory would have
+# taken the manifest with the bytes, which is the one file that must survive:
+# a clone with no tiles is a working clone, and a clone with no pin cannot
+# fetch them or even say what is missing.
+/assets/terrain/tiles/**
+!/assets/terrain/tiles/PIN
+!/assets/terrain/tiles/.gdignore
 # The client fixture COMMITS, at 25 MB. It is the quantised DISPLAY form --
 # band rows over the contract's declared bounds -- not the fixture itself: the
 # full-precision payload is 76 MB and stays in the simulation repo, because

@@ -129,6 +129,9 @@ func _initialize() -> void:
     test_the_probe_re_derives_what_the_build_placed()
     test_a_re_centre_that_moved_a_key_is_a_defect_and_not_churn()
     test_the_console_answers_headless_from_a_named_point()
+    test_the_tiles_do_not_decode_with_the_overviews_constants()
+    test_an_unwritten_tile_is_empty_ground_and_not_a_missing_fetch()
+    test_the_pyramid_makes_the_near_field_relief_and_does_not_open_walk_mode()
     stage_the_main_scene()
 
 
@@ -5392,18 +5395,53 @@ func test_walk_mode_is_refused_while_the_ground_is_a_plane() -> void:
     # A gate that picked its own would report a blocker of its own invention.
     var v := TerrainView.new()
     var drawn_sample := hf.pixel_size_m * float(v.stride)
-    var verdict := DebugPlayer.walk_available(b, drawn_sample)
+    var near_field := TerrainView.SCATTER_HORIZON_M
+    var verdict := DebugPlayer.walk_available(b, drawn_sample, near_field)
     check(not bool(verdict["ok"]),
             "walk mode opened on ground sampled every %s m" % String.num(drawn_sample, 0))
-    check(str(verdict["why"]).contains("tile pyramid"),
+    check(str(verdict["why"]).contains("SECOND product"),
             "the refusal does not name what it waits on: %s" % str(verdict["why"]))
 
+    # THE TWO FINDINGS MOVED APART, WHICH IS THE POINT OF SPLITTING THEM. At
+    # today's sampling both refuse. At the pyramid's 100 m the near field
+    # becomes relief and the underfoot answer does not change at all -- so a
+    # single verdict would have reported "still refuses" over a fortyfold
+    # improvement in the thing that was actually broken.
+    var today := DebugPlayer.ground_findings(b, drawn_sample, near_field)
+    check(not bool((today["near_field_is_relief"] as Dictionary)["ok"]),
+            "the near field reads as relief at %s m sampling" % String.num(drawn_sample, 0))
+    check(not bool((today["changes_underfoot"] as Dictionary)["ok"]),
+            "the ground reads as changing underfoot at %s m sampling"
+            % String.num(drawn_sample, 0))
+
+    var tiled := DebugPlayer.ground_findings(b, 100.0, near_field)
+    check(bool((tiled["near_field_is_relief"] as Dictionary)["ok"]),
+            "the pyramid's 100 m does not make the near field relief, and the measurement "
+            + "counts sixty-nine ground samples in a 480 m disc where the drawn mesh has none")
+    check(not bool((tiled["changes_underfoot"] as Dictionary)["ok"]),
+            "100 m ground reads as changing underfoot. It does not -- the measurement walks "
+            + "600 m on three headings and finds the height changing every 100 m, which is "
+            + "twenty seconds at the ruled speed. If this passes, the criterion was relaxed.")
+
+    # NOT RELAXED, AND PINNED SO IT CANNOT BE. The underfoot criterion is the
+    # body's own sustainable speed over one second, and the ruled envelope is
+    # SLOWER than the stub's -- so the real number makes this stricter, never
+    # looser. A future 0.7 m/s must not open a gate that 5.0 m/s closed.
+    var slow := b.locomotion.duplicate()
+    slow["sustainable_speed_m_s"] = 0.7
+    var slower := PerceptBundle.new()
+    slower.locomotion = slow
+    check(not bool((DebugPlayer.ground_findings(slower, 100.0, near_field)
+                    ["changes_underfoot"] as Dictionary)["ok"]),
+            "a slower body opened a gate a faster one closed")
+
     # It is a gate and not a wall: ground fine enough opens it.
-    var fine := DebugPlayer.walk_available(b, 1.0)
+    var fine := DebugPlayer.walk_available(b, 1.0, near_field)
     check(bool(fine["ok"]), "walk mode stayed shut on metre ground: %s" % str(fine.get("why", "")))
-    print("player: walk refused at %s m ground sampling (stride %d) against %s m of walking "
-            % [String.num(drawn_sample, 0), v.stride,
-                    String.num(float(verdict["one_second_m"]), 1)] + "per second")
+    print("player: walk refused at %s m sampling (stride %d) -- near field is a plane today "
+            % [String.num(drawn_sample, 0), v.stride]
+            + "and relief at the pyramid's 100 m, and the ground still does not change "
+            + "underfoot at either")
     v.free()
 
 
@@ -5788,3 +5826,154 @@ func test_the_console_answers_headless_from_a_named_point() -> void:
     print("console: %d verbs answering headless from a named point" % console.names().size())
     console.free()
     v.queue_free()
+
+
+# ============================================================================
+# A1: the tile pyramid, and what it does and does not open.
+# ============================================================================
+
+func test_the_tiles_do_not_decode_with_the_overviews_constants() -> void:
+    """THE ONE MISTAKE HERE THAT IS SILENT.
+
+    Both grids resample with `average`, which pulls extremes in by an amount
+    that depends on pixel footprint, so the native grid's constants are wider
+    than the overview's at both ends. A clipped code is a valid code: decode a
+    tile with the overview's `offset_m` / `scale_m_per_step` and the basin's
+    real peaks come back flattened with nothing to report it.
+
+    So the pyramid carries its own encoding in its own pin, refuses to run
+    without one rather than falling back on the pair it can see, and this
+    measures what the wrong pair would have cost."""
+    var tp := TilePyramid.load_from()
+    if not tp.is_loaded():
+        print("tiles: %s -- skipping, and saying so" % tp.why_absent)
+        return
+    var hf := heightfield()
+    check(absf(tp.offset_m - hf.offset_m) > 1.0e-9 or absf(tp.scale_m - hf.scale_m) > 1.0e-12,
+            "the tile pin carries the overview's own constants, so either the pyramid was "
+            + "vendored from the wrong report or this check has stopped discriminating")
+
+    # What the wrong pair costs, in metres, on real ground.
+    var inv := tp.inventory()
+    if int(inv["present"]) == 0:
+        print("tiles: %d keyed, none fetched -- `python3 tools/fetch_artefacts.py`. "
+                % int(inv["keyed"]) + "The checks that need them are not running.")
+        return
+    var worst := 0.0
+    var sampled := 0
+    for ty in range(200, 1200, 97):
+        for tx in range(200, 900, 89):
+            var w := hf.texel_to_world(float(tx), float(ty))
+            var at := tp.locate(w.x, w.y)
+            if not bool(at["ok"]) or tp.availability(str(at["key"])) != TilePyramid.PRESENT:
+                continue
+            var right := tp.height_at_world(w.x, w.y)
+            if is_nan(right):
+                continue
+            # The same code read through the overview's pair.
+            var code := (right - tp.offset_m) / tp.scale_m
+            var wrong := hf.offset_m + code * hf.scale_m
+            worst = maxf(worst, absf(right - wrong))
+            sampled += 1
+    check(sampled > 20, "only %d tile samples could be compared" % sampled)
+    check(worst > 1.0, "the two encodings differ by at most %s m over %d samples, so the "
+            % [String.num(worst, 3), sampled]
+            + "warning they carry is about nothing and one of them is wrong")
+    print("tiles: the overview's constants misread this pyramid by up to %s m over %d samples"
+            % [String.num(worst, 2), sampled])
+
+
+func test_an_unwritten_tile_is_empty_ground_and_not_a_missing_fetch() -> void:
+    """§5.1a'S DISTINCTION, WHICH IS WHY THE PIN LISTS KEYS AT ALL.
+
+    254 of 600 tiles at z=0 are entirely nodata and the emitter skips them, so
+    absent-and-unkeyed is a fact about the basin. Absent-and-keyed is a fact
+    about this clone. Reporting both as "no tile" would make a failed fetch
+    look like empty ground, which is the one confusion that turns a broken
+    transport into a plausible picture."""
+    var tp := TilePyramid.load_from()
+    if not tp.is_loaded():
+        return
+    # A corner of the grid the emitter never wrote: z=0 is 20 x 30 tiles and
+    # the basin does not fill it.
+    check(tp.availability("0/0_0.png") == TilePyramid.EMPTY_GROUND,
+            "0/0_0.png is not reported as empty ground: %s" % tp.availability("0/0_0.png"))
+    check(tp.availability("0/99_99.png") == TilePyramid.EMPTY_GROUND,
+            "a tile outside the grid is not empty ground")
+    var keyed := ""
+    for k in tp.keys:
+        keyed = str(k)
+        break
+    check(keyed != "", "the pin keys no tiles at all")
+    check(tp.availability(keyed) in [TilePyramid.PRESENT, TilePyramid.NOT_FETCHED],
+            "a keyed tile reports %s" % tp.availability(keyed))
+
+    var inv := tp.inventory()
+    check(int(inv["keyed"]) == 496, "the pin keys %d tiles and the run wrote 496"
+            % int(inv["keyed"]))
+    check(float(inv["finest_pixel_size_m"]) == 100.0,
+            "the finest level is %s m" % String.num(float(inv["finest_pixel_size_m"]), 1))
+    # z=0 IS THE FINEST, and reading it the other way loads the coarsest tiles
+    # into the near field -- which looks like the pyramid not working rather
+    # than like the pyramid being read upside down.
+    check(tp.pixel_size_of(0) < tp.pixel_size_of(5),
+            "z=0 is not the finest level, so the polarity is being read backwards")
+    print("tiles: %d keyed, %d present, %d not fetched, finest %s m, z=0 is finest"
+            % [int(inv["keyed"]), int(inv["present"]), int(inv["not_fetched"]),
+                    String.num(float(inv["finest_pixel_size_m"]), 0)])
+
+
+func test_the_pyramid_makes_the_near_field_relief_and_does_not_open_walk_mode() -> void:
+    """THE ANSWER TO WHAT THE PYRAMID DOES, PINNED AGAINST THE MEASUREMENT.
+
+    Two blockers were wearing one gate. The pyramid moves one of them by a
+    factor of forty and does not touch the other, and this is what stops that
+    being reported as "still refuses":
+
+      the near field held ZERO mesh vertices inside the disc a standing body
+      sees, and holds sixty-nine ground samples at the pyramid's 100 m;
+
+      the ground still changes only every hundred metres of walking, which is
+      twenty seconds at the ruled speed and worse at a real envelope's.
+
+    If the second ever passes here, either a finer product landed or the
+    criterion was relaxed -- and the second is the failure this test exists to
+    catch, because relaxing a threshold to open a gate buys less than the
+    refusal it replaces."""
+    var f := FileAccess.open("res://measurements/ground_relief.json", FileAccess.READ)
+    if f == null:
+        check(false, "no ground_relief.json: run `bash tools/measure_relief.sh`")
+        return
+    var parsed = JSON.parse_string(f.get_as_text())
+    if typeof(parsed) != TYPE_DICTIONARY:
+        check(false, "ground_relief.json is not a JSON object")
+        return
+    var doc: Dictionary = parsed
+    if bool(doc.get("refused", false)):
+        print("relief: the measurement refused -- %s" % str(doc.get("why", "")))
+        return
+    var macro: Dictionary = doc["macro_relief"]
+    var vertices := float((macro["mesh_vertices_in_disc"] as Dictionary)["p50"])
+    var texels := float((macro["native_texels_in_disc"] as Dictionary)["p50"])
+    check(vertices <= 1.0, "the drawn mesh has %s vertices in the near field, so the blocker "
+            % String.num(vertices, 0) + "measurements/README.md names is no longer what it says")
+    check(texels > 20.0, "the pyramid puts only %s ground samples in the same disc"
+            % String.num(texels, 0))
+    check(texels / maxf(vertices, 1.0) > 20.0,
+            "the pyramid improves the near field by less than twentyfold")
+
+    var change_m := float((doc["underfoot"]["metres_between_ground_changes"]
+            as Dictionary)["p50"])
+    check(change_m > 5.0,
+            "the ground now changes every %s m, which would meet the underfoot criterion at "
+                    % String.num(change_m, 1)
+            + "the ruled 5 m/s. Either a metre-scale product landed -- in which case say so "
+            + "and open walk mode deliberately -- or this measurement moved to make it pass.")
+
+    var residual := float((macro["worst_residual_m"] as Dictionary)["p50"])
+    check(residual > 1.0, "the drawn surface now sits within %s m of the native grid"
+            % String.num(residual, 2))
+    print("relief: near field %s mesh vertices against %s native texels; ground changes every "
+            % [String.num(vertices, 0), String.num(texels, 0)]
+            + "%s m; a plant on the drawn plane stands %s m from the data's own ground (p50)"
+                    % [String.num(change_m, 0), String.num(residual, 1)])

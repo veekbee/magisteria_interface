@@ -128,7 +128,8 @@ func _view_embody(args: PackedStringArray) -> PackedStringArray:
     body.flying = true
     view.observer = body.observer()
     var walk := DebugPlayer.walk_available(view.bundle,
-            view.heightfield.pixel_size_m * float(view.terrain.stride))
+            view.heightfield.pixel_size_m * float(view.terrain.stride),
+            TerrainView.SCATTER_HORIZON_M)
     var out := PackedStringArray()
     out.append("a %s body stands at (%s, %s)" % [body.posture,
             String.num(w.x, 1), String.num(w.y, 1)])
@@ -136,6 +137,11 @@ func _view_embody(args: PackedStringArray) -> PackedStringArray:
     out.append("it moves at %s" % ("%s m/s, from the bundle" % String.num(float(speed["m_s"]), 2)
             if bool(speed["ok"]) else str(speed["why"])))
     out.append("walk mode: %s" % ("available" if bool(walk["ok"]) else str(walk["why"])))
+    var relief: Dictionary = walk["near_field_is_relief"]
+    out.append("near field: %s" % ("relief -- about %s ground samples inside %s m"
+            % [String.num(float(relief["samples_in_near_field"]), 0),
+                    String.num(float(relief["near_field_radius_m"]), 0)]
+            if bool(relief["ok"]) else str(relief["why"])))
     return out
 
 

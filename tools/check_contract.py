@@ -54,6 +54,7 @@ ARTEFACT_PATH = ROOT / "contract" / "schema.json"
 TERRAIN_PIN = ROOT / "assets" / "terrain" / "PIN"
 FIXTURE_PIN = ROOT / "assets" / "fixture" / "PIN"
 CONTOUR_PIN = ROOT / "assets" / "contours" / "PIN"
+TILES_PIN = ROOT / "assets" / "terrain" / "tiles" / "PIN"
 
 
 def sha256(data: bytes) -> str:
@@ -149,13 +150,16 @@ def check_multi(pin_path: Path, label: str) -> list[str]:
     # not there.
     fetched = set((pin.get("fetched") or {}).get("files", {}))
     problems = []
+    # THE SKIP STAYS LOUD AND STOPS BEING 496 LINES. A per-file line was right
+    # for a one-file artefact and unreadable for a pyramid; what has to survive
+    # is that the skip is visible and names what it wanted, so absent rows are
+    # counted, a few are named, and the count is printed either way.
+    absent_fetched = []
     for name, claimed in pin.get("files", {}).items():
         path = pin_path.parent / name
         if not path.exists():
             if name in fetched:
-                print(f"  {label}: {name} ABSENT -- fetched artefact, not committed. "
-                      f"`python3 tools/fetch_artefacts.py` brings it in; checks that "
-                      f"need it are not running.")
+                absent_fetched.append(name)
             else:
                 problems.append(f"{label} PIN names {name}, which is not present")
             continue
@@ -165,6 +169,12 @@ def check_multi(pin_path: Path, label: str) -> list[str]:
                 f"{label} artefact {name} does not match its PIN\n"
                 f"    PIN claims  {claimed}\n"
                 f"    file is     {actual}")
+    if absent_fetched:
+        shown = ", ".join(absent_fetched[:3])
+        more = f" and {len(absent_fetched) - 3} more" if len(absent_fetched) > 3 else ""
+        print(f"  {label}: {len(absent_fetched)} file(s) ABSENT -- fetched artefacts, not "
+              f"committed ({shown}{more}). `python3 tools/fetch_artefacts.py` brings them "
+              f"in; checks that need them are not running.")
     return problems
 
 
@@ -208,6 +218,19 @@ def check_against_multi(sim: Path, pin_path: Path, label: str) -> tuple[list[str
     pin = json.loads(pin_path.read_text())
     commit = pin.get("source_commit", "")
     rules = pin.get("cross_repo", {}).get("files", {})
+    # A FOURTH ANSWER, DECLARED RATHER THAN INFERRED. An artefact that is
+    # fetched on BOTH sides of the boundary has no upstream blob to compare
+    # against: `git show <commit>:<path>` has nothing to show, because the
+    # producing repo does not commit it either. That is not a missing vendor
+    # run and must not read as one -- but nor may a checker decide it for
+    # itself, or every un-vendored pin becomes "probably fine". So the pin
+    # says so, in the block where the rules would otherwise be.
+    why_not = pin.get("cross_repo", {}).get("not_checkable_because")
+    if why_not and not rules:
+        tally["not_checkable"] += len(pin.get("files", {}))
+        print(f"  {label}: {len(pin.get('files', {}))} file(s) not checkable cross-repo "
+              f"by declaration -- {why_not[:80]}...")
+        return [], tally
     if not commit:
         return [f"{label} PIN names no source_commit -- nothing to check it against"], tally
     if not rules:
@@ -277,14 +300,15 @@ def main(argv=None) -> int:
     pin = load_pin()
     problems = (check_local(pin) + check_multi(TERRAIN_PIN, "terrain")
                 + check_multi(FIXTURE_PIN, "fixture")
-                + check_multi(CONTOUR_PIN, "contours"))
+                + check_multi(CONTOUR_PIN, "contours")
+                + check_multi(TILES_PIN, "tiles"))
     scope = "local"
     tallies = {}
     if a.against is not None:
         sim = a.against.resolve()
         problems += check_against(pin, sim)
         for pp, label in ((TERRAIN_PIN, "terrain"), (FIXTURE_PIN, "fixture"),
-                          (CONTOUR_PIN, "contours")):
+                          (CONTOUR_PIN, "contours"), (TILES_PIN, "tiles")):
             probs, tally = check_against_multi(sim, pp, label)
             problems += probs
             if pp.exists():
@@ -302,7 +326,7 @@ def main(argv=None) -> int:
           f"sha256 {pin.get('file_sha256', '')[:16]}…, "
           f"pinned at {pin.get('artefact_committed_at', '')[:12]}")
     for pp, label in ((TERRAIN_PIN, "terrain"), (FIXTURE_PIN, "fixture"),
-                      (CONTOUR_PIN, "contours")):
+                      (CONTOUR_PIN, "contours"), (TILES_PIN, "tiles")):
         if pp.exists():
             d = json.loads(pp.read_text())
             names = d.get("files", {})

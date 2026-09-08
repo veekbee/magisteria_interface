@@ -12,7 +12,7 @@
   "data/flowlines_data/flowlines_order4.gpkg",
   "data/waterbodies_data/waterbodies.gpkg"
  ],
- "generated_at_utc": "2026-09-03T01:58:12Z",
+ "generated_at_utc": "2026-09-08T04:56:03Z",
  "heightfield": {
   "file": "heightfield_overview.png",
   "width": 998,
@@ -65,14 +65,65 @@
  },
  "tiles": {
   "emitted": false,
-  "why_not": "the git-LFS-versus-fetch-by-manifest decision has not been made, and the roadmap's own appendix says to make it BEFORE the first large artefact lands. The grid is declared so a client can be written against it; the bytes follow the ruling.",
-  "native_pixel_size_m": 100.0,
-  "full_width_px": 9980,
-  "full_height_px": 14860,
-  "tile_px": 512,
-  "tiles_x": 20,
-  "tiles_y": 30,
-  "naming": "tiles/{z}/{x}_{y}.png at the same encoding as the overview",
+  "why_not": "the pyramid is fetched, never committed -- decision 948 (~10 MB threshold, digest authoritative, host replaceable). This block is the same in every clone whether or not `--tiles` ran, because a tracked manifest must not claim bytes the tree does not hold; a run that emitted leaves its report in tiles/emitted.json, which is not committed either. The ruling this block once waited on has landed, so absence here is transport, not a deferral.",
+  "levels": [
+   {
+    "z": 0,
+    "pixel_size_m": 100.0,
+    "width_px": 9980,
+    "height_px": 14860,
+    "tiles_x": 20,
+    "tiles_y": 30,
+    "tile_px": 512
+   },
+   {
+    "z": 1,
+    "pixel_size_m": 200.0,
+    "width_px": 4990,
+    "height_px": 7430,
+    "tiles_x": 10,
+    "tiles_y": 15,
+    "tile_px": 512
+   },
+   {
+    "z": 2,
+    "pixel_size_m": 400.0,
+    "width_px": 2495,
+    "height_px": 3715,
+    "tiles_x": 5,
+    "tiles_y": 8,
+    "tile_px": 512
+   },
+   {
+    "z": 3,
+    "pixel_size_m": 800.0,
+    "width_px": 1248,
+    "height_px": 1858,
+    "tiles_x": 3,
+    "tiles_y": 4,
+    "tile_px": 512
+   },
+   {
+    "z": 4,
+    "pixel_size_m": 1600.0,
+    "width_px": 624,
+    "height_px": 929,
+    "tiles_x": 2,
+    "tiles_y": 2,
+    "tile_px": 512
+   },
+   {
+    "z": 5,
+    "pixel_size_m": 3200.0,
+    "width_px": 312,
+    "height_px": 465,
+    "tiles_x": 1,
+    "tiles_y": 1,
+    "tile_px": 512
+   }
+  ],
+  "naming": "tiles/{z}/{x}_{y}.png",
+  "z_polarity": "z=0 is the FINEST level (native_pixel_size_m); each higher z halves the resolution. This is inverted from the web-map convention where z=0 is the whole world in one tile. Read `levels[]` rather than assuming either.",
   "origin": [
    -1809292.9365744274,
    2356726.304046243
