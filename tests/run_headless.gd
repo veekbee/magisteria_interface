@@ -114,6 +114,13 @@ func _initialize() -> void:
     test_phenology_is_the_cell_measured_against_itself()
     test_the_tint_moves_with_the_season_it_is_read_from()
     test_multimesh_custom_data_does_not_read_back_headless()
+    test_the_bundle_admits_only_what_it_declares()
+    test_the_same_moment_produces_the_same_bundle()
+    test_the_passthrough_earns_nothing_and_hides_nothing()
+    test_the_bundle_paints_the_pixels_the_fixture_did()
+    test_an_overlay_refuses_a_bundle_it_did_not_bind_against()
+    test_the_observation_point_is_the_bodys_and_never_the_cameras()
+    test_the_transducer_subtree_consumes_the_bundle_and_never_the_fixture()
     stage_the_main_scene()
 
 
@@ -4949,3 +4956,350 @@ func test_the_shading_is_exaggerated_and_the_geometry_is_not() -> void:
             "the view builds geometry at %s, not 1:1" % String.num(TerrainView.EXAGGERATION, 2))
     print("scale: geometry 1:1 within %s m of the field; shading normals turn up to %.0f degrees"
             % [String.num(worst, 4), rad_to_deg(turned)])
+
+
+# ============================================================================
+# Phase 8 lane B1: the stub-B seam.
+# ============================================================================
+
+## An observer good enough to produce a bundle for, with nothing in it that a
+## transducer chose. Stature and posture are what a BODY is; there is no
+## radius, no filter and no detail level, because a knob a consumer can turn is
+## a knob a consumer can turn too far.
+func _dev_observer() -> Dictionary:
+    return {
+        "session": "gate",
+        "stature_m": BodyDerivation.DEFAULT_STATURE_M,
+        "posture": "standing",
+        "ground_point": PackedFloat64Array([100.0, 0.0, -200.0]),
+    }
+
+
+func test_the_bundle_admits_only_what_it_declares() -> void:
+    """THE CLOSED SCHEMA IS THE LEAK GUARD, and it is the only form of that
+    guard that can live in a public repo.
+
+    The alternative is a denylist: a written list of everything that must never
+    cross, which is one forgotten entry from being wrong, and which discloses
+    the vocabulary of the thing it is protecting merely by naming it. A
+    whitelist says what DOES cross. Anything else is refused unread -- not
+    dropped, not ignored, refused -- so a field cannot arrive by being sent, by
+    being added upstream, or by a producer and a consumer agreeing privately.
+    """
+    var fl := fixture()
+    var p := FixturePassthrough.over(fl)
+    check(p.is_ready(), "the passthrough producer did not come up over the fixture")
+    var b := p.bundle_for(fl.windows[0], 0, _dev_observer())
+    var ok := b.check()
+    check(bool(ok["ok"]), "a passthrough bundle did not check: %s" % str(ok["why"]))
+
+    var doc := b.to_dict()
+    var back := PerceptBundle.from_dict(doc)
+    check(not back.refused, "a bundle this schema wrote was refused reading it back: %s"
+            % back.refusal)
+
+    # An undeclared field at each level, refused where it arrives.
+    for level in [["body", "competence_hint"], ["header", "earned_rung"],
+            ["fields", "truth"], ["root", "evidence"]]:
+        var bad := b.to_dict()
+        if str(level[0]) == "root":
+            bad[str(level[1])] = 1
+        else:
+            (bad[str(level[0])] as Dictionary)[str(level[1])] = 1
+        var r := PerceptBundle.from_dict(bad)
+        check(r.refused, "`%s` was accepted at %s -- the schema is not closed"
+                % [str(level[1]), str(level[0])])
+        check(r.refusal.contains(str(level[1])),
+                "the refusal does not name the field that caused it: %s" % r.refusal)
+
+    # A major version this client does not speak is a refusal, not a masking.
+    var future := b.to_dict()
+    (future["header"] as Dictionary)["schema_version"] = {"major": 99, "minor": 0}
+    check(PerceptBundle.from_dict(future).refused, "a future major was read anyway")
+
+    # And a readout, which v0 does not define a masked form for.
+    var withreadout := b.to_dict()
+    (withreadout["body"] as Dictionary)["readouts"] = [{"id": "thirst", "value": 0.5}]
+    var rr := PerceptBundle.from_dict(withreadout)
+    check(not rr.refused, "a readout is a declared field and should parse")
+    check(not bool(rr.check()["ok"]),
+            "a bundle carrying a readout passed its own check, and v0 defines no masked form "
+            + "for one -- so it would have crossed unmasked by default")
+    print("bundle: %d cells, %d rows, closed schema refuses undeclared fields at four levels"
+            % [b.cell_keys.size(), b.rows.size()])
+
+
+func test_the_same_moment_produces_the_same_bundle() -> void:
+    """DECISION 180 IS WHAT MAKES A BUNDLE STREAM WORTH RECORDING. Same world,
+    same observer, same moment, same bytes -- so a stream replays, and a replay
+    that disagrees is a defect rather than a re-roll.
+
+    Checked as bytes rather than as a structure on purpose: a dictionary
+    compare would pass on two documents whose keys arrive in different orders,
+    and it is the DOCUMENT that gets written to a file."""
+    var fl := fixture()
+    var p := FixturePassthrough.over(fl)
+    var one := JSON.stringify(p.bundle_for(fl.windows[0], 3, _dev_observer()).to_dict())
+    p.forget()
+    var two := JSON.stringify(p.bundle_for(fl.windows[0], 3, _dev_observer()).to_dict())
+    check(one == two, "two bundles for one moment differ (%d vs %d bytes)"
+            % [one.length(), two.length()])
+
+    var other := JSON.stringify(p.bundle_for(fl.windows[0], 4, _dev_observer()).to_dict())
+    check(one != other, "two different days produced the same bundle, so the moment is not "
+            + "reaching the fields")
+
+    # A bodies-only frame still says which channel 1 it was standing in.
+    var light := p.bundle_for(fl.windows[0], 3, _dev_observer()).to_dict(false)
+    check(not light.has("fields"), "a bodies-only frame carried channel 1 anyway")
+    check((light["header"] as Dictionary).has("moment"),
+            "a bodies-only frame does not say which moment it belongs to")
+    print("bundle: deterministic at %d bytes with fields, %d without"
+            % [one.length(), JSON.stringify(light).length()])
+
+
+func test_the_passthrough_earns_nothing_and_hides_nothing() -> void:
+    """A PASSTHROUGH THAT REFINES ANYTHING IS A MOCK WEARING A STUB'S NAME.
+
+    The fixture models no observer, so there is nothing it could have earned:
+    channel 2 is empty, no overlay is refined, and channel 1 is the carried
+    rows at their carried values. The last of those is checked against the
+    loader cell by cell rather than by counting rows -- a bundle that carried
+    the right row names and the wrong numbers would look identical from the
+    outside."""
+    var fl := fixture()
+    var window := fl.windows[0]
+    var p := FixturePassthrough.over(fl)
+    var b := p.bundle_for(window, 12, _dev_observer())
+
+    check(b.subjects.is_empty(), "the passthrough invented %d subjects" % b.subjects.size())
+    check(b.refinements.is_empty(), "the passthrough refined %d overlays" % b.refinements.size())
+    check(b.readouts.is_empty(), "the passthrough carried a readout")
+    check(str(b.producer.get("kind", "")) == FixturePassthrough.KIND,
+            "the bundle does not stamp which producer made it")
+
+    var band_rows := fl.row_names(window, "band")
+    check(band_rows.size() > 0 and b.rows.size() == band_rows.size(),
+            "the bundle carries %d rows against %d band rows in the fixture"
+            % [b.rows.size(), band_rows.size()])
+    var compared := 0
+    var worst := 0.0
+    for row in band_rows:
+        var groups := b.row_groups(row)
+        for gi in groups.size():
+            var mine := b.row_values(row, gi)
+            var theirs := fl.day_values(window, row, 12, gi)
+            check(mine.size() == theirs.size(),
+                    "row %s group %d is %d long in the bundle and %d in the fixture"
+                    % [row, gi, mine.size(), theirs.size()])
+            for i in mini(mine.size(), theirs.size()):
+                if is_nan(theirs[i]):
+                    check(is_nan(mine[i]), "row %s cell %d is nodata and the bundle carries %f"
+                            % [row, i, mine[i]])
+                    continue
+                worst = maxf(worst, absf(mine[i] - theirs[i]))
+                compared += 1
+    check(compared > 10000, "only %d values were compared" % compared)
+    check(worst == 0.0, "the bundle moved a carried value by %s" % String.num(worst, 12))
+
+    # The key axis is the world's, not the moment's.
+    var later := p.bundle_for(window, 40, _dev_observer())
+    check(b.same_axis_as(later), "two moments of one world do not share a key axis")
+    print("passthrough: %d values carried verbatim, %d subjects, %d refinements"
+            % [compared, b.subjects.size(), b.refinements.size()])
+
+
+func test_the_bundle_paints_the_pixels_the_fixture_did() -> void:
+    """B1'S ACCEPTANCE TEST: ZERO BEHAVIOUR CHANGE.
+
+    Making the viewer a bundle consumer is worth nothing if it moves a pixel,
+    and 'the tests still pass' is a weaker claim than the one owed -- most of
+    them do not look at the ground. So the two paths are run side by side and
+    the images compared BYTE FOR BYTE: the same row, the same day, painted
+    through the bundle and painted from the loader directly.
+
+    If this ever fails, the passthrough has started deciding something."""
+    var rl := residence()
+    var fl := fixture()
+    var p := FixturePassthrough.over(fl)
+    var window := fl.windows[0]
+    var row := "band.wetness"
+    var b := p.bundle_for(window, 7, _dev_observer())
+
+    var overlay := FieldOverlay.new()
+    overlay.bind(rl, b, TerrainView.BARE_ALBEDO)
+    check(overlay.is_bound(), "the overlay did not bind against the bundle's key axis")
+    check(overlay.resolved_px > 100000,
+            "only %d pixels resolved through the bundle's axis" % overlay.resolved_px)
+
+    var through := overlay.paint_row(b, row, 0, 0.0, 1.0)
+    check(bool(through["ok"]), "the bundle path did not paint: %s" % str(through.get("why", "")))
+    if not bool(through["ok"]):
+        return
+    var direct := overlay.texture_for(fl.day_values(window, row, 7), 0.0, 1.0)
+    var a := (through["texture"] as ImageTexture).get_image().get_data()
+    var c := direct.get_image().get_data()
+    check(a.size() == c.size() and a.size() > 0,
+            "the two images are %d and %d bytes" % [a.size(), c.size()])
+    var differing := 0
+    for i in mini(a.size(), c.size()):
+        if a[i] != c[i]:
+            differing += 1
+    check(differing == 0, "%d bytes of %d differ between the bundle path and the fixture path"
+            % [differing, a.size()])
+    print("seam: %d px painted through a bundle, %d bytes identical to the fixture path"
+            % [overlay.resolved_px, a.size()])
+
+
+func test_an_overlay_refuses_a_bundle_it_did_not_bind_against() -> void:
+    """The join is an array of cell indices, and against another key axis every
+    one of them names a different patch of ground. There is no way to see that
+    on screen: a basin painted through the wrong join looks like a basin. So it
+    is refused rather than checked by eye."""
+    var rl := residence()
+    var fl := fixture()
+    var p := FixturePassthrough.over(fl)
+    var b := p.bundle_for(fl.windows[0], 1, _dev_observer())
+    var overlay := FieldOverlay.new()
+    overlay.bind(rl, b, TerrainView.BARE_ALBEDO)
+
+    var stranger := p.bundle_for(fl.windows[0], 2, _dev_observer())
+    stranger.cell_keys = PackedStringArray(["someone|0", "else|1"])
+    var r := overlay.paint_row(stranger, "band.wetness", 0, 0.0, 1.0)
+    check(not bool(r["ok"]), "the overlay painted a bundle from another key axis")
+    check(str(r["why"]).contains("axis"), "the refusal does not say why: %s" % str(r["why"]))
+    print("seam: an overlay refuses a bundle whose key axis is not the one it bound against")
+
+
+func test_the_observation_point_is_the_bodys_and_never_the_cameras() -> void:
+    """THE ONE RESIDENCY QUESTION IN THIS LANE THAT IS ALREADY RULED: eye height
+    is B's. The camera coincides with the observation point and never owns it.
+
+    Put the derivation in a camera rig and it is correct exactly until a second
+    consumer exists -- a headless scorer, a second observer, a driver with no
+    camera at all -- and then it is either duplicated or a renderer is being
+    asked where a body's eyes are.
+
+    So this checks two things: that the derivation answers, and that nobody
+    downstream holds a second copy of the answer."""
+    var stature := BodyDerivation.DEFAULT_STATURE_M
+    var standing := BodyDerivation.eye_height_m(stature, "standing")
+    var crouched := BodyDerivation.eye_height_m(stature, "crouched")
+    var prone := BodyDerivation.eye_height_m(stature, "prone")
+    check(standing < stature and standing > crouched and crouched > prone and prone > 0.0,
+            "eye heights are not ordered by posture: %s standing, %s crouched, %s prone"
+            % [String.num(standing, 3), String.num(crouched, 3), String.num(prone, 3)])
+
+    # An easting a Vector3 could not hold: single precision steps in about 6 cm
+    # out here, and a body's own position is the one thing exact for free.
+    var ground := PackedFloat64Array([-1237456.127, 1234.0, 1908765.379])
+    var eye := BodyDerivation.observation_point(ground, stature, "standing")
+    check(eye[0] == ground[0] and eye[2] == ground[2],
+            "the derivation moved the body sideways")
+    check(absf(eye[1] - (ground[1] + standing)) < 1.0e-12,
+            "the observation point is not the ground plus the eye height")
+    check(absf(eye[0] - Vector3(float(ground[0]), 0.0, 0.0).x) > 0.0,
+            "a Vector3 round-trips this easting exactly, so the float64 carriage is "
+            + "buying nothing and the comment above it is wrong")
+
+    # A body that crouches and gets faster is a defect visible without knowing
+    # any of the numbers.
+    var fast := float(BodyDerivation.locomotion(stature, "standing")["sustainable_speed_m_s"])
+    var slow := float(BodyDerivation.locomotion(stature, "crouched")["sustainable_speed_m_s"])
+    check(fast > slow and slow > 0.0, "crouching is not slower than standing")
+
+    # NO SECOND HOME. Nothing that draws may hold an eye height of its own.
+    for path in ["res://src/ui/camera_rig.gd", "res://src/terrain/terrain_view.gd",
+            "res://tools/free_flight.gd"]:
+        var f := FileAccess.open(path, FileAccess.READ)
+        check(f != null, "cannot read %s" % path)
+        if f == null:
+            continue
+        var text := f.get_as_text()
+        check(not text.contains("EYE_HEIGHT"),
+                "%s holds an eye height of its own. It is the body's: take it from "
+                        % path
+                + "BodyDerivation, or the day a second consumer needs one there are two.")
+    print("body: eyes at %s m standing, %s crouched, %s prone from a %s m stature"
+            % [String.num(standing, 3), String.num(crouched, 3), String.num(prone, 3),
+                    String.num(stature, 2)])
+
+
+## Names a transducer file may not mention: the artefact behind the bundle, in
+## each of the forms someone would reach for it by.
+const REACHES_PAST_THE_BUNDLE := ["FixtureLoader", "fixture_client", "assets/fixture"]
+
+
+## The scan itself, as a function of TEXT so the gate can check it against a
+## violation that does not exist on disk.
+##
+## COMMENT LINES ARE STRIPPED FIRST, deliberately. A rule that cannot be
+## explained in the file it governs is a rule the next person deletes; the
+## boundary comment in `field_overlay.gd` should be free to say what it does not
+## reach for. What is scanned is what runs.
+static func _reaches_past_the_bundle(source: String) -> PackedStringArray:
+    var found := PackedStringArray()
+    var code := ""
+    for line in source.split("\n"):
+        if line.strip_edges().begins_with("#"):
+            continue
+        code += line + "\n"
+    for needle in REACHES_PAST_THE_BUNDLE:
+        if code.contains(needle):
+            found.append(str(needle))
+    return found
+
+
+func test_the_transducer_subtree_consumes_the_bundle_and_never_the_fixture() -> void:
+    """THE GUARD B1 IS REQUIRED TO LEAVE BEHIND.
+
+    What it forbids is not the fixture -- the fixture is what the client has
+    today -- but a consumer reaching PAST a bundle for the file underneath.
+    That reach is invisible while a passthrough is producing: every pixel is
+    right, and stays right until a real producer withholds something and the
+    fallback quietly supplies it anyway.
+
+    THE HARD PART IS NOT THE SCAN, IT IS WHAT IT SCANS. A scan over `src/ui/`
+    would fail on correct code -- the scrubber and the series plot read the
+    artefact on purpose and are not transducer code. A scan over nothing passes
+    while proving nothing, which is worse than failing. So membership is a
+    path: `Transducer.SUBTREE`, stated at the subtree root, and this test
+    refuses an empty one and checks its own predicate against a violation
+    before believing a green.
+    """
+    var files := Transducer.scripts()
+    check(files.size() >= 2, "the transducer subtree holds %d scripts. A boundary with nothing "
+            % files.size() + "inside it passes this test by scanning nothing.")
+
+    var consumers := 0
+    for path in files:
+        var f := FileAccess.open(path, FileAccess.READ)
+        check(f != null, "cannot read %s" % path)
+        if f == null:
+            continue
+        var source := f.get_as_text()
+        var name := path.get_file()
+        var bad := _reaches_past_the_bundle(source)
+        check(bad.is_empty(), "%s reaches past the bundle for %s. Everything under %s consumes "
+                % [name, str(bad), Transducer.SUBTREE]
+                + "a PerceptBundle and reads no artefact behind one.")
+        if Transducer.NOT_A_CONSUMER.has(name):
+            continue
+        check(source.contains("PerceptBundle"),
+                "%s is in the transducer subtree and never mentions a bundle. Either it "
+                        % name
+                + "consumes one or it does not belong inside the boundary.")
+        consumers += 1
+    check(consumers >= 1, "the subtree holds no consumer at all")
+
+    # THE NEGATIVE CONTROL. A scan that has stopped being able to see a
+    # violation reports the same green as a clean tree, so it is shown one.
+    check(not _reaches_past_the_bundle("var x: FixtureLoader = null").is_empty(),
+            "the scan does not fire on a plain reference, so its green means nothing")
+    check(not _reaches_past_the_bundle("\tvar p := \"res://assets/fixture/\"").is_empty(),
+            "the scan does not fire on a direct artefact path")
+    # And the other way: prose may name what a file does not do.
+    check(_reaches_past_the_bundle("## never a FixtureLoader here\nvar x := 1").is_empty(),
+            "the scan fires on a comment, so the boundary cannot be explained where it applies")
+    print("transducer: %d scripts under %s, %d consumers, none reaching past a bundle"
+            % [files.size(), Transducer.SUBTREE, consumers])

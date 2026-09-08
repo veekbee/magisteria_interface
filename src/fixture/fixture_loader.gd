@@ -96,7 +96,15 @@ func taxon_groups(window: String, row: String) -> PackedStringArray:
     var out := PackedStringArray()
     var w: Dictionary = manifest.get("windows", {}).get(window, {})
     var series: Dictionary = w.get("series", {})
-    for g in series.get(row, {}).get("taxon_groups", []):
+    # A row with no taxon axis carries `taxon_groups: null`, not a missing key,
+    # so the default in `get` never fires and the loop iterated a Nil. Every
+    # caller until now asked only about the two rows that have an axis; asking
+    # about all of them is how it surfaced. The answer for a row without one is
+    # an empty axis, which is what an empty array already says.
+    var tg: Variant = series.get(row, {}).get("taxon_groups", null)
+    if typeof(tg) != TYPE_ARRAY:
+        return out
+    for g in (tg as Array):
         out.append(str(g))
     return out
 

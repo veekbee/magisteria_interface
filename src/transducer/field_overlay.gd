@@ -3,6 +3,10 @@ extends RefCounted
 
 ## M2: a carried row, one day, as colour on the terrain.
 ##
+## In the transducer subtree: it consumes a `PerceptBundle` and never the
+## artefact underneath. See `transducer.gd` for what that boundary is and what
+## it is worth.
+##
 ## THE CHAIN, and every link is somebody else's ruling. A rendered pixel has a
 ## residence key (decision 891, server-authoritative, received not computed);
 ## the key joins to a cell through the fixture's `cell_keys`; the cell indexes
@@ -52,11 +56,21 @@ var nodata_px: int = 0
 
 var _cell_of_px: PackedInt32Array = PackedInt32Array()   ## -1 where unkeyed
 var _nodata := PackedByteArray([0, 0, 0, 255])
+## The bundle whose key axis the join above was built against. Held to be
+## compared, never read for values.
+var _axis: PerceptBundle = null
 
 
 ## Precompute the pixel -> cell join once. It depends only on the two layers,
 ## not on which row or day is shown, so doing it per frame would repay nothing.
-func bind(rl: ResidenceLayer, fl: FixtureLoader, nodata: Color) -> void:
+##
+## THE JOIN COMES FROM THE BUNDLE'S KEY AXIS, which is what puts this file in
+## the transducer subtree: the axis is a property of the world rather than of
+## the moment, so one bind serves every later bundle from the same world --
+## and `paint_row` checks that rather than assuming it. 1.48 million lookups
+## per day-step would be the alternative, and a mispainted basin the cost of
+## not checking.
+func bind(rl: ResidenceLayer, bundle: PerceptBundle, nodata: Color) -> void:
     _nodata = PackedByteArray([int(nodata.r * 255.0), int(nodata.g * 255.0),
                                int(nodata.b * 255.0), 255])
     width = rl.width
@@ -72,16 +86,36 @@ func bind(rl: ResidenceLayer, fl: FixtureLoader, nodata: Color) -> void:
             var huc: String = rl.node_of_index.get(k[0], "")
             if huc == "":
                 continue
-            var ci: Variant = fl.cell_of_key.get("%s|%d" % [huc, k[1]], null)
-            if ci == null:
+            var ci := bundle.index_of("%s|%d" % [huc, k[1]])
+            if ci < 0:
                 continue
-            _cell_of_px[y * width + x] = int(ci)
+            _cell_of_px[y * width + x] = ci
             resolved_px += 1
     nodata_px = width * height - resolved_px
+    _axis = bundle
 
 
 func is_bound() -> bool:
     return _cell_of_px.size() == width * height and width > 0
+
+
+## One row-day of a bundle's channel 1, as colour on the terrain.
+##
+## Refuses rather than paints when the bundle's key axis is not the one this
+## overlay bound against: the join is an array of cell indices, and against a
+## different axis every one of them names another patch of ground. A basin
+## painted through the wrong join looks like a basin.
+func paint_row(bundle: PerceptBundle, row: String, group: int,
+               lo: float, hi: float) -> Dictionary:
+    if not is_bound():
+        return {"ok": false, "why": "the overlay is not bound"}
+    if _axis == null or not bundle.same_axis_as(_axis):
+        return {"ok": false, "why": ("this bundle's key axis is not the one the overlay bound "
+                + "against, so the pixel-to-cell join does not describe it")}
+    var vals := bundle.row_values(row, group)
+    if vals.is_empty():
+        return {"ok": false, "why": "the bundle carries no row %s at group %d" % [row, group]}
+    return {"ok": true, "texture": texture_for(vals, lo, hi)}
 
 
 ## Colour texture for one row-day. `lo`/`hi` are the CONTRACT's bounds.

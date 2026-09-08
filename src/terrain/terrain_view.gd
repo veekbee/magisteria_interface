@@ -123,6 +123,23 @@ var report: Dictionary = {}
 var residence: ResidenceLayer
 var fixture: FixtureLoader
 var overlay: FieldOverlay
+
+## THE STUB-B SEAM. The ground paint goes through a bundle rather than through
+## the fixture: `producer` stands in for B, and `FieldOverlay` -- which is in
+## the transducer subtree -- sees only what the bundle carries. Everything else
+## in this file still reads the fixture directly, which is stated in
+## `transducer.gd` row by row rather than left to be discovered.
+var producer: FixturePassthrough = null
+var bundle: PerceptBundle = null
+## Who the bundle is produced FOR. A dev viewer is not a body; the debug player
+## replaces this with one, and until it does the body half of every bundle is a
+## default standing at the origin.
+var observer: Dictionary = {
+    "session": "dev-viewer",
+    "stature_m": BodyDerivation.DEFAULT_STATURE_M,
+    "posture": "standing",
+    "ground_point": PackedFloat64Array([0.0, 0.0, 0.0]),
+}
 var _terrain_mi: MeshInstance3D
 var _terrain_mat: ShaderMaterial
 var _flow_mi: MeshInstance3D = null
@@ -275,8 +292,19 @@ func bind_fields(terrain_dir: String = TERRAIN_DIR,
         field_report = {"ok": false, "why": "fixture did not load"}
         return field_report
 
+    producer = FixturePassthrough.over(fixture)
+    if not producer.is_ready():
+        field_report = {"ok": false, "why": "the passthrough producer has no key axis"}
+        return field_report
+    bundle = producer.bundle_for(fixture.windows[0], 0, observer)
+    var bcheck := bundle.check()
+    if not bool(bcheck["ok"]):
+        field_report = {"ok": false, "why": "the first bundle did not check: %s"
+                % str(bcheck["why"])}
+        return field_report
+
     overlay = FieldOverlay.new()
-    overlay.bind(residence, fixture, BARE_ALBEDO)
+    overlay.bind(residence, bundle, BARE_ALBEDO)
     field_report = {
         "ok": true,
         "resolved_px": overlay.resolved_px,
@@ -294,10 +322,17 @@ func show_field(window: String, row: String, day: int, group: int = 0) -> bool:
     if overlay == null or not overlay.is_bound():
         return false
     var b := _bounds_for(row)
-    var vals := fixture.day_values(window, row, day, group)
-    if vals.is_empty():
+    # THROUGH THE SEAM. The moment names the bundle; the bundle carries the
+    # row. Bounds are still the fixture manifest's realised range and are
+    # passed in from here -- a ramp's range is a drawing decision made outside
+    # the transducer, and where it should come from once a real producer exists
+    # is not this file's to settle.
+    bundle = producer.bundle_for(window, day, observer)
+    var painted := overlay.paint_row(bundle, row, group, b.x, b.y)
+    if not bool(painted["ok"]):
+        push_warning("fields: %s" % str(painted["why"]))
         return false
-    _terrain_mat.set_shader_parameter("field", overlay.texture_for(vals, b.x, b.y))
+    _terrain_mat.set_shader_parameter("field", painted["texture"])
     _terrain_mat.set_shader_parameter("has_field", true)
     shown = {"window": window, "row": row, "day": day, "group": group}
     # PER DAY-STEP, NOT PER FRAME. The 128,000 instances/second build wall does

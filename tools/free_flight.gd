@@ -31,7 +31,14 @@ extends SceneTree
 ## that stopped being drawn -- which for an interactive session is not a corner
 ## case but the normal way a person alt-tabs away.
 
-const EYE_HEIGHT_M := 1.7
+## HOW HIGH THE CAMERA RIDES IS NOT THIS FILE'S TO SAY. Eye height is the
+## body's, derived from a stature and a posture on the producer side of the
+## stub-B seam; the camera coincides with the observation point and never owns
+## it. This harness flies a standing default body, and if that is ever wrong it
+## is wrong in one place for everybody.
+static func _eye_height_m() -> float:
+    return BodyDerivation.eye_height_m(BodyDerivation.DEFAULT_STATURE_M, "standing")
+
 const SETTLE_FRAMES := 12
 
 ## Metres per second. §3.1c's figure; see the note above.
@@ -224,7 +231,7 @@ func _place() -> void:
     cam.near = 0.5
     var surface: float = view.terrain.drawn_surface_y(at_world, view.heightfield)
     var ground: float = view.scatter_centre_mesh.y if is_nan(surface) else surface
-    cam.position = Vector3(view.scatter_centre_mesh.x, ground + EYE_HEIGHT_M,
+    cam.position = Vector3(view.scatter_centre_mesh.x, ground + _eye_height_m(),
             view.scatter_centre_mesh.z)
     _yaw = 0.0
     _pitch = -6.0
@@ -264,7 +271,7 @@ func _place() -> void:
         "shading_exaggeration": view.terrain.shading_exaggeration,
         "viewport": [DisplayServer.window_get_size().x, DisplayServer.window_get_size().y],
         "fov_degrees": cam.fov,
-        "eye_height_m": EYE_HEIGHT_M,
+        "eye_height_m": _eye_height_m(),
         "asked_speed_m_s": speed_m_s,
         "individuation_k": k_fraction * _k_res,
         "k_over_k_res": k_fraction,
@@ -360,7 +367,7 @@ func _fly() -> void:
             view.terrain.mesh_to_world(Vector3(cam.position.x, 0.0, cam.position.z),
                     view.heightfield), view.heightfield)
     if not is_nan(ground):
-        cam.position.y = ground + EYE_HEIGHT_M
+        cam.position.y = ground + _eye_height_m()
 
     var world_here: Vector2 = view.terrain.mesh_to_world(
             Vector3(cam.position.x, 0.0, cam.position.z), view.heightfield)
