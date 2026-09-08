@@ -5388,9 +5388,10 @@ func test_walk_mode_is_refused_while_the_ground_is_a_plane() -> void:
     var b := p.bundle_for(fl.windows[0], 0, _dev_observer())
     var hf := heightfield()
 
-    var tm := TerrainMesh.new()
-    tm.build(hf, 2, 1.0)
-    var drawn_sample := hf.pixel_size_m * float(tm.stride)
+    # THE STRIDE THE VIEWER ACTUALLY DRAWS AT, not a stride this test chose.
+    # A gate that picked its own would report a blocker of its own invention.
+    var v := TerrainView.new()
+    var drawn_sample := hf.pixel_size_m * float(v.stride)
     var verdict := DebugPlayer.walk_available(b, drawn_sample)
     check(not bool(verdict["ok"]),
             "walk mode opened on ground sampled every %s m" % String.num(drawn_sample, 0))
@@ -5400,8 +5401,10 @@ func test_walk_mode_is_refused_while_the_ground_is_a_plane() -> void:
     # It is a gate and not a wall: ground fine enough opens it.
     var fine := DebugPlayer.walk_available(b, 1.0)
     check(bool(fine["ok"]), "walk mode stayed shut on metre ground: %s" % str(fine.get("why", "")))
-    print("player: walk refused at %s m ground sampling against %s m of walking per second"
-            % [String.num(drawn_sample, 0), String.num(float(verdict["one_second_m"]), 1)])
+    print("player: walk refused at %s m ground sampling (stride %d) against %s m of walking "
+            % [String.num(drawn_sample, 0), v.stride,
+                    String.num(float(verdict["one_second_m"]), 1)] + "per second")
+    v.free()
 
 
 func test_a_recorded_walk_replays_and_cannot_outrun_its_own_locomotion() -> void:
