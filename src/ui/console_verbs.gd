@@ -46,7 +46,7 @@ func bind(console_: DevConsole, view_: TerrainView) -> void:
     console.register("view.capture", "<name> -- a png in shots/", _view_capture)
     console.register("view.embody", "stand a debug body at the reticle", _view_embody)
     console.register("view.disembody", "back to the free dev camera", _view_disembody)
-    console.register("view.posture", "standing | crouched | prone", _view_posture)
+
 
     console.register("probe.cell", "[x y] -- the cell under the reticle", _probe_cell)
     console.register("probe.row", "<row> [x y] -- any carried row here", _probe_row)
@@ -57,6 +57,19 @@ func bind(console_: DevConsole, view_: TerrainView) -> void:
     console.register("probe.percept", "<family> [x y] -- the min(), two columns", _probe_percept)
     console.register("probe.pin", "what this client is standing on", _probe_pin)
 
+    # POSTURE IS A `world.*` VERB AND NOT A `view.*` ONE, on a discriminator
+    # worth keeping: in a production player, changing posture is an ACTION THE
+    # BODY TAKES -- it goes to B and changes what B reports back, the
+    # observation point and the locomotion envelope among it. That is not
+    # A-side. A `view.*` verb that would have to become a B-side action the day
+    # a real producer exists is in the wrong prefix now, and today it is
+    # exactly what `world.*` is for: a dev endpoint writing stub-B state, which
+    # does not exist client-side in production.
+    #
+    # `view.embody` stays A-side. Switching between the three pinned view modes
+    # -- dev camera, debug player, player -- is a view-mode change and stays
+    # legitimate forever.
+    console.register("world.posture", "standing | crouched | prone", _world_posture)
     console.register("world.day", "<n> -- move the moment", _world_day)
     console.register("world.rebuild", "[radius] -- rebuild the scatter here", _world_rebuild)
     console.register("world.reload", "re-read the fixture from disk", _world_reload)
@@ -149,17 +162,6 @@ func _view_disembody(_args: PackedStringArray) -> PackedStringArray:
     body = null
     return PackedStringArray(["free dev camera. No observer, and the fixture is truth again -- "
             + "which is a stance, not an absence of one."])
-
-
-func _view_posture(args: PackedStringArray) -> PackedStringArray:
-    if body == null:
-        return PackedStringArray(["no body: `view.embody` first"])
-    if args.is_empty() or not PerceptBundle.POSTURES.has(str(args[0])):
-        return PackedStringArray(["posture is %s; one of %s" % [body.posture,
-                str(PerceptBundle.POSTURES)]])
-    body.posture = str(args[0])
-    view.observer = body.observer()
-    return PackedStringArray(["posture %s" % body.posture])
 
 
 # -- probe.* -----------------------------------------------------------------
@@ -359,6 +361,18 @@ func _probe_pin(_args: PackedStringArray) -> PackedStringArray:
     var man: Dictionary = view.fixture.manifest
     out.append("fixture  %s" % str(man.get("run", man.get("trace", "unnamed"))))
     out.append("windows  %s" % str(Array(view.fixture.windows)))
+    var tp := TilePyramid.load_from()
+    if tp.is_loaded():
+        var inv := tp.inventory()
+        out.append("tiles    %d keyed, %d present, %d not fetched; finest %s m, z=0 is finest"
+                % [int(inv["keyed"]), int(inv["present"]), int(inv["not_fetched"]),
+                        String.num(float(inv["finest_pixel_size_m"]), 0)])
+        out.append("  encoding offset %s scale %s -- NOT the overview's; a clipped code is a "
+                % [String.num(tp.offset_m, 6), String.num(tp.scale_m, 9)]
+                + "valid code, so decoding a tile with the overview's pair fails silently")
+        out.append("  host_base %s" % ("set" if tp.host_base != "" else "NOT SET (a valid clone)"))
+    else:
+        out.append("tiles    %s" % tp.why_absent)
     if view.bundle != null:
         out.append("producer %s  %s" % [str(view.bundle.producer.get("kind", "?")),
                 str(view.bundle.producer.get("provenance", {}))])
@@ -366,6 +380,17 @@ func _probe_pin(_args: PackedStringArray) -> PackedStringArray:
 
 
 # -- world.* -----------------------------------------------------------------
+
+func _world_posture(args: PackedStringArray) -> PackedStringArray:
+    if body == null:
+        return PackedStringArray(["no body: `view.embody` first"])
+    if args.is_empty() or not PerceptBundle.POSTURES.has(str(args[0])):
+        return PackedStringArray(["posture is %s; one of %s" % [body.posture,
+                str(PerceptBundle.POSTURES)]])
+    body.posture = str(args[0])
+    view.observer = body.observer()
+    return PackedStringArray(["posture %s" % body.posture])
+
 
 func _world_day(args: PackedStringArray) -> PackedStringArray:
     if args.is_empty() or view.shown.is_empty():

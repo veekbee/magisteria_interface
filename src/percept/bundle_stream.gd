@@ -19,6 +19,16 @@ extends RefCounted
 ## THE SIZE RULE IS THE REPO'S (decision 948): over ten megabytes and a file is
 ## not committed -- it arrives through `tools/fetch_artefacts.py` and nothing
 ## else. `over_committable` says so before a caller writes rather than after.
+##
+## AND WHICH WAY OUT TO TAKE WHEN IT DOES. Channel 1 is about a megabyte a
+## moment, so a stream is roughly ten moments from the threshold, and there are
+## two routes that are not equivalent. A COARSER ENCODING changes what the
+## stream IS -- it is evidence, and evidence that has been rounded to fit a
+## size limit is a different artefact wearing the same name. THE FETCH ROUTE
+## changes only where the bytes live, which is what decision 948 exists to
+## make cheap: a pin with a `host_base` (decision 972) and the same digests.
+## So the fetch route is the one to reach for, and a coarser encoding only with
+## a reason that is not size.
 
 const COMMITTABLE_BYTES := 10485760
 

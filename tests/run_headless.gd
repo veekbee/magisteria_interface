@@ -5776,6 +5776,17 @@ func test_the_console_answers_headless_from_a_named_point() -> void:
             "probe.survive", "probe.percept", "probe.pin", "world.day", "world.rebuild"]:
         check(Array(console.names()).has(expected), "the console has no %s" % expected)
 
+    # POSTURE MOVED PREFIX, AND THE DISCRIMINATOR IS PINNED HERE. In a
+    # production player, changing posture is an action the body takes: it goes
+    # to B and changes what B reports back. A `view.*` verb that would have to
+    # become a B-side action the day a real producer exists is in the wrong
+    # prefix now, and a dev endpoint writing stub-B state is what `world.*` is
+    # for -- so it disappears in production, correctly, along with the console.
+    check(Array(console.names()).has("world.posture"),
+            "posture is not a world verb")
+    check(not Array(console.names()).has("view.posture"),
+            "view.posture still exists, so both prefixes claim the same verb")
+
     var at := "%f %f" % [centre.x, centre.y]
     var cell := console.run("probe.cell " + at)
     check(cell.size() >= 3, "probe.cell answered %d lines" % cell.size())
