@@ -121,6 +121,9 @@ func _initialize() -> void:
     test_an_overlay_refuses_a_bundle_it_did_not_bind_against()
     test_the_observation_point_is_the_bodys_and_never_the_cameras()
     test_the_transducer_subtree_consumes_the_bundle_and_never_the_fixture()
+    test_the_body_moves_at_the_speed_the_bundle_reports()
+    test_walk_mode_is_refused_while_the_ground_is_a_plane()
+    test_a_recorded_walk_replays_and_cannot_outrun_its_own_locomotion()
     stage_the_main_scene()
 
 
@@ -5303,3 +5306,159 @@ func test_the_transducer_subtree_consumes_the_bundle_and_never_the_fixture() -> 
             "the scan fires on a comment, so the boundary cannot be explained where it applies")
     print("transducer: %d scripts under %s, %d consumers, none reaching past a bundle"
             % [files.size(), Transducer.SUBTREE, consumers])
+
+
+# ============================================================================
+# Phase 8 lane B2: the debug player.
+# ============================================================================
+
+func test_the_body_moves_at_the_speed_the_bundle_reports() -> void:
+    """THE CHEAP CONSONANCE TEST. A player whose speed is a constant of its own
+    is a camera with a walk animation, and it would pass every test that only
+    looks at whether it moved. So the speed is doubled IN THE BUNDLE and the
+    body is required to notice.
+
+    And the refusal matters as much as the movement: a producer that says
+    nothing about locomotion gets a body that does not move, not a body that
+    falls back on a plausible number and travels at it forever."""
+    var fl := fixture()
+    var p := FixturePassthrough.over(fl)
+    var b := p.bundle_for(fl.windows[0], 0, _dev_observer())
+
+    var body := DebugPlayer.new()
+    body.ground = PackedFloat64Array([0.0, 0.0, 0.0])
+    body.heading_degrees = 0.0
+    var r := body.step(b, 1.0, Vector2(0.0, 1.0))
+    check(bool(r["ok"]), "the body did not move: %s" % str(r.get("why", "")))
+    var one := float(r["moved_m"])
+    var declared := float(b.locomotion["sustainable_speed_m_s"])
+    check(absf(one - declared) < 1.0e-9,
+            "a second of walking covered %s m against a declared %s m/s"
+            % [String.num(one, 4), String.num(declared, 4)])
+
+    # Change the producer's answer; the body must change with it.
+    b.locomotion["sustainable_speed_m_s"] = declared * 2.0
+    var faster := body.step(b, 1.0, Vector2(0.0, 1.0))
+    check(absf(float(faster["moved_m"]) - declared * 2.0) < 1.0e-9,
+            "the bundle doubled the speed and the body covered %s m. It is not reading the "
+                    % String.num(float(faster["moved_m"]), 4)
+            + "locomotion field, which makes it a camera with legs.")
+
+    # Two keys are not a diagonal bonus.
+    b.locomotion["sustainable_speed_m_s"] = declared
+    var diag := body.step(b, 1.0, Vector2(1.0, 1.0))
+    check(absf(float(diag["moved_m"]) - declared) < 1.0e-6,
+            "a diagonal covered %s m against a straight %s"
+            % [String.num(float(diag["moved_m"]), 4), String.num(declared, 4)])
+
+    # No locomotion, no movement, and a sentence saying so.
+    var mute := p.bundle_for(fl.windows[0], 0, _dev_observer())
+    mute.locomotion = {}
+    var still := body.step(mute, 1.0, Vector2(0.0, 1.0))
+    check(not bool(still["ok"]) and float(still["moved_m"]) == 0.0,
+            "a body with no locomotion field moved %s m" % String.num(float(still["moved_m"]), 4))
+    check(str(still["why"]).length() > 20, "it does not say why it did not move")
+
+    # The camera goes where the eyes are and nowhere else.
+    check(DebugPlayer.camera_position(b) == b.as_vector3(),
+            "the camera does not coincide with the reported observation point")
+    print("player: %s m/s from the bundle, doubled in the bundle and followed, mute bundle "
+            % String.num(declared, 2) + "refused")
+
+
+func test_walk_mode_is_refused_while_the_ground_is_a_plane() -> void:
+    """WALK MODE IS READY AND GATED, and the gate is A1's, not this repo's.
+
+    The terrain export triangulates the heightfield every few kilometres, so a
+    body standing in the scatter stands in the middle of one flat triangle.
+    Anything tuned against that is tuned against a plane -- which is exactly
+    what a person walking a heading in flight 3 reported seeing.
+
+    The criterion is derived rather than picked: the ground has to change at
+    least once per second of walking, so its sample spacing must be no coarser
+    than the distance this body's own sustainable speed covers in a second.
+    Both numbers come from outside the player."""
+    var fl := fixture()
+    var p := FixturePassthrough.over(fl)
+    var b := p.bundle_for(fl.windows[0], 0, _dev_observer())
+    var hf := heightfield()
+
+    var tm := TerrainMesh.new()
+    tm.build(hf, 2, 1.0)
+    var drawn_sample := hf.pixel_size_m * float(tm.stride)
+    var verdict := DebugPlayer.walk_available(b, drawn_sample)
+    check(not bool(verdict["ok"]),
+            "walk mode opened on ground sampled every %s m" % String.num(drawn_sample, 0))
+    check(str(verdict["why"]).contains("tile pyramid"),
+            "the refusal does not name what it waits on: %s" % str(verdict["why"]))
+
+    # It is a gate and not a wall: ground fine enough opens it.
+    var fine := DebugPlayer.walk_available(b, 1.0)
+    check(bool(fine["ok"]), "walk mode stayed shut on metre ground: %s" % str(fine.get("why", "")))
+    print("player: walk refused at %s m ground sampling against %s m of walking per second"
+            % [String.num(drawn_sample, 0), String.num(float(verdict["one_second_m"]), 1)])
+
+
+func test_a_recorded_walk_replays_and_cannot_outrun_its_own_locomotion() -> void:
+    """A BUNDLE STREAM IS A FIXTURE YOU CAN REPLAY FROM A CLONE, and it is
+    recorded because a walk nobody can re-score is a demo.
+
+    Two things are checked on the way back. That the file survives the trip --
+    channel 1 stored once per moment, bodies per frame, and the poses identical
+    afterwards. And the invariant that separates a body from a camera: no frame
+    moved further than the speed the bundle itself reported would allow. A
+    transducer helping itself to more speed than it was given shows up there
+    and nowhere else, so the check is shown a tampered frame before its green
+    is believed."""
+    var fl := fixture()
+    var p := FixturePassthrough.over(fl)
+    var body := DebugPlayer.new()
+    body.ground = PackedFloat64Array([-1237456.127, 1500.0, 1908765.379])
+    var stream: BundleStream = null
+    var walked: Array = []
+    var dt := 1.0 / 60.0
+    for i in 120:
+        var day := 0 if i < 60 else 1
+        var b := p.bundle_for(fl.windows[0], day, body.observer())
+        if stream == null:
+            stream = BundleStream.opened(b)
+        stream.add(b, float(i) * dt)
+        walked.append(b.as_vector3())
+        body.heading_degrees = float(i)
+        body.step(b, dt, Vector2(0.0, 1.0))
+
+    check(stream.frames.size() == 120, "%d frames recorded" % stream.frames.size())
+    check(stream.moments.size() == 2,
+            "%d moments stored for two days of walking -- channel 1 is being written per frame"
+            % stream.moments.size())
+
+    var doc := JSON.stringify(stream.to_dict())
+    var back := BundleStream.from_dict(JSON.parse_string(doc))
+    check(back.frames.size() == stream.frames.size(), "the stream lost frames on the way back")
+    var worst := 0.0
+    for i in back.frames.size():
+        var pt: Array = ((back.frames[i] as Dictionary)["body"] as Dictionary)["observation_point"]
+        worst = maxf(worst, (Vector3(float(pt[0]), float(pt[1]), float(pt[2]))
+                - (walked[i] as Vector3)).length())
+    check(worst < 1.0e-6, "a replayed observation point sits %s m from the recorded one"
+            % String.num(worst, 9))
+
+    var outran := back.outran_its_speed()
+    check(outran.is_empty(), "%d frames outran the speed their own bundle reported, worst %s m "
+            % [outran.size(), "" if outran.is_empty()
+                    else String.num(float((outran[0] as Dictionary)["moved_m"]), 3)]
+            + "against what it was allowed")
+
+    # THE NEGATIVE CONTROL: a body teleported one metre must be caught, or the
+    # check above is a green that means nothing.
+    var tampered := BundleStream.from_dict(JSON.parse_string(doc))
+    var f: Dictionary = tampered.frames[50]
+    var pt2: Array = (f["body"] as Dictionary)["observation_point"]
+    pt2[0] = float(pt2[0]) + 1.0
+    check(not tampered.outran_its_speed().is_empty(),
+            "a body moved a metre in a sixtieth of a second and the check did not fire")
+
+    var size := stream.over_committable()
+    print("stream: %d frames, %d moments, %d bytes%s, no frame outran its locomotion"
+            % [stream.frames.size(), stream.moments.size(), int(size["bytes"]),
+                    ", OVER the committable size" if bool(size["over"]) else ""])
