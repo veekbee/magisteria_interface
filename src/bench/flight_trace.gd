@@ -33,6 +33,12 @@ const POSE_FIELDS := "position is the camera in MESH space; orientation is a qua
 const MARK_NONE := 0
 const MARK_LOOKED_WRONG := 1
 
+## The size over which this repo does not commit a file (decision 948). A trace
+## is not exempt: it is a measurement input like any other, and one long enough
+## to cross this has to arrive through `tools/fetch_artefacts.py` instead. The
+## gate checks the directory rather than trusting the format to stay small.
+const COMMITTABLE_BYTES := 10485760
+
 var header: Dictionary = {}
 var frames: Array = []
 
@@ -45,16 +51,56 @@ func begin(about: Dictionary) -> void:
     frames = []
 
 
+## Values a frame is assumed to hold when it does not say otherwise. A flight is
+## sixteen thousand rows and most of them are ordinary: nothing rebuilt, nothing
+## was marked, the window was drawn. Writing that out per frame is most of a
+## trace by weight and none of it by meaning.
+const FRAME_DEFAULTS := {
+    "gone_fraction": 0.0,
+    "build_ms": 0.0,
+    "mark": MARK_NONE,
+    "rebuilt": false,
+    "drawn": true,
+}
+
+## Metres the position is written to. A millimetre is three orders below the
+## centimetre placement quantises world coordinates to, so this is exact for
+## every purpose in this repo and about half the length of the float that
+## produced it.
+const POSITION_QUANTUM := 0.001
+
+## The quaternion's. A millionth is about a ten-thousandth of a degree.
+const ORIENTATION_QUANTUM := 0.000001
+
+
 ## One frame. `pose` is the camera's transform; the rest is what was measured.
+##
+## ROUNDED AND SPARSE, AND BOTH ARE ABOUT SIZE RATHER THAN TASTE. A four-minute
+## flight is 24,000 rows, and written at full float precision with every field
+## on every row it came to 15 MB -- over the threshold above which this repo
+## does not commit a file at all (decision 948). Rounding to a millimetre and
+## omitting the fields that hold their default takes the same flight to under
+## 8 MB and loses nothing: the quanta are far below anything that changes a
+## build, and a reader that wants `rebuilt` on a frame that did not rebuild is
+## asking for `false`.
 func add(t_ms: float, pose: Transform3D, measured: Dictionary) -> void:
     var q := pose.basis.get_rotation_quaternion()
     var row := {
-        "t_ms": t_ms,
-        "position": [pose.origin.x, pose.origin.y, pose.origin.z],
-        "orientation": [q.x, q.y, q.z, q.w],
+        "t_ms": snappedf(t_ms, POSITION_QUANTUM),
+        "position": [snappedf(pose.origin.x, POSITION_QUANTUM),
+                     snappedf(pose.origin.y, POSITION_QUANTUM),
+                     snappedf(pose.origin.z, POSITION_QUANTUM)],
+        "orientation": [snappedf(q.x, ORIENTATION_QUANTUM),
+                        snappedf(q.y, ORIENTATION_QUANTUM),
+                        snappedf(q.z, ORIENTATION_QUANTUM),
+                        snappedf(q.w, ORIENTATION_QUANTUM)],
     }
     for k in measured:
-        row[k] = measured[k]
+        var v = measured[k]
+        if FRAME_DEFAULTS.has(k) and typeof(v) == typeof(FRAME_DEFAULTS[k]) \
+                and v == FRAME_DEFAULTS[k]:
+            continue
+        row[k] = snappedf(float(v), 0.0001) if typeof(v) == TYPE_FLOAT else v
     frames.append(row)
 
 

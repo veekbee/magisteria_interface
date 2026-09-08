@@ -56,7 +56,7 @@
           "mean": 70.0460962423847
         }
       },
-      "replayed_at_commit": "b31469d",
+      "replayed_at_commit": "e3757e8",
       "vertical_exaggeration": 1.0,
       "shading_exaggeration": 12.0,
       "frames": 16184.0,
@@ -66,7 +66,7 @@
         "frames_disagreeing_on_population": 16184.0,
         "worst_disagreement_instances": 2527.0,
         "flown_at_commit": "27ba9b0",
-        "replayed_at_commit": "b31469d",
+        "replayed_at_commit": "e3757e8",
         "same_commit": false,
         "ok": false,
         "ran": true,
@@ -100,7 +100,7 @@
           "p50": 26922.0,
           "p95": 30959.0,
           "max": 37407.0,
-          "mean": 26772.196799308
+          "mean": 26772.0095155709
         },
         "frame_ms_in_flight": {
           "n": 16184.0,
@@ -221,7 +221,7 @@
         {
           "t_s": 46.415304,
           "instances": 104926.0,
-          "in_view": 24656.0,
+          "in_view": 24665.0,
           "rebuilt": false
         },
         {
@@ -492,77 +492,77 @@
       "by_heading": [
         {
           "from_degrees": 0.0,
-          "frames": 1968.0,
-          "in_view_mean": 27472.1041666667
+          "frames": 1980.0,
+          "in_view_mean": 27466.452020202
         },
         {
           "from_degrees": 30.0,
-          "frames": 1762.0,
-          "in_view_mean": 27570.1322360953
+          "frames": 1763.0,
+          "in_view_mean": 27562.5184344867
         },
         {
           "from_degrees": 60.0,
-          "frames": 664.0,
-          "in_view_mean": 27666.813253012
+          "frames": 661.0,
+          "in_view_mean": 27687.8880484115
         },
         {
           "from_degrees": 90.0,
-          "frames": 499.0,
-          "in_view_mean": 27220.3166332665
+          "frames": 500.0,
+          "in_view_mean": 27226.85
         },
         {
           "from_degrees": 120.0,
-          "frames": 436.0,
-          "in_view_mean": 27821.9220183486
+          "frames": 435.0,
+          "in_view_mean": 27810.5931034483
         },
         {
           "from_degrees": 150.0,
-          "frames": 536.0,
-          "in_view_mean": 26243.3638059701
+          "frames": 526.0,
+          "in_view_mean": 26262.1882129278
         },
         {
           "from_degrees": 180.0,
-          "frames": 650.0,
-          "in_view_mean": 25573.1476923077
+          "frames": 654.0,
+          "in_view_mean": 25548.4785932722
         },
         {
           "from_degrees": 210.0,
-          "frames": 1205.0,
-          "in_view_mean": 27394.4572614108
+          "frames": 1210.0,
+          "in_view_mean": 27401.9446280992
         },
         {
           "from_degrees": 240.0,
-          "frames": 1749.0,
-          "in_view_mean": 26764.8907947399
+          "frames": 1751.0,
+          "in_view_mean": 26763.8149628784
         },
         {
           "from_degrees": 270.0,
-          "frames": 2098.0,
-          "in_view_mean": 26102.4475691134
+          "frames": 2095.0,
+          "in_view_mean": 26106.199522673
         },
         {
           "from_degrees": 300.0,
-          "frames": 1986.0,
-          "in_view_mean": 26001.7059415911
+          "frames": 1983.0,
+          "in_view_mean": 25995.1926374181
         },
         {
           "from_degrees": 330.0,
-          "frames": 2631.0,
-          "in_view_mean": 26469.0505511212
+          "frames": 2626.0,
+          "in_view_mean": 26468.3229246002
         }
       ],
       "heading_spread": {
-        "lowest_mean_in_view": 25573.1476923077,
-        "highest_mean_in_view": 27821.9220183486,
-        "ratio": 1.0879349837219,
+        "lowest_mean_in_view": 25548.4785932722,
+        "highest_mean_in_view": 27810.5931034483,
+        "ratio": 1.08854204378228,
         "frames_with_nothing_in_view": 118.0,
         "pitch_degrees": {
           "n": 16184.0,
-          "min": -85.0000145787517,
-          "p50": -3.99999982060002,
-          "p95": 1.50000009486278,
+          "min": -85.0000537628348,
+          "p50": -4.0000216449914,
+          "p95": 1.49996774710139,
           "max": 85.0000537628348,
-          "mean": -4.09141753693005
+          "mean": -4.09141795403468
         },
         "read_the_ratio_against_the_pitch": "a heading is only comparable with another at a comparable attitude. A camera pitched at the sky has nothing in front of it whatever its heading, so a bucket full of those reads as an empty heading and drives the ratio to nothing. If `frames_with_nothing_in_view` is not small, or the pitch quantiles reach the clamp, the spread is about where the camera was pointing up and down and not about heading at all.",
         "what": "what a HEADING has in front of it, which a translation-only dolly never sampled. A pan cannot churn -- the scatter is built around a centre and a rotation does not move it, so churn is exactly 0 for any pan, always, and is a metric that cannot fail on what it is pointed at. This is the statistic a pan is measured by instead.",
@@ -820,7 +820,7 @@
           "mean": 14.8258997763119
         }
       },
-      "replayed_at_commit": "b31469d",
+      "replayed_at_commit": "e3757e8",
       "vertical_exaggeration": 1.0,
       "shading_exaggeration": 12.0,
       "frames": 22706.0,
@@ -830,7 +830,7 @@
         "frames_disagreeing_on_population": 22706.0,
         "worst_disagreement_instances": 496.0,
         "flown_at_commit": "d4872e5",
-        "replayed_at_commit": "b31469d",
+        "replayed_at_commit": "e3757e8",
         "same_commit": false,
         "ok": false,
         "ran": true,
@@ -864,7 +864,7 @@
           "p50": 28395.0,
           "p95": 54867.0,
           "max": 65442.0,
-          "mean": 29374.166607945
+          "mean": 29374.2668898089
         },
         "frame_ms_in_flight": {
           "n": 22706.0,
@@ -1256,33 +1256,33 @@
       "by_heading": [
         {
           "from_degrees": 0.0,
-          "frames": 1546.0,
-          "in_view_mean": 29858.0815006468
+          "frames": 1423.0,
+          "in_view_mean": 31103.8060435699
         },
         {
           "from_degrees": 30.0,
-          "frames": 2914.0,
-          "in_view_mean": 28679.6678105697
+          "frames": 3041.0,
+          "in_view_mean": 28159.4166392634
         },
         {
           "from_degrees": 60.0,
-          "frames": 1350.0,
-          "in_view_mean": 40299.1325925926
+          "frames": 1347.0,
+          "in_view_mean": 40295.0987379362
         },
         {
           "from_degrees": 90.0,
-          "frames": 2372.0,
-          "in_view_mean": 45516.5354131535
+          "frames": 2374.0,
+          "in_view_mean": 45519.4570345409
         },
         {
           "from_degrees": 120.0,
-          "frames": 947.0,
-          "in_view_mean": 37176.8289334741
+          "frames": 942.0,
+          "in_view_mean": 37141.7664543524
         },
         {
           "from_degrees": 150.0,
-          "frames": 1220.0,
-          "in_view_mean": 56808.4606557377
+          "frames": 1222.0,
+          "in_view_mean": 56786.9615384615
         },
         {
           "from_degrees": 180.0,
@@ -1292,42 +1292,42 @@
         },
         {
           "from_degrees": 210.0,
-          "frames": 405.0,
-          "in_view_mean": 30655.3777777778
+          "frames": 410.0,
+          "in_view_mean": 30666.812195122
         },
         {
           "from_degrees": 240.0,
-          "frames": 5868.0,
-          "in_view_mean": 19704.2718132243
+          "frames": 5861.0,
+          "in_view_mean": 19691.4593072854
         },
         {
           "from_degrees": 270.0,
-          "frames": 4117.0,
-          "in_view_mean": 24578.1656546029
+          "frames": 4115.0,
+          "in_view_mean": 24589.6284325638
         },
         {
           "from_degrees": 300.0,
-          "frames": 1335.0,
-          "in_view_mean": 17526.2599250936
+          "frames": 1345.0,
+          "in_view_mean": 17570.2624535316
         },
         {
           "from_degrees": 330.0,
-          "frames": 632.0,
-          "in_view_mean": 28052.042721519
+          "frames": 626.0,
+          "in_view_mean": 28040.482428115
         }
       ],
       "heading_spread": {
-        "lowest_mean_in_view": 17526.2599250936,
-        "highest_mean_in_view": 56808.4606557377,
-        "ratio": 3.24133391257087,
+        "lowest_mean_in_view": 17570.2624535316,
+        "highest_mean_in_view": 56786.9615384615,
+        "ratio": 3.23199278830621,
         "frames_with_nothing_in_view": 21.0,
         "pitch_degrees": {
           "n": 22706.0,
-          "min": -21.0000036690408,
-          "p50": -0.999999961512525,
-          "p95": 2.50000018419457,
-          "max": 55.0000072408346,
-          "mean": -0.660926616225032
+          "min": -21.000012814195,
+          "p50": -0.99998501819781,
+          "p95": 2.49998330610095,
+          "max": 54.9999953327628,
+          "mean": -0.660924868640231
         },
         "read_the_ratio_against_the_pitch": "a heading is only comparable with another at a comparable attitude. A camera pitched at the sky has nothing in front of it whatever its heading, so a bucket full of those reads as an empty heading and drives the ratio to nothing. If `frames_with_nothing_in_view` is not small, or the pitch quantiles reach the clamp, the spread is about where the camera was pointing up and down and not about heading at all.",
         "what": "what a HEADING has in front of it, which a translation-only dolly never sampled. A pan cannot churn -- the scatter is built around a centre and a rotation does not move it, so churn is exactly 0 for any pan, always, and is a metric that cannot fail on what it is pointed at. This is the statistic a pan is measured by instead.",
@@ -1408,7 +1408,7 @@
           "mean": 2.59989256197778
         }
       },
-      "replayed_at_commit": "b31469d",
+      "replayed_at_commit": "e3757e8",
       "vertical_exaggeration": 1.0,
       "shading_exaggeration": 12.0,
       "frames": 24704,
@@ -1418,11 +1418,11 @@
         "frames_disagreeing_on_population": 24704,
         "worst_disagreement_instances": 505,
         "flown_at_commit": "b31469d",
-        "replayed_at_commit": "b31469d",
-        "same_commit": true,
+        "replayed_at_commit": "e3757e8",
+        "same_commit": false,
         "ok": false,
         "ran": true,
-        "means": "a defect: the flight and the replay ran the same code and disagree anyway",
+        "means": "the scatter changed between the flight and this replay, and this is how much it changed over a path someone walked",
         "why_not": "",
         "what": "the flight recorded what it measured; this recomputed it from the poses alone. They have to agree exactly, because placement is a function of the ground and the rebuild rule is a function of the path. A disagreement means the flight was not deterministic or this replay is not faithful, and neither is a thing to quote a number over.",
         "not_compared": "frame time. A headless frame is not drawn and costs nothing, so the milliseconds in this artefact are the FLIGHT's measurements carried through and are never re-derived."
@@ -1452,7 +1452,7 @@
           "p50": 8509.0,
           "p95": 29387.0,
           "max": 33621.0,
-          "mean": 11436.7719802461
+          "mean": 11436.8903416451
         },
         "frame_ms_in_flight": {
           "n": 24704,
@@ -1845,7 +1845,7 @@
         {
           "from_degrees": 0.0,
           "frames": 24168,
-          "in_view_mean": 11130.8112380007
+          "in_view_mean": 11130.9417411453
         },
         {
           "from_degrees": 30.0,
@@ -1910,21 +1910,21 @@
         {
           "from_degrees": 330.0,
           "frames": 536,
-          "in_view_mean": 25232.4048507463
+          "in_view_mean": 25231.9757462687
         }
       ],
       "heading_spread": {
-        "lowest_mean_in_view": 11130.8112380007,
-        "highest_mean_in_view": 25232.4048507463,
-        "ratio": 2.26689720194002,
+        "lowest_mean_in_view": 11130.9417411453,
+        "highest_mean_in_view": 25231.9757462687,
+        "ratio": 2.26683207342638,
         "frames_with_nothing_in_view": 122,
         "pitch_degrees": {
           "n": 24704,
-          "min": -33.4999999141227,
-          "p50": -0.9999997480366,
-          "p95": 3.99999939267078,
-          "max": 40.9999998274872,
-          "mean": 0.14390380265935
+          "min": -33.499983532531,
+          "p50": -0.999946379055793,
+          "p95": 3.99997457277541,
+          "max": 41.0000134026226,
+          "mean": 0.14389874092886
         },
         "read_the_ratio_against_the_pitch": "a heading is only comparable with another at a comparable attitude. A camera pitched at the sky has nothing in front of it whatever its heading, so a bucket full of those reads as an empty heading and drives the ratio to nothing. If `frames_with_nothing_in_view` is not small, or the pitch quantiles reach the clamp, the spread is about where the camera was pointing up and down and not about heading at all.",
         "what": "what a HEADING has in front of it, which a translation-only dolly never sampled. A pan cannot churn -- the scatter is built around a centre and a rotation does not move it, so churn is exactly 0 for any pan, always, and is a metric that cannot fail on what it is pointed at. This is the statistic a pan is measured by instead.",

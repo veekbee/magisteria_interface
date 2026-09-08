@@ -95,6 +95,7 @@ func _initialize() -> void:
     test_two_builds_over_the_same_ground_place_the_same_plants()
     test_a_census_is_the_stand_a_headless_replay_can_score()
     test_a_flight_trace_round_trips_and_a_pan_cannot_churn()
+    test_no_committed_trace_is_over_the_size_this_repo_commits()
     test_the_pinned_flight_replays_to_what_the_artefact_says()
     test_a_density_schedule_is_finer_than_the_texel_it_thins()
     test_pft_fractions_are_a_composition_of_the_cover()
@@ -3598,6 +3599,54 @@ func test_a_flight_trace_round_trips_and_a_pan_cannot_churn() -> void:
             "nearest-rank quantiles came out at %s" % str(q))
     check(FlightTrace.quantiles([]).is_empty(),
             "an empty sample returned numbers, which read as a measurement of zero")
+
+
+func test_no_committed_trace_is_over_the_size_this_repo_commits() -> void:
+    """DECISION 948'S THRESHOLD IS ABOUT FILES, AND A TRACE IS A FILE.
+
+    A flight is a measurement input like the fixture, and the rule for an input
+    over 10 MB is the same either way: it does not go in the tree, it arrives
+    through `tools/fetch_artefacts.py` against a digest. This repo is public and
+    a commit is forever, so the check belongs before the push and not after.
+
+    IT WAS NEEDED. The first three flown traces were committed at 10.0, 14.0 and
+    15.3 MB -- two of them over -- because the size was checked once when the
+    only trace was a 637 KB scripted path and never again once real flights
+    started arriving twenty times larger. Rounding the pose to a millimetre and
+    dropping the fields that hold their default took the same three to 5.1, 7.1
+    and 7.7 MB, which is what makes "a trace is a fixture you can replay from a
+    clone" true rather than aspirational.
+
+    The check is on the DIRECTORY rather than on the format, because the format
+    staying small is a hope and a long enough flight will still cross this.
+    """
+    var dir := DirAccess.open("res://measurements/flights")
+    check(dir != null, "no measurements/flights directory")
+    if dir == null:
+        return
+    var traces := 0
+    var over: Array = []
+    var total := 0
+    for name in dir.get_files():
+        if not name.ends_with(".trace.json"):
+            continue
+        traces += 1
+        var f := FileAccess.open("res://measurements/flights/" + name, FileAccess.READ)
+        if f == null:
+            continue
+        var bytes := f.get_length()
+        total += bytes
+        if bytes > FlightTrace.COMMITTABLE_BYTES:
+            over.append("%s at %.1f MB" % [name, float(bytes) / 1e6])
+    check(traces > 0, "no traces are committed, so the replay has nothing to score")
+    check(over.is_empty(),
+            "%s over decision 948's %.1f MB threshold. A trace that large does not go in the "
+                    % [", ".join(PackedStringArray(over)),
+                            float(FlightTrace.COMMITTABLE_BYTES) / 1e6]
+            + "tree; it arrives through tools/fetch_artefacts.py against a digest. This repo "
+            + "is public and a commit is forever.")
+    print("flights: %d traces committed, %.1f MB total, largest under the %.0f MB threshold"
+            % [traces, float(total) / 1e6, float(FlightTrace.COMMITTABLE_BYTES) / 1e6])
 
 
 func test_the_pinned_flight_replays_to_what_the_artefact_says() -> void:

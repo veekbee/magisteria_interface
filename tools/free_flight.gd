@@ -386,19 +386,25 @@ func _fly() -> void:
     # a flight came back with 26 stalls of 1.8 s and 26 rebuilds and not one of
     # them on the same row. `build_ms` is the blocked time and belongs to the
     # frame that caused it; the two are read together and the artefact says so.
-    trace.add(float(now - _t0) / 1000.0, cam.global_transform, {
-        "build_centre_epsg5070": [_build_centre.x, _build_centre.y],
+    # WHAT IS RECORDED IS WHAT WAS MEASURED AND CANNOT BE RE-DERIVED, plus the
+    # populations the replay's agreement check compares against. The sub-cell
+    # count and the symmetric churn fraction are both recomputed by the replay
+    # from the census, and the build centre only changes on the frames that
+    # rebuilt -- carrying all three on every one of twenty thousand rows was a
+    # sixth of a trace to say nothing new.
+    var row := {
         "frame_ms": frame_ms,
         "instances": FlightTrace.population(cen),
         "in_view_instances": int(seen["instances"]),
-        "in_view_sub_cells": int(seen["sub_cells"]),
         "gone_fraction": float(churn["gone_fraction"]),
-        "churn_fraction": float(churn["churn_fraction"]),
         "rebuilt": _rebuilt_this_frame,
         "build_ms": _last_build_ms if _rebuilt_this_frame else 0.0,
         "mark": mark,
         "drawn": focused,
-    })
+    }
+    if _rebuilt_this_frame:
+        row["build_centre_epsg5070"] = [_build_centre.x, _build_centre.y]
+    trace.add(float(now - _t0) / 1000.0, cam.global_transform, row)
 
     if _rebuilt_this_frame:
         _build_flash = MARK_FLASH_FRAMES
@@ -489,7 +495,12 @@ func _write() -> void:
         print("        speed p50 %s m/s (asked %s), turn p50 %s deg/s"
                 % [String.num(float(sp["p50"]), 2), String.num(speed_m_s, 1),
                    String.num(float((trace.header["turn_degrees_s_measured"] as Dictionary)["p50"]), 1)])
-    print("        -> %s" % out_path)
+    var bytes := FileAccess.open(out_path, FileAccess.READ).get_length()
+    print("        -> %s  (%.1f MB)" % [out_path, float(bytes) / 1e6])
+    if bytes > FlightTrace.COMMITTABLE_BYTES:
+        print("        NOTE: over decision 948's %d-byte threshold, so this one is NOT "
+                        % FlightTrace.COMMITTABLE_BYTES
+                + "committable. Route it through tools/fetch_artefacts.py or fly shorter.")
     print("        replay it: bash tools/replay_flight.sh --trace %s" % out_path)
     stage = DONE
     quit(0)
