@@ -115,8 +115,9 @@
  },
  "generated_by": "tools/blender/build_families.py",
  "keyed_by": {
+  "and_below": "by TAXON NODE where a producer sends a refinement, and only there. See `specific`. The rule below is not repealed by that: it is what the WIRE can key, and a node is a key from somewhere else.",
   "axis": "life_form",
-  "never": "per PFT member and per AFT. Palettes are off the wire (894), the fixture aggregates to life form (872, 889), and a size-baked form token is wrong rather than imprecise (\u00a723.302, decision 180).",
+  "never": "per PFT member and per AFT OFF THE WIRE. Palettes are off the wire (894), the fixture aggregates to life form (872, 889), and a size-baked form token is wrong rather than imprecise (\u00a723.302, decision 180). None of that is a statement about a node an observer earned and a producer sent.",
   "read_from": "fixture_client.json's windows.<window>.series.<row>.taxon_groups. The client reads that list rather than assuming this file's order: the wire's order is alphabetical and any other order here would scatter each family over another family's ground while looking entirely plausible."
  },
  "not_here": {
@@ -139,5 +140,37 @@
   "decision 872",
   "decision 889",
   "decision 894"
- ]
+ ],
+ "specific": {
+  "aspen": {
+   "blend_source": "tools/blender/specific_aspen.blend",
+   "file": "specific_aspen.glb",
+   "life_form": "tree",
+   "triangles": 52,
+   "vertices": 36,
+   "why": "PFT 9. Shares a parent with the spire, which is what makes the asset lookup a node lookup rather than a boolean."
+  },
+  "desert_succulent": {
+   "blend_source": "tools/blender/specific_desert_succulent.blend",
+   "file": "specific_desert_succulent.glb",
+   "life_form": "succulent",
+   "triangles": 160,
+   "vertices": 112,
+   "why": "PFT 6. Arms, against the parent's single column."
+  },
+  "needleleaf_evergreen_subalpine": {
+   "blend_source": "tools/blender/specific_needleleaf_evergreen_subalpine.blend",
+   "file": "specific_needleleaf_evergreen_subalpine.glb",
+   "life_form": "tree",
+   "triangles": 60,
+   "vertices": 42,
+   "why": "PFT 1. A spire against the parent's round two-stage canopy."
+  }
+ },
+ "specific_is": {
+  "_what": "B6's specific-rung forms, keyed by TAXON NODE. Each declares the life form it refines, so a node with no asset falls back to its parent's archetype -- \u00a717.8.6's per-internal-node representative form, which makes the asset lookup the identity and a missing asset ART DEBT rather than a smaller percept.",
+  "chosen_for": "silhouette, not ecology. A rung boundary has to be visible to be asserted, and two of the three share a parent so the lookup is a node lookup rather than a boolean.",
+  "keyed_by": "a taxon node, which arrives in a producer's refinement overlay and never off the wire. `band.pft_fractions` carries four groups and no fifth key; nothing here is indexed off the fixture.",
+  "parameters": "inherited from the parent life form, exactly. A narrower span would be authoring calibration no producer sent."
+ }
 }

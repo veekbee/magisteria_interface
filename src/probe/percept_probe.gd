@@ -91,6 +91,36 @@ static func evaluate(affordable_rung: String, earned_rung: Variant,
     return out
 
 
+## THE TRANSITION LINE. §17.8.6 rules blend WITHIN a rung and switch BETWEEN
+## rungs, so no frame may render one subject at two rungs. That is checked
+## blind in the gate; this is the half a person reads while walking a boundary.
+##
+## `at` is what the rung is now, `was` what it was when this subject was last
+## looked at, and `both_in_one_frame` the count of subjects the build drew at
+## two rungs -- which is a build-report number rather than something this
+## function can compute, because only the build knows what it wrote.
+##
+## A CHANGE IS NOT A DEFECT AND THE LINE HAS TO SAY SO. Crossing a boundary is
+## the rung system working; the same subject appearing at two rungs at once is
+## the leak. Printing them in one line without distinguishing them is how a
+## person learns to ignore both.
+static func transition(at: String, was: String, both_in_one_frame: int) -> Dictionary:
+    var changed := was != "" and was != at
+    return {
+        "rung": at,
+        "was": was,
+        "changed": changed,
+        "both_in_one_frame": both_in_one_frame,
+        "leak": both_in_one_frame > 0,
+        "line": ("rung %s%s%s" % [
+                at,
+                (" <- %s, switched since the last look" % was) if changed else "",
+                ("   *** %d subject(s) DRAWN AT TWO RUNGS IN ONE FRAME -- §17.8.6 forbids "
+                        % both_in_one_frame + "exactly this ***")
+                        if both_in_one_frame > 0 else ""]),
+    }
+
+
 ## The lines the console prints. Kept here so the interactive format and any
 ## headless assertion read the same text.
 static func lines(percept: Dictionary) -> PackedStringArray:
@@ -105,4 +135,6 @@ static func lines(percept: Dictionary) -> PackedStringArray:
                 % str(percept["rendered"]))
     if bool(percept.get("art_debt", false)):
         out.append("  " + str(percept.get("art_debt_note", "ART DEBT")))
+    if percept.has("transition"):
+        out.append("  " + str((percept["transition"] as Dictionary)["line"]))
     return out

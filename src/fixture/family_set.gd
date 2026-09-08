@@ -10,11 +10,21 @@ extends RefCounted
 ## the two axes move independently -- they come from different carried rows and
 ## a uniform scale would tie them together.
 ##
-## KEYED BY LIFE FORM AND BY NOTHING ELSE. Palettes are off the wire (decision
-## 894), the fixture aggregates to life form (decisions 872, 889), and a
-## size-baked form token is wrong rather than imprecise on most of a palette
-## (§23.302, decision 180). There is no per-PFT mesh here and no key one could
-## be indexed by if there were.
+## KEYED BY LIFE FORM OFF THE WIRE, AND BY TAXON NODE WHERE A PRODUCER SENDS
+## ONE. Palettes are off the wire (decision 894), the fixture aggregates to
+## life form (decisions 872, 889), and a size-baked form token is wrong rather
+## than imprecise on most of a palette (§23.302, decision 180). None of that
+## has changed, and none of it is a statement about a node an OBSERVER earned:
+## a refinement overlay carries a taxon node, and the node is the key. So
+## `families` is indexed off the fixture and `specific` never is.
+##
+## THE LOOKUP IS THE IDENTITY, AND THAT IS A REQUIREMENT RATHER THAN A
+## CONVENIENCE (§17.8.6). Every internal node of the taxonomy has a
+## representative form, so `resolve` always answers with SOME asset -- a node
+## with none falls back to its parent's archetype and says it did. That is what
+## makes a missing model ART DEBT rather than a smaller percept: if the lookup
+## could fail, a modelling gap would start reading as a claim about what the
+## observer earned.
 ##
 ## THE ORDER COMES FROM THE WIRE, NOT FROM THIS FILE. `families.json` is a map
 ## from name to file; the group axis's order is read from the fixture's
@@ -30,11 +40,16 @@ extends RefCounted
 
 const DIR := "res://assets/families/"
 
+const LIFE_FORM_RUNG := "life_form"
+const SPECIFIC_RUNG := "specific"
+
 var manifest: Dictionary = {}
 var families: Dictionary = {}        ## life_form -> manifest entry
+var specific: Dictionary = {}        ## taxon node -> manifest entry (carries `life_form`)
 var why_absent: String = ""
 
 var _meshes: Dictionary = {}         ## life_form -> Mesh
+var _specific_meshes: Dictionary = {} ## taxon node -> Mesh
 var _foliage: Dictionary = {}        ## life_form -> area-weighted mask mean
 
 
@@ -51,6 +66,7 @@ static func load_from(dir_path: String = DIR) -> FamilySet:
         return fs
     fs.manifest = parsed
     fs.families = parsed.get("families", {})
+    fs.specific = parsed.get("specific", {})
     for life_form in fs.families:
         var entry: Dictionary = fs.families[life_form]
         var path := dir_path + str(entry.get("file", ""))
@@ -59,7 +75,80 @@ static func load_from(dir_path: String = DIR) -> FamilySet:
             push_error("families: %s names %s, which holds no mesh" % [life_form, path])
             continue
         fs._meshes[life_form] = mesh
+    for node in fs.specific:
+        var entry: Dictionary = fs.specific[node]
+        var path := dir_path + str(entry.get("file", ""))
+        var mesh := _mesh_in(path)
+        if mesh == null:
+            # NOT AN ERROR AND NOT SILENCE. A declared node with no mesh is art
+            # debt, and `resolve` will draw the parent and say so; pushing an
+            # error here would make a modelling gap look like a load failure.
+            push_warning("families: node %s names %s, which holds no mesh -- ART DEBT"
+                    % [node, path])
+            continue
+        fs._specific_meshes[str(node)] = mesh
     return fs
+
+
+## Every taxon node this client can draw at the specific rung.
+func nodes() -> PackedStringArray:
+    var out := PackedStringArray()
+    for n in specific:
+        out.append(str(n))
+    out.sort()
+    return out
+
+
+## The life form a specific node refines, or "" if the node is not one.
+func parent_of(node: String) -> String:
+    return str((specific.get(node, {}) as Dictionary).get("life_form", ""))
+
+
+## Which rung a node sits at. Two here: the four life forms the wire names, and
+## the taxa a refinement can name below them.
+func rung_of(node: String) -> String:
+    if families.has(node):
+        return LIFE_FORM_RUNG
+    if specific.has(node):
+        return SPECIFIC_RUNG
+    return ""
+
+
+## WHICH ASSET ACTUALLY DRAWS A NODE, and at which rung.
+##
+## Always answers, because the lookup is required to be the identity. A node
+## with no asset of its own draws its parent's archetype, reports the rung it
+## was actually drawn at -- which is the parent's, not the one asked for -- and
+## flags `art_debt`. Nothing here reduces what the observer earned; it reports
+## what this client could show of it.
+func resolve(node: String) -> Dictionary:
+    if _specific_meshes.has(node):
+        return {"ok": true, "node_drawn": node, "rung": SPECIFIC_RUNG,
+                "art_debt": false, "why": ""}
+    var parent := parent_of(node)
+    if parent != "" and _meshes.has(parent):
+        return {"ok": true, "node_drawn": parent, "rung": LIFE_FORM_RUNG, "art_debt": true,
+                "why": ("ART DEBT: no asset for %s, so its parent %s is drawn. The lookup is "
+                        % [node, parent]
+                        + "required to be the identity, so this is a missing model and not a "
+                        + "claim about what the observer earned.")}
+    if _meshes.has(node):
+        return {"ok": true, "node_drawn": node, "rung": LIFE_FORM_RUNG,
+                "art_debt": false, "why": ""}
+    return {"ok": false, "node_drawn": "", "rung": "", "art_debt": true,
+            "why": "no asset and no parent for node %s" % node}
+
+
+## The mesh `resolve` chose.
+func mesh_for_node(node: String) -> Mesh:
+    var r := resolve(node)
+    return null if not bool(r["ok"]) else _mesh_for(str(r["node_drawn"]))
+
+
+func _mesh_for(node: String) -> Mesh:
+    if _specific_meshes.has(node):
+        return _specific_meshes[node]
+    return _meshes.get(node, null)
 
 
 ## The first mesh in an imported glTF scene.
@@ -100,6 +189,13 @@ func life_forms() -> PackedStringArray:
 
 func has(life_form: String) -> bool:
     return _meshes.has(life_form)
+
+
+## Whether SOME asset would answer this node -- its own, or its parent's.
+## Always true for a life form this set holds, which is what the identity
+## lookup guarantees.
+func can_draw(node: String) -> bool:
+    return bool(resolve(node)["ok"])
 
 
 func mesh_for(life_form: String) -> Mesh:
@@ -147,14 +243,31 @@ func foliage_fraction(life_form: String) -> float:
     return f
 
 
-func triangles_of(life_form: String) -> int:
-    return int(families.get(life_form, {}).get("triangles", 0))
+## Triangles of the asset that would actually DRAW this node, which is the
+## number a frame budget has to price. A node falling back to its parent costs
+## the parent's triangles, not the ones its own model would have had.
+func triangles_of(node: String) -> int:
+    if families.has(node):
+        return int((families[node] as Dictionary).get("triangles", 0))
+    var r := resolve(node)
+    if not bool(r["ok"]):
+        return 0
+    var drawn := str(r["node_drawn"])
+    if specific.has(drawn):
+        return int((specific[drawn] as Dictionary).get("triangles", 0))
+    return int((families.get(drawn, {}) as Dictionary).get("triangles", 0))
 
 
 ## `[min, max]` for one parameter, or an empty Vector2 span when the family or
 ## the parameter is not declared -- which is itself a refusal, not a default.
+## INHERITED EXACTLY BY A SPECIFIC NODE, never narrowed. A tighter span for a
+## named taxon would be calibration this client authored and no producer sent --
+## a claim about how tall this plant grows here, invented to look precise.
 func range_of(life_form: String, parameter: String) -> Dictionary:
-    var entry: Dictionary = families.get(life_form, {})
+    var key := life_form
+    if specific.has(key):
+        key = parent_of(key)
+    var entry: Dictionary = families.get(key, {})
     var params: Dictionary = entry.get("parameters", {})
     if not params.has(parameter):
         return {}

@@ -39,7 +39,8 @@ func bind(console_: DevConsole, view_: TerrainView) -> void:
     console = console_
     view = view_
     instances = InstanceProbe.new()
-    instances.bind(view.scatter, view.heightfield, view.fixture, view.cell_probe())
+    instances.bind(view.scatter, view.heightfield, view.fixture, view.cell_probe(),
+            view.families)
 
     console.register("view.mode", "data | naturalistic", _view_mode)
     console.register("view.where", "the camera, the reticle, and what is drawn", _view_where)
@@ -70,6 +71,8 @@ func bind(console_: DevConsole, view_: TerrainView) -> void:
     # -- dev camera, debug player, player -- is a view-mode change and stays
     # legitimate forever.
     console.register("world.posture", "standing | crouched | prone", _world_posture)
+    console.register("world.producer", "fixture_passthrough | mock -- which producer earns",
+            _world_producer)
     console.register("world.day", "<n> -- move the moment", _world_day)
     console.register("world.rebuild", "[radius] -- rebuild the scatter here", _world_rebuild)
     console.register("world.reload", "re-read the fixture from disk", _world_reload)
@@ -304,16 +307,45 @@ func _probe_instance(args: PackedStringArray) -> PackedStringArray:
 
 
 func _percept_lines(family: String, r: Dictionary) -> PackedStringArray:
-    var has_asset := view.families != null and view.families.has(family)
-    # Affordable is the finest rung this client could draw; earned is null
-    # because nothing earns anything yet; rendered is what is actually on
-    # screen, which is every plant at its life form.
-    var percept := PerceptProbe.evaluate("specific", null, has_asset, "life_form")
+    # THE EARNED COLUMN IS THE PRODUCER'S, and it is a placeholder only while
+    # nothing earns anything. Under the mock it reads what the overlay actually
+    # sent for this ground -- which is what makes this the decision-184
+    # instrument rather than a decoration: the column changes when a producer
+    # starts withholding, and nowhere else does.
+    var node := str(r.get("node", family))
+    var earned = null
+    if view.producer_kind == MockProducer.KIND:
+        earned = view.families.rung_of(node)
+    var lookup := {} if view.families == null else view.families.resolve(node)
+    var has_asset := bool(lookup.get("ok", false)) and not bool(lookup.get("art_debt", true))
+    var rendered := str(lookup.get("rung", "life_form"))
+    var percept := PerceptProbe.evaluate("specific", earned, has_asset, rendered)
+    var both := 0
+    if view.scatter != null:
+        both = int((view.scatter.report.get("rungs", {}) as Dictionary)
+                .get("subjects_at_two_rungs", 0))
+    percept["transition"] = PerceptProbe.transition(rendered, _last_rung.get(node_key(r), ""),
+            both)
+    _last_rung[node_key(r)] = rendered
     var out := PackedStringArray(["percept"])
+    out.append("  node       %s%s" % [node,
+            "" if node == family else "   <- refined from %s by the producer" % family])
     out.append_array(PerceptProbe.lines(percept))
-    out.append("  the whole world is drawn at the life-form rung today: four family "
-            + "archetypes, no species assets.")
+    if view.producer_kind != MockProducer.KIND:
+        out.append("  nothing earns anything under a passthrough, so the whole world draws at "
+                + "its life form -- a valid transducer for `earned = life form everywhere`.")
     return out
+
+
+## A SUBJECT'S NAME, WHICH IS ITS GROUND AND ITS RANK. Not an index into any
+## MultiMesh: those are rebuilt whenever the camera moves, so an index would
+## name a different plant on the next frame and the transition line would
+## report a switch that never happened.
+func node_key(r: Dictionary) -> String:
+    return "%s|%s" % [str(r.get("placement_key", "?")), str(r.get("rank", "?"))]
+
+
+var _last_rung: Dictionary = {}
 
 
 func _probe_percept(args: PackedStringArray) -> PackedStringArray:
@@ -392,6 +424,26 @@ func _world_posture(args: PackedStringArray) -> PackedStringArray:
     return PackedStringArray(["posture %s" % body.posture])
 
 
+func _world_producer(args: PackedStringArray) -> PackedStringArray:
+    if args.is_empty():
+        return PackedStringArray(["producer is %s; one of %s"
+                % [view.producer_kind, str([FixturePassthrough.KIND, MockProducer.KIND])]])
+    var r := view.set_producer(str(args[0]))
+    if not bool(r["ok"]):
+        return PackedStringArray([str(r["why"])])
+    var out := PackedStringArray(["producer is %s" % view.producer_kind])
+    if view.producer_kind == MockProducer.KIND:
+        out.append("it earns the specific rung within %s m of a cell's centroid -- which is a "
+                % String.num(MockProducer.SPECIFIC_WITHIN_M, 0)
+                + "CELL-SHAPED boundary, because channel 1 is keyed by residence cell and a "
+                + "cell here averages 126 km2")
+        out.append("every constant in it is invented, including which taxon lands where")
+    if not view.shown.is_empty():
+        view.show_field(str(view.shown["window"]), str(view.shown["row"]),
+                int(view.shown["day"]), int(view.shown["group"]))
+    return out
+
+
 func _world_day(args: PackedStringArray) -> PackedStringArray:
     if args.is_empty() or view.shown.is_empty():
         return PackedStringArray(["world.day <n>; drawn now: %s" % str(view.shown)])
@@ -439,6 +491,7 @@ func _world_reload(_args: PackedStringArray) -> PackedStringArray:
     var r := view.bind_fields()
     if not bool(r.get("ok", false)):
         return PackedStringArray(["reload failed: %s" % str(r.get("why", ""))])
-    instances.bind(view.scatter, view.heightfield, view.fixture, view.cell_probe())
+    instances.bind(view.scatter, view.heightfield, view.fixture, view.cell_probe(),
+            view.families)
     return PackedStringArray(["re-read: %d cells, %d px resolved" % [int(r["cells"]),
             int(r["resolved_px"])]])

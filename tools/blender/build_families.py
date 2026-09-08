@@ -53,7 +53,7 @@ import sys
 
 import bpy
 import bmesh
-from mathutils import Vector
+from mathutils import Matrix, Vector
 
 ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 BLEND_DIR = os.path.join(ROOT, "tools", "blender")
@@ -267,6 +267,121 @@ FAMILIES = {
     "succulent": build_succulent,
 }
 
+
+# --------------------------------------------------------------------------
+# B6: specific-rung forms, for the taxa a producer can refine to
+# --------------------------------------------------------------------------
+#
+# WHY THESE EXIST NOW WHEN THE MODULE NOTE ABOVE SAYS THEY CANNOT. That note is
+# still true about the WIRE: `band.pft_fractions` carries four groups and no
+# fifth key, so nothing keyed below life form can be indexed off the fixture.
+# What changed is that a key arrived from somewhere else. A producer may send a
+# refinement -- a taxon node for a patch of ground, where the observer earned
+# one -- and the node IS the key. So the rule is not repealed, it is stated
+# precisely: keyed by life form off the wire, and by taxon node only where a
+# producer sent one. Where no refinement arrives, or no asset answers the node,
+# the life-form archetype is drawn and that is the identity lookup working.
+#
+# THREE TAXA, CHOSEN FOR SILHOUETTE RATHER THAN FOR ECOLOGY. The point of B6 is
+# a rung boundary that can be seen and asserted, so each of these has to be
+# unmistakable against its own parent at a distance. Two share a parent, which
+# is what makes the choice a node lookup rather than a boolean.
+#
+# NO NARROWER PARAMETER RANGES. A specific form inherits its parent's legal
+# span exactly. Narrowing it would be authoring calibration no producer sent --
+# a claim about how tall THIS taxon grows here, invented to look precise, which
+# is the one thing M5's parameter rule forbids.
+
+
+def build_needleleaf_spire():
+    """PFT 1, needleleaf evergreen (subalpine): a narrow spire.
+
+    Against the generic tree's two broad stages this reads at any distance --
+    the whole silhouette is tall and thin rather than round."""
+    bm = bmesh.new()
+    cylinder(bm, 0.035, 0.02, 0.0, 0.30, 6)
+    cone(bm, 0.20, 0.16, 0.58, 8)
+    cone(bm, 0.15, 0.46, 0.80, 8)
+    cone(bm, 0.09, 0.70, 1.0, 8)
+    return finish(bm, "specific_needleleaf_spire",
+                  lambda co: 0.0 if co.z < 0.16 else 1.0)
+
+
+def build_aspen():
+    """PFT 9, deciduous montane (aspen): a slender clear trunk under a small
+    high crown.
+
+    Its phenology mask is the interesting half -- the crown is the whole of
+    what turns, and the trunk is a third of the form's height, so a seasonal
+    parameter moves far more of this silhouette than of a conifer's."""
+    bm = bmesh.new()
+    cylinder(bm, 0.03, 0.022, 0.0, 0.56, 6)
+    blob(bm, (0.0, 0.0, 0.74), 0.24)
+    blob(bm, (0.10, 0.06, 0.90), 0.17)
+    return finish(bm, "specific_aspen", lambda co: 0.0 if co.z < 0.56 else 1.0)
+
+
+def build_columnar_cactus():
+    """PFT 6, desert succulent/scrub: a column with two raised arms.
+
+    The parent succulent is a single fluted column; the arms are what a viewer
+    resolves as a different plant rather than a differently-scaled one."""
+    bm = bmesh.new()
+    cylinder(bm, 0.22, 0.19, 0.0, 1.0, 8)
+    for side in (-1.0, 1.0):
+        cylinder(bm, 0.10, 0.09, 0.34, 0.44, 6)
+        arm = bmesh.new()
+        bmesh.ops.create_cone(arm, cap_ends=True, cap_tris=False, segments=6,
+                              radius1=0.09, radius2=0.08, depth=0.42)
+        bmesh.ops.rotate(arm, verts=arm.verts,
+                         matrix=Matrix.Rotation(math.radians(90.0), 3, "Y"))
+        bmesh.ops.translate(arm, verts=arm.verts, vec=Vector((side * 0.30, 0.0, 0.44)))
+        bmesh.ops.create_cone(arm, cap_ends=True, cap_tris=False, segments=6,
+                              radius1=0.085, radius2=0.075, depth=0.34)
+        for v in arm.verts[-14:] if len(arm.verts) > 14 else []:
+            pass
+        _merge(bm, arm)
+        arm.free()
+        upright = bmesh.new()
+        bmesh.ops.create_cone(upright, cap_ends=True, cap_tris=False, segments=6,
+                              radius1=0.085, radius2=0.075, depth=0.36)
+        bmesh.ops.translate(upright, verts=upright.verts,
+                            vec=Vector((side * 0.44, 0.0, 0.62)))
+        _merge(bm, upright)
+        upright.free()
+    return finish(bm, "specific_columnar_cactus", lambda co: 0.15)
+
+
+def _merge(bm, other):
+    """Copy another bmesh's geometry in. The clumps overlap by design, so a
+    duplicate face is dropped rather than treated as an error."""
+    mapping = {}
+    for v in other.verts:
+        mapping[v] = bm.verts.new(v.co)
+    for f in other.faces:
+        try:
+            bm.faces.new([mapping[v] for v in f.verts])
+        except ValueError:
+            pass
+
+
+#: node id -> (parent life form, builder, why this taxon).
+#: Names are the reference PFTs' own (decision 971: development tunes against
+#: the reference-shaped fixture, so drawing B6's taxa from the reference ten is
+#: the ruling working rather than a limitation).
+SPECIFIC = {
+    "needleleaf_evergreen_subalpine": (
+        "tree", build_needleleaf_spire,
+        "PFT 1. A spire against the parent's round two-stage canopy."),
+    "aspen": (
+        "tree", build_aspen,
+        "PFT 9. Shares a parent with the spire, which is what makes the asset "
+        "lookup a node lookup rather than a boolean."),
+    "desert_succulent": (
+        "succulent", build_columnar_cactus,
+        "PFT 6. Arms, against the parent's single column."),
+}
+
 #: Legal ranges, and where each end comes from.
 #:
 #: WIRE-VISIBLE INFORMATION ONLY. What the carried rows give is a life form,
@@ -332,15 +447,15 @@ def triangles(obj):
     return sum(len(p.vertices) - 2 for p in obj.data.polygons)
 
 
-def export(life_form, builder):
+def export(life_form, builder, prefix="family"):
     clear_scene()
     obj = builder()
     obj.location = (0.0, 0.0, 0.0)
 
-    blend = os.path.join(BLEND_DIR, "family_%s.blend" % life_form)
+    blend = os.path.join(BLEND_DIR, "%s_%s.blend" % (prefix, life_form))
     bpy.ops.wm.save_as_mainfile(filepath=blend)
 
-    glb = os.path.join(OUT_DIR, "family_%s.glb" % life_form)
+    glb = os.path.join(OUT_DIR, "%s_%s.glb" % (prefix, life_form))
     bpy.ops.export_scene.gltf(
         filepath=glb,
         export_format="GLB",
@@ -354,14 +469,14 @@ def export(life_form, builder):
         export_lights=False,
     )
     return {
-        "file": "family_%s.glb" % life_form,
-        "blend_source": "tools/blender/family_%s.blend" % life_form,
+        "file": "%s_%s.glb" % (prefix, life_form),
+        "blend_source": "tools/blender/%s_%s.blend" % (prefix, life_form),
         "triangles": triangles(obj),
         "vertices": len(obj.data.vertices),
     }
 
 
-def manifest(built):
+def manifest(built, specific):
     families = {}
     for life_form, facts in sorted(built.items()):
         params = {}
@@ -382,14 +497,19 @@ def manifest(built):
         "blender": bpy.app.version_string,
         "keyed_by": {
             "axis": "life_form",
+            "and_below": ("by TAXON NODE where a producer sends a refinement, and only there. "
+                          "See `specific`. The rule below is not repealed by that: it is what "
+                          "the WIRE can key, and a node is a key from somewhere else."),
             "read_from": ("fixture_client.json's windows.<window>.series.<row>.taxon_groups. "
                           "The client reads that list rather than assuming this file's order: "
                           "the wire's order is alphabetical and any other order here would "
                           "scatter each family over another family's ground while looking "
                           "entirely plausible."),
-            "never": ("per PFT member and per AFT. Palettes are off the wire (894), the "
-                      "fixture aggregates to life form (872, 889), and a size-baked form "
-                      "token is wrong rather than imprecise (\u00a723.302, decision 180)."),
+            "never": ("per PFT member and per AFT OFF THE WIRE. Palettes are off the wire "
+                      "(894), the fixture aggregates to life form (872, 889), and a "
+                      "size-baked form token is wrong rather than imprecise "
+                      "(\u00a723.302, decision 180). None of that is a statement about a node "
+                      "an observer earned and a producer sent."),
         },
         "convention": {
             "units": ("each mesh is normalised to 1 m tall and 1 m across, standing on the "
@@ -400,6 +520,22 @@ def manifest(built):
             "vertex_colour_g": "height fraction along the form, 0 at the base",
         },
         "families": families,
+        "specific": specific,
+        "specific_is": {
+            "_what": ("B6's specific-rung forms, keyed by TAXON NODE. Each declares the life "
+                      "form it refines, so a node with no asset falls back to its parent's "
+                      "archetype -- \u00a717.8.6's per-internal-node representative form, which "
+                      "makes the asset lookup the identity and a missing asset ART DEBT rather "
+                      "than a smaller percept."),
+            "keyed_by": ("a taxon node, which arrives in a producer's refinement overlay and "
+                         "never off the wire. `band.pft_fractions` carries four groups and no "
+                         "fifth key; nothing here is indexed off the fixture."),
+            "parameters": ("inherited from the parent life form, exactly. A narrower span "
+                           "would be authoring calibration no producer sent."),
+            "chosen_for": ("silhouette, not ecology. A rung boundary has to be visible to be "
+                           "asserted, and two of the three share a parent so the lookup is a "
+                           "node lookup rather than a boolean."),
+        },
         "not_here": {"animal_families": ABSENT},
     }
 
@@ -411,9 +547,17 @@ def main():
         built[life_form] = export(life_form, builder)
         print("family %-10s %4d triangles, %3d vertices"
               % (life_form, built[life_form]["triangles"], built[life_form]["vertices"]))
+    specific = {}
+    for node, (parent, builder, why) in sorted(SPECIFIC.items()):
+        facts = export(node, builder, prefix="specific")
+        facts["life_form"] = parent
+        facts["why"] = why
+        specific[node] = facts
+        print("specific %-32s %4d triangles, %3d vertices  (refines %s)"
+              % (node, facts["triangles"], facts["vertices"], parent))
     path = os.path.join(OUT_DIR, "families.json")
     with open(path, "w") as f:
-        json.dump(manifest(built), f, indent=1, sort_keys=True)
+        json.dump(manifest(built, specific), f, indent=1, sort_keys=True)
         f.write("\n")
     print("wrote %s" % path)
     return 0

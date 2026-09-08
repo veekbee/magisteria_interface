@@ -58,13 +58,16 @@ var _sc: VegetationScatter = null
 var _hf: Heightfield = null
 var _cp: CellProbe = null
 var _fl: FixtureLoader = null
+var _fs: FamilySet = null
 
 
-func bind(sc: VegetationScatter, hf: Heightfield, fl: FixtureLoader, cp: CellProbe) -> void:
+func bind(sc: VegetationScatter, hf: Heightfield, fl: FixtureLoader, cp: CellProbe,
+          fs: FamilySet = null) -> void:
     _sc = sc
     _hf = hf
     _fl = fl
     _cp = cp
+    _fs = fs
 
 
 func is_bound() -> bool:
@@ -178,6 +181,15 @@ func sub_at(world: Vector2, life_form: String) -> Dictionary:
                 + "%s m. Nothing was decided here either way."
                         % String.num(float(r.get("radius_m", 0.0)), 0))
         return out
+    # WHICH NODE THIS GROUND'S PLANTS OF THIS FAMILY ARE DRAWN AT, from the
+    # same overlay the build read. Re-derived rather than remembered: the probe
+    # asks the scatter's own refinement map, so a probe-vs-drawn disagreement
+    # here can only mean the build wrote something else.
+    var cell_key := "%s|%d" % [str(cell.get("huc10", "")), int(cell.get("band", -1))]
+    var node := str(_sc.refinements.get("%s|%s" % [cell_key, life_form], life_form))
+    out["node"] = node
+    out["rung"] = "" if _fs == null else _fs.rung_of(node)
+    out["refined"] = node != life_form
     out["state"] = BEYOND_HORIZON if bool(out["beyond_horizon"]) else DRAWN
     return out
 

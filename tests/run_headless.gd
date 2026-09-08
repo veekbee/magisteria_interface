@@ -84,7 +84,7 @@ func _initialize() -> void:
     test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it()
     test_the_scatter_measurement_verifies_in_pixels_not_primitives()
     test_every_wire_life_form_resolves_to_a_family()
-    test_no_family_is_keyed_below_life_form()
+    test_no_family_is_keyed_below_life_form_off_the_wire()
     test_a_parameter_outside_its_range_is_refused_not_clamped()
     test_the_exaggeration_is_applied_after_the_check_not_before()
     test_the_families_hold_the_unit_convention_the_transform_relies_on()
@@ -132,6 +132,10 @@ func _initialize() -> void:
     test_the_tiles_do_not_decode_with_the_overviews_constants()
     test_an_unwritten_tile_is_empty_ground_and_not_a_missing_fetch()
     test_the_pyramid_makes_the_near_field_relief_and_does_not_open_walk_mode()
+    test_a_node_with_no_asset_draws_its_parent_and_says_it_is_art_debt()
+    test_the_mock_earns_a_rung_and_its_boundary_is_cell_shaped()
+    test_no_subject_is_drawn_at_two_rungs_and_the_guard_can_fire()
+    test_walking_the_boundary_switches_the_rung_once_and_never_both()
     stage_the_main_scene()
 
 
@@ -1932,11 +1936,19 @@ func test_every_wire_life_form_resolves_to_a_family() -> void:
     print("families: %s for wire groups %s" % [str(fs.life_forms()), str(groups)])
 
 
-func test_no_family_is_keyed_below_life_form() -> void:
+func test_no_family_is_keyed_below_life_form_off_the_wire() -> void:
     """Palettes are off the wire (decision 894) and the fixture aggregates to
     life form (872, 889), so a per-PFT or per-AFT mesh set has no key it could
-    legally be indexed by -- and a size-baked form token is wrong rather than
-    imprecise on most of a palette (§23.302, decision 180).
+    legally be indexed by OFF THE WIRE -- and a size-baked form token is wrong
+    rather than imprecise on most of a palette (§23.302, decision 180).
+
+    THE RULE IS NARROWED HERE RATHER THAN REPEALED, and the distinction is the
+    whole of B6. What the wire cannot key, it still cannot key: `families` must
+    equal the wire's group count and nothing indexes off the fixture below it.
+    What changed is that a key can arrive from somewhere else -- a producer's
+    refinement carries a taxon node, and the node IS the key. So `specific` is
+    allowed to exist and is held to the same parameter rule: authored form,
+    computed individual, no baked size anywhere.
 
     Checked against the manifest rather than against intent: the family count
     must equal the wire's group count, not the 12-position PFT axis the sim
@@ -1959,13 +1971,20 @@ func test_no_family_is_keyed_below_life_form() -> void:
             "the manifest does not cite why it is not keyed lower")
 
     # no family entry may carry a size: the family is authored, the individual
-    # is parameters (§17.8.2)
-    for life_form in fs.life_forms():
-        var entry: Dictionary = fs.families[life_form]
+    # is parameters (§17.8.2). THE SAME RULE APPLIES TO A SPECIFIC NODE -- it
+    # is a named taxon, which is exactly where the temptation to bake a height
+    # lives, and a producer sending a node is not a producer sending a size.
+    for entry_name in Array(fs.life_forms()) + Array(fs.nodes()):
+        var entry: Dictionary = fs.families.get(entry_name, fs.specific.get(entry_name, {}))
         for forbidden in ["height", "size", "scale", "species", "pft", "aft"]:
             for k in entry:
                 check(not str(k).to_lower().contains(forbidden),
-                        "family %s carries a baked %s" % [life_form, forbidden])
+                        "family %s carries a baked %s" % [str(entry_name), forbidden])
+    # And `keyed_by` has to state the narrowed rule, not the old absolute one:
+    # a reader meeting only the old sentence would delete `specific` as illegal.
+    check(str(fs.manifest.get("keyed_by", {}).get("and_below", "")).contains("refinement"),
+            "the manifest does not say a taxon node may key an asset where a producer sends "
+            + "one, so the rule reads as forbidding what B6 does")
 
 
 func test_a_parameter_outside_its_range_is_refused_not_clamped() -> void:
@@ -5641,7 +5660,7 @@ func test_the_probe_re_derives_what_the_build_placed() -> void:
         return
 
     var probe := InstanceProbe.new()
-    probe.bind(v.scatter, v.heightfield, v.fixture, v.cell_probe())
+    probe.bind(v.scatter, v.heightfield, v.fixture, v.cell_probe(), v.families)
     check(probe.is_bound(), "the instance probe did not bind to the build")
 
     var q := VegetationScatter.PLACEMENT_QUANTUM
@@ -5723,7 +5742,7 @@ func test_a_re_centre_that_moved_a_key_is_a_defect_and_not_churn() -> void:
         v.queue_free()
         return
     var probe := InstanceProbe.new()
-    probe.bind(v.scatter, v.heightfield, v.fixture, v.cell_probe())
+    probe.bind(v.scatter, v.heightfield, v.fixture, v.cell_probe(), v.families)
 
     var q := VegetationScatter.PLACEMENT_QUANTUM
     var verdicts := {}
@@ -5988,3 +6007,275 @@ func test_the_pyramid_makes_the_near_field_relief_and_does_not_open_walk_mode() 
             % [String.num(vertices, 0), String.num(texels, 0)]
             + "%s m; a plant on the drawn plane stands %s m from the data's own ground (p50)"
                     % [String.num(change_m, 0), String.num(residual, 1)])
+
+
+# ============================================================================
+# B6: specific-rung assets, and the rung boundary.
+# ============================================================================
+
+func test_a_node_with_no_asset_draws_its_parent_and_says_it_is_art_debt() -> void:
+    """§17.8.6 REQUIRES THE ASSET LOOKUP TO BE THE IDENTITY: every internal node
+    of the taxonomy has a representative form, so a node always draws
+    something. That is what makes a missing model ART DEBT rather than a
+    smaller percept -- if the lookup could fail, a modelling gap would start
+    reading as a claim about what the observer earned.
+
+    And the specific forms inherit their parent's parameter ranges EXACTLY. A
+    narrower span for a named taxon would be calibration this client authored
+    and no producer sent."""
+    var fs := family_set()
+    if not fs.is_loaded():
+        return
+    var nodes := fs.nodes()
+    check(nodes.size() >= 2, "only %d specific-rung nodes; B6 asks for two or three"
+            % nodes.size())
+
+    var parents := {}
+    for node in nodes:
+        var r := fs.resolve(str(node))
+        check(bool(r["ok"]), "node %s resolves to nothing" % str(node))
+        check(str(r["rung"]) == FamilySet.SPECIFIC_RUNG,
+                "node %s draws at %s" % [str(node), str(r["rung"])])
+        check(not bool(r["art_debt"]), "node %s is reported as art debt and has an asset"
+                % str(node))
+        var parent := fs.parent_of(str(node))
+        check(fs.has(parent), "node %s refines %s, which is not a family" % [str(node), parent])
+        parents[parent] = int(parents.get(parent, 0)) + 1
+        # RANGES INHERITED EXACTLY.
+        for param in ["height_m", "crown_m"]:
+            var mine := fs.range_of(str(node), param)
+            var theirs := fs.range_of(parent, param)
+            check(mine == theirs, "node %s narrows %s against its parent %s: %s vs %s"
+                    % [str(node), param, parent, str(mine), str(theirs)])
+        check(fs.triangles_of(str(node)) > 0,
+                "node %s prices at zero triangles" % str(node))
+
+    # TWO SHARING A PARENT is what makes the lookup a node lookup rather than a
+    # boolean, so it is asserted rather than assumed.
+    var shared := false
+    for parent in parents:
+        if int(parents[parent]) >= 2:
+            shared = true
+    check(shared, "no two specific nodes share a parent, so nothing here distinguishes "
+            + "`which node` from `refined or not`")
+
+    # A NODE THAT DOES NOT EXIST falls back and says so.
+    fs.specific["unmodelled_taxon"] = {"life_form": "tree"}
+    var debt := fs.resolve("unmodelled_taxon")
+    check(bool(debt["ok"]), "a node with no asset resolved to nothing at all")
+    check(str(debt["node_drawn"]) == "tree" and str(debt["rung"]) == FamilySet.LIFE_FORM_RUNG,
+            "a node with no asset drew %s at %s" % [str(debt["node_drawn"]), str(debt["rung"])])
+    check(bool(debt["art_debt"]) and str(debt["why"]).contains("ART DEBT"),
+            "a missing model is not reported as art debt")
+    check(fs.triangles_of("unmodelled_taxon") == fs.triangles_of("tree"),
+            "a node falling back to its parent is not priced at the parent's triangles")
+    fs.specific.erase("unmodelled_taxon")
+    print("families: %d specific nodes over %d parents, ranges inherited, missing asset is "
+            % [nodes.size(), parents.size()] + "art debt and draws the parent")
+
+
+func test_the_mock_earns_a_rung_and_its_boundary_is_cell_shaped() -> void:
+    """THE FINDING B6 PRODUCED, PINNED SO IT IS NOT RE-DISCOVERED.
+
+    An earned function is a distance -- `distance_v0`'s shape, and the right
+    shape for SUBJECTS, which carry their own positions. Channel 1 does not:
+    it is keyed by residence cell, and a cell in this basin averages 126 km2.
+    So the finest rung boundary channel 1 can express for flora is a CELL
+    BOUNDARY, and a metre-scale threshold has no key to land on.
+
+    That is a fact about the wire and not about the mock, which is why it is
+    asserted here rather than left in a comment."""
+    var fs := family_set()
+    var fl := fixture()
+    if not fs.is_loaded() or fs.nodes().is_empty():
+        return
+    var base := FixturePassthrough.over(fl)
+    var mock := MockProducer.over(base, fs)
+    check(mock.is_ready(), "the mock producer did not come up")
+
+    # A synthetic cell layout: cells on a 10 km lattice, which is about what
+    # this basin's are.
+    var centres := {}
+    for i in 6:
+        for j in 6:
+            centres["cell|%d_%d" % [i, j]] = Vector2(float(i) * 10000.0, float(j) * 10000.0)
+    var observer := _dev_observer()
+    observer["ground_point"] = PackedFloat64Array([0.0, 0.0, 0.0])
+    var b := mock.bundle_for(fl.windows[0], 0, observer, centres)
+    check(str(b.producer.get("kind", "")) == MockProducer.KIND,
+            "the bundle does not stamp the mock as its producer")
+    check(str((b.producer.get("provenance", {}) as Dictionary).get("_fake", "")).length() > 20,
+            "the mock does not say its constants are invented")
+
+    # PRESENT ONLY WHERE EARNED. An overlay everywhere is the same statement as
+    # no overlay at all.
+    check(not b.refinements.is_empty(), "the mock refined nothing at all")
+    var refined_cells := {}
+    for key in b.refinements:
+        var parts := str(key).split("|")
+        var cell := "%s|%s" % [str(parts[0]), str(parts[1])]
+        refined_cells[cell] = true
+        var node := str(b.refinements[key])
+        check(fs.parent_of(node) == str(parts[2]),
+                "%s refines %s to %s, whose parent is %s"
+                % [str(key), str(parts[2]), node, fs.parent_of(node)])
+    check(refined_cells.size() < centres.size(),
+            "every cell was refined, so there is no boundary and this is a passthrough "
+            + "wearing a mock's name")
+    for cell in refined_cells:
+        var c: Vector2 = centres[cell]
+        check(c.length() <= MockProducer.SPECIFIC_WITHIN_M,
+                "%s is %s m out and was refined inside a %s m rule"
+                % [str(cell), String.num(c.length(), 0),
+                        String.num(MockProducer.SPECIFIC_WITHIN_M, 0)])
+
+    # DETERMINISTIC: same world, same observer, same moment, same bytes.
+    var again := mock.bundle_for(fl.windows[0], 0, observer, centres)
+    check(JSON.stringify(b.refinements) == JSON.stringify(again.refinements),
+            "two bundles for one moment refined differently")
+
+    # THE BOUNDARY IS A CELL BOUNDARY, which is the finding. Moving the
+    # observer a few hundred metres changes nothing; moving it a cell does.
+    observer["ground_point"] = PackedFloat64Array([300.0, 0.0, 0.0])
+    var nudged := mock.bundle_for(fl.windows[0], 0, observer, centres)
+    check(JSON.stringify(nudged.refinements) == JSON.stringify(b.refinements),
+            "a 300 m step changed the overlay. Channel 1 is keyed by cell and a cell here is "
+            + "about eleven kilometres across, so a metre-scale boundary is not expressible "
+            + "-- if this passes, the key space changed and the finding is stale.")
+    observer["ground_point"] = PackedFloat64Array([30000.0, 0.0, 30000.0])
+    var far := mock.bundle_for(fl.windows[0], 0, observer, centres)
+    check(JSON.stringify(far.refinements) != JSON.stringify(b.refinements),
+            "moving three cells away changed nothing, so the earned function is not a "
+            + "function of where the observer is")
+    print("mock: %d of %d cells refined within %s m; a 300 m step moves nothing and three "
+            % [refined_cells.size(), centres.size(),
+                    String.num(MockProducer.SPECIFIC_WITHIN_M, 0)]
+            + "cells moves the boundary")
+
+
+func test_no_subject_is_drawn_at_two_rungs_and_the_guard_can_fire() -> void:
+    """§17.8.6: BLEND WITHIN A RUNG, SWITCH BETWEEN RUNGS.
+
+    No frame may render one subject at two rungs. Today that is a property of
+    the placement rather than a hope about it -- the node is a function of
+    (cell, life form), so a boundary falls between cells and never inside one,
+    and each plant is written into exactly one MultiMesh.
+
+    WHICH IS EXACTLY WHY THE CHECK HAS TO BE SHOWN A FAILURE FROM SOMEWHERE
+    ELSE. A guard whose only exercise is a path that cannot produce a violation
+    reports the same green as a broken one. The production path is asserted
+    clean; the predicate is handed a contradiction."""
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    v.bind_families()
+    v.show_field("deepest_winter", "band.pft_fractions", 45)
+    var set_up := v.set_producer(MockProducer.KIND)
+    check(bool(set_up["ok"]), "the mock producer would not select: %s" % str(set_up.get("why", "")))
+    if not bool(set_up["ok"]):
+        v.queue_free()
+        return
+
+    var verts: PackedVector3Array = v.terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var centre := v.terrain.mesh_to_world(verts[5000], v.heightfield)
+    v.observer["ground_point"] = PackedFloat64Array([centre.x, 0.0, centre.y])
+    var r := v.scatter_at(centre)
+    check(bool(r.get("ok", false)), "no scatter: %s" % str(r.get("why", "")))
+    if not bool(r.get("ok", false)):
+        v.queue_free()
+        return
+
+    var rungs: Dictionary = r["rungs"]
+    check(int(rungs["subjects_at_two_rungs"]) == 0,
+            "%d subjects were drawn at two rungs in one frame: %s"
+            % [int(rungs["subjects_at_two_rungs"]), str(rungs["examples"])])
+    var drawn: Dictionary = rungs["drawn_by_rung"]
+    check(drawn.has(FamilySet.SPECIFIC_RUNG),
+            "the mock earned a specific rung and nothing was drawn at it: %s" % str(drawn))
+    check(int(drawn.get(FamilySet.SPECIFIC_RUNG, 0)) > 0,
+            "zero instances at the specific rung")
+
+    # PLACEMENT DID NOT MOVE. A rung change decides which asset draws a plant;
+    # it must never decide where the plant stands, or earning a rung would
+    # re-place the whole cell -- §16.6's defect through the one door left open.
+    var refined_digest: Dictionary = (r["placement"] as Dictionary)["digest"]
+    v.set_producer(FixturePassthrough.KIND)
+    var plain := v.scatter_at(centre)
+    check(bool(plain.get("ok", false)), "the passthrough build failed")
+    if bool(plain.get("ok", false)):
+        var plain_digest: Dictionary = (plain["placement"] as Dictionary)["digest"]
+        check(str(refined_digest.get("all", "")) == str(plain_digest.get("all", "")),
+                "the stand moved when the rung changed. Placement is keyed on the life form "
+                + "and must stay keyed on it: a refined node in the key would re-place every "
+                + "plant in the cell.")
+        var plain_rungs: Dictionary = plain["rungs"]
+        check(not (plain_rungs["drawn_by_rung"] as Dictionary).has(FamilySet.SPECIFIC_RUNG),
+                "the passthrough drew something at the specific rung, and it earns nothing")
+
+    # THE PREDICATE, SHOWN A CONTRADICTION.
+    var seen := {}
+    check(not VegetationScatter.contradicts(seen, "cell|1|tree", "aspen"),
+            "the first assignment for a key was reported as a contradiction")
+    check(not VegetationScatter.contradicts(seen, "cell|1|tree", "aspen"),
+            "repeating the same assignment was reported as a contradiction")
+    check(VegetationScatter.contradicts(seen, "cell|1|tree", "needleleaf_evergreen_subalpine"),
+            "one cell assigned two nodes was NOT reported, so this guard's green means "
+            + "nothing at all")
+    print("rungs: %s drawn, %d subjects at two rungs, and the predicate fires on a "
+            % [str(drawn), int(rungs["subjects_at_two_rungs"])] + "synthetic contradiction")
+    v.queue_free()
+
+
+func test_walking_the_boundary_switches_the_rung_once_and_never_both() -> void:
+    """THE FIRST REAL TRANSDUCER TEST: walk a rung boundary and watch the drawn
+    rung change.
+
+    Monotone approach, so a switch back is a defect rather than terrain: the
+    earned function is a distance, so once a cell is inside it, walking further
+    in cannot put it out. What is asserted is that the rung DOES change -- a
+    boundary nobody crosses tests nothing -- that it changes once, and that no
+    step draws the same ground at both rungs."""
+    var fs := family_set()
+    var fl := fixture()
+    if not fs.is_loaded() or fs.nodes().is_empty():
+        return
+    var mock := MockProducer.over(FixturePassthrough.over(fl), fs)
+    var centres := {"target|0": Vector2(0.0, 0.0)}
+    var observer := _dev_observer()
+
+    var seen: Array = []
+    var switches := 0
+    var last := ""
+    var step := MockProducer.SPECIFIC_WITHIN_M / 8.0
+    for i in 20:
+        var away := MockProducer.SPECIFIC_WITHIN_M * 2.0 - float(i) * step
+        observer["ground_point"] = PackedFloat64Array([away, 0.0, 0.0])
+        var b := mock.bundle_for(fl.windows[0], 0, observer, centres)
+        var here := ""
+        for key in b.refinements:
+            if str(key).begins_with("target|0|"):
+                here = str(b.refinements[key])
+        var rung := FamilySet.LIFE_FORM_RUNG if here == "" else fs.rung_of(here)
+        seen.append(rung)
+        if last != "" and rung != last:
+            switches += 1
+        last = rung
+    check(switches == 1, "the rung changed %d times over a monotone approach: %s"
+            % [switches, str(seen)])
+    check(str(seen[0]) == FamilySet.LIFE_FORM_RUNG,
+            "the walk started inside the boundary, so it never crossed one")
+    check(str(seen[seen.size() - 1]) == FamilySet.SPECIFIC_RUNG,
+            "the walk ended outside the boundary")
+
+    # THE TRANSITION LINE a person reads, and the leak it exists to show.
+    var clean := PerceptProbe.transition(FamilySet.SPECIFIC_RUNG, FamilySet.LIFE_FORM_RUNG, 0)
+    check(bool(clean["changed"]) and not bool(clean["leak"]),
+            "a rung change is being reported as a leak, and crossing a boundary is the "
+            + "system working")
+    check(str(clean["line"]).contains("switched"), "the line does not say a switch happened")
+    var leaking := PerceptProbe.transition(FamilySet.SPECIFIC_RUNG, FamilySet.SPECIFIC_RUNG, 3)
+    check(bool(leaking["leak"]) and str(leaking["line"]).contains("TWO RUNGS"),
+            "a subject drawn at two rungs does not show in the transition line")
+    print("boundary: %d switch over %d steps of a monotone approach, and the transition line "
+            % [switches, seen.size()] + "tells a switch from a leak")

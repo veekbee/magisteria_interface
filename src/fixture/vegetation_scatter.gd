@@ -383,6 +383,17 @@ var meshes: Dictionary = {}          ## life_form -> MultiMesh
 ##
 ## NOT SERIALISED. It is thousands of entries and it is an intermediate, not a
 ## measurement; what reaches an artefact is what was computed FROM it.
+## THE REFINEMENT OVERLAY THIS BUILD DRAWS UNDER, `"<cell key>|<life form>" ->
+## node`, empty where nothing is earned.
+##
+## SET BY THE CALLER FROM A BUNDLE rather than read from one here. The scatter
+## still reads the fixture for its rows -- the seasonal range it needs is a
+## whole year and no single-moment bundle carries that -- so it is halfway
+## across the seam and there is no honesty in giving it a bundle it would only
+## half use. What arrives is the overlay itself, which is the part a producer
+## earns.
+var refinements: Dictionary = {}
+
 var census: Dictionary = {}
 var report: Dictionary = {}
 
@@ -465,6 +476,11 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
     var implied: Dictionary = {}
     for g in groups:
         implied[g] = 0.0
+    # PRICED BY NODE, COUNTED BY LIFE FORM. A refined node draws a different
+    # asset with a different triangle count, so a budget solved over life forms
+    # would price a stand of spires as a stand of generic trees. `implied`
+    # stays the wire's own quantity.
+    var implied_by_node: Dictionary = {}
     var texels := 0
     var flat_cells := 0
     var phen_lo := 1.0
@@ -516,7 +532,8 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             var huc: String = _rl.node_of_index.get(int(key[0]), "")
             if huc == "":
                 continue
-            var ci: Variant = _fl.cell_of_key.get("%s|%d" % [huc, int(key[1])], null)
+            var cell_key_s := "%s|%d" % [huc, int(key[1])]
+            var ci: Variant = _fl.cell_of_key.get(cell_key_s, null)
             if ci == null:
                 continue
             texels += 1
@@ -548,6 +565,15 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 var params: Dictionary = imp["parameters"]
                 var crown := float(imp["crown_m"])
                 var count := float(imp["count"])
+                # WHICH NODE THIS CELL'S PLANTS OF THIS LIFE FORM ARE DRAWN AT.
+                # The overlay is keyed by cell and life form, so the answer is
+                # the same for every plant of that family on that ground -- a
+                # rung boundary falls BETWEEN cells and never inside one, which
+                # is what makes "no frame draws one subject at two rungs" a
+                # property of the placement rather than a hope about it.
+                var node := str(refinements.get("%s|%s" % [cell_key_s, life_form], life_form))
+                if not _fs.can_draw(node):
+                    node = life_form
                 var phen := phenology_for(seasons[gi], cell, bio)
                 var why_phen := _fs.check(life_form, "phenology", phen)
                 if why_phen != "":
@@ -602,6 +628,7 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                         # are drawing decisions and the implication is a
                         # measurement.
                         implied[life_form] = float(implied[life_form]) + per_sub
+                        implied_by_node[node] = float(implied_by_node.get(node, 0.0)) + per_sub
                         # The horizon is a hard cut and the schedule is a fade;
                         # they compose, and neither substitutes for the other.
                         if k > 0.0 and d_m > horizon_m:
@@ -610,7 +637,8 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                         if keep <= 0.0:
                             continue
                         wanted.append({"origin": o, "half_m": sub_half,
-                                       "life_form": life_form, "count": per_sub,
+                                       "life_form": life_form, "node": node,
+                                       "cell_key": cell_key_s, "count": per_sub,
                                        "banded": per_sub * keep,
                                        "distance_m": d_m, "keep": keep,
                                        "height_m": float(params["height_m"]),
@@ -627,7 +655,11 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
     var total_banded := 0.0
     for item in wanted:
         total_banded += float(item["banded"])
-    var afford := _affordable(groups, implied)
+    var priced := PackedStringArray()
+    for n in implied_by_node:
+        priced.append(str(n))
+    var afford := _affordable(priced if not priced.is_empty() else groups,
+            implied_by_node if not implied_by_node.is_empty() else implied)
     var head: float = float(afford.get("instances", 0.0)) if bool(afford.get("ok", false)) else 0.0
     var bound_by := "the frame budget"
     if not frame_budget:
@@ -697,10 +729,29 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
     var phen_of: Dictionary = {}
     for g in groups:
         placed[g] = 0
-        by_family[g] = []
-        phen_of[g] = PackedFloat32Array()
+    # DRAWN BY NODE, COUNTED BY LIFE FORM. `placed` stays keyed by life form
+    # because it is compared against `implied`, which is a wire quantity and
+    # must not silently become a per-taxon one. The MultiMeshes are keyed by
+    # node, because a node is what decides which asset draws.
+    var placed_by_node: Dictionary = {}
+    # THE B6 GUARD, AND THE FORM THAT CAN ACTUALLY FIRE. §17.8.6 rules blend
+    # within a rung and switch between rungs, so no frame may draw one subject
+    # at two rungs. A subject here is a plant, named by (placement key, rank),
+    # and each is written into exactly one MultiMesh -- so the way that rule
+    # gets broken is not a double write, it is the NODE CEASING TO BE A
+    # FUNCTION OF (cell, life form): an earned function evaluated per instance
+    # or per sub-cell would split one cell's plants across two rungs mid-frame.
+    # So that is what is checked, once per sub-cell rather than once per plant.
+    var node_of_cell: Dictionary = {}
+    var split_subjects := 0
+    var split_examples: Array = []
     for item in wanted:
         var life_form: String = item["life_form"]
+        var node: String = str(item.get("node", life_form))
+        if not by_family.has(node):
+            by_family[node] = []
+            phen_of[node] = PackedFloat32Array()
+            placed_by_node[node] = 0
         var origin: Vector2 = item["origin"]
         var half: float = item["half_m"]
         # HOISTED, ALL OF IT. Every line here is constant for the sub-cell:
@@ -708,8 +759,23 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         # sits in is one texel by construction. Both were being recomputed per
         # INSTANCE, which is a hundred thousand string walks a build to learn
         # the same answer.
+        # KEYED ON THE LIFE FORM AND NEVER ON THE NODE, which is load-bearing
+        # rather than an oversight. Placement is a function of ground and
+        # family; if the key carried the refined node, earning a rung would
+        # re-place every plant in the cell -- the churn defect §16.6 exists to
+        # remove, arriving through the one door left open. A rung change moves
+        # which asset draws a plant. It must never move the plant.
         var lf_key := family_key(life_form)
         var cell_key := placement_key(lf_key, origin, half)
+        # The node has to be a function of (cell, life form) -- see the guard's
+        # note above. A sub-cell belongs to one cell, so two sub-cells of one
+        # cell disagreeing means the earned function stopped being one.
+        var cell_of_sub := "%s|%s" % [str(item.get("cell_key", "")), life_form]
+        if contradicts(node_of_cell, cell_of_sub, node):
+            split_subjects += 1
+            if split_examples.size() < 4:
+                split_examples.append("%s: %s and %s"
+                        % [cell_of_sub, str(node_of_cell[cell_of_sub]), node])
         # ROUNDING THAT KEEPS THE STAND, AND KEEPS IT IN THE SAME ORDER.
         #
         # A sub-cell is a thirty-metre square and a family's implication in one
@@ -773,10 +839,11 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             if not bool(xf["ok"]):
                 refused += 1
                 continue
-            (by_family[life_form] as Array).append(xf["transform"])
-            var pf: PackedFloat32Array = phen_of[life_form]
+            (by_family[node] as Array).append(xf["transform"])
+            var pf: PackedFloat32Array = phen_of[node]
             pf.append(float(item["phenology"]))
-            phen_of[life_form] = pf
+            phen_of[node] = pf
+            placed_by_node[node] = int(placed_by_node[node]) + 1
             phen_lo = minf(phen_lo, float(item["phenology"]))
             phen_hi = maxf(phen_hi, float(item["phenology"]))
             placed[life_form] = int(placed[life_form]) + 1
@@ -868,8 +935,8 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                         + "BAND_SUBDIVISION, or read this family's count as absent-by-grid.")
 
     var triangles := 0
-    for life_form in by_family:
-        var transforms: Array = by_family[life_form]
+    for node in by_family:
+        var transforms: Array = by_family[node]
         if transforms.is_empty():
             continue
         var mm := MultiMesh.new()
@@ -885,15 +952,19 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         # zero and every plant renders as bare structure in every season. White
         # is the identity for that multiply; the mask survives it.
         mm.use_colors = true
-        mm.mesh = _fs.mesh_for(life_form)
+        # THROUGH `mesh_for_node`, WHICH IS THE IDENTITY LOOKUP. A node with no
+        # asset of its own draws its parent's archetype rather than nothing --
+        # §17.8.6's representative form per internal node -- so a missing model
+        # is art debt and never a smaller percept.
+        mm.mesh = _fs.mesh_for_node(node)
         mm.instance_count = transforms.size()
-        var pf: PackedFloat32Array = phen_of[life_form]
+        var pf: PackedFloat32Array = phen_of[node]
         for i in transforms.size():
             mm.set_instance_transform(i, transforms[i])
             mm.set_instance_color(i, Color.WHITE)
             mm.set_instance_custom_data(i, Color(pf[i], 0.0, 0.0, 1.0))
-        meshes[life_form] = mm
-        triangles += _fs.triangles_of(life_form) * transforms.size()
+        meshes[node] = mm
+        triangles += _fs.triangles_of(node) * transforms.size()
 
     report = {
         "ok": true,
@@ -919,6 +990,8 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         "frame_budget_applied": frame_budget,
         "share_drawn": share,
         "share_bound_by": bound_by,
+        "placed_by_node": placed_by_node,
+        "rungs": _rung_report(placed_by_node, split_subjects, split_examples),
         "build_ceiling": MAX_BUILT_INSTANCES,
         "refused_parameters": refused,
         "placement": {
@@ -1073,7 +1146,7 @@ func _affordable(groups: PackedStringArray, implied: Dictionary) -> Dictionary:
     var weighted_ns := 0.0
     for g in groups:
         var n := float(implied.get(g, 0.0))
-        if n <= 0.0 or not _fs.has(g):
+        if n <= 0.0 or not _fs.can_draw(g):
             continue
         var per := _fc.per_instance_ns(_fs.triangles_of(g))
         if not bool(per["ok"]):
@@ -1147,6 +1220,50 @@ func implication(life_form: String, share: float, bare: float, biomass: float,
         "crown_m": crown,
         "count": count,
         "per_sub": count / float(BAND_SUBDIVISION * BAND_SUBDIVISION),
+    }
+
+
+## WHETHER A NODE ASSIGNMENT CONTRADICTS ONE ALREADY MADE IN THIS BUILD.
+##
+## Static and separate so the gate can hand it a contradiction. A guard whose
+## only exercise is a path that cannot produce a violation reports the same
+## green as a broken one -- and today the production path CANNOT produce one,
+## because the node is a function of (cell, life form). That is the property
+## worth having and it is exactly why the check itself has to be shown a
+## failure from somewhere else.
+static func contradicts(seen: Dictionary, key: String, node: String) -> bool:
+    if seen.has(key) and str(seen[key]) != node:
+        return true
+    seen[key] = node
+    return false
+
+
+## WHAT RUNG EACH PLANT WAS DRAWN AT, AND WHETHER ANY SUBJECT WAS DRAWN AT TWO.
+##
+## §17.8.6 rules blend WITHIN a rung and switch BETWEEN rungs, so no frame may
+## render one subject at two rungs. Reported here rather than only asserted in
+## the gate, because `probe.percept`'s transition line reads it interactively
+## and a person walking a boundary is the other half of the same check.
+func _rung_report(placed_by_node: Dictionary, split_subjects: int,
+                  examples: Array) -> Dictionary:
+    var by_rung := {}
+    for node in placed_by_node:
+        var rung := _fs.rung_of(str(node))
+        if rung == "":
+            rung = "unknown"
+        by_rung[rung] = int(by_rung.get(rung, 0)) + int(placed_by_node[node])
+    return {
+        "drawn_by_rung": by_rung,
+        "nodes_drawn": placed_by_node.keys(),
+        "subjects_at_two_rungs": split_subjects,
+        "examples": examples,
+        "_rule": ("§17.8.6: blend within a rung, switch between rungs. A subject drawn at two "
+                + "rungs in one frame is the cross-rung leak that rule forbids. Zero here is "
+                + "a property of the placement rather than a hope: the node is a function of "
+                + "(cell, life form), so a boundary falls between cells and never inside one."),
+        "_would_fire_if": ("the earned function were evaluated per instance or per sub-cell, "
+                + "which is the shape a distance-to-camera rule would take. The gate feeds it "
+                + "exactly that and requires this to be non-zero."),
     }
 
 

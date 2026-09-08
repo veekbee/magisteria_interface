@@ -130,6 +130,12 @@ var overlay: FieldOverlay
 ## in this file still reads the fixture directly, which is stated in
 ## `transducer.gd` row by row rather than left to be discovered.
 var producer: FixturePassthrough = null
+## The producer that EARNS something, when one is selected. Passthrough draws
+## every plant at its life form -- a valid transducer for "everything is earned
+## at the life-form rung" -- and a transducer that never changes rung cannot
+## exercise the one rule about changing rung.
+var mock: MockProducer = null
+var producer_kind: String = FixturePassthrough.KIND
 var bundle: PerceptBundle = null
 ## Who the bundle is produced FOR. A dev viewer is not a body; the debug player
 ## replaces this with one, and until it does the body half of every bundle is a
@@ -145,6 +151,7 @@ var _terrain_mat: ShaderMaterial
 var _flow_mi: MeshInstance3D = null
 var _flow_display: FlowDisplay = null
 var field_report: Dictionary = {}
+var _cell_centres: Dictionary = {}
 
 var probe: CellProbe = null
 ## What `show_field` last painted. The probe reads the row that is DRAWN
@@ -317,6 +324,74 @@ func bind_fields(terrain_dir: String = TERRAIN_DIR,
     return field_report
 
 
+## WHERE EACH CELL IS, so a producer with a distance in it has somewhere to
+## measure from.
+##
+## A STUB CONCESSION, STATED. A real producer holds the world and knows where
+## its own cells are; this one is handed them by the client, which is the wrong
+## direction and is what a stub looks like. Built once from the residence
+## raster at a stride -- the centroid of a 126 km2 cell does not need every
+## pixel of it -- and cached, because it depends on the ground rather than on
+## the moment.
+##
+## AND THE GRANULARITY IS THE FINDING. Channel 1 is keyed by residence cell and
+## a cell here averages 126 km2, so the finest rung boundary channel 1 can
+## express for flora is a cell boundary. A distance rule in metres -- the shape
+## `distance_v0` takes for SUBJECTS, which carry their own positions -- has no
+## key to land on here. See `MockProducer`.
+func cell_centres() -> Dictionary:
+    if not _cell_centres.is_empty() or residence == null or fixture == null:
+        return _cell_centres
+    var sums := {}
+    var stride := 4
+    var y := 0
+    while y < residence.height:
+        var x := 0
+        while x < residence.width:
+            var k := residence.key_at(x, y)
+            if not k.is_empty():
+                var huc: String = residence.node_of_index.get(int(k[0]), "")
+                if huc != "":
+                    var key := "%s|%d" % [huc, int(k[1])]
+                    var w := heightfield.texel_to_world(float(x), float(y))
+                    if not sums.has(key):
+                        sums[key] = [0.0, 0.0, 0]
+                    var acc: Array = sums[key]
+                    acc[0] = float(acc[0]) + w.x
+                    acc[1] = float(acc[1]) + w.y
+                    acc[2] = int(acc[2]) + 1
+                    sums[key] = acc
+            x += stride
+        y += stride
+    for key in sums:
+        var acc: Array = sums[key]
+        var n := float(acc[2])
+        if n > 0.0:
+            _cell_centres[key] = Vector2(float(acc[0]) / n, float(acc[1]) / n)
+    return _cell_centres
+
+
+## Which producer the viewer draws through. `mock` earns a specific rung near
+## the observer and a life form beyond it; `fixture_passthrough` earns nothing,
+## which is the shipped default.
+func set_producer(kind: String) -> Dictionary:
+    if kind == MockProducer.KIND:
+        if families == null or families.nodes().is_empty():
+            return {"ok": false, "why": "no specific-rung assets, so nothing to refine to"}
+        mock = MockProducer.over(producer, families)
+        if not mock.is_ready():
+            return {"ok": false, "why": "the mock producer did not come up"}
+    producer_kind = kind
+    return {"ok": true, "kind": producer_kind}
+
+
+## A bundle for one moment, from whichever producer is selected.
+func bundle_at(window: String, day: int) -> PerceptBundle:
+    if producer_kind == MockProducer.KIND and mock != null:
+        return mock.bundle_for(window, day, observer, cell_centres())
+    return producer.bundle_for(window, day, observer)
+
+
 ## Paint one row-day onto the terrain. Bounds come from the CONTRACT.
 func show_field(window: String, row: String, day: int, group: int = 0) -> bool:
     if overlay == null or not overlay.is_bound():
@@ -327,7 +402,7 @@ func show_field(window: String, row: String, day: int, group: int = 0) -> bool:
     # passed in from here -- a ramp's range is a drawing decision made outside
     # the transducer, and where it should come from once a real producer exists
     # is not this file's to settle.
-    bundle = producer.bundle_for(window, day, observer)
+    bundle = bundle_at(window, day)
     var painted := overlay.paint_row(bundle, row, group, b.x, b.y)
     if not bool(painted["ok"]):
         push_warning("fields: %s" % str(painted["why"]))
@@ -638,6 +713,12 @@ func scatter_at(centre: Vector2, radius_m: float = SCATTER_HORIZON_M,
         return {"ok": false, "why": "no vegetation scatter is bound"}
     if shown.is_empty():
         return {"ok": false, "why": "no row is painted, so there is no day to scatter"}
+    # THE OVERLAY THE BUILD DRAWS UNDER, from whichever producer is selected.
+    # Handed over rather than fetched by the scatter: the scatter still reads
+    # the fixture for the whole year its phenology needs, so giving it a bundle
+    # it would only half use would be a seam in name.
+    bundle = bundle_at(str(shown["window"]), int(shown["day"]))
+    scatter.refinements = bundle.refinements
     var r := scatter.build(str(shown["window"]), int(shown["day"]), centre, radius_m,
             bands, ceiling, k, only, frame_budget)
     if not bool(r.get("ok", false)):
