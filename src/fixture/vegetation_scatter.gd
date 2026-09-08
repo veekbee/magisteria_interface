@@ -137,22 +137,32 @@ const NO_SCHEDULE: Array = []
 ## resolution, and the sweep is looking for how far before.
 const NO_HORIZON_RULE := 0.0
 
-## How far `render_cost.json`'s coefficient sits below a real frame.
+## How far `render_cost.json`'s coefficient sits below a real frame, and the
+## divisor the budget solve applies because of it.
 ##
-## The budget below is `budget_ms / mean_ns_per_instance`, and that coefficient
-## is measured on an EMPTY STAGE -- no terrain, no culling, no LOD. It is a
-## floor, and `measurements/scatter_cost.json` measures the distance from it:
-## the same instances in the viewer that draws them cost about a third more,
-## reproducibly and never less, across a 5.6x change in the pixels they cover.
+## The coefficient prices one instance on an EMPTY STAGE -- no terrain, no
+## culling, no LOD. It is a floor, and `measurements/scatter_cost.json`
+## measures the distance from it: the same instances, in the viewer that draws
+## them, cost about a third more -- reproducibly and never less, across a 5.6x
+## change in the pixels they cover. Thinned "to fit 33.3 ms" by the floor
+## alone, a scatter lands near 44 ms. That was not a hypothetical: at the
+## basin's densest cells the thinning was already engaged and the frame still
+## measured 36-49 ms (`measurements/scatter_horizon.json`).
 ##
-## So a scatter thinned "to fit 33.3 ms" by this coefficient lands near 44 ms.
-## That is not a hypothetical: at the basin's densest cells the thinning is
-## already engaged and the frame still measures 36-49 ms
-## (`measurements/scatter_horizon.json`). The number is NOT applied here --
-## §19.8.9 owns the coefficient and correcting a budget is its call, not this
-## client's -- but the budget block says it, so nobody reads the prediction as
-## the frame. `test_the_budget_says_it_is_made_from_a_floor` keeps it current
-## against the artefact it is quoted from.
+## THE NUMBER IS NOW APPLIED, AND THE VALUE DID NOT CHANGE. It was held
+## disclosure-only while §19.8.9 owned the question; decision 951 answers it --
+## a budget solve divides by floor x measured multiplier -- so `_affordable`
+## solves against `budget_ms / 1.33`. 1.33 is the same measurement it always
+## was. What changed is that the solve uses it instead of printing it.
+##
+## AND IT IS NECESSARY, NOT SUFFICIENT -- the part that will otherwise be
+## forgotten. One over-budget cell is fixed by this and one is still about
+## 37 ms over; and the multiplier is ONE-PLACE, measured at a single location
+## and not known to generalise. Solving the horizon from a per-place instance
+## budget is the step after this one, and it wants a MEASURED frame at the
+## place it solves for rather than this one number carried further than it was
+## measured. `test_the_budget_solve_divides_by_the_floors_measured_multiplier` keeps the quoted
+## figure current against the artefact it came from.
 const EMPTY_STAGE_UNDER_PREDICTS := 1.33
 
 
@@ -1027,11 +1037,22 @@ func _affordable(groups: PackedStringArray, implied: Dictionary) -> Dictionary:
     if total <= 0.0:
         return {"ok": true, "instances": 0.0, "why": "nothing implied"}
     var mean_ns := weighted_ns / total
-    var affordable := _fc.budget_ms * 1.0e6 / mean_ns
+    # DECISION 951: THE SOLVE DIVIDES BY FLOOR x MEASURED MULTIPLIER. The
+    # coefficient is a floor, so the budget it would spend unaided is spent
+    # against a frame that does not exist. Dividing the budget by the measured
+    # multiplier is the same arithmetic as pricing each instance at what it
+    # really costs, and it is done here, once, at the point of use -- so a
+    # caller reading `instances` is reading what fits rather than what would
+    # fit on an empty stage. See EMPTY_STAGE_UNDER_PREDICTS for what this is
+    # NOT: sufficient, or known to hold anywhere but where it was measured.
+    var effective_ms := _fc.budget_ms / EMPTY_STAGE_UNDER_PREDICTS
+    var affordable := effective_ms * 1.0e6 / mean_ns
     return {
         "ok": true,
         "instances": affordable,
         "budget_ms": _fc.budget_ms,
+        "budget_ms_effective": effective_ms,
+        "empty_stage_multiplier": EMPTY_STAGE_UNDER_PREDICTS,
         "mean_ns_per_instance": mean_ns,
         "implied_total": total,
         "implied_ms": weighted_ns / 1.0e6,
@@ -1039,12 +1060,11 @@ func _affordable(groups: PackedStringArray, implied: Dictionary) -> Dictionary:
                 + str(_fc.host.get("rendering_method", "?")),
         "predicted_from": ("render_cost.json's empty-stage coefficient, which is a FLOOR and "
                 + "not a forecast: measured against a real frame it under-predicts by about "
-                + "%sx, so a scatter thinned to fit %s ms lands nearer %s ms. The correction "
+                + "%sx. Per decision 951 the solve divides by it, so the %s ms budget is spent "
                         % [String.num(EMPTY_STAGE_UNDER_PREDICTS, 2),
-                                String.num(_fc.budget_ms, 1),
-                                String.num(_fc.budget_ms * EMPTY_STAGE_UNDER_PREDICTS, 1)]
-                + "is not applied here; the coefficient is §19.8.9's."),
-        "budget_ms_if_corrected": _fc.budget_ms / EMPTY_STAGE_UNDER_PREDICTS,
+                                String.num(_fc.budget_ms, 1)]
+                + "as %s ms here. Necessary, not sufficient: the multiplier is one-place."
+                        % String.num(effective_ms, 1)),
     }
 
 

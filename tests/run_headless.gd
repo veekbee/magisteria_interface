@@ -80,7 +80,7 @@ func _initialize() -> void:
     test_the_verdict_is_read_and_never_supplied()
     test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one()
     test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate()
-    test_the_budget_says_it_is_made_from_a_floor()
+    test_the_budget_solve_divides_by_the_floors_measured_multiplier()
     test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it()
     test_the_scatter_measurement_verifies_in_pixels_not_primitives()
     test_every_wire_life_form_resolves_to_a_family()
@@ -2071,7 +2071,8 @@ func test_the_cost_model_refuses_outside_its_measured_span() -> void:
         var t := fs.triangles_of(life_form)
         check(bool(fc.per_instance_ns(t)["ok"]),
                 "family %s at %d triangles cannot be priced by the measurement" % [life_form, t])
-    var budget := fc.instances_within_budget(fs.triangles_of("tree"))
+    var budget := fc.instances_within_budget(fs.triangles_of("tree"),
+            VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS)
     check(budget > 1000, "the budget holds only %d trees" % budget)
     print("cost model: %.2f + %.5f ns per triangle, budget holds %d trees of %d triangles"
             % [fc.intercept_ns, fc.slope_ns_per_triangle, budget, fs.triangles_of("tree")])
@@ -2127,6 +2128,16 @@ func test_the_scatter_reports_what_it_could_not_draw() -> void:
     check(bool(budget["ok"]), "no budget was computed: %s" % str(budget.get("why", "")))
     check(float(budget["implied_ms"]) > 0.0, "the implied cost is zero")
     check(float(budget["budget_ms"]) > 0.0, "no frame budget came from the measurement")
+    # Decision 951 on a real build: the head this scatter solved for is what
+    # the CORRECTED budget holds, not what the empty stage would.
+    var spent_ms := float(budget["instances"]) * float(budget["mean_ns_per_instance"]) / 1.0e6
+    check(absf(spent_ms - float(budget["budget_ms_effective"])) < 0.01,
+            "the affordable head spends %s ms and the effective budget is %s ms"
+            % [String.num(spent_ms, 3), String.num(float(budget["budget_ms_effective"]), 3)])
+    check(absf(float(budget["budget_ms_effective"])
+                    * VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS
+                    - float(budget["budget_ms"])) < 1.0e-6,
+            "the effective budget is not the nominal one divided by the multiplier")
     print("scatter: %d texels, %s implied at %.0f ms against a %.1f ms budget, share %s (%s)"
             % [int(r["texels"]), String.num(total_implied, 0), float(budget["implied_ms"]),
                float(budget["budget_ms"]), String.num(float(r["share_drawn"]), 5),
@@ -2901,21 +2912,41 @@ func test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate() -
                     ", warm-up at the head" if low.has("head_warm_up") else ""])
 
 
-func test_the_budget_says_it_is_made_from_a_floor() -> void:
-    """The scatter budgets by dividing a frame budget by `render_cost.json`'s
-    per-instance coefficient, and that coefficient is measured on an empty
-    stage. It is a FLOOR, so the budget it yields is an over-estimate of what
-    fits, by however far a real frame sits above it.
+func test_the_budget_solve_divides_by_the_floors_measured_multiplier() -> void:
+    """DECISION 951, PINNED AT BOTH SOLVE SITES.
 
-    That is not a hypothetical. At the basin's densest cells the thinning is
-    already engaged -- one draws 6.8% of its implied stand -- and the frame
-    still measures 36 to 49 ms against a 33.3 ms budget. Two of the five draw
-    everything, believing they fit, and do not.
+    `render_cost.json`'s per-instance coefficient is measured on an empty stage
+    -- no terrain, no culling, no LOD -- so a budget spent against it is spent
+    against a frame nobody plays. At the basin's densest cells the thinning was
+    already engaged, one cell drawing 6.8% of its implied stand, and the frame
+    still measured 36 to 49 ms against a 33.3 ms budget: two of five drew
+    everything, believing they fit, and did not.
 
-    The correction is NOT applied: §19.8.9 owns the coefficient. What is
-    required is that the budget block SAYS so, and that the figure it says stays
-    the one `scatter_cost.json` actually measures.
+    This test asserts the LIVE relationship, not the old disclosure. It was
+    written when the correction was quoted and deliberately not applied, and
+    §19.8.9 has since answered -- so what it checks now is that a solve divides
+    by the multiplier, that the multiplier is the one `scatter_cost.json`
+    measures, and that neither solve site can quietly answer the empty stage
+    instead.
     """
+    var fc := FrameCost.load_from()
+    if fc.budget_ms > 0.0:
+        var tri := family_set().triangles_of("tree")
+        var corrected := fc.instances_within_budget(tri,
+                VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS)
+        var floor_only := fc.instances_within_budget(tri, 1.0)
+        check(corrected > 0 and floor_only > corrected,
+                "the corrected budget (%d) does not sit below the floor's own (%d), so the "
+                        % [corrected, floor_only]
+                + "multiplier is not being applied")
+        check(absf(float(floor_only) / float(corrected)
+                        - VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS) < 0.02,
+                "floor/corrected is %sx and the multiplier is %sx"
+                % [String.num(float(floor_only) / float(corrected), 3),
+                        String.num(VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS, 2)])
+        print("budget: %d trees at the floor, %d once decision 951 is applied"
+                % [floor_only, corrected])
+
     var f := FileAccess.open("res://measurements/scatter_cost.json", FileAccess.READ)
     if f == null:
         check(false, "no scatter_cost.json to check the quoted ratio against")
@@ -2934,7 +2965,8 @@ func test_the_budget_says_it_is_made_from_a_floor() -> void:
             + "now measures %sx. The quoted figure is what a reader uses to know what the "
                     % String.num(ratio, 3)
             + "budget is worth, so it has to track the measurement it came from.")
-    print("budget: the empty stage under-predicts by %sx measured, %sx quoted"
+    print("budget: the empty stage under-predicts by %sx measured, %sx quoted, and the "
+                    + "solve divides by it"
             % [String.num(ratio, 3), String.num(VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS, 2)])
 
 

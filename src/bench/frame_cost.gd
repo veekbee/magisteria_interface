@@ -137,8 +137,18 @@ func predict(triangles: int, instances: int) -> Dictionary:
 
 
 ## The largest instance count that fits the budget at this complexity.
-func instances_within_budget(triangles: int) -> int:
+##
+## THE MULTIPLIER IS A REQUIRED ARGUMENT AND HAS NO DEFAULT, which is the
+## point of it. Decision 951 rules that a budget solve divides by floor x
+## measured multiplier; this file reads `render_cost.json`, whose coefficient
+## is the floor, and the multiplier is measured elsewhere (`scatter_cost.json`,
+## quoted as `VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS`). Defaulting it to
+## 1.0 here would leave a second, quieter solve that answers the empty stage
+## while the first answers the frame -- so the caller states which measurement
+## it is spending, or does not get a number. Pass 1.0 deliberately to ask what
+## the floor alone would hold.
+func instances_within_budget(triangles: int, empty_stage_multiplier: float) -> int:
     var per := per_instance_ns(triangles)
-    if not bool(per["ok"]) or float(per["ns"]) <= 0.0:
+    if not bool(per["ok"]) or float(per["ns"]) <= 0.0 or empty_stage_multiplier <= 0.0:
         return 0
-    return int(budget_ms * 1.0e6 / float(per["ns"]))
+    return int(budget_ms / empty_stage_multiplier * 1.0e6 / float(per["ns"]))

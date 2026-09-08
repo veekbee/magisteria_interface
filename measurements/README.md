@@ -1359,11 +1359,17 @@ it fitted and did not. **A scatter cannot budget itself with a coefficient that 
 frame it is budgeting for**, and no choice of `k` repairs that — at best it moves which cells the
 error is visible in.
 
-The correction is **not applied here**: §19.8.9 owns the coefficient, and dividing the budget by 1.33
-would thin the scatter everywhere, which is a fidelity decision and not this client's. What is
-applied is disclosure — the report's `budget` block now names the coefficient as a floor, quotes the
-measured ratio, and carries `budget_ms_if_corrected`. `test_the_budget_says_it_is_made_from_a_floor`
-keeps the quoted figure tracking `scatter_cost.json`, currently 1.334× measured against 1.33 quoted.
+**The correction is now applied.** It was held disclosure-only while §19.8.9 owned the coefficient;
+**decision 951** answers it — a budget solve divides by floor × measured multiplier — so the solve
+spends `budget_ms / 1.33` and the report carries `budget_ms_effective` beside the nominal figure.
+`test_the_budget_solve_divides_by_the_floors_measured_multiplier` pins both solve sites and keeps the
+quoted multiplier tracking `scatter_cost.json`, currently 1.334× measured against 1.33 quoted.
+
+**The three rows above were measured before that landed**, and they are left as they were rather than
+re-labelled: they are the evidence the ruling was made on. What applying it does to them is
+arithmetic — where the frame budget was the binding constraint, the affordable head divides by 1.33
+and so does the share. What it does not do is fix them, which is the caveat the ruling carries in its
+own arithmetic: the multiplier is **one-place**, measured here and not known to generalise.
 
 **What this says about the revisit trigger.** The trigger fires, but not for the reason it names: the
 ruled `k` is over budget at three of five hard cells, and the instrument that ranked them mis-ranks

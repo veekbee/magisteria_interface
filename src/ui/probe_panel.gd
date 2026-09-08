@@ -218,10 +218,16 @@ func show_scatter(r: Dictionary) -> void:
     # NOTE: GDScript's format has no %g. It fails at runtime rather than at
     # parse, exactly as burn_edge.gd records for %e, so the share goes through
     # String.num instead.
+    # THE SPENDABLE BUDGET, NOT THE NOMINAL ONE. Per decision 951 the solve
+    # divides the frame budget by the empty stage's measured multiplier, so the
+    # count beside it is what fits at real cost. Printing the nominal 33.3 ms
+    # next to a corrected count would read as a solve that does not close.
     scatter_share.text = ("share drawn %s — the wire implies %s instances at %.1f ms; "
-            + "the %.1f ms budget holds %s on %s") % [
+            + "%.1f of the %.1f ms budget (decision 951) holds %s on %s") % [
             String.num(share, 5), _si(float(budget.get("implied_total", 0.0))),
-            float(budget.get("implied_ms", 0.0)), float(budget.get("budget_ms", 0.0)),
+            float(budget.get("implied_ms", 0.0)),
+            float(budget.get("budget_ms_effective", budget.get("budget_ms", 0.0))),
+            float(budget.get("budget_ms", 0.0)),
             _si(float(budget.get("instances", 0.0))), str(budget.get("measured_on", "?"))]
 
 
