@@ -156,6 +156,74 @@ var verdict_banner: VerdictBanner = null
 var console: DevConsole = null
 var verbs: ConsoleVerbs = null
 
+## Degrees of pan per pixel of mouse movement while embodied. The same quarter
+## degree `free_flight.gd` uses, so a person's hand means the same thing in
+## both.
+const LOOK_DEGREES_PX := 0.25
+
+
+## DRIVING THE BODY. Fly mode is available now; walk mode is gated on the tile
+## pyramid, and `DebugPlayer.walk_available` refuses it with the arithmetic
+## rather than a comment.
+##
+## THE ORDER HERE IS THE WHOLE CLAIM. The body moves, the producer is asked for
+## a bundle for where it now stands, and the camera is placed at the
+## observation point THE BUNDLE REPORTS. The camera is never told a height. If
+## the producer ever answers differently -- a posture, a stature, a real
+## envelope -- the view follows without a line changing here, which is what
+## "the camera coincides with the observation point" has to mean to be worth
+## saying.
+func _process(delta: float) -> void:
+    if verbs == null or verbs.body == null or _terrain.producer == null:
+        return
+    var body: DebugPlayer = verbs.body
+    if console != null and console.visible:
+        # Typing a command is not walking.
+        delta = 0.0
+    var intent := Vector2(
+            float(Input.is_key_pressed(KEY_D)) - float(Input.is_key_pressed(KEY_A)),
+            float(Input.is_key_pressed(KEY_W)) - float(Input.is_key_pressed(KEY_S)))
+    body.step(_terrain.bundle, delta, intent)
+    if not body.flying:
+        var here := Vector2(body.ground[0], body.ground[2])
+        body.settle(_terrain.terrain.drawn_surface_y(here, _terrain.heightfield))
+
+    _terrain.observer = body.observer()
+    var moment: Dictionary = _terrain.shown
+    if moment.is_empty():
+        return
+    _terrain.bundle = _terrain.producer.bundle_for(str(moment["window"]), int(moment["day"]),
+            _terrain.observer)
+    _place_camera_at_the_reported_point(body)
+
+
+func _place_camera_at_the_reported_point(body: DebugPlayer) -> void:
+    var cam: Camera3D = _terrain.rig.fly
+    if cam == null:
+        return
+    var eye := _terrain.bundle.observation_point
+    if eye.size() != 3:
+        return
+    # World metres into the coordinates the scene is drawn in. The precision
+    # the bundle carried is spent HERE, at a named place, rather than lost in
+    # a container three steps earlier.
+    var mesh := _terrain.terrain.world_to_mesh(Vector2(eye[0], eye[2]), _terrain.heightfield)
+    cam.position = Vector3(mesh.x, float(eye[1]) * _terrain.terrain.exaggeration, mesh.y)
+    cam.rotation = Vector3(deg_to_rad(body.pitch_degrees), deg_to_rad(-body.heading_degrees), 0.0)
+
+
+func _unhandled_input(event: InputEvent) -> void:
+    if verbs == null or verbs.body == null:
+        return
+    if console != null and console.visible:
+        return
+    var motion := event as InputEventMouseMotion
+    if motion != null and Input.get_mouse_button_mask() & MOUSE_BUTTON_MASK_RIGHT:
+        verbs.body.heading_degrees = fmod(
+                verbs.body.heading_degrees + motion.relative.x * LOOK_DEGREES_PX, 360.0)
+        verbs.body.pitch_degrees = clampf(
+                verbs.body.pitch_degrees - motion.relative.y * LOOK_DEGREES_PX, -85.0, 85.0)
+
 
 func _on_field_changed(window: String, row: String, day: int, group: int) -> void:
     if not _terrain.show_field(window, row, day, group):

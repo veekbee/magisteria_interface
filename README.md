@@ -7,7 +7,16 @@ build machinery live here. **The design corpus does not.**
 
 ```
 contract/     the vendored artefact and its pin
-src/          GDScript — contract loader, UI
+src/          GDScript — contract loader, terrain, fixture, UI
+src/percept/    the bundle: what one observer is given about one moment, and the
+                producer that stands in for the simulation by handing over the
+                fixture unchanged
+src/transducer/ everything that consumes a bundle and reads no artefact behind
+                one. Membership is the path, the gate scans it, and
+                src/transducer/transducer.gd says what is outside it and why
+src/probe/      development instruments — the instance probe and the percept
+                readout. A view of data this client holds whole, exempt by that
+                context; against a live wire they are absent by construction
 scenes/       Godot scenes
 assets/       the vendored artefacts and M5's families; see assets/README.md for what commits
 measurements/ numbers measured here rather than vendored — see measurements/README.md
