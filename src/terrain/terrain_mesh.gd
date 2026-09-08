@@ -24,6 +24,12 @@ var vertex_count: int = 0
 var quad_count: int = 0
 var skipped_quads: int = 0
 var stride: int = 1
+
+## THE DETAIL TERM THIS MESH WAS BUILT WITH, or null. Held so that
+## `GroundSurface` can refuse to place plants on a surface this mesh does not
+## draw -- one ground, every consumer, enforced by there being nowhere to get a
+## second one.
+var detail: DetailField = null
 var exaggeration: float = 1.0
 
 ## What the NORMALS are computed as if the exaggeration were, which is not what
@@ -49,8 +55,13 @@ var shading_exaggeration: float = 1.0
 ## 1.0 everywhere in this project; `shading_exaggeration` steepens the gradient
 ## the NORMALS are computed from, which moves no geometry.
 func build(hf: Heightfield, stride_: int = 2, exaggeration_: float = 1.0,
-           shading_exaggeration_: float = -1.0) -> ArrayMesh:
+           shading_exaggeration_: float = -1.0, detail_: DetailField = null) -> ArrayMesh:
     stride = max(1, stride_)
+    # RECORDED, NOT JUST APPLIED. `GroundSurface` compares this against the
+    # detail term a scatter is about to place with, and refuses when they
+    # differ -- so there is no arrangement in which the plants stand on a
+    # surface this mesh does not draw.
+    detail = detail_
     exaggeration = exaggeration_
     shading_exaggeration = (exaggeration_ if shading_exaggeration_ < 0.0
             else shading_exaggeration_)
@@ -67,6 +78,12 @@ func build(hf: Heightfield, stride_: int = 2, exaggeration_: float = 1.0,
             # the mesh is a RESAMPLING of the field, which is exactly where
             # §16.5's terracing appears if the sampling is nearest.
             h[j * nx + i] = hf.height_at(float(i * stride), float(j * stride))
+            if detail != null and detail.is_loaded() and not is_nan(h[j * nx + i]):
+                # AT THE VERTEX'S OWN WORLD POSITION. The detail is a function
+                # of position and nothing else, so it is evaluated where the
+                # vertex is rather than interpolated from anywhere.
+                var w := hf.texel_to_world(float(i * stride), float(j * stride))
+                h[j * nx + i] = h[j * nx + i] + detail.detail_at(w)
 
     var verts := PackedVector3Array()
     var normals := PackedVector3Array()

@@ -1,0 +1,77 @@
+{
+  "_what": "Per-landform parameters for the metre-scale detail function.",
+  "_FAKE": "EVERY NUMBER IN THIS FILE IS INVENTED. Not measured, not fitted, not derived -- chosen so the function has something to run on and so the shapes of the rows are settled before the data arrives. They are replaced wholesale by calibration rows measured from real metre ground, not adjusted. A reader quoting a figure from here is quoting a placeholder.",
+  "_replaced_by": "per-landform variograms, roughness spectra and drainage anisotropy measured from a real 1 m test window, plus the HAND taper. Sim-session side.",
+  "_the_shape_is_the_deliverable": "what is real here is the row SCHEMA -- which quantities a landform class carries and how the function consumes them. The values land into these slots.",
+  "units": {
+    "amplitude_m": "standard deviation of the detail term at the parent spacing, metres",
+    "spectral_slope": "fBm Hurst-like exponent; higher is smoother between octaves",
+    "anisotropy": "ratio of along-orientation wavelength to across; 1.0 is isotropic",
+    "orientation_source": "which field orients the anisotropy. `aspect` is downslope; `none` is isotropic",
+    "finest_wavelength_m": "the finest wavelength this class synthesises. Octaves are DERIVED from it and the parent spacing, so the row states a resolution rather than a count that means different things under different parents",
+    "orientation_deg": "constant orientation of the anisotropy for this class, degrees. Orientation by local aspect or drainage is NOT implemented -- see DetailField.orientation_note for the measured reason -- and `orientation_source` records what the calibration will want."
+  },
+  "landforms": {
+    "playa": {
+      "amplitude_m": 0.04,
+      "spectral_slope": 1.2,
+      "anisotropy": 1.0,
+      "_why_this_class": "the owner's acceptance criterion names it: a playa is smooth. It is a literal parameter row for that reason.",
+      "finest_wavelength_m": 0.25,
+      "orientation_deg": 0.0,
+      "_orientation_source_wanted": "none"
+    },
+    "floor": {
+      "amplitude_m": 0.18,
+      "spectral_slope": 0.95,
+      "anisotropy": 1.4,
+      "finest_wavelength_m": 0.25,
+      "orientation_deg": 30.0,
+      "_orientation_source_wanted": "aspect"
+    },
+    "slope": {
+      "amplitude_m": 0.55,
+      "spectral_slope": 0.8,
+      "anisotropy": 2.0,
+      "_why_anisotropic": "downslope lineation is what a hillside has and an isotropic field does not; the ratio is invented, the mechanism is not",
+      "finest_wavelength_m": 0.25,
+      "orientation_deg": 75.0,
+      "_orientation_source_wanted": "aspect"
+    },
+    "talus": {
+      "amplitude_m": 1.6,
+      "spectral_slope": 0.55,
+      "anisotropy": 1.2,
+      "_why_this_class": "the other half of the owner's criterion: rocky slopes are rough. Its amplitude is fortyfold the playa's, which is the discrimination the variogram test has to be able to see.",
+      "finest_wavelength_m": 0.25,
+      "orientation_deg": 75.0,
+      "_orientation_source_wanted": "aspect"
+    },
+    "riparian_margin": {
+      "amplitude_m": 0.09,
+      "spectral_slope": 1.1,
+      "anisotropy": 3.0,
+      "_why_its_own_class": "margins are their own calibration classes and are never interpolated between neighbours. A shoreline is where vertical error converts to horizontal error at 1/slope, so this row is the one whose amplitude matters most and is least free.",
+      "finest_wavelength_m": 0.25,
+      "orientation_deg": 15.0,
+      "_orientation_source_wanted": "channel"
+    }
+  },
+  "classifier": {
+    "_FAKE": "slope thresholds invented. The pipeline already derives slope, aspect and distance-to-channel at 100 m (iota_magisteria/data/terrain_layers_output/), none of it vendored here yet; when those arrive this classifier reads them instead of re-deriving slope from the lattice.",
+    "from": "slope of the parent lattice, and distance to a mapped channel where one is available",
+    "playa_below_slope_deg": 0.6,
+    "floor_below_slope_deg": 4.0,
+    "slope_below_slope_deg": 22.0,
+    "talus_above_slope_deg": 22.0,
+    "riparian_within_m": 150.0
+  },
+  "hand_taper": {
+    "_FAKE": "the taper's shape and both constants are invented; the MECHANISM is \u00a72b's and is the lead one for the water margin.",
+    "_what": "roughness amplitude tapers with height above nearest drainage: suppressed near channels and on floodplains, which are depositional and genuinely smooth, full strength upslope.",
+    "full_strength_above_m": 25.0,
+    "floor_fraction": 0.15,
+    "_absent_today": "no HAND raster is vendored, so the taper evaluates to 1.0 everywhere and says so. It is wired rather than waited for: a mechanism with nowhere to plug in is a mechanism that gets rebuilt when the data lands."
+  },
+  "_target_is_sub_metre": "0.25 m, not 1 m. The gate measured real ground: the p50 gap between one reported height and the next equals the cell size at every resolution, so 1 m ground passes the underfoot criterion at the stub's 5.0 m/s and FAILS at the 0.7 m/s a real load-bearing envelope reports. A synthesis target of 1 m would have inherited that failure."
+}

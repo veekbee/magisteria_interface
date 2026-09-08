@@ -1,5 +1,36 @@
 {
   "_exaggeration_is": "1:1, and it has to be for this artefact to mean anything: every number here is a vertical distance compared with a horizontal one, and an exaggerated mesh would inflate the residual against ground that had not moved.",
+  "detail_surface": {
+    "_and_that_number_is_vacuous": "a continuous function returns a different height at every representable position, so this comes out as the sampling step whatever the function does. A synthesizer of one micrometre amplitude measures the same as one of a metre. THE CRITERION STOPS DISCRIMINATING against a function, and walk mode is not opened on it.",
+    "_swing_is": "how far the synthesised ground actually moves over the distance a body covers in a second at each speed. THIS is the quantity a body would feel, and the criterion has no clause about it -- which is what the gate found and did not answer.",
+    "available": true,
+    "finest_synthesised_m": 0.244140625,
+    "metres_between_ground_changes": {
+      "max": 1.0,
+      "mean": 1.0,
+      "min": 1.0,
+      "n": 1440,
+      "p50": 1.0,
+      "p95": 1.0
+    },
+    "places": 12,
+    "vertical_swing_over_0_7_m": {
+      "max": 0.071840495525521,
+      "mean": 0.0228931760926988,
+      "min": 0.000664130615859904,
+      "n": 12,
+      "p50": 0.0166798586060395,
+      "p95": 0.071840495525521
+    },
+    "vertical_swing_over_5_m": {
+      "max": 0.592113283553772,
+      "mean": 0.18975291979649,
+      "min": 0.00563905709213941,
+      "n": 12,
+      "p50": 0.138661345382388,
+      "p95": 0.592113283553772
+    }
+  },
   "disc": {
     "_why": "what tools/free_flight.gd builds a scatter within, so it is the ground a standing body has near field",
     "places_measured": 60,
@@ -64,7 +95,7 @@
       "p95": 252.284542625278
     }
   },
-  "measured_at_utc": "2026-09-08T06:15:16",
+  "measured_at_utc": "2026-09-08T17:57:09",
   "measurement": "ground relief at the overview and at the tile pyramid",
   "places": [
     {

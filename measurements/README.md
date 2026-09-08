@@ -1661,6 +1661,27 @@ travel for a threshold under pressure is the other one.
 fails if the underfoot measurement ever passes at 100 m, and the gate holds a control asserting that
 a *slower* body cannot open a gate a faster one closed.
 
+### And on a synthesised surface the criterion stops discriminating
+
+The detail function (`src/terrain/detail_field.gd`) is that product, and running the same instrument
+on it produced a second finding rather than a pass:
+
+| on the synthesised surface | |
+|---|---:|
+| metres between height changes (p50) | **1.0 m — the sampling step** |
+| vertical swing over 5 m of walking | 0.139 m |
+| vertical swing over 0.7 m of walking | 0.0167 m |
+
+**A raster cannot report a gap smaller than one cell; a continuous function has no cell.** It returns
+a different height at every representable position, so the gap comes out as whatever step the
+instrument used — and a synthesizer of one micrometre amplitude would measure exactly as well as one
+of a metre. The criterion is satisfied trivially and says nothing.
+
+So **walk mode is not opened on it.** What a body would actually feel is the swing — 14 cm of
+undulation per second at running pace, 1.7 cm at a load-bearing one — and the criterion has no
+clause about that. Adding one is a design question about how much ground movement is enough, not a
+threshold to pick, and it is carried rather than answered.
+
 **So the finding is that walk mode wants a product that does not exist**: metre-scale relief, which
 is a detail mesh or a synthesis rather than a terrain export. Synthesising it is *adding* to what
 the data says, which is a design question and not this repo's to answer. Fly mode is unaffected, and

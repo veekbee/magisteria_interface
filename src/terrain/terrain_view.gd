@@ -152,6 +152,7 @@ var _flow_mi: MeshInstance3D = null
 var _flow_display: FlowDisplay = null
 var field_report: Dictionary = {}
 var _cell_centres: Dictionary = {}
+var ground: GroundSurface = null
 
 var probe: CellProbe = null
 ## What `show_field` last painted. The probe reads the row that is DRAWN
@@ -686,6 +687,13 @@ func bind_families() -> Dictionary:
         groups = fixture.taxon_groups(fixture.windows[0], "band.pft_fractions")
     scatter = VegetationScatter.new()
     scatter.bind(heightfield, residence, fixture, families, frame_cost, terrain)
+    # ONE GROUND. The surface the scatter stands plants on is the surface the
+    # mesh draws, by there being one object that answers for both and refusing
+    # when they disagree. `terrain.detail` is null today, so this is the mesh's
+    # own triangulation -- the point is that it cannot become anything else for
+    # one consumer and not the other.
+    ground = GroundSurface.over(heightfield, terrain, terrain.detail)
+    scatter.ground = ground
     tint = VegetationTint.new()
     tint.bind(residence, fixture, families, scatter)
     return {

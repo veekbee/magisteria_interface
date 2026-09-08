@@ -1,0 +1,223 @@
+{
+  "_exaggeration_is": "1:1. Every number here is a vertical distance compared with a horizontal one, so an exaggerated surface would inflate the whole artefact against ground that had not moved.",
+  "_flat_is": "a synthesizer that adds a constant offset inside its amplitude bound. It satisfies every range check and discriminates nothing, which is why bounds alone cannot be the test.",
+  "classes": {
+    "floor": {
+      "_residual_is": "total surface minus lattice at the longest lag. It should come out near `gamma_at_max_lag`; a large disagreement means the detail term is not reaching the surface consumers sample.",
+      "amplitude_m_declared": 0.18,
+      "anisotropy": 1.4,
+      "gamma_at_max_lag": 0.000182043297661332,
+      "gamma_implied_by_row": 0.000174697608890078,
+      "gamma_lattice_m2": {
+        "1.0": 0.00184337369545654,
+        "16.0": 0.4592556443486,
+        "2.0": 0.00717875926334218,
+        "32.0": 1.89713384500419,
+        "4.0": 0.0276283590456042,
+        "64.0": 7.65860979977629,
+        "8.0": 0.111309031046639
+      },
+      "gamma_m2": {
+        "1.0": 0.000000193564742490557,
+        "16.0": 0.0000210405173287231,
+        "2.0": 0.000000561998281571371,
+        "32.0": 0.0000653074671786176,
+        "4.0": 0.00000194313043651272,
+        "64.0": 0.000182043297661332,
+        "8.0": 0.00000634379032127074
+      },
+      "gamma_residual_at_max_lag": -0.0300052579865353,
+      "gamma_total_m2": {
+        "1.0": 0.00183724355590637,
+        "16.0": 0.45744867734752,
+        "2.0": 0.00714950951399665,
+        "32.0": 1.89044242114139,
+        "4.0": 0.0275577449571471,
+        "64.0": 7.62860454178976,
+        "8.0": 0.110798509732153
+      },
+      "hurst_declared": 0.95,
+      "hurst_measured": 0.835527527408619,
+      "matches_rows": true
+    },
+    "playa": {
+      "_residual_is": "total surface minus lattice at the longest lag. It should come out near `gamma_at_max_lag`; a large disagreement means the detail term is not reaching the surface consumers sample.",
+      "amplitude_m_declared": 0.04,
+      "anisotropy": 1.0,
+      "gamma_at_max_lag": 0.0000106313460033292,
+      "gamma_implied_by_row": 0.00000218248828001157,
+      "gamma_lattice_m2": {
+        "1.0": 0.00184337369545654,
+        "16.0": 0.4592556443486,
+        "2.0": 0.00717875926334218,
+        "32.0": 1.89713384500419,
+        "4.0": 0.0276283590456042,
+        "64.0": 7.65860979977629,
+        "8.0": 0.111309031046639
+      },
+      "gamma_m2": {
+        "1.0": 0.00000000454036827171799,
+        "16.0": 0.000000873208688273433,
+        "2.0": 0.0000000165334037866546,
+        "32.0": 0.000003182565818166,
+        "4.0": 0.0000000617729746485881,
+        "64.0": 0.0000106313460033292,
+        "8.0": 0.000000228999017880474
+      },
+      "gamma_residual_at_max_lag": 0.00034250570197969,
+      "gamma_total_m2": {
+        "1.0": 0.0018436715461564,
+        "16.0": 0.459319919339079,
+        "2.0": 0.00718096623913002,
+        "32.0": 1.89745221149368,
+        "4.0": 0.0276294073892498,
+        "64.0": 7.65895230547827,
+        "8.0": 0.111314247174392
+      },
+      "hurst_declared": 1.2,
+      "hurst_measured": 0.938897969475113,
+      "matches_rows": true
+    },
+    "riparian_margin": {
+      "_residual_is": "total surface minus lattice at the longest lag. It should come out near `gamma_at_max_lag`; a large disagreement means the detail term is not reaching the surface consumers sample.",
+      "amplitude_m_declared": 0.09,
+      "anisotropy": 3.0,
+      "gamma_at_max_lag": 0.0000183834683835958,
+      "gamma_implied_by_row": 0.0000191461281592909,
+      "gamma_lattice_m2": {
+        "1.0": 0.00184337369545654,
+        "16.0": 0.4592556443486,
+        "2.0": 0.00717875926334218,
+        "32.0": 1.89713384500419,
+        "4.0": 0.0276283590456042,
+        "64.0": 7.65860979977629,
+        "8.0": 0.111309031046639
+      },
+      "gamma_m2": {
+        "1.0": 0.0000000129325578181302,
+        "16.0": 0.00000197042120322788,
+        "2.0": 0.0000000533396935452128,
+        "32.0": 0.00000706854649753959,
+        "4.0": 0.000000201643165004016,
+        "64.0": 0.0000183834683835958,
+        "8.0": 0.000000610709283170863
+      },
+      "gamma_residual_at_max_lag": 0.000674495644745754,
+      "gamma_total_m2": {
+        "1.0": 0.00184334864576558,
+        "16.0": 0.459360781723149,
+        "2.0": 0.00717685063221169,
+        "32.0": 1.89713563434016,
+        "4.0": 0.0276187357207994,
+        "64.0": 7.65928429542104,
+        "8.0": 0.111321728945764
+      },
+      "hurst_declared": 1.1,
+      "hurst_measured": 0.871576875092446,
+      "matches_rows": true
+    },
+    "slope": {
+      "_residual_is": "total surface minus lattice at the longest lag. It should come out near `gamma_at_max_lag`; a large disagreement means the detail term is not reaching the surface consumers sample.",
+      "amplitude_m_declared": 0.55,
+      "anisotropy": 2.0,
+      "gamma_at_max_lag": 0.00170645115772949,
+      "gamma_implied_by_row": 0.00372060304670088,
+      "gamma_lattice_m2": {
+        "1.0": 0.00184337369545654,
+        "16.0": 0.4592556443486,
+        "2.0": 0.00717875926334218,
+        "32.0": 1.89713384500419,
+        "4.0": 0.0276283590456042,
+        "64.0": 7.65860979977629,
+        "8.0": 0.111309031046639
+      },
+      "gamma_m2": {
+        "1.0": 0.00000354862241345199,
+        "16.0": 0.000231726558550047,
+        "2.0": 0.0000103897588584981,
+        "32.0": 0.000754858394996498,
+        "4.0": 0.0000283830941200629,
+        "64.0": 0.00170645115772949,
+        "8.0": 0.0000843651467031236
+      },
+      "gamma_residual_at_max_lag": -0.104223016391861,
+      "gamma_total_m2": {
+        "1.0": 0.00182592366888107,
+        "16.0": 0.453501330040812,
+        "2.0": 0.00707428001822239,
+        "32.0": 1.87167395244148,
+        "4.0": 0.0272148449250764,
+        "64.0": 7.55438678338443,
+        "8.0": 0.109870955989234
+      },
+      "hurst_declared": 0.8,
+      "hurst_measured": 0.752211366762681,
+      "matches_rows": true
+    },
+    "talus": {
+      "_residual_is": "total surface minus lattice at the longest lag. It should come out near `gamma_at_max_lag`; a large disagreement means the detail term is not reaching the surface consumers sample.",
+      "amplitude_m_declared": 1.6,
+      "anisotropy": 1.2,
+      "gamma_at_max_lag": 0.0342627539579208,
+      "gamma_implied_by_row": 0.12446233279404,
+      "gamma_lattice_m2": {
+        "1.0": 0.00184337369545654,
+        "16.0": 0.4592556443486,
+        "2.0": 0.00717875926334218,
+        "32.0": 1.89713384500419,
+        "4.0": 0.0276283590456042,
+        "64.0": 7.65860979977629,
+        "8.0": 0.111309031046639
+      },
+      "gamma_m2": {
+        "1.0": 0.000376644101251874,
+        "16.0": 0.0069834398309613,
+        "2.0": 0.000759130336616826,
+        "32.0": 0.0151594874847986,
+        "4.0": 0.00169423146323992,
+        "64.0": 0.0342627539579208,
+        "8.0": 0.00409704272094827
+      },
+      "gamma_residual_at_max_lag": -0.00199212415489836,
+      "gamma_total_m2": {
+        "1.0": 0.0022988292028644,
+        "16.0": 0.465695245170014,
+        "2.0": 0.00810712624270504,
+        "32.0": 1.94458634079756,
+        "4.0": 0.030412820574001,
+        "64.0": 7.6566176756214,
+        "8.0": 0.114704238424078
+      },
+      "hurst_declared": 0.55,
+      "hurst_measured": 0.539368787362984,
+      "matches_rows": true
+    }
+  },
+  "finest_synthesised_m": 0.244140625,
+  "lags_m": [
+    1.0,
+    2.0,
+    4.0,
+    8.0,
+    16.0,
+    32.0,
+    64.0
+  ],
+  "measured_at_utc": "2026-09-08T17:43:51",
+  "measurement": "variogram of the synthesized detail surface, per landform",
+  "parameters_are": "PLACEHOLDER rows from assets/detail/detail_rows.json, every value invented. What is checked is that the surface delivers what the rows declare; when measured targets land they drop into the same comparison.",
+  "parent_spacing_m": 1000.0,
+  "synthesizer": "conditional spectral refinement",
+  "verdict": {
+    "_control": "",
+    "discriminates": true,
+    "gamma_ratio": 3222.80489668866,
+    "gamma_ratio_implied": 1600.0,
+    "ok": true,
+    "roughest": "talus",
+    "slopes_match_rows": true,
+    "smoothest": "playa",
+    "why": "classes discriminate 3223x at the longest lag against 1600x implied by their amplitudes, and every class delivers its declared slope"
+  },
+  "vertical_exaggeration": 1.0
+}

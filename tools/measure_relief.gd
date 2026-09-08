@@ -161,6 +161,12 @@ func _init() -> void:
                             String.num(p50 / speed, 1)]),
         }
 
+    # THE SAME WALK ON THE DETAIL SURFACE, because the sketch says the detail
+    # function opens the gate only by making this measurement pass legitimately
+    # on the product it was waiting for -- and running it is how we find out
+    # what "legitimately" costs.
+    var detail := _on_the_detail_surface(hf, places, walk_m)
+
     var doc := {
         "measurement": "ground relief at the overview and at the tile pyramid",
         "measured_at_utc": Time.get_datetime_string_from_system(true),
@@ -220,6 +226,7 @@ func _init() -> void:
                     + "changes the height is a question about where the step started."),
             "by_speed": underfoot,
         },
+        "detail_surface": detail,
         "places": places,
     }
     _write(out_path, doc)
@@ -240,6 +247,17 @@ func _init() -> void:
                     as Dictionary).get("max", NAN)), 1))
     print("relief: the ground changes every %s m (p50 over %d walked runs)"
             % [String.num(float(run_q.get("p50", NAN)), 1), runs.size()])
+    if bool(detail.get("available", false)):
+        print("relief: on the SYNTHESISED surface the ground changes every %s m -- which is "
+                % String.num(float((detail["metres_between_ground_changes"] as Dictionary)
+                        .get("p50", NAN)), 1)
+                + "the sampling step and says nothing")
+        print("relief: it moves %s m over 5 m of walking and %s m over 0.7 m, which is what a "
+                % [String.num(float((detail["vertical_swing_over_5_m"] as Dictionary)
+                                .get("p50", NAN)), 3),
+                        String.num(float((detail["vertical_swing_over_0_7_m"] as Dictionary)
+                                .get("p50", NAN)), 4)]
+                + "body would feel and what the criterion does not ask about")
     for name in underfoot:
         var u: Dictionary = underfoot[name]
         print("relief: at %s m/s -- %s%s" % [String.num(float(u["sustainable_speed_m_s"]), 1),
@@ -268,6 +286,91 @@ func _vertices_in(hf: Heightfield, tm: TerrainMesh, centre: Vector2, radius: flo
             if (w - centre).length() <= radius and not is_nan(hf.height_at_texel(vx, vy)):
                 n += 1
     return n
+
+
+## THE UNDERFOOT WALK, REPEATED ON THE SYNTHESISED SURFACE -- and the finding
+## is that the criterion stops discriminating there.
+##
+## A raster cannot report a gap smaller than one cell, so on real ground the
+## measured gap IS the cell size and the criterion reduces to "is the data
+## finer than the per-second distance". A CONTINUOUS FUNCTION HAS NO CELL. It
+## returns a different number at every representable position, so the gap comes
+## out as the sampling step whatever the function does -- a synthesizer of one
+## micrometre amplitude passes exactly as well as one of a metre.
+##
+## So this reports the gap AND the amplitude over the distance a body covers in
+## a second, and says plainly that the first is vacuous here. Walk mode is NOT
+## opened on it: the criterion wants a second clause about how much the ground
+## moves before a function can satisfy it, and that clause is a design question
+## rather than a threshold to pick.
+func _on_the_detail_surface(hf: Heightfield, places: Array, walk_m: float) -> Dictionary:
+    var df := DetailField.load_from(hf)
+    if not df.is_loaded():
+        return {"available": false, "why": df.why_absent}
+    var runs: Array = []
+    var swing_5: Array = []
+    var swing_07: Array = []
+    var taken := 0
+    for p in places:
+        if taken >= 12:
+            break
+        var c: Vector2 = p["centre"]
+        if is_nan(df.height_at(c)):
+            continue
+        taken += 1
+        var last := df.height_at(c)
+        var since := 0.0
+        var lo5 := INF
+        var hi5 := -INF
+        var lo07 := INF
+        var hi07 := -INF
+        var d := 1.0
+        while d <= minf(walk_m, 120.0):
+            var q: Vector2 = c + Vector2(d, 0.0)
+            var h := df.height_at(q)
+            if is_nan(h):
+                break
+            since += 1.0
+            if h != last:
+                runs.append(since)
+                since = 0.0
+                last = h
+            d += 1.0
+        # THE SWING IS SAMPLED FINELY, because the question is how far the
+        # ground moves within one second of walking and at 0.7 m/s that is
+        # shorter than the metre step above. A first run reported NAN there,
+        # having taken no sample inside the distance it was asking about.
+        var fine := 0.0
+        while fine <= 5.0:
+            var h5 := df.height_at(c + Vector2(fine, 0.0))
+            if not is_nan(h5):
+                lo5 = minf(lo5, h5)
+                hi5 = maxf(hi5, h5)
+                if fine <= 0.7:
+                    lo07 = minf(lo07, h5)
+                    hi07 = maxf(hi07, h5)
+            fine += 0.05
+        if hi5 > lo5:
+            swing_5.append(hi5 - lo5)
+        if hi07 > lo07:
+            swing_07.append(hi07 - lo07)
+    return {
+        "available": true,
+        "places": taken,
+        "finest_synthesised_m": df.finest_m,
+        "metres_between_ground_changes": FlightTrace.quantiles(runs),
+        "_and_that_number_is_vacuous": ("a continuous function returns a different height at "
+                + "every representable position, so this comes out as the sampling step "
+                + "whatever the function does. A synthesizer of one micrometre amplitude "
+                + "measures the same as one of a metre. THE CRITERION STOPS DISCRIMINATING "
+                + "against a function, and walk mode is not opened on it."),
+        "vertical_swing_over_5_m": FlightTrace.quantiles(swing_5),
+        "vertical_swing_over_0_7_m": FlightTrace.quantiles(swing_07),
+        "_swing_is": ("how far the synthesised ground actually moves over the distance a body "
+                + "covers in a second at each speed. THIS is the quantity a body would feel, "
+                + "and the criterion has no clause about it -- which is what the gate found "
+                + "and did not answer."),
+    }
 
 
 ## A world point moved to the centre of the native texel it falls in, so no

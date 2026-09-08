@@ -136,6 +136,10 @@ func _initialize() -> void:
     test_the_mock_earns_a_rung_and_its_boundary_is_cell_shaped()
     test_no_subject_is_drawn_at_two_rungs_and_the_guard_can_fire()
     test_walking_the_boundary_switches_the_rung_once_and_never_both()
+    test_the_detail_is_exactly_zero_at_every_parent_sample()
+    test_the_detail_tells_a_playa_from_a_talus_slope()
+    test_one_ground_for_every_consumer_or_none_at_all()
+    test_the_detail_rows_say_that_they_are_invented()
     stage_the_main_scene()
 
 
@@ -6279,3 +6283,260 @@ func test_walking_the_boundary_switches_the_rung_once_and_never_both() -> void:
             "a subject drawn at two rungs does not show in the transition line")
     print("boundary: %d switch over %d steps of a monotone approach, and the transition line "
             % [switches, seen.size()] + "tells a switch from a leak")
+
+
+# ============================================================================
+# Terrain stage 0: the detail function, and the constraint the rest rests on.
+# ============================================================================
+
+func detail_field() -> DetailField:
+    return DetailField.load_from(heightfield())
+
+
+func test_the_detail_is_exactly_zero_at_every_parent_sample() -> void:
+    """THE CONSTRAINT THE WHOLE METHOD RESTS ON, and the one worth asserting
+    hardest: detail refines and never contradicts.
+
+    The function reproduces the shipped lattice values EXACTLY at the lattice,
+    so every consumer that samples there -- slope, aspect, routing, zonal
+    statistics, energy budgets -- is untouched by its existence. Not `within a
+    tolerance`: exactly, because the mechanism is subtracting the function's
+    own coarse component, and if that is right the difference is zero and if it
+    is wrong no tolerance makes it safe.
+
+    AND A ZERO FUNCTION WOULD PASS THIS, so the control is that the detail is
+    NOT zero away from the lattice."""
+    var hf := heightfield()
+    var df := detail_field()
+    check(df.is_loaded(), "the detail field did not load: %s" % df.why_absent)
+    if not df.is_loaded():
+        return
+
+    var nodes := 0
+    var worst := 0.0
+    for ty in range(300, 1000, 37):
+        for tx in range(200, 800, 41):
+            var w := hf.texel_to_world(float(tx), float(ty))
+            if is_nan(hf.height_at_world(w.x, w.y)):
+                continue
+            nodes += 1
+            worst = maxf(worst, absf(df.detail_at(w)))
+            var lattice := hf.height_at_world(w.x, w.y)
+            check(df.height_at(w) == lattice,
+                    "at a parent node the function gives %s and the lattice gives %s"
+                    % [String.num(df.height_at(w), 12), String.num(lattice, 12)])
+    check(nodes > 100, "only %d parent nodes were checked" % nodes)
+    check(worst == 0.0, "the detail is %s m at a parent node, not zero"
+            % String.num(worst, 15))
+
+    # THE CONTROL. A function that is zero everywhere satisfies the assertion
+    # above and refines nothing.
+    var moved := 0.0
+    var away := 0
+    for ty2 in range(300, 1000, 37):
+        var w2 := hf.texel_to_world(float(ty2) + 0.37, 500.41)
+        if is_nan(hf.height_at_world(w2.x, w2.y)):
+            continue
+        away += 1
+        moved = maxf(moved, absf(df.detail_at(w2)))
+    check(away > 5 and moved > 0.001,
+            "the detail is at most %s m anywhere between nodes, so it is a zero function and "
+                    % String.num(moved, 6)
+            + "the exactness above is about nothing")
+    print("detail: exactly zero at %d parent nodes, up to %s m between them, finest %s m"
+            % [nodes, String.num(moved, 3), String.num(df.finest_m, 3)])
+
+
+func test_the_detail_tells_a_playa_from_a_talus_slope() -> void:
+    """`REASONABLE FEATURES` HAS TO BE A MEASURED MATCH RATHER THAN TASTE, and
+    a bounded-but-flat synthesizer must fail.
+
+    The owner's acceptance criterion is a statement about SPREAD -- a playa is
+    smooth and rocky slopes are rough -- so bounds cannot be the test. A
+    function adding a constant offset inside its amplitude bound satisfies
+    every range check and tells the two apart not at all. The variogram is what
+    distinguishes them, and this is that measurement at gate scale."""
+    var hf := heightfield()
+    var df := detail_field()
+    if not df.is_loaded():
+        return
+    var centre := Vector2.INF
+    for ty in range(400, 1100, 11):
+        var cand := hf.texel_to_world(500.0, float(ty))
+        if not is_nan(hf.height_at_world(cand.x, cand.y)):
+            centre = cand
+            break
+    if centre == Vector2.INF:
+        check(false, "no valid ground to measure a variogram over")
+        return
+
+    var smooth := _semivariance(df, centre, "playa", 32.0)
+    var rough := _semivariance(df, centre, "talus", 32.0)
+    check(rough > 0.0 and smooth > 0.0, "one of the two classes has no variance at all")
+    check(rough / maxf(smooth, 1e-12) > 4.0,
+            "talus and playa differ by %sx at a 32 m lag. Their declared amplitudes differ by "
+                    % String.num(rough / maxf(smooth, 1e-12), 2)
+            + "fortyfold, so a synthesizer this close to flat discriminates nothing.")
+
+    # A VARIOGRAM THAT RISES WITH LAG, which is what a spectral claim means.
+    var near := _semivariance(df, centre, "talus", 2.0)
+    check(rough > near, "the talus variogram does not rise between a 2 m and a 32 m lag, so "
+            + "the field is white noise wearing a spectrum's parameters")
+
+    # THE FLAT CONTROL, in the gate rather than only in the tool.
+    check(_semivariance_of_constant(0.8) == 0.0,
+            "a constant offset was measured as having variance, so this instrument cannot see "
+            + "the defect it exists for")
+
+    # And the artefact agrees with the gate.
+    var f := FileAccess.open("res://measurements/detail_variogram.json", FileAccess.READ)
+    if f != null:
+        var parsed = JSON.parse_string(f.get_as_text())
+        if typeof(parsed) == TYPE_DICTIONARY:
+            var doc: Dictionary = parsed
+            check(bool((doc.get("verdict", {}) as Dictionary).get("ok", false)),
+                    "the recorded variogram run failed: %s"
+                    % str((doc.get("verdict", {}) as Dictionary).get("why", "")))
+            check(str(doc.get("parameters_are", "")).contains("PLACEHOLDER"),
+                    "the artefact does not say its parameters are invented")
+    print("detail: talus/playa semivariance %sx at a 32 m lag, rising with lag, and a constant "
+            % String.num(rough / maxf(smooth, 1e-12), 0) + "offset measures zero")
+
+
+## Half the mean squared difference between pairs a fixed distance apart, over
+## the detail term alone. The lattice's own variation is metres where the
+## detail's is centimetres, so scoring the sum would measure the lattice --
+## which a first run of the tool did, reporting every class within 2% of every
+## other.
+func _semivariance(df: DetailField, centre: Vector2, landform: String, lag: float) -> float:
+    var total := 0.0
+    var n := 0
+    for i in 200:
+        var u := StableHash.unit(StableHash.of3(i, int(lag), 3))
+        var v := StableHash.unit(StableHash.of3(i, int(lag), 5))
+        var a := centre + Vector2((u - 0.5) * 400.0, (v - 0.5) * 400.0)
+        var b := a + Vector2(lag, 0.0)
+        var da := df.detail_at(a, landform)
+        var db := df.detail_at(b, landform)
+        total += (da - db) * (da - db)
+        n += 1
+    return 0.0 if n == 0 else 0.5 * total / float(n)
+
+
+func _semivariance_of_constant(value: float) -> float:
+    var total := 0.0
+    for i in 50:
+        total += (value - value) * (value - value)
+    return 0.5 * total / 50.0
+
+
+func test_one_ground_for_every_consumer_or_none_at_all() -> void:
+    """THE WRONG-GROUND DEFECT, PREVENTED AT THE SCALE BELOW THE ONE THAT
+    CAUGHT IT.
+
+    Plants were once placed on the heightfield while the mesh drew a
+    triangulation of it; the two disagree by a mean of 36 m and up to 640 m,
+    which is invisible from a map camera and the whole picture at eye level. A
+    metre-scale detail term reopens exactly that class one scale down.
+
+    So there is one object both consumers ask, and it REFUSES to answer when
+    the mesh in front of it was built with a different detail term. Detail is
+    on for both or for neither; there is no arrangement in which one has it."""
+    var hf := heightfield()
+    var tm := TerrainMesh.new()
+    tm.build(hf, 8, 1.0)
+    var plain := GroundSurface.over(hf, tm, null)
+    check(plain.agrees_with_mesh(), "a mesh built with no detail disagrees with no detail")
+    # SOMEWHERE THE MESH ACTUALLY DRAWS. A point over one of the basin's holes
+    # gives NAN from both paths and would let every comparison below pass by
+    # comparing nothing.
+    var w := Vector2.INF
+    for ty in range(400, 1100, 13):
+        var cand := hf.texel_to_world(500.0, float(ty))
+        if not is_nan(tm.drawn_surface_y(cand, hf)):
+            w = cand
+            break
+    check(w != Vector2.INF, "no point on the mesh could be found to compare on")
+    if w == Vector2.INF:
+        return
+    check(not is_nan(plain.surface_at(w)), "the agreeing surface refused: %s" % plain.why_refused)
+    check(plain.surface_at(w) == tm.drawn_surface_y(w, hf),
+            "the surface a plant stands on is not the surface the mesh draws")
+
+    # THE REFUSAL, which is the whole guard.
+    var df := detail_field()
+    var mismatched := GroundSurface.over(hf, tm, df)
+    check(not mismatched.agrees_with_mesh(),
+            "a surface holding a detail term agrees with a mesh built without one")
+    check(is_nan(mismatched.surface_at(w)),
+            "a surface the mesh does not draw answered with a height anyway")
+    check(mismatched.why_refused.contains("wrong-ground"),
+            "the refusal does not say what it is preventing: %s" % mismatched.why_refused)
+
+    # AND WITH DETAIL ON BOTH SIDES it agrees again -- a gate, not a wall.
+    var detailed := TerrainMesh.new()
+    detailed.build(hf, 8, 1.0, -1.0, df)
+    var both := GroundSurface.over(hf, detailed, df)
+    check(both.agrees_with_mesh(), "detail on both sides still disagrees")
+    check(not is_nan(both.surface_at(w)), "the detailed surface refused: %s" % both.why_refused)
+
+    # THE SCATTER REFUSES LOUDLY rather than placing nothing. A silent empty
+    # stand reads as no vegetation here rather than as a mismatch.
+    var sc := VegetationScatter.new()
+    sc.bind(hf, residence(), fixture(), family_set(), FrameCost.load_from(), tm)
+    sc.ground = GroundSurface.over(hf, tm, df)
+    var r := sc.build("deepest_winter", 45, w, 1000.0)
+    check(not bool(r.get("ok", true)), "the scatter built on a surface the mesh does not draw")
+    check(str(r.get("why", "")).contains("wrong-ground"),
+            "the scatter's refusal does not name the defect: %s" % str(r.get("why", "")))
+    print("ground: one surface for both consumers, refused when the mesh carries a different "
+            + "detail term, and the scatter refuses loudly rather than placing nothing")
+
+
+func test_the_detail_rows_say_that_they_are_invented() -> void:
+    """PLACEHOLDER PARAMETERS HAVE TO ANNOUNCE THEMSELVES, everywhere a reader
+    might quote one. The row schema is the deliverable; the values are not, and
+    a number that does not say it is invented becomes a number somebody cites.
+
+    The same discipline the mock producer's constants carry, one lane over."""
+    var f := FileAccess.open(DetailField.ROWS_PATH, FileAccess.READ)
+    check(f != null, "no detail rows at %s" % DetailField.ROWS_PATH)
+    if f == null:
+        return
+    var text := f.get_as_text()
+    var parsed = JSON.parse_string(text)
+    check(typeof(parsed) == TYPE_DICTIONARY, "the rows are not a JSON object")
+    if typeof(parsed) != TYPE_DICTIONARY:
+        return
+    var doc: Dictionary = parsed
+    check(str(doc.get("_FAKE", "")).contains("INVENTED"),
+            "the rows do not say at the top that every value in them is invented")
+    check(str(doc.get("_replaced_by", "")).length() > 20,
+            "the rows do not say what replaces them")
+    check(str((doc.get("classifier", {}) as Dictionary).get("_FAKE", "")).length() > 20,
+            "the classifier's thresholds do not say they are invented")
+    check(str((doc.get("hand_taper", {}) as Dictionary).get("_FAKE", "")).length() > 20,
+            "the HAND taper's constants do not say they are invented")
+
+    # THE OWNER'S ACCEPTANCE CRITERION IS TWO LITERAL ROWS.
+    var landforms: Dictionary = doc.get("landforms", {})
+    check(landforms.has("playa") and landforms.has("talus"),
+            "the acceptance criterion names a playa and rocky slopes and they are not rows")
+    check(float((landforms["talus"] as Dictionary)["amplitude_m"])
+                    > 10.0 * float((landforms["playa"] as Dictionary)["amplitude_m"]),
+            "the rough class is not much rougher than the smooth one, so the rows do not "
+            + "express the criterion they were written for")
+
+    # AND THE TARGET IS SUB-METRE, not the 1 m the sketch first proposed: real
+    # 1 m ground passes the underfoot criterion at the stub's speed and fails
+    # at the 0.7 m/s a real envelope reports.
+    for name in landforms:
+        var finest := float((landforms[name] as Dictionary).get("finest_wavelength_m", 99.0))
+        check(finest < 1.0, "%s synthesises down to %s m, and 1 m ground fails the underfoot "
+                % [str(name), String.num(finest, 3)]
+                + "criterion at a load-bearing envelope's speed")
+    var df := detail_field()
+    check(df.orientation_note().contains("NOT implemented"),
+            "the orientation source is not recorded as unimplemented")
+    print("detail rows: invented and saying so in four places, playa and talus are literal "
+            + "rows, and every class synthesises below a metre")

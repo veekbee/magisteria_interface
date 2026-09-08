@@ -184,24 +184,22 @@ static func resolution_k(viewport_height_px: float, fov_degrees: float) -> float
     return viewport_height_px / (2.0 * t)
 
 
-## A 32-bit avalanche. Deterministic, portable, and not `String.hash()` or
-## `RandomNumberGenerator`: both are engine internals free to change between
-## versions, and a placement that moves when Godot updates is the defect this
-## whole scheme exists to remove.
+## A 32-bit avalanche. FORWARDED TO `StableHash`, which is the one
+## implementation: the detail function needs the same mixer for the same reason
+## placement does, and two copies of an avalanche are two things free to
+## diverge. The name stays here because three other files cite it by this name.
+##
+## Not `String.hash()` or `RandomNumberGenerator`: both are engine internals
+## free to change between versions, and a placement that moves when Godot
+## updates is the defect this whole scheme exists to remove.
 static func mix32(value: int) -> int:
-    var x: int = value & HASH_MASK
-    x = ((x ^ (x >> 16)) * 0x21f0aaad) & HASH_MASK
-    x = ((x ^ (x >> 15)) * 0x735a2d97) & HASH_MASK
-    return (x ^ (x >> 15)) & HASH_MASK
+    return StableHash.mix32(value)
 
 
 ## One hash over an ordered list of integers. Order matters and is the point:
 ## `[x, y]` and `[y, x]` are different ground.
 static func stable_hash(parts: Array) -> int:
-    var h: int = 0x9e3779b9
-    for p in parts:
-        h = mix32(h ^ mix32(int(p)))
-    return h
+    return StableHash.over(parts)
 
 
 ## THE SAME HASH OVER EXACTLY THREE PARTS, WITHOUT THE ARRAY.
@@ -213,26 +211,20 @@ static func stable_hash(parts: Array) -> int:
 ## loop that adds them up. Measured: the whole digest and jitter path cost
 ## 270 ms of a 1,670 ms build before this.
 static func stable_hash3(a: int, b: int, c: int) -> int:
-    var h: int = 0x9e3779b9
-    h = mix32(h ^ mix32(a))
-    h = mix32(h ^ mix32(b))
-    return mix32(h ^ mix32(c))
+    return StableHash.of3(a, b, c)
 
 
 ## The hash read as a fraction of 1, which is the form a rank and a jitter both
 ## want.
 static func hash01(h: int) -> float:
-    return float(h & HASH_MASK) / HASH_SPAN
+    return StableHash.unit(h)
 
 
 ## The family axis of the key, from the name rather than from an index, so
 ## adding a family to the fixture cannot move an existing family's plants.
 ## FNV-1a over the UTF-8 bytes -- small, specified elsewhere, and ours.
 static func family_key(life_form: String) -> int:
-    var h: int = 0x811c9dc5
-    for b in life_form.to_utf8_buffer():
-        h = ((h ^ int(b)) * 16777619) & HASH_MASK
-    return h
+    return StableHash.of_name(life_form)
 
 
 ## A Feistel round pair over `2 * bits` bits. Invertible for any round function,
@@ -394,6 +386,13 @@ var meshes: Dictionary = {}          ## life_form -> MultiMesh
 ## earns.
 var refinements: Dictionary = {}
 
+## ONE GROUND, EVERY CONSUMER. When set, every plant's footing comes through
+## this rather than off the mesh directly -- and it refuses to answer when the
+## mesh in front of it carries a different detail term from the one it holds.
+## The wrong-ground defect has already happened once at kilometre scale; this
+## is what stops it recurring at metre scale.
+var ground: GroundSurface = null
+
 var census: Dictionary = {}
 var report: Dictionary = {}
 
@@ -452,6 +451,14 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         # take its width from one life form and its height from another.
         report = {"ok": false, "why": ("the two vegetation rows name different group axes: "
                 + "%s against %s") % [str(groups), str(biomass_groups)]}
+        return report
+    # REFUSED LOUDLY RATHER THAN DROPPED QUIETLY. If the ground this scatter
+    # would stand plants on is not the ground the mesh draws, every instance
+    # would fail its height lookup and the build would report an empty stand --
+    # which reads as no vegetation here rather than as a mismatch.
+    if ground != null and not ground.agrees_with_mesh():
+        ground.surface_at(centre)
+        report = {"ok": false, "why": ground.why_refused}
         return report
     var missing := _fs.missing_for(groups)
 
@@ -829,7 +836,8 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             # why the first seam run photographed 1.65 million instances as a
             # patch on the horizon.
             var h := _hf.height_at_world(wx, wy)
-            var y := _tm.drawn_surface_y(Vector2(wx, wy), _hf)
+            var y := (_tm.drawn_surface_y(Vector2(wx, wy), _hf) if ground == null
+                    else ground.surface_at(Vector2(wx, wy)))
             if is_nan(h) or is_nan(y):
                 continue            # the one-texel nodata border; dropped, not clamped
             var m := _tm.world_to_mesh(Vector2(wx, wy), _hf)

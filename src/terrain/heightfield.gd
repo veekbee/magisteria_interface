@@ -105,7 +105,13 @@ func height_at_texel(x: int, y: int) -> float:
 
 
 ## One-dimensional Catmull-Rom through four samples, t in [0, 1] between p1, p2.
-static func _catmull(p0: float, p1: float, p2: float, p3: float, t: float) -> float:
+##
+## PUBLIC BECAUSE THE DETAIL FUNCTION NEEDS THIS EXACT INTERPOLANT AND NOT A
+## SECOND ONE. Its exactness at the parent lattice rests on subtracting a
+## coarse component put back through an interpolating scheme; using a different
+## one there would leave a residue at every node -- small, plausible, and a
+## violation of the one constraint the whole method rests on.
+static func catmull(p0: float, p1: float, p2: float, p3: float, t: float) -> float:
     var t2 := t * t
     var t3 := t2 * t
     return 0.5 * ((2.0 * p1)
@@ -135,8 +141,8 @@ func height_at(fx: float, fy: float) -> float:
             if is_nan(h):
                 return NAN
             cols[i] = h
-        rows[j] = _catmull(cols[0], cols[1], cols[2], cols[3], tx)
-    return _catmull(rows[0], rows[1], rows[2], rows[3], ty)
+        rows[j] = catmull(cols[0], cols[1], cols[2], cols[3], tx)
+    return catmull(rows[0], rows[1], rows[2], rows[3], ty)
 
 
 ## World (EPSG:5070 metres) -> continuous texel coordinate.

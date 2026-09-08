@@ -36,6 +36,17 @@ if grep -qE "SCRIPT ERROR|Parse Error|Failed to load" /tmp/import.log; then
   echo "import produced script or parse errors"; grep -E "SCRIPT ERROR|Parse Error" /tmp/import.log | head -5; fail=1
 else echo "ok"; fi
 
+echo "== every script compiles =="
+# A SCRIPT THAT FAILS TO COMPILE DOES NOT SAY SO WHERE YOU LOOK. `--import` does
+# not compile GDScript, and a broken `class_name` script resolves at runtime to
+# a bare GDScript with none of its statics -- so the symptom is "Nonexistent
+# function 'load_from' in base 'GDScript'" a thousand lines into a test log,
+# pointing at the caller rather than at the file with the error in it. Measured:
+# a single inferred-Variant warning in `detail_field.gd` took four runs to
+# locate that way. Loading every script names the file and the line.
+"$GODOT" --headless --script res://tools/compile_check.gd 2>&1 | tee /tmp/compile.log
+grep -q "^compile: all " /tmp/compile.log || { echo "-- not every script compiles"; fail=1; }
+
 echo "== headless tests =="
 "$GODOT" --headless --script res://tests/run_headless.gd 2>&1 | tee /tmp/test.log
 rc=${PIPESTATUS[0]}
