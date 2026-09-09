@@ -351,7 +351,7 @@ func _vertices_in(hf: Heightfield, tm: TerrainMesh, centre: Vector2, radius: flo
 ## surface and it would want its own row here rather than quietly replacing
 ## this one.
 func _on_the_detail_surface(hf: Heightfield, places: Array, walk_m: float) -> Dictionary:
-    var df := DetailField.load_from(hf)
+    var df := DetailField.load_from(hf, DetailField.ROWS_PATH, 0.0, TerrainLayers.load_from())
     if not df.is_loaded():
         return {"available": false, "why": df.why_absent}
     var runs: Array = []

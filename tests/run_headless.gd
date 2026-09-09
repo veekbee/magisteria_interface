@@ -154,6 +154,10 @@ func _initialize() -> void:
     test_a_patch_refines_its_own_level_and_not_the_overview()
     test_the_view_turns_detail_on_for_both_surfaces_or_neither()
     test_the_patch_keeps_ground_the_native_grid_does_not_have()
+    test_the_layers_ride_the_pyramids_own_grid()
+    test_aspect_is_read_through_its_validity_byte_and_never_around_it()
+    test_a_layer_decodes_into_the_range_its_pin_declares()
+    test_the_classifier_reads_the_layers_and_can_reach_the_margin()
     stage_the_main_scene()
 
 
@@ -6384,7 +6388,8 @@ func test_walking_the_boundary_switches_the_rung_once_and_never_both() -> void:
 # ============================================================================
 
 func detail_field() -> DetailField:
-    return DetailField.load_from(heightfield())
+    return DetailField.load_from(heightfield(), DetailField.ROWS_PATH, 0.0,
+            TerrainLayers.load_from())
 
 
 func test_the_detail_is_exactly_zero_at_every_parent_sample() -> void:
@@ -7540,3 +7545,329 @@ func test_the_patch_keeps_ground_the_native_grid_does_not_have() -> void:
             % [absent, np.n * np.n] + "%d of them are inside the %d the coarse mesh draws -- "
             % [np.no_native, had] + "0 holes opened and all %d positions at risk answered"
             % stood)
+
+
+# ============================================================================
+# The three derived terrain layers.
+# ============================================================================
+
+var _tlayers: TerrainLayers = null
+
+
+func terrain_layers() -> TerrainLayers:
+    if _tlayers == null:
+        _tlayers = TerrainLayers.load_from()
+    return _tlayers
+
+
+## A world position with all three layers under it, or Vector2.INF.
+func layered_place() -> Vector2:
+    var tl := terrain_layers()
+    var hf := heightfield()
+    if not tl.is_loaded():
+        return Vector2.INF
+    for ty in range(300, 1200, 23):
+        for tx in range(200, 900, 29):
+            var w := hf.texel_to_world(float(tx), float(ty))
+            if is_nan(hf.height_at_world(w.x, w.y)):
+                continue
+            var ok := true
+            for name in [TerrainLayers.SLOPE, TerrainLayers.ASPECT, TerrainLayers.DISTANCE]:
+                var at := tl.locate(str(name), w.x, w.y, 0)
+                if not bool(at.get("ok", false)):
+                    ok = false
+                    break
+                if tl.availability(str(at["key"])) != TilePyramid.PRESENT:
+                    ok = false
+                    break
+            if ok and not is_nan(tl.slope_degrees_at(w.x, w.y, 0)):
+                return w
+    return Vector2.INF
+
+
+func test_the_layers_ride_the_pyramids_own_grid() -> void:
+    """ONE GRID, ONE PRODUCER. The layers are emitted by reading the height
+    export's grid, not by re-deriving one: same origin, same tile_px, same
+    naming, same z-polarity and the SAME KEY SETS at every level.
+
+    A layer tile half a pixel off the height tile beneath it is a misalignment
+    nothing reports, because both look like data. So this compares the two pins
+    against each other rather than each against its own claim."""
+    var tl := terrain_layers()
+    var tp := TilePyramid.load_from()
+    if not tl.is_loaded() or not tp.is_loaded():
+        print("layers: %s -- skipping, and saying so"
+                % (tl.why_absent if not tl.is_loaded() else tp.why_absent))
+        return
+    check(tl.origin_x == tp.origin_x and tl.origin_y == tp.origin_y,
+            "the layers' grid corner is (%s, %s) and the pyramid's is (%s, %s)"
+            % [String.num(tl.origin_x, 6), String.num(tl.origin_y, 6),
+                    String.num(tp.origin_x, 6), String.num(tp.origin_y, 6)])
+    check(Array(tl.names()) == [TerrainLayers.ASPECT, TerrainLayers.DISTANCE,
+            TerrainLayers.SLOPE],
+            "the pin names %s" % str(Array(tl.names())))
+    # z = 0 IS THE FINEST HERE TOO, with the same control as the pyramid's.
+    check(tl.pixel_size_of(TerrainLayers.SLOPE, 0)
+                    < tl.pixel_size_of(TerrainLayers.SLOPE, 5),
+            "z=0 is not the finest layer level, so the polarity is inverted from the pyramid's")
+    for name in tl.names():
+        for z in 6:
+            check(tl.pixel_size_of(str(name), z) == tp.pixel_size_of(z),
+                    "%s z=%d is %s m and the pyramid's is %s m" % [str(name), z,
+                            String.num(tl.pixel_size_of(str(name), z), 1),
+                            String.num(tp.pixel_size_of(z), 1)])
+    # THE KEY SETS ARE IDENTICAL, which is the strong form: not "the same
+    # count" but the same tiles, so a layer never has ground where the height
+    # pyramid has none.
+    var missing := 0
+    var extra := 0
+    for k in tp.keys:
+        for name in tl.names():
+            if not tl.keys.has("%s/%s" % [str(name), str(k)]):
+                missing += 1
+    for k in tl.keys:
+        var parts := str(k).split("/", true, 1)
+        if parts.size() == 2 and not tp.keys.has(parts[1]):
+            extra += 1
+    check(missing == 0, "%d height tiles have no layer tile beside them" % missing)
+    check(extra == 0, "%d layer tiles name ground the height pyramid does not key" % extra)
+    var inv := tl.inventory()
+    check(int(inv["keyed"]) == tp.keys.size() * 3,
+            "%d layer tiles against %d height tiles times three"
+            % [int(inv["keyed"]), tp.keys.size()])
+    print("layers: %d tiles over %d layers on the pyramid's own grid, key sets identical, "
+            % [int(inv["keyed"]), tl.names().size()] + "%d present" % int(inv["present"]))
+
+
+func test_aspect_is_read_through_its_validity_byte_and_never_around_it() -> void:
+    """THE ONE READING THAT WOULD LOOK RIGHT AND BE MEANINGLESS.
+
+    Where B is 0 or 128 the components are zeroed, and zeroed components go
+    through `atan2((0-128)/127, (0-128)/127)` to 225 degrees -- a perfectly
+    plausible south-west. So the failure this prevents is not a crash and not a
+    NAN: it is a wrong answer, over half the source grid, that no reader could
+    tell from a right one.
+
+    The guard is structural rather than remembered: there is no method on
+    `TerrainLayers` that returns an azimuth without having consulted B.
+    `aspect_at` returns a STATE and a number, and the number is NAN in two of
+    the three states.
+
+    The control is that the naive decode really does produce 225."""
+    var tl := terrain_layers()
+    if not tl.is_loaded():
+        print("layers: %s -- skipping, and saying so" % tl.why_absent)
+        return
+    # THE CONTROL FIRST. If zeroed components did not decode to a plausible
+    # direction there would be nothing here to guard against.
+    var naive := rad_to_deg(atan2((0.0 - 128.0) / 127.0, (0.0 - 128.0) / 127.0))
+    check(absf(naive - -135.0) < 0.001 or absf(naive - 225.0) < 0.001,
+            "a zeroed aspect pixel decodes to %s degrees, not the 225 the guard is about"
+            % String.num(naive, 3))
+
+    var w := layered_place()
+    check(w != Vector2.INF, "no place has all three layers fetched under it")
+    if w == Vector2.INF:
+        print("layers: none fetched -- skipping, and saying so")
+        return
+    # A SCALAR READ OF ASPECT IS REFUSED, not quietly wrong. `value_at`'s
+    # arithmetic IS the misreading the direction pair exists to prevent.
+    check(is_nan(tl.value_at(TerrainLayers.ASPECT, w.x, w.y, 0)),
+            "aspect decoded as a scalar rather than refusing")
+
+    # AND THE THREE STATES ARE ALL REACHED SOMEWHERE, so the byte is carrying
+    # three values and not two.
+    var seen := {}
+    var valid_azimuths := 0
+    var out_of_range := 0
+    for j in 60:
+        for i in 60:
+            var q := w + Vector2(float(i - 30) * 400.0, float(j - 30) * 400.0)
+            var a := tl.aspect_at(q.x, q.y, 0)
+            var st := str(a["state"])
+            seen[st] = int(seen.get(st, 0)) + 1
+            if st == TerrainLayers.VALID:
+                valid_azimuths += 1
+                var deg := float(a["azimuth_deg"])
+                if is_nan(deg) or deg < -180.001 or deg > 180.001:
+                    out_of_range += 1
+            elif not is_nan(float(a["azimuth_deg"])):
+                # THE WHOLE POINT. A non-valid state must not carry a number.
+                out_of_range += 1
+    check(valid_azimuths > 100, "only %d of 3600 samples had a valid aspect" % valid_azimuths)
+    check(out_of_range == 0,
+            "%d samples carried an azimuth they should not have, or one out of range"
+            % out_of_range)
+    check(seen.has(TerrainLayers.NO_DATA),
+            "no sample was outside the basin, so the nodata state is untested here")
+    print("layers: aspect over 3600 samples -- %s; every non-valid state carries NAN and the "
+            % str(seen) + "naive decode of a zeroed pixel is %s degrees" % String.num(naive, 1))
+
+
+func test_a_layer_decodes_into_the_range_its_pin_declares() -> void:
+    """THE TWO SCALAR LAYERS HAVE RANGES THREE ORDERS OF MAGNITUDE APART -- 0 to
+    78.2 degrees against 0 to 183,725.9 m -- so one layer's constants applied to
+    the other's bytes is wrong by that much, with nothing to report it. Each is
+    decoded from its OWN stats block; this is the check that it was."""
+    var tl := terrain_layers()
+    var w := layered_place()
+    if not tl.is_loaded() or w == Vector2.INF:
+        print("layers: none fetched -- skipping, and saying so")
+        return
+    for name in [TerrainLayers.SLOPE, TerrainLayers.DISTANCE]:
+        var stats: Dictionary = (tl.layers[str(name)] as Dictionary)["stats"]
+        var lo := float(stats["min"])
+        var hi := float(stats["max"])
+        var taken := 0
+        var out := 0
+        var seen_lo := INF
+        var seen_hi := -INF
+        for j in 40:
+            for i in 40:
+                var q := w + Vector2(float(i - 20) * 600.0, float(j - 20) * 600.0)
+                var v := tl.value_at(str(name), q.x, q.y, 0)
+                if is_nan(v):
+                    continue
+                taken += 1
+                seen_lo = minf(seen_lo, v)
+                seen_hi = maxf(seen_hi, v)
+                if v < lo - 1.0e-6 or v > hi + 1.0e-6:
+                    out += 1
+        check(taken > 200, "%s decoded at only %d of 1600 samples" % [str(name), taken])
+        check(out == 0, "%s decoded %d samples outside its own declared range" % [str(name), out])
+        print("layers: %s over %d samples reads %s .. %s, declared %s .. %s"
+                % [str(name), taken, String.num(seen_lo, 2), String.num(seen_hi, 2),
+                        String.num(lo, 2), String.num(hi, 2)])
+    # THE CONTROL: the two ranges really are far enough apart that a swap would
+    # show. Without it "inside its own range" is a weak claim.
+    var s_hi := float((tl.layers[TerrainLayers.SLOPE] as Dictionary)["stats"]["max"])
+    var d_hi := float((tl.layers[TerrainLayers.DISTANCE] as Dictionary)["stats"]["max"])
+    check(d_hi > s_hi * 1000.0, "the two layers' ranges are within a thousandfold, so decoding "
+            + "one with the other's constants would not leave the range")
+
+
+func test_the_classifier_reads_the_layers_and_can_reach_the_margin() -> void:
+    """THE ROW THAT WAS UNREACHABLE.
+
+    `riparian_margin` has been a row since stage 0 -- and the row whose
+    amplitude matters most, because a shoreline converts vertical error to
+    horizontal error at 1/slope -- and nothing could ever return it. The only
+    field available was slope re-derived from a kilometre lattice; there was no
+    channel network to measure a distance from.
+
+    So this asserts the substantive change rather than the better slope: the
+    class exists in the field now, and the classifier says which source it
+    used."""
+    var hf := heightfield()
+    var tl := terrain_layers()
+    var with_layers := DetailField.load_from(hf, DetailField.ROWS_PATH, 0.0, tl)
+    var without := DetailField.load_from(hf, DetailField.ROWS_PATH, 0.0, null)
+    check(with_layers.is_loaded() and without.is_loaded(), "the rows did not load")
+    check(without.classifier_source().contains("parent lattice"),
+            "a field with no layers does not say it is re-deriving: %s"
+            % without.classifier_source())
+    if not tl.is_loaded():
+        print("layers: %s -- skipping the layered half, and saying so" % tl.why_absent)
+        return
+    check(with_layers.classifier_source().contains("assets/terrain/layers/"),
+            "a field with layers does not say it is reading them: %s"
+            % with_layers.classifier_source())
+
+    # THE LEVEL IS CHOSEN BY THE PARENT SPACING, not fixed at the finest. A
+    # classifier refining a kilometre lattice that sampled slope at 100 m would
+    # classify a kilometre of ground by one point of it.
+    check(with_layers.level_for_spacing(1000.0) == 3,
+            "a 1,000 m parent reads level %d, and 800 m is the closest in ratio"
+            % with_layers.level_for_spacing(1000.0))
+    check(with_layers.level_for_spacing(100.0) == 0,
+            "a 100 m parent does not read the finest level")
+
+    var w := layered_place()
+    check(w != Vector2.INF, "no place has all three layers fetched under it")
+    if w == Vector2.INF:
+        return
+    var seen := {}
+    for j in 70:
+        for i in 70:
+            var q := w + Vector2(float(i - 35) * 900.0, float(j - 35) * 900.0)
+            if is_nan(hf.height_at_world(q.x, q.y)):
+                continue
+            var c := with_layers.classify(q)
+            seen[c] = int(seen.get(c, 0)) + 1
+    check(int(seen.get("riparian_margin", 0)) > 0,
+            "the margin class is still unreachable over %d classified points: %s"
+            % [seen.values().size(), str(seen)])
+    check(seen.size() >= 3, "only %d classes appear, so the classifier is not discriminating"
+            % seen.size())
+    # AND THE MARGIN IS NOT EVERYTHING. A threshold that swallowed the basin
+    # would satisfy the check above and mean the opposite of what it claims.
+    var total := 0
+    for k in seen:
+        total += int(seen[k])
+    check(float(seen.get("riparian_margin", 0)) / float(total) < 0.5,
+            "%s%% of the basin classified as margin, which is a threshold swallowing the map"
+            % String.num(100.0 * float(seen.get("riparian_margin", 0)) / float(total), 1))
+
+    # A SLOPE AVERAGES AND A DISTANCE DOES NOT, and this is the control that
+    # found it -- after two wrong predictions, both of which this measurement
+    # refused.
+    #
+    # The first version of this class read BOTH layers at the level nearest the
+    # parent spacing: "sample a quantity at the scale you are using it", which
+    # is right for slope and inverts for a distance transform. The mean of a
+    # distance field over 800 m is not the distance of anything.
+    #
+    # WHAT WAS PREDICTED AND WHAT WAS MEASURED. First guess: the margin would
+    # be MORE reachable at a fine parent because a 150 m band cannot sit on an
+    # 800 m cell. Second guess, after that failed: the coarse read INVENTS
+    # margins by pulling distances down near channels. Measured, on the same
+    # points at the same threshold: the coarse read finds 8 where the fine
+    # read finds 49, and 2 of the 8 are places the fine field says are
+    # kilometres from a channel.
+    #
+    # SO IT IS WRONG IN BOTH DIRECTIONS AT ONCE, which is a stronger statement
+    # than either guess. A coarse read of a distance transform is not a blurred
+    # version of the fine one; it is a different field, erasing six margins in
+    # seven and inventing a couple that were never there. Averaging is
+    # meaningful for a quantity that has a value over an area and this does
+    # not have one.
+    var coarse_hits := 0
+    var fine_hits := 0
+    var fabricated := 0
+    var compared := 0
+    var near_m := float((with_layers.rows.get("classifier", {}) as Dictionary)
+            .get("riparian_within_m", 150.0))
+    for j2 in 70:
+        for i2 in 70:
+            var q2 := w + Vector2(float(i2 - 35) * 900.0, float(j2 - 35) * 900.0)
+            var d_fine := tl.distance_to_channel_m(q2.x, q2.y, 0)
+            var d_coarse := tl.distance_to_channel_m(q2.x, q2.y, 3)
+            if is_nan(d_fine) or is_nan(d_coarse):
+                continue
+            compared += 1
+            if d_coarse <= near_m:
+                coarse_hits += 1
+            if d_fine <= near_m:
+                fine_hits += 1
+            if d_coarse <= near_m and d_fine > near_m:
+                fabricated += 1
+    check(compared > 500, "only %d points could be compared at both levels" % compared)
+    # BOTH DIRECTIONS ASSERTED, because either alone is a weaker claim than
+    # what was measured and either alone could be arranged.
+    check(fabricated > 0, "reading the distance layer coarse invented no margins over %d "
+            % compared + "points, so half the reason this class pins itself to z=0 is not "
+            + "demonstrated here")
+    check(fine_hits > coarse_hits * 2, "the coarse read found %d margins against the fine "
+            % coarse_hits + "read's %d, so it is not erasing the class and this reading is "
+            % fine_hits + "wrong")
+    check(with_layers.classifier_source().contains("does not average"),
+            "the source line does not say why distance is read at a different level from "
+            + "slope: %s" % with_layers.classifier_source())
+    print("layers: classified %d points -- %s -- from %s"
+            % [total, str(seen), with_layers.classifier_source()])
+    print("layers: over %d points a %s m margin test reads %d hits at z=0 and %d at z=3 -- "
+            % [compared, String.num(near_m, 0), fine_hits, coarse_hits]
+            + "the coarse read erases %d real margins AND invents %d that are kilometres "
+            % [fine_hits - (coarse_hits - fabricated), fabricated]
+            + "from a channel. A distance transform is not sampled at the parent's scale the "
+            + "way a slope is.")

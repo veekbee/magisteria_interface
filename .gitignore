@@ -42,6 +42,15 @@
 /assets/terrain/tiles/**
 !/assets/terrain/tiles/PIN
 !/assets/terrain/tiles/.gdignore
+# The three derived layers -- slope, aspect, distance-to-channel -- on the same
+# grid as the pyramid, and 437 MB of it: three times the height tiles, because
+# derivative fields are rougher and PNG compresses roughness badly. Same rule
+# and the same shape of exception, and the README is kept too because it is
+# what tells a reader with no bytes what the directory is for.
+/assets/terrain/layers/**
+!/assets/terrain/layers/PIN
+!/assets/terrain/layers/.gdignore
+!/assets/terrain/layers/README.md
 # THE CLIENT FIXTURE NO LONGER COMMITS, and this paragraph said it did for
 # four days after it stopped. `fce9bd8` moved it to fetch-by-manifest under
 # decision 948 -- 28 MB against a 10,485,760-byte threshold -- and the line at

@@ -17,20 +17,20 @@
     "parent_spacing_m": 1000.0,
     "places": 12,
     "vertical_swing_over_0_7_m": {
-      "max": 0.071840495525521,
-      "mean": 0.0228931760926988,
+      "max": 0.0812099330073579,
+      "mean": 0.0235618282498725,
       "min": 0.000664130615859904,
       "n": 12,
-      "p50": 0.0166798586060395,
-      "p95": 0.071840495525521
+      "p50": 0.0167944129093485,
+      "p95": 0.0812099330073579
     },
     "vertical_swing_over_5_m": {
-      "max": 0.592113283553772,
-      "mean": 0.18975291979649,
-      "min": 0.00563905709213941,
+      "max": 0.646307983455245,
+      "mean": 0.192204434693622,
+      "min": 0.00690718400437618,
       "n": 12,
-      "p50": 0.138661345382388,
-      "p95": 0.592113283553772
+      "p50": 0.122532640415557,
+      "p95": 0.646307983455245
     }
   },
   "disc": {
@@ -97,7 +97,7 @@
       "p95": 252.284542625278
     }
   },
-  "measured_at_utc": "2026-09-09T05:12:10",
+  "measured_at_utc": "2026-09-09T08:10:48",
   "measurement": "ground relief at the overview and at the tile pyramid",
   "places": [
     {
@@ -950,12 +950,12 @@
     "_what": "the same discs measured against a near-field patch of the tile pyramid, built and seamed to the coarse mesh at each place. THIS IS THE ACCEPTANCE METRIC: the residual is how far a plant on the drawn surface stands from the ground the data holds, and it is what streaming buys down. Frame time is a budget to stay inside rather than the thing being bought.",
     "_worst_residual_is_zero_because": "the patch's vertices ARE the pyramid's texel centres, so at the points the data actually holds a value the drawn surface reproduces it exactly. That is the design and this is it stated, not a measurement of it -- read the next two figures for that.",
     "build_ms": {
-      "max": 68.0,
-      "mean": 42.0,
-      "min": 28.0,
+      "max": 73.0,
+      "mean": 44.2,
+      "min": 30.0,
       "n": 60,
-      "p50": 36.0,
-      "p95": 65.0
+      "p50": 38.0,
+      "p95": 70.0
     },
     "coarse_residual_anywhere_m": {
       "max": 429.503099325102,

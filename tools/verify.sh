@@ -43,16 +43,17 @@ python3 tools/fetch_artefacts.py --selftest || fail=1
 # client exists to display, and 1,526 of the suite's checks read it. A gate
 # that let those skip would go green having run half of itself.
 python3 tools/fetch_artefacts.py --quiet --require assets/fixture/PIN || fail=1
-# THE BYTES MUST NOT BE COMMITTABLE BY ACCIDENT. 141 MB of tile pyramid sits
-# under assets/terrain/tiles/ once fetched, against a ~10 MB threshold. The
-# .gitignore keeps it out; this is the check that the .gitignore still does,
-# because a rule nobody verifies is a rule that survives exactly until someone
-# adds a negation to it.
-tracked=$(git ls-files assets/terrain/tiles \
-  | grep -vE '^assets/terrain/tiles/(PIN|\.gdignore)$' || true)
+# THE BYTES MUST NOT BE COMMITTABLE BY ACCIDENT. 141 MB of tile pyramid and
+# 437 MB of derived layers sit under assets/terrain/ once fetched, against a
+# ~10 MB threshold. The .gitignore keeps them out; this is the check that the
+# .gitignore still does, because a rule nobody verifies is a rule that survives
+# exactly until someone adds a negation to it -- and the layers arrived by
+# adding three negations to it.
+tracked=$(git ls-files assets/terrain/tiles assets/terrain/layers \
+  | grep -vE '^assets/terrain/(tiles|layers)/(PIN|README\.md|\.gdignore)$' || true)
 if [ -n "$tracked" ]; then
   echo "fetched tile bytes are tracked by git:"; echo "$tracked" | head -5; fail=1
-else echo "ok -- only the pin and the .gdignore are tracked"; fi
+else echo "ok -- only the pins, READMEs and .gdignores are tracked"; fi
 
 echo "== no addons =="
 [ -d addons ] && { echo "addons/ exists"; fail=1; } || echo "ok"

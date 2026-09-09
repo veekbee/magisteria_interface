@@ -60,8 +60,9 @@
     }
   },
   "classifier": {
-    "_FAKE": "slope thresholds invented. The pipeline already derives slope, aspect and distance-to-channel at 100 m (magisteria/data/terrain_layers_output/), none of it vendored here yet; when those arrive this classifier reads them instead of re-deriving slope from the lattice.",
-    "from": "slope of the parent lattice, and distance to a mapped channel where one is available",
+    "_FAKE": "thresholds invented, and only the thresholds. Slope and distance-to-channel are now REAL: they are vendored at assets/terrain/layers/ (source data/terrain_layers_output/, reprojected onto the tile grid by the producer) and DetailField reads them at the level nearest its own parent spacing. A clone without them falls back to the lattice's own gradient and classifier_source() says which was used.",
+    "_riparian_was_unreachable": "until the distance layer arrived, `riparian_margin` was a row nothing could return -- the only field available was slope re-derived from a kilometre lattice, and there was no channel network to measure distance from. It is tested FIRST in the classifier now, because a margin on a 3-degree slope is a margin and asking about slope first would file it as `floor` and never reach the question.",
+    "from": "slope and distance-to-channel from assets/terrain/layers/ where fetched, sampled at the level nearest the parent spacing; the parent lattice's own gradient otherwise",
     "playa_below_slope_deg": 0.6,
     "floor_below_slope_deg": 4.0,
     "slope_below_slope_deg": 22.0,

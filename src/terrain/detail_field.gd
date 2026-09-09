@@ -90,6 +90,17 @@ var calibrated_at_parent_m: float = 0.0
 var calibration_note: String = ""
 
 var _hf: Heightfield = null
+## THE DERIVED LAYERS, when this clone has them. Null is a working clone and
+## the classifier says which source it used rather than answering the same way
+## either way.
+var _layers: TerrainLayers = null
+## Which level of the layers to read. DERIVED FROM THE PARENT SPACING, not
+## fixed at the finest: a classifier refining a 1 km lattice that sampled slope
+## at 100 m would classify a kilometre of ground by one point of it. The same
+## discipline `calibrated_at_parent_m` applies to amplitude -- a quantity is
+## read at the scale it is being used at -- and it falls out of the same
+## principle rather than being a second rule.
+var _layer_z: int = 0
 ## The 16 parent-node noise values of the cell last asked about, per landform:
 ## `landform -> [x0, y0, stencil]`.
 ##
@@ -107,10 +118,12 @@ var _stencil: Dictionary = {}
 
 
 static func load_from(hf: Heightfield, path: String = ROWS_PATH,
-                      spacing_m: float = 0.0) -> DetailField:
+                      spacing_m: float = 0.0,
+                      layers: TerrainLayers = null) -> DetailField:
     var df := DetailField.new()
     df._hf = hf
     df.parent_spacing_m = spacing_m if spacing_m > 0.0 else hf.pixel_size_m
+    df.bind_layers(layers)
     if not FileAccess.file_exists(path):
         df.why_absent = "no parameter rows at %s" % path
         return df
@@ -180,10 +193,12 @@ func for_parent(spacing_m: float) -> DetailField:
     df._hf = _hf
     df.rows = rows
     df.rows_path = rows_path
+    df._layers = _layers
     df.calibrated_at_parent_m = calibrated_at_parent_m
     df.calibration_note = calibration_note
     df.why_absent = why_absent
     df.parent_spacing_m = spacing_m
+    df._layer_z = df.level_for_spacing(spacing_m)
     df.finest_m = INF
     for name in df.landforms():
         df.finest_m = minf(df.finest_m,
@@ -221,6 +236,46 @@ func amplitude_for(landform: String) -> float:
     if ref <= 0.0 or parent_spacing_m <= 0.0 or is_equal_approx(ref, parent_spacing_m):
         return a
     return a * pow(parent_spacing_m / ref, float(p.get("spectral_slope", 1.0)))
+
+
+## Take the derived layers, and pick the level to read them at.
+func bind_layers(layers: TerrainLayers) -> void:
+    _layers = layers if layers != null and layers.is_loaded() else null
+    _layer_z = level_for_spacing(parent_spacing_m)
+
+
+## THE LEVEL WHOSE PIXEL IS CLOSEST TO THIS PARENT SPACING, in ratio rather
+## than in metres: 800 m and 1,600 m are 200 m and 600 m from a 1,000 m parent
+## but 0.8x and 1.6x of it, and a pyramid halves, so the ratio is the distance
+## that matches how the levels are spaced.
+func level_for_spacing(spacing_m: float) -> int:
+    if _layers == null or spacing_m <= 0.0:
+        return 0
+    var best := 0
+    var best_d := INF
+    for lv in (_layers.layers.get(TerrainLayers.SLOPE, {}) as Dictionary).get("levels", []):
+        var d: Dictionary = lv
+        var px := float(d["pixel_size_m"])
+        if px <= 0.0:
+            continue
+        var dist: float = absf(log(px / spacing_m))
+        if dist < best_d:
+            best_d = dist
+            best = int(d["z"])
+    return best
+
+
+## Where the classifier's slope came from, for a report that has to say whether
+## a number is data or a re-derivation.
+func classifier_source() -> String:
+    if _layers == null:
+        return ("the parent lattice's own gradient. The derived layers are not fetched: "
+                + "`python3 tools/fetch_artefacts.py`.")
+    return ("slope at z=%d (%s m), the level nearest this parent spacing; distance-to-channel "
+            % [_layer_z, String.num(_layers.pixel_size_of(TerrainLayers.SLOPE, _layer_z), 0)]
+            + "at z=0 (%s m) always, because a distance transform does not average. Both from "
+            % String.num(_layers.pixel_size_of(TerrainLayers.DISTANCE, 0), 0)
+            + "assets/terrain/layers/")
 
 
 func is_loaded() -> bool:
@@ -422,13 +477,29 @@ static func _dot_grad(ix: int, iy: int, dx: float, dy: float) -> float:
 
 ## WHICH LANDFORM CLASS A POINT IS IN.
 ##
-## From the parent lattice's own slope today, because the pipeline's derived
-## layers -- slope, aspect and distance-to-channel at 100 m, which exist
-## sim-side -- are not vendored here. When they are, this reads them instead of
-## re-deriving one of them and guessing at the other two. The thresholds are
-## fake rows and say so.
+## FROM THE DERIVED LAYERS WHERE THIS CLONE HAS THEM, and from the parent
+## lattice's own gradient where it does not. The rows' `_FAKE` note used to
+## read "when those arrive this classifier reads them"; they have arrived, and
+## this is that.
+##
+## THE MARGIN CLASS WAS UNREACHABLE UNTIL NOW, which is the substantive change
+## rather than the better slope. `riparian_margin` has been a row since stage 0
+## -- with the note that it is the row whose amplitude matters most and is
+## least free, because a shoreline converts vertical error to horizontal at
+## 1/slope -- and nothing could ever return it, since the only field available
+## was slope re-derived from a kilometre lattice. Distance-to-channel is what
+## it was waiting for.
+##
+## IT IS TESTED FIRST, and that is a decision rather than an ordering
+## accident: a margin on a 3-degree slope is a margin, and asking about slope
+## first would file it as `floor` and never reach the question. The thresholds
+## are still fake rows and still say so.
 func classify(w: Vector2) -> String:
     var c: Dictionary = rows.get("classifier", {})
+    var near := float(c.get("riparian_within_m", 150.0))
+    var d_channel := distance_to_channel_m(w)
+    if not is_nan(d_channel) and d_channel <= near:
+        return "riparian_margin"
     var deg := slope_degrees_at(w)
     if is_nan(deg):
         return "floor"
@@ -441,13 +512,59 @@ func classify(w: Vector2) -> String:
     return "talus"
 
 
+## SLOPE IN DEGREES, from the layer where there is one.
+##
+## THE FALLBACK IS NOT THE SAME QUANTITY AND IT IS NOT PRETENDING TO BE. A
+## central difference over the parent lattice is the slope of a kilometre of
+## averaged ground; the layer is slope computed on the source DEM and
+## reprojected. They agree in character and not in value, which is why
+## `classifier_source` exists and why a measurement that quotes a class
+## distribution has to say which one produced it.
 func slope_degrees_at(w: Vector2) -> float:
+    if _layers != null:
+        var v := _layers.slope_degrees_at(w.x, w.y, _layer_z)
+        # SLOPE'S MASK IS NARROWER THAN THE DEM'S BY A ONE-PIXEL RIM -- a
+        # gradient needs neighbours -- so a NAN here over drawn ground is
+        # expected on 0.19% of it and falls through to the lattice rather than
+        # classifying it `floor` by default.
+        if not is_nan(v):
+            return v
+    return lattice_slope_degrees_at(w)
+
+
+func lattice_slope_degrees_at(w: Vector2) -> float:
     var d := _hf.pixel_size_m
     var hx := _hf.height_at_world(w.x + d, w.y) - _hf.height_at_world(w.x - d, w.y)
     var hy := _hf.height_at_world(w.x, w.y + d) - _hf.height_at_world(w.x, w.y - d)
     if is_nan(hx) or is_nan(hy):
         return NAN
     return rad_to_deg(atan(Vector2(hx, hy).length() / (2.0 * d)))
+
+
+## HORIZONTAL DISTANCE TO THE NEAREST ORDER-4 FLOWLINE, metres. NAN without
+## the layers -- there is nothing to re-derive it from, and a client that
+## guessed would be inventing a channel network.
+##
+## READ AT THE FINEST LEVEL ALWAYS, AND NOT AT THE PARENT'S. This is the one
+## place the "sample a quantity at the scale you are using it" rule inverts,
+## and it took a failing test to see it.
+##
+## A SLOPE AVERAGES AND A DISTANCE DOES NOT. The slope of a kilometre of ground
+## is a real quantity and it is the one a kilometre parent is refining. The
+## mean of a distance transform over a kilometre is not the distance of
+## anything, because a distance transform has no value over an area -- only at
+## a point.
+##
+## MEASURED, on 3,330 points of real basin at the rows' own 150 m threshold:
+## the fine level finds 49 margins and the 800 m level finds 8, and 2 of those
+## 8 are places the fine field says are kilometres from a channel. So a coarse
+## read is wrong in BOTH directions at once -- it erases six margins in seven
+## and invents a couple that were never there -- and it is not a blurred
+## version of the fine field but a different one. The margin is the row whose
+## amplitude matters most, because a shoreline converts vertical error to
+## horizontal at 1/slope.
+func distance_to_channel_m(w: Vector2) -> float:
+    return NAN if _layers == null else _layers.distance_to_channel_m(w.x, w.y, 0)
 
 
 ## HOW FAR THE AMPLITUDE IS TAPERED HERE, 0 to 1.
@@ -466,6 +583,12 @@ func taper_at(_w: Vector2) -> float:
 
 
 func taper_source() -> String:
-    return ("no HAND raster is vendored, so the taper is 1.0 everywhere. The pipeline derives "
-            + "distance-to-channel at 100 m sim-side, which is the horizontal sibling of what "
-            + "this wants.")
+    if _layers == null:
+        return ("no HAND raster and no derived layers, so the taper is 1.0 everywhere.")
+    return ("distance-to-channel is vendored and HAND is not, so the taper is still 1.0. They "
+            + "are not substitutes: one is horizontal distance to a channel and the other is "
+            + "height above it, and it is the height that says whether ground is depositional. "
+            + "Decision 985 conditions amplitude continuously on HAND and slope, which "
+            + "supersedes the per-class selection this taper was drafted beside, so the "
+            + "mechanism is 985's to build and not this method's to guess at. The distance "
+            + "layer is in use -- it is what makes `riparian_margin` reachable in `classify`.")

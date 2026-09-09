@@ -174,6 +174,8 @@ var ground: GroundSurface = null
 ## is `stream_to` that starts it, which is what an embodied viewer calls and
 ## what `view.stream` calls by hand.
 var pyramid: TilePyramid = null
+## The three derived layers, when detail is on and this clone has them.
+var layers: TerrainLayers = null
 var residency: TileResidency = null
 var patch: NearFieldPatch = null
 var stream_report: Dictionary = {}
@@ -218,7 +220,12 @@ func build() -> Dictionary:
 
     var df: DetailField = null
     if detail_on:
-        df = DetailField.load_from(heightfield)
+        # THE LAYERS IF THIS CLONE HAS THEM. Null is a working clone: the
+        # classifier falls back to the lattice's own gradient and says so, and
+        # `riparian_margin` becomes unreachable again, which is honest -- there
+        # is no channel network to re-derive one from.
+        layers = TerrainLayers.load_from()
+        df = DetailField.load_from(heightfield, DetailField.ROWS_PATH, 0.0, layers)
         if not df.is_loaded():
             report = {"ok": false, "why": "detail is on and the rows did not load: %s"
                     % df.why_absent}

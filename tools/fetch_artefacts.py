@@ -58,7 +58,8 @@ from typing import Optional, Sequence
 
 ROOT = Path(__file__).resolve().parents[1]
 PINS = ("contract/PIN", "assets/fixture/PIN", "assets/terrain/PIN",
-        "assets/terrain/tiles/PIN", "assets/contours/PIN")
+        "assets/terrain/tiles/PIN", "assets/terrain/layers/PIN",
+        "assets/contours/PIN")
 
 
 def sha256_file(p: Path) -> str:

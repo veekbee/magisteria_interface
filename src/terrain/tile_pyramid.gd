@@ -149,18 +149,41 @@ func locate(wx: float, wy: float, z: int = 0) -> Dictionary:
     var px_m := pixel_size_of(z)
     if is_nan(px_m):
         return {"ok": false, "why": "no level %d" % z}
-    var fx := (wx - origin_x) / px_m - 0.5
-    var fy := (origin_y - wy) / px_m - 0.5
+    var at := on_grid(origin_x, origin_y, px_m, wx, wy)
+    if not bool(at["ok"]):
+        return at
+    var tile: Vector2i = at["tile"]
+    at["z"] = z
+    at["key"] = "%d/%d_%d.png" % [z, tile.x, tile.y]
+    return at
+
+
+## WHICH TILE AND TEXEL A WORLD POSITION FALLS IN, ON ANY GRID OF THIS SHAPE.
+##
+## STATIC, AND SHARED WITH `TerrainLayers` RATHER THAN COPIED INTO IT. The
+## layers are emitted on this grid deliberately -- the producer reads the height
+## export to get it -- and the half texel below is the difference between a
+## texel's corner and its CENTRE. A second copy of that half is a second place
+## for it to go missing, which is exactly how `mesh_to_world` once put every
+## recovered world position 500 m off the texel it was built from.
+##
+## The KEY is not built here, because the two artefacts name their tiles
+## differently: `{z}/{x}_{y}.png` against `<layer>/{z}/{x}_{y}.png`. Everything
+## upstream of the name is one implementation.
+static func on_grid(ox: float, oy: float, px_m: float,
+                    wx: float, wy: float) -> Dictionary:
+    var fx := (wx - ox) / px_m - 0.5
+    var fy := (oy - wy) / px_m - 0.5
     var ix := int(round(fx))
     var iy := int(round(fy))
     if ix < 0 or iy < 0:
         return {"ok": false, "why": "outside the grid"}
     var tx := ix / TILE_PX
     var ty := iy / TILE_PX
-    return {"ok": true, "z": z, "tile": Vector2i(tx, ty),
+    return {"ok": true, "tile": Vector2i(tx, ty),
             "in_tile": Vector2i(ix - tx * TILE_PX, iy - ty * TILE_PX),
             "texel": Vector2i(ix, iy),
-            "key": "%d/%d_%d.png" % [z, tx, ty], "pixel_size_m": px_m}
+            "pixel_size_m": px_m}
 
 
 ## Which of the three absences -- or PRESENT -- applies to one key.

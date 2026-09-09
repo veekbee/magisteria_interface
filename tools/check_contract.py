@@ -55,6 +55,7 @@ TERRAIN_PIN = ROOT / "assets" / "terrain" / "PIN"
 FIXTURE_PIN = ROOT / "assets" / "fixture" / "PIN"
 CONTOUR_PIN = ROOT / "assets" / "contours" / "PIN"
 TILES_PIN = ROOT / "assets" / "terrain" / "tiles" / "PIN"
+LAYERS_PIN = ROOT / "assets" / "terrain" / "layers" / "PIN"
 
 
 def sha256(data: bytes) -> str:
@@ -301,14 +302,16 @@ def main(argv=None) -> int:
     problems = (check_local(pin) + check_multi(TERRAIN_PIN, "terrain")
                 + check_multi(FIXTURE_PIN, "fixture")
                 + check_multi(CONTOUR_PIN, "contours")
-                + check_multi(TILES_PIN, "tiles"))
+                + check_multi(TILES_PIN, "tiles")
+                + check_multi(LAYERS_PIN, "layers"))
     scope = "local"
     tallies = {}
     if a.against is not None:
         sim = a.against.resolve()
         problems += check_against(pin, sim)
         for pp, label in ((TERRAIN_PIN, "terrain"), (FIXTURE_PIN, "fixture"),
-                          (CONTOUR_PIN, "contours"), (TILES_PIN, "tiles")):
+                          (CONTOUR_PIN, "contours"), (TILES_PIN, "tiles"),
+                          (LAYERS_PIN, "layers")):
             probs, tally = check_against_multi(sim, pp, label)
             problems += probs
             if pp.exists():
@@ -326,7 +329,8 @@ def main(argv=None) -> int:
           f"sha256 {pin.get('file_sha256', '')[:16]}…, "
           f"pinned at {pin.get('artefact_committed_at', '')[:12]}")
     for pp, label in ((TERRAIN_PIN, "terrain"), (FIXTURE_PIN, "fixture"),
-                      (CONTOUR_PIN, "contours"), (TILES_PIN, "tiles")):
+                      (CONTOUR_PIN, "contours"), (TILES_PIN, "tiles"),
+                      (LAYERS_PIN, "layers")):
         if pp.exists():
             d = json.loads(pp.read_text())
             names = d.get("files", {})

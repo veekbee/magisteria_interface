@@ -41,7 +41,10 @@ func _init() -> void:
     if not hf.is_loaded():
         _refuse(out_path, "the overview heightfield did not load")
         return
-    var df := DetailField.load_from(hf)
+    # WITH THE DERIVED LAYERS WHERE THIS CLONE HAS THEM, because the class a
+    # point is in is what this measurement strata by, and classifying from a
+    # kilometre lattice measures a different partition of the basin.
+    var df := DetailField.load_from(hf, DetailField.ROWS_PATH, 0.0, TerrainLayers.load_from())
     if not df.is_loaded():
         _refuse(out_path, "no detail rows: %s" % df.why_absent)
         return
