@@ -3051,8 +3051,13 @@ func test_the_budget_solve_divides_by_the_floors_measured_multiplier() -> void:
             + "now measures %sx. The quoted figure is what a reader uses to know what the "
                     % String.num(ratio, 3)
             + "budget is worth, so it has to track the measurement it came from.")
-    print("budget: the empty stage under-predicts by %sx measured, %sx quoted, and the "
-                    + "solve divides by it"
+    # PARENTHESISED, AND IT WAS NOT. `%` binds tighter than `+` in GDScript, so
+    # the format was applied to "solve divides by it" alone -- a fragment with
+    # no specifiers -- and the engine reported "not all arguments converted"
+    # while the line printed its own format string. `verify.sh` greps for
+    # `SCRIPT ERROR` and this is an `ERROR`, so it survived every green run.
+    print(("budget: the empty stage under-predicts by %sx measured, %sx quoted, and the "
+                    + "solve divides by it")
             % [String.num(ratio, 3), String.num(VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS, 2)])
 
 
@@ -7665,10 +7670,14 @@ func test_aspect_is_read_through_its_validity_byte_and_never_around_it() -> void
             "a zeroed aspect pixel decodes to %s degrees, not the 225 the guard is about"
             % String.num(naive, 3))
 
+    # THE PIN WITHOUT THE BYTES IS A VALID CLONE, and this skips rather than
+    # failing on it. An earlier version asserted first and skipped second,
+    # which turned a working clone into two red checks -- caught by CI, where
+    # the host is a `file://` path CI cannot reach, which is exactly the state
+    # the absence discipline exists for.
     var w := layered_place()
-    check(w != Vector2.INF, "no place has all three layers fetched under it")
     if w == Vector2.INF:
-        print("layers: none fetched -- skipping, and saying so")
+        print("layers: keyed but not fetched -- skipping the decoded half, and saying so")
         return
     # A SCALAR READ OF ASPECT IS REFUSED, not quietly wrong. `value_at`'s
     # arithmetic IS the misreading the direction pair exists to prevent.
@@ -7783,8 +7792,8 @@ func test_the_classifier_reads_the_layers_and_can_reach_the_margin() -> void:
             "a 100 m parent does not read the finest level")
 
     var w := layered_place()
-    check(w != Vector2.INF, "no place has all three layers fetched under it")
     if w == Vector2.INF:
+        print("layers: keyed but not fetched -- skipping the classified half, and saying so")
         return
     var seen := {}
     for j in 70:

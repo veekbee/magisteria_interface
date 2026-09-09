@@ -81,6 +81,41 @@ rc=${PIPESTATUS[0]}
 if grep -qE "SCRIPT ERROR|Parse Error|^FAIL:" /tmp/test.log; then
   echo "-- script errors or failures in the test log"; fail=1
 fi
+# AN ERROR THE ENGINE RAISED, AS OPPOSED TO ONE THIS CODE CHOSE TO PRINT.
+#
+# The greps above look for `SCRIPT ERROR`, and a whole class of fault does not
+# say that. Measured: `print("a %s" + "b" % [x])` binds `%` tighter than `+`,
+# so the format lands on the tail fragment alone; the engine reports `ERROR:
+# String formatting error` and the line prints its own format string. That
+# survived every green run since it was written, and CI found it only because
+# a different failure made someone read the log.
+#
+# Failing on `ERROR:` outright does not work here, and that is not an accident:
+# this repo uses `push_error` for DESIGNED refusals that tests then assert --
+# aspect refusing a scalar read, the console refusing an unprefixed verb. A
+# green run emits exactly two, and both are the point.
+#
+# So the discriminator is the `at:` line, which names the C++ frame that raised
+# it. `push_error` and `push_warning` are this code speaking; anything else is
+# the engine. A green run leaves zero.
+engine_err=$(awk '
+  /^ERROR: /            { err = 1; msg = $0; next }
+  /^ *at: /             { if (err && $0 !~ /push_error/) print msg; err = 0; next }
+                        { err = 0 }' /tmp/test.log)
+# AND THE RULE HAS A NEGATIVE CONTROL, because a filter that cannot fire is not
+# a filter -- the lesson `compile_check.gd` and `fetch_artefacts.py --selftest`
+# both learned the hard way.
+control=$(printf 'ERROR: chosen\n   at: push_error (core/variant/variant_utility.cpp:1023)\nERROR: raised\n   at: validated_evaluate (core/variant/variant_op.h:770)\n' | awk '
+  /^ERROR: /            { err = 1; msg = $0; next }
+  /^ *at: /             { if (err && $0 !~ /push_error/) print msg; err = 0; next }
+                        { err = 0 }')
+if [ "$control" != "ERROR: raised" ]; then
+  echo "-- the engine-error filter does not discriminate: it reported [$control]"; fail=1
+fi
+if [ -n "$engine_err" ]; then
+  echo "-- errors the ENGINE raised, which no grep above looks for:"
+  echo "$engine_err" | head -5; fail=1
+fi
 grep -q "^OK -- " /tmp/test.log || { echo "-- no OK line: the runner did not finish"; fail=1; }
 [ "$rc" -ne 0 ] && { echo "-- runner exited $rc"; fail=1; }
 
