@@ -47,6 +47,9 @@ const CLASSES := ["playa", "floor", "slope", "talus", "riparian_margin"]
 const MAX_OCTAVES := 12
 
 var rows: Dictionary = {}
+## Where the rows came from. Part of what makes two fields the SAME FUNCTION --
+## see `same_function_as`, and the guard that needed it.
+var rows_path: String = ""
 var why_absent: String = ""
 
 ## Metres between parent lattice samples. The detail is exactly zero on this
@@ -117,6 +120,7 @@ static func load_from(hf: Heightfield, path: String = ROWS_PATH,
         df.why_absent = "%s is not a JSON object" % path
         return df
     df.rows = parsed
+    df.rows_path = path
     df.calibrated_at_parent_m = float(df.rows.get("calibrated_at_parent_m", 0.0))
     if df.calibrated_at_parent_m <= 0.0:
         # NOT A SILENT 1:1. A rows file that does not say which parent its
@@ -149,6 +153,60 @@ func octaves_for(landform: String) -> int:
     if finest <= 0.0 or parent_spacing_m <= 0.0:
         return 1
     return clampi(int(ceil(log(parent_spacing_m / finest) / log(2.0))), 1, MAX_OCTAVES)
+
+
+## THE SAME FUNCTION OVER A DIFFERENT PARENT LATTICE.
+##
+## THIS IS WHAT MAKES "ONE GROUND, EVERY CONSUMER" SURVIVE A SECOND LEVEL. A
+## `DetailField` is two things: a function, which is the rows and their
+## calibration, and a LATTICE, which is whatever grid it is refining. Those
+## were one object while there was one grid, and streaming made that a defect
+## rather than a simplification -- the near field refines the pyramid's 100 m
+## level and was being handed a field that thought it was refining a kilometre.
+##
+## MEASURED, BEFORE THE GUARD BELOW EXISTED: a 1,000 m-parented field on a
+## 100 m patch moved 676 of 729 sampled patch vertices, by up to 0.36 m, and
+## applied 1.6 m of amplitude where 0.451 m is the same surface. Both halves
+## wrong at once -- the exactness is asserted about a lattice nobody is drawing,
+## and the roughness is the full kilometre band laid over ground that already
+## carries it.
+##
+## Shares the rows rather than re-reading them: a re-parent is a change of
+## lattice and must not be an opportunity for the function to differ.
+func for_parent(spacing_m: float) -> DetailField:
+    if spacing_m <= 0.0 or is_equal_approx(spacing_m, parent_spacing_m):
+        return self
+    var df := DetailField.new()
+    df._hf = _hf
+    df.rows = rows
+    df.rows_path = rows_path
+    df.calibrated_at_parent_m = calibrated_at_parent_m
+    df.calibration_note = calibration_note
+    df.why_absent = why_absent
+    df.parent_spacing_m = spacing_m
+    df.finest_m = INF
+    for name in df.landforms():
+        df.finest_m = minf(df.finest_m,
+                df.parent_spacing_m / pow(2.0, float(df.octaves_for(str(name)))))
+    return df
+
+
+## WHETHER TWO FIELDS ARE THE SAME FUNCTION, DELIBERATELY IGNORING THE LATTICE.
+##
+## The guard that keeps a scatter and a mesh on one ground used to be object
+## identity, which was right while one lattice was the only lattice and became
+## wrong the moment a patch needed its own. Identity would REFUSE the correctly
+## re-parented field and accept only the mis-parented one, which is a guard
+## enforcing the defect it was written to prevent.
+##
+## So sameness is the rows and the calibration they were measured against.
+## Parent spacing is excluded on purpose: `calibrated_at_parent_m` exists
+## precisely so that one row is one surface at every parent.
+func same_function_as(other: DetailField) -> bool:
+    if other == null:
+        return false
+    return (rows_path == other.rows_path
+            and is_equal_approx(calibrated_at_parent_m, other.calibrated_at_parent_m))
 
 
 ## THIS CLASS ROW'S AMPLITUDE UNDER THE PARENT ACTUALLY BEING REFINED.

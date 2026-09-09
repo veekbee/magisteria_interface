@@ -110,6 +110,18 @@ const SHADING_EXAGGERATION := 12.0
 ## 0.219), because those pixels now carry their field colour instead of none.
 const AMBIENT_ENERGY := 0.15
 
+## METRE-SCALE DETAIL ON THE DRAWN SURFACE. OFF BY DEFAULT, and off is not a
+## placeholder: decision 974 licenses a published pure function evaluated on
+## both sides, and this switch is what makes that path REACHABLE rather than a
+## thing only tests construct. A default of on would change what every existing
+## measurement is measuring.
+##
+## IT IS ONE SWITCH FOR BOTH SURFACES BECAUSE IT HAS TO BE. `GroundSurface`
+## refuses when a scatter's ground and the mesh's disagree, so there is no
+## arrangement in which the coarse mesh has detail and the patch does not. The
+## patch re-parents the field to its own level; see `NearFieldPatch.build`.
+@export var detail_on: bool = false
+
 @export var stride: int = 4
 @export var exaggeration: float = EXAGGERATION
 @export var shading_exaggeration: float = SHADING_EXAGGERATION
@@ -204,8 +216,15 @@ func build() -> Dictionary:
         report = {"ok": false, "why": "heightfield did not load"}
         return report
 
+    var df: DetailField = null
+    if detail_on:
+        df = DetailField.load_from(heightfield)
+        if not df.is_loaded():
+            report = {"ok": false, "why": "detail is on and the rows did not load: %s"
+                    % df.why_absent}
+            return report
     terrain = TerrainMesh.new()
-    var mesh := terrain.build(heightfield, stride, exaggeration, shading_exaggeration)
+    var mesh := terrain.build(heightfield, stride, exaggeration, shading_exaggeration, df)
     if mesh.get_surface_count() == 0:
         report = {"ok": false, "why": "terrain mesh has no surface"}
         return report
@@ -702,9 +721,11 @@ func bind_families() -> Dictionary:
     scatter.bind(heightfield, residence, fixture, families, frame_cost, terrain)
     # ONE GROUND. The surface the scatter stands plants on is the surface the
     # mesh draws, by there being one object that answers for both and refusing
-    # when they disagree. `terrain.detail` is null today, so this is the mesh's
-    # own triangulation -- the point is that it cannot become anything else for
-    # one consumer and not the other.
+    # when they disagree. `terrain.detail` is whatever `detail_on` decided, and
+    # it is the SAME reference the mesh was built with -- the point is that it
+    # cannot become anything else for one consumer and not the other. A
+    # streamed patch re-parents it to its own level, which is a change of
+    # lattice and not of function; `GroundSurface.stream` checks both halves.
     ground = GroundSurface.over(heightfield, terrain, terrain.detail)
     scatter.ground = ground
     tint = VegetationTint.new()

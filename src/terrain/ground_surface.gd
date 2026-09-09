@@ -84,9 +84,34 @@ func stream(p: NearFieldPatch) -> bool:
                 + "holds. Plants would stand on a level nobody is drawing, which is the "
                 + "wrong-ground defect at level granularity.")
         return false
-    if p.detail != detail:
-        why_refused = ("the patch was built with a different detail term from this surface. "
-                + "One ground, every consumer -- and that has to survive a level arriving.")
+    # THE SAME FUNCTION, NOT THE SAME OBJECT, AND THE DIFFERENCE IS THE WHOLE
+    # OF THIS CHECK.
+    #
+    # Object identity was right while one lattice was the only lattice. A patch
+    # refines the pyramid's level, not the overview, so its field is re-parented
+    # -- and an identity test would REFUSE the correctly parented field and
+    # accept only the mis-parented one. A guard enforcing the defect it exists
+    # to prevent is worse than no guard, because it is green.
+    #
+    # So: same rows, same calibration, and the parent is checked separately
+    # against the level the patch actually refines.
+    if detail == null:
+        if p.detail_family != null:
+            why_refused = ("the patch carries a detail term and this surface holds none. One "
+                    + "ground, every consumer -- and that has to survive a level arriving.")
+            return false
+    elif not detail.same_function_as(p.detail_family):
+        why_refused = ("the patch was built from different detail rows, or from rows "
+                + "calibrated against a different parent, than this surface holds. Same "
+                + "function on both sides or neither.")
+        return false
+    if p.detail != null and not is_equal_approx(p.detail.parent_spacing_m, p.pixel_size_m):
+        why_refused = ("the patch refines a %s m level and its detail term is parented to "
+                % String.num(p.pixel_size_m, 0)
+                + "%s m. The exactness the whole method rests on is defined against the grid "
+                % String.num(p.detail.parent_spacing_m, 0)
+                + "being refined, so a field parented anywhere else is exact about a lattice "
+                + "nobody is drawing while adding the wrong amplitude to the one they are.")
         return false
     patch = p
     why_refused = ""

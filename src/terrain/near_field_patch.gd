@@ -80,7 +80,14 @@ var holes: int = 0
 ## refuses a patch that does not belong to the mesh in front of it, so there is
 ## no arrangement in which plants stand on a level nobody is drawing.
 var seamed_to: TerrainMesh = null
+## The detail term AS THIS PATCH USES IT -- re-parented to the level it is
+## refining, which is not the lattice the caller's field was built against.
 var detail: DetailField = null
+## The caller's field, before the re-parent. Kept so the fix-up is a recorded
+## fact rather than a silent one, and so `GroundSurface` can ask whether the
+## two are the same function.
+var detail_family: DetailField = null
+var detail_reparented_from_m: float = 0.0
 
 var _y := PackedFloat64Array()     ## drawn height per node, NAN for a hole
 ## World position of node (0, 0), IN DOUBLE PRECISION. `world_of` hands back a
@@ -104,7 +111,7 @@ static func build(res: TileResidency, centre_: Vector2, z_: int,
                   df: DetailField = null, refine_: int = 1) -> NearFieldPatch:
     var p := NearFieldPatch.new()
     p.seamed_to = tm
-    p.detail = df
+    p.detail_family = df
     p.refine = maxi(1, refine_)
     p.z = z_
     var tp := res.pyramid()
@@ -123,11 +130,6 @@ static func build(res: TileResidency, centre_: Vector2, z_: int,
     p.half_extent_m = res.half_extent_m(z_)
     p.step_m = p.pixel_size_m / float(p.refine)
     p.n = 2 * reach * p.refine + 1
-    # THE SAME EXPRESSION `DetailField.parent_node` USES, and it has to be.
-    # Exactness at the parent lattice is asserted by comparing POSITIONS, so
-    # the position a patch vertex arrives at must be the float the detail
-    # function computes for that node -- not a value a different but equal
-    # arithmetic produced.
     # ONE CORNER, IN DOUBLE PRECISION, AND IT MUST BE THE OVERVIEW'S.
     #
     # The detail term is exactly zero on the lattice it refines, and that
@@ -146,8 +148,31 @@ static func build(res: TileResidency, centre_: Vector2, z_: int,
                 + "The two grids have to be nested for the patch's vertices to be the "
                 + "lattice the detail term vanishes on, and they are not.")
         return p
+    # THE PARENT LATTICE IS THE LEVEL, AND THE PATCH IS THE ONLY OBJECT THAT
+    # KNOWS WHICH LEVEL IT IS. So it re-parents the field rather than trusting
+    # a caller to have computed a number the caller does not own -- which is
+    # exactly the class of mistake this method existed for a week without.
+    #
+    # `DetailField.load_from` defaults the parent to the heightfield's own
+    # pixel, which is the shipped 1,000 m overview. Every construction in the
+    # tree takes that default. Handed straight to a 100 m patch it puts a
+    # non-zero detail term on all 729 sampled patch vertices and moves the
+    # drawn height at 676 of them -- the other 53 are on the rim, where the
+    # blend weight is zero and nothing is applied -- by up to 0.36 m, at 3.55x
+    # the amplitude the same row means at 100 m. And the exact-at-parent guard
+    # goes on being green about a lattice nobody is drawing.
+    #
+    # Recorded rather than silent: `report()` carries both spacings.
+    if df != null:
+        p.detail_reparented_from_m = df.parent_spacing_m
+        p.detail = df.for_parent(p.pixel_size_m)
     p._grid_origin_x = tp.origin_x
     p._grid_origin_y = tp.origin_y
+    # THE SAME EXPRESSION `DetailField.parent_node` USES, and it has to be.
+    # Exactness at the parent lattice is asserted by comparing POSITIONS, so
+    # the position a patch vertex arrives at must be the float the detail
+    # function computes for that node -- not a value a different but equal
+    # arithmetic produced.
     p.t0 = Vector2i(int(round((centre_.x - tp.origin_x) / p.pixel_size_m - 0.5)) - reach,
                     int(round((tp.origin_y - centre_.y) / p.pixel_size_m - 0.5)) - reach)
     p._origin_w_x = p._grid_origin_x + (float(p.t0.x) + 0.5) * p.pixel_size_m
@@ -368,5 +393,7 @@ func report() -> Dictionary:
         "no_native": no_native,
         "holes": holes,
         "detail": detail != null and detail.is_loaded(),
+        "detail_parent_m": (detail.parent_spacing_m if detail != null else 0.0),
+        "detail_reparented_from_m": detail_reparented_from_m,
         "why_refused": why_refused,
     }

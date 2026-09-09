@@ -344,6 +344,12 @@ func _vertices_in(hf: Heightfield, tm: TerrainMesh, centre: Vector2, radius: flo
 ## opened on it: the criterion wants a second clause about how much the ground
 ## moves before a function can satisfy it, and that clause is a design question
 ## rather than a threshold to pick.
+## THE PARENT HERE IS THE OVERVIEW'S, DELIBERATELY. This walks the surface the
+## COARSE mesh draws with detail on, which is the 1,000 m lattice refined. A
+## streamed patch refines the pyramid's 100 m level instead and carries a
+## re-parented field with a third of the amplitude; that is a different
+## surface and it would want its own row here rather than quietly replacing
+## this one.
 func _on_the_detail_surface(hf: Heightfield, places: Array, walk_m: float) -> Dictionary:
     var df := DetailField.load_from(hf)
     if not df.is_loaded():
@@ -397,6 +403,11 @@ func _on_the_detail_surface(hf: Heightfield, places: Array, walk_m: float) -> Di
             swing_07.append(hi07 - lo07)
     return {
         "available": true,
+        "parent_spacing_m": df.parent_spacing_m,
+        "_parent_is": ("the lattice this surface refines: the shipped 1 km overview, which is "
+                + "what the coarse mesh draws. A streamed near-field patch refines the "
+                + "pyramid's 100 m level and carries the same rows re-parented to it, which "
+                + "is a third of this amplitude and is not what these numbers are about."),
         "places": taken,
         "finest_synthesised_m": df.finest_m,
         "metres_between_ground_changes": FlightTrace.quantiles(runs),

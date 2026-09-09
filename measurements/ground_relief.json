@@ -2,6 +2,7 @@
   "_exaggeration_is": "1:1, and it has to be for this artefact to mean anything: every number here is a vertical distance compared with a horizontal one, and an exaggerated mesh would inflate the residual against ground that had not moved.",
   "detail_surface": {
     "_and_that_number_is_vacuous": "a continuous function returns a different height at every representable position, so this comes out as the sampling step whatever the function does. A synthesizer of one micrometre amplitude measures the same as one of a metre. THE CRITERION STOPS DISCRIMINATING against a function, and walk mode is not opened on it.",
+    "_parent_is": "the lattice this surface refines: the shipped 1 km overview, which is what the coarse mesh draws. A streamed near-field patch refines the pyramid's 100 m level and carries the same rows re-parented to it, which is a third of this amplitude and is not what these numbers are about.",
     "_swing_is": "how far the synthesised ground actually moves over the distance a body covers in a second at each speed. THIS is the quantity a body would feel, and the criterion has no clause about it -- which is what the gate found and did not answer.",
     "available": true,
     "finest_synthesised_m": 0.244140625,
@@ -13,6 +14,7 @@
       "p50": 1.0,
       "p95": 1.0
     },
+    "parent_spacing_m": 1000.0,
     "places": 12,
     "vertical_swing_over_0_7_m": {
       "max": 0.071840495525521,
@@ -95,7 +97,7 @@
       "p95": 252.284542625278
     }
   },
-  "measured_at_utc": "2026-09-08T21:56:49",
+  "measured_at_utc": "2026-09-09T05:12:10",
   "measurement": "ground relief at the overview and at the tile pyramid",
   "places": [
     {
@@ -948,12 +950,12 @@
     "_what": "the same discs measured against a near-field patch of the tile pyramid, built and seamed to the coarse mesh at each place. THIS IS THE ACCEPTANCE METRIC: the residual is how far a plant on the drawn surface stands from the ground the data holds, and it is what streaming buys down. Frame time is a budget to stay inside rather than the thing being bought.",
     "_worst_residual_is_zero_because": "the patch's vertices ARE the pyramid's texel centres, so at the points the data actually holds a value the drawn surface reproduces it exactly. That is the design and this is it stated, not a measurement of it -- read the next two figures for that.",
     "build_ms": {
-      "max": 74.0,
-      "mean": 42.35,
-      "min": 30.0,
+      "max": 68.0,
+      "mean": 42.0,
+      "min": 28.0,
       "n": 60,
       "p50": 36.0,
-      "p95": 69.0
+      "p95": 65.0
     },
     "coarse_residual_anywhere_m": {
       "max": 429.503099325102,

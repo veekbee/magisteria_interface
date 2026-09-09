@@ -150,6 +150,8 @@ func _initialize() -> void:
     test_the_detail_vanishes_on_the_patch_and_appears_below_it()
     test_one_row_serves_two_parents()
     test_a_level_switch_moves_no_plant()
+    test_a_patch_refines_its_own_level_and_not_the_overview()
+    test_the_view_turns_detail_on_for_both_surfaces_or_neither()
     stage_the_main_scene()
 
 
@@ -7253,4 +7255,147 @@ func test_a_level_switch_moves_no_plant() -> void:
     print("streaming: the placement digest is identical across the level switch over %d "
             % int(n0["all"]) + "plants, and %d of %d sub-cells moved vertically, by up to %s m"
             % [lifted, compared, String.num(worst, 1)])
+    v.queue_free()
+
+
+func test_a_patch_refines_its_own_level_and_not_the_overview() -> void:
+    """THE LATTICE A PATCH REFINES IS THE LEVEL IT IS DRAWING, and the wiring
+    that decides it is the whole of this.
+
+    `DetailField.load_from` defaults the parent to the heightfield's own pixel
+    -- the shipped 1,000 m overview -- and every construction in the tree takes
+    that default. A patch draws the pyramid's 100 m level. Handed the default
+    straight through, the near field would carry the full kilometre-parent
+    amplitude over ground that already holds the 1,000 -> 100 m band, and the
+    exact-at-parent guard would go on being green about nodes nobody is
+    drawing.
+
+    Measured, which is why this test exists rather than a comment: a
+    1,000 m-parented field on a 100 m patch moves 676 of 729 sampled patch
+    vertices by up to 0.36 m.
+
+    So the patch re-parents, because it is the only object that knows which
+    level it is, and the control below is that the un-re-parented field really
+    would have done damage."""
+    var p := streaming_place()
+    if p.is_empty():
+        print("streaming: no fetched pyramid -- skipping, and saying so")
+        return
+    var res: TileResidency = p["res"]
+    var hf: Heightfield = p["hf"]
+    var tm: TerrainMesh = p["tm"]
+    var tp: TilePyramid = p["tp"]
+    var overview := DetailField.load_from(hf)
+    check(overview.parent_spacing_m == hf.pixel_size_m,
+            "the default parent is not the overview's pixel, so this test is about nothing")
+    var np := NearFieldPatch.build(res, p["centre"], 0, hf, tm, overview)
+    check(np.is_built(), "the patch did not build: %s" % np.why_refused)
+    if not np.is_built():
+        return
+    check(np.detail.parent_spacing_m == tp.pixel_size_of(0),
+            "the patch's detail term is parented to %s m and it refines %s m"
+            % [String.num(np.detail.parent_spacing_m, 0),
+                    String.num(tp.pixel_size_of(0), 0)])
+    check(np.detail_reparented_from_m == hf.pixel_size_m,
+            "the re-parent was not recorded, so the fix-up is silent")
+    check(np.detail.same_function_as(overview),
+            "re-parenting changed the function and not only the lattice")
+    check(np.detail.amplitude_for("talus") < overview.amplitude_for("talus") * 0.5,
+            "re-parenting did not reduce the amplitude: %s against %s"
+            % [String.num(np.detail.amplitude_for("talus"), 3),
+                    String.num(overview.amplitude_for("talus"), 3)])
+
+    # THE EXACTNESS IS ABOUT THE LATTICE BEING DRAWN. Zero at every patch
+    # vertex, exactly, with the re-parent in place.
+    var plain := NearFieldPatch.build(res, p["centre"], 0, hf, tm, null)
+    var moved := 0
+    var compared := 0
+    for j in range(0, np.n, 3):
+        for i in range(0, np.n, 3):
+            var a := plain.height_at_node(i, j)
+            var b := np.height_at_node(i, j)
+            if is_nan(a) or is_nan(b):
+                continue
+            compared += 1
+            if a != b:
+                moved += 1
+    check(compared > 300, "only %d nodes could be compared" % compared)
+    check(moved == 0, "%d of %d patch vertices carry a detail term, so the exactness is being "
+            % [moved, compared] + "asserted about a lattice the patch is not drawing")
+
+    # THE CONTROL: without the re-parent it would have. Built by hand here
+    # rather than by disabling the fix, so the number is measured and not
+    # asserted.
+    var wrong := 0
+    var worst := 0.0
+    for j in range(0, np.n, 3):
+        for i in range(0, np.n, 3):
+            var w := np.world_of(i, j)
+            var d := overview.detail_at(w)
+            if d != 0.0:
+                wrong += 1
+            worst = maxf(worst, absf(d))
+    check(wrong > compared / 2, "only %d of %d patch vertices would have moved under the "
+            % [wrong, compared] + "overview's parent, so this check does not discriminate")
+    check(worst > 0.1, "the mis-parented field would have moved the surface by only %s m"
+            % String.num(worst, 4))
+    print("streaming: the patch re-parents %s m -> %s m; zero of %d vertices carry detail "
+            % [String.num(np.detail_reparented_from_m, 0),
+                    String.num(np.detail.parent_spacing_m, 0), compared]
+            + "after it, and %d would have moved by up to %s m without it"
+            % [wrong, String.num(worst, 3)])
+
+
+func test_the_view_turns_detail_on_for_both_surfaces_or_neither() -> void:
+    """THE PRODUCTION PATH, DRIVEN. The re-parent above is worth nothing if the
+    only caller that reaches it is a test.
+
+    `detail_on` is off by default and off is not a placeholder -- decision 974
+    licenses a published pure function evaluated on both sides, and this switch
+    is what makes that path reachable. One switch for both surfaces, because
+    `GroundSurface` refuses when they disagree: there is no arrangement in
+    which the coarse mesh has detail and the patch does not."""
+    var p := streaming_place()
+    if p.is_empty():
+        print("streaming: no fetched pyramid -- skipping, and saying so")
+        return
+    var v := TerrainView.new()
+    v.detail_on = true
+    get_root().add_child(v)
+    var r := v.build()
+    check(bool(r.get("ok", false)), "the view refused to build with detail on: %s"
+            % str(r.get("why", "?")))
+    if not bool(r.get("ok", false)):
+        v.queue_free()
+        return
+    check(v.terrain.detail != null, "detail is on and the mesh carries no detail term")
+    check(v.terrain.detail.parent_spacing_m == v.heightfield.pixel_size_m,
+            "the coarse mesh's detail term is not parented to the overview it refines")
+    v.bind_fields()
+    v.bind_families()
+    check(v.ground.detail == v.terrain.detail,
+            "the ground and the mesh hold different detail terms")
+    var streamed := v.stream_to(p["centre"])
+    check(bool(streamed.get("ok", false)),
+            "the patch was refused with detail on: %s" % str(streamed.get("why", "?")))
+    if bool(streamed.get("ok", false)):
+        check(v.ground.patch != null, "a patch was drawn the ground does not hold")
+        check(float(streamed["detail_parent_m"]) == 100.0,
+                "the streamed patch's detail is parented to %s m, not the level's 100 m"
+                % String.num(float(streamed["detail_parent_m"]), 0))
+        check(float(streamed["detail_reparented_from_m"]) == 1000.0,
+                "the report does not record what the field was re-parented from")
+        # AND THE GUARD FIRES ON A PATCH PARENTED TO THE WRONG LATTICE.
+        var bad := NearFieldPatch.build(v.residency, v.residency.centre, 0, v.heightfield,
+                v.terrain, v.terrain.detail)
+        bad.detail = v.terrain.detail          # undo the re-parent, by hand
+        check(not v.ground.stream(bad),
+                "the ground accepted a patch whose detail is parented to the overview")
+        check(v.ground.why_refused.contains("nobody is drawing"),
+                "the refusal does not say what is wrong: %s" % v.ground.why_refused)
+        v.ground.stream(v.patch)
+    print("view: detail_on builds both surfaces, the patch reports a %s m parent from a %s m "
+            % [String.num(float(streamed.get("detail_parent_m", 0.0)), 0),
+                    String.num(float(streamed.get("detail_reparented_from_m", 0.0)), 0)]
+            + "field, and a hand-broken parent is refused")
     v.queue_free()
