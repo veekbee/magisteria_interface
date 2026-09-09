@@ -152,6 +152,7 @@ func _initialize() -> void:
     test_a_level_switch_moves_no_plant()
     test_a_patch_refines_its_own_level_and_not_the_overview()
     test_the_view_turns_detail_on_for_both_surfaces_or_neither()
+    test_the_patch_keeps_ground_the_native_grid_does_not_have()
     stage_the_main_scene()
 
 
@@ -7399,3 +7400,115 @@ func test_the_view_turns_detail_on_for_both_surfaces_or_neither() -> void:
                     String.num(float(streamed.get("detail_reparented_from_m", 0.0)), 0)]
             + "field, and a hand-broken parent is refused")
     v.queue_free()
+
+
+func test_the_patch_keeps_ground_the_native_grid_does_not_have() -> void:
+    """THE NEVER-SUBTRACTS RULE'S NODATA HALF, AT A PLACE WHERE IT FIRES.
+
+    The rule is that where the patch has nothing to say it reproduces the
+    coarse surface, so it can never open a hole in ground the coarse mesh was
+    drawing -- and a rebuild that REMOVES a plant is a worse rebuild than one
+    that moves it (decision 952).
+
+    Until now it was only ever exercised by the blend ring: at every place the
+    gate measures, the two grids' holes coincide and `no_native` is zero. That
+    made the rule structural rather than observed, which is a weaker claim than
+    the comment was making.
+
+    THE COORDINATE IS THE SIM SESSION'S, HANDED OVER. 4,354 km2 of the basin
+    are nodata in the native grid, of which 57 km2 are interior holes with
+    drawn ground on all sides; this is the densest of them, 93 of 100 fine
+    pixels absent, with its neighbour at 90. It exists because the overview's
+    validity flag is any-valid rather than all-valid, so a 1 km cell declares
+    ground on as little as 1% real coverage -- which is the sim session's own
+    open question and is exactly what makes this case real rather than
+    contrived."""
+    var tp := TilePyramid.load_from()
+    if not tp.is_loaded() or int(tp.inventory()["present"]) == 0:
+        print("streaming: no fetched pyramid -- skipping, and saying so")
+        return
+    var hf := heightfield()
+    var tm := TerrainMesh.new()
+    tm.build(hf, 4, 1.0)
+    var res := TileResidency.over(tp)
+    var hole := Vector2(-1148792.9, 1246226.3)
+    var z := res.level_for(hole)
+    if z < 0:
+        print("streaming: the nodata place has no fetched level -- skipping")
+        return
+    var c := res.snap(hole, z)
+    if not bool(res.pump(c, z, 16)["ready"]):
+        print("streaming: the nodata place's tiles did not load -- skipping")
+        return
+    var np := NearFieldPatch.build(res, c, z, hf, tm, null)
+    check(np.is_built(), "the patch did not build over the nodata place: %s" % np.why_refused)
+    if not np.is_built():
+        return
+    # THE HALF THAT HAD NEVER FIRED. Nodes with coarse ground under them and no
+    # native datum: the patch takes the coarse height rather than opening a
+    # hole, so the plants standing there keep standing.
+    check(np.no_native > 0, "the handed coordinate has no missing native data under it, so "
+            + "either the place has moved or this check is still not exercising the rule")
+    var had := 0
+    var lost := 0
+    for j in np.n:
+        for i in np.n:
+            if is_nan(tm.drawn_surface_y(np.world_of(i, j), hf)):
+                continue
+            had += 1
+            if is_nan(np.height_at_node(i, j)):
+                lost += 1
+    check(had > 100, "only %d nodes have coarse ground here" % had)
+    check(lost == 0, "the patch opened %d holes in ground the coarse mesh was drawing" % lost)
+
+    # AND THE REASON THE POPULATION AT RISK IS SMALL, MEASURED RATHER THAN
+    # ASSUMED. The sim session's census counts native nodata against the
+    # RASTER. What the client DRAWS has a much wider hole: `TerrainMesh` emits
+    # a quad only when all four corners are valid, and `Heightfield.height_at`
+    # is NAN if any of its sixteen bicubic taps is -- so at stride 4 a hole in
+    # the data grows a margin of kilometres before it becomes a hole on screen.
+    # Most of a nodata region is therefore outside the drawn surface entirely,
+    # and only its fringe is ground the patch could take away.
+    var absent := 0
+    for j3 in np.n:
+        for i3 in np.n:
+            if is_nan(tp.height_at_world(np.world_of(i3, j3).x, np.world_of(i3, j3).y, z)):
+                absent += 1
+    check(absent > np.no_native, "every node with no native datum is inside the drawn surface, "
+            + "so the coarse mesh's nodata margin is not wider than the raster's and this "
+            + "reading is wrong")
+    # AND THE PATCH IS STILL MOSTLY DATA. A place that was nodata everywhere
+    # would pass the two checks above by refining nothing.
+    check(np.from_native > np.no_native,
+            "%d nodes came from the native grid against %d with none, so this patch is mostly "
+            % [np.from_native, np.no_native] + "coarse surface and proves little about either")
+    # AND A PLANT STANDS ON EVERY ONE OF THEM. The scatter drops any instance
+    # whose ground answers NAN, which is how a hole here becomes a removed
+    # plant -- so the positions asked about are exactly the population at risk:
+    # nodes with coarse ground and no native datum, rather than a box around
+    # the centre. A first version sampled a fixed 740 m box and answered 0 of
+    # 0, which passes and means nothing.
+    var g := GroundSurface.over(hf, tm, null)
+    check(g.stream(np), "the surface refused the patch: %s" % g.why_refused)
+    var stood := 0
+    var refused := 0
+    for j2 in np.n:
+        for i2 in np.n:
+            var w := np.world_of(i2, j2)
+            if is_nan(tm.drawn_surface_y(w, hf)):
+                continue
+            if not is_nan(tp.height_at_world(w.x, w.y, z)):
+                continue
+            if is_nan(g.surface_at(w)):
+                refused += 1
+            else:
+                stood += 1
+    check(stood + refused > 0,
+            "no node here has coarse ground and no native datum, so nothing was tested")
+    check(refused == 0, "%d of %d positions with coarse ground and no native datum got no "
+            % [refused, stood + refused] + "height from the streamed surface, which is a plant "
+            + "removed by a rebuild")
+    print("streaming: at the handed nodata place %d of %d nodes lack a native datum but only "
+            % [absent, np.n * np.n] + "%d of them are inside the %d the coarse mesh draws -- "
+            % [np.no_native, had] + "0 holes opened and all %d positions at risk answered"
+            % stood)
