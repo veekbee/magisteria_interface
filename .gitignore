@@ -42,12 +42,18 @@
 /assets/terrain/tiles/**
 !/assets/terrain/tiles/PIN
 !/assets/terrain/tiles/.gdignore
-# The client fixture COMMITS, at 25 MB. It is the quantised DISPLAY form --
-# band rows over the contract's declared bounds -- not the fixture itself: the
-# full-precision payload is 76 MB and stays in the simulation repo, because
-# three of its rows are float64 for values below float32's floor and no colour
-# ramp can show those. Committing the display form is what lets a fresh clone
-# run M2 from the repo alone; anything needing the precision goes upstream.
+# THE CLIENT FIXTURE NO LONGER COMMITS, and this paragraph said it did for
+# four days after it stopped. `fce9bd8` moved it to fetch-by-manifest under
+# decision 948 -- 28 MB against a 10,485,760-byte threshold -- and the line at
+# the bottom of this file is what actually governs. What is committed is
+# `fixture_client.json`, the manifest; the bytes arrive through
+# tools/fetch_artefacts.py and nothing else.
+#
+# What it IS, unchanged: the quantised DISPLAY form -- band rows over the
+# contract's declared bounds -- and not the fixture itself. The full-precision
+# payload is 76 MB and stays in the simulation repo, because three of its rows
+# are float64 for values below float32's floor and no colour ramp can show
+# those. Anything needing the precision goes upstream.
 
 .DS_Store
 

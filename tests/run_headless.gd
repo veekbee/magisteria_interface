@@ -29,6 +29,7 @@ const WINDOW_MIN_H := 800
 
 
 func _initialize() -> void:
+    say_if_the_fixture_is_absent()
     test_real_artefact_loads_clean()
     test_conditional_fields_are_presence_not_empty_string()
     test_major_mismatch_refuses_and_names_both_versions()
@@ -896,6 +897,33 @@ func residence() -> ResidenceLayer:
         _rl = ResidenceLayer.load_from(JSON.parse_string(f.get_as_text()),
                 TERRAIN_DIR + "residence_overview.png")
     return _rl
+
+
+## ONE SENTENCE AT THE TOP, BEFORE THE THIRTY-EIGHT.
+##
+## The fixture binary is fetched rather than committed (decision 948) and a
+## run without it fails 38 checks -- every one of them reading `... gave 0
+## values, its shape says 5684`, none of them naming the file. CI was red for
+## thirty commits that way: the cause appeared once, as a `push_error` on line
+## 33 of a hundred-line log, and the symptom appeared thirty-eight times at the
+## bottom where anyone would look.
+##
+## SO THIS DOES NOT SKIP AND IT DOES NOT PASS. The failures below are real --
+## the suite cannot check a decoder against an artefact that is not there, and
+## turning 1,526 checks into skips would let a green run mean half a gate. It
+## says what is wrong once, in front, in the words that name the fix.
+func say_if_the_fixture_is_absent() -> void:
+    var fl := fixture()
+    if fl.is_loaded():
+        return
+    print("")
+    print("---- THE FIXTURE BINARY IS NOT HERE, AND EVERYTHING BELOW FOLLOWS FROM THAT ----")
+    print("  missing: %s" % fl.binary_path())
+    print("  it is fetched, never committed (decision 948): 28 MB against a 10 MB threshold.")
+    print("  bring it in:  python3 tools/fetch_artefacts.py")
+    print("  the gate does that for you and requires it:  bash tools/verify.sh")
+    print("  the failures after this line are one missing file wearing many names.")
+    print("")
 
 
 func fixture() -> FixtureLoader:

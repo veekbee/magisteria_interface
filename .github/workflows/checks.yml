@@ -1,8 +1,13 @@
 # .github/workflows/checks.yml
 #
-# Three checks, in the order that makes a failure legible: the contract pin,
-# then whether the project imports at all, then whether the loader agrees with
-# the contract it was written against.
+# CI RUNS `tools/verify.sh` AND NOTHING ELSE, and that is the whole design.
+#
+# It used to run a hand-copied subset of that script's steps, under a header in
+# `verify.sh` reading "run exactly what CI runs, in the same order". The two
+# drifted: the gate grew a transport selftest, a tracked-tile guard and a
+# compile check, and none of the three ever ran on a push. A sentence saying
+# two things are the same is not a mechanism for keeping them the same. So
+# there is one definition of the gate and this file supplies it an engine.
 #
 # Godot is downloaded from the engine's own releases rather than through a
 # third-party setup action. The no-addons rule in README.md is about the
@@ -27,23 +32,6 @@ jobs:
       - uses: actions/setup-python@v5
         with: { python-version: '3.12' }
 
-      # First, because it needs no engine and it is the check most likely to
-      # fail on a real change: the vendored artefact against its PIN. The
-      # cross-repo half needs a simulation-repo checkout and is deliberately
-      # not run here -- see the tool's own header.
-      - name: contract pin (local half)
-        run: python3 tools/check_contract.py
-
-      - name: no addons, of any kind
-        # README.md's rule, mechanised. A test framework or a terrain plugin
-        # arriving as an addon is exactly the thing that gets added quietly
-        # and argued about later.
-        run: |
-          if [ -d addons ]; then
-            echo "::error::addons/ exists -- see README.md's 'No addons, of any kind'"
-            exit 1
-          fi
-
       - name: fetch Godot ${{ env.GODOT_VERSION }}
         run: |
           set -euo pipefail
@@ -54,31 +42,16 @@ jobs:
           chmod +x godot
           ./godot --version
 
-      - name: project imports
-        # Generates the import cache. A scene referencing a script that does
-        # not parse fails here, which is a much clearer failure than the same
-        # thing surfacing as a null later -- but note the grep does the work:
-        # `--import` returned exit 0 over four failed script loads on the
-        # first run of this workflow.
-        run: |
-          set -euo pipefail
-          ./godot --headless --import 2>&1 | tee import.log
-          if grep -qE "SCRIPT ERROR|Parse Error|Failed to load" import.log; then
-            echo "::error::import produced script or parse errors"
-            exit 1
-          fi
-
-      - name: loader smoke (headless)
-        # The runner sets its own exit code, but the log is checked as well.
-        # MEASURED, not defensive: on this repo's first CI run Godot exited
-        # **0** with four scripts failing to load on a parse error. The grep is
-        # the only reason that run went red. A test run that cannot fail is not
-        # a test run.
-        run: |
-          set -euo pipefail
-          ./godot --headless --script res://tests/run_headless.gd 2>&1 | tee test.log
-          if grep -qE "SCRIPT ERROR|Parse Error|^FAIL:" test.log; then
-            echo "::error::headless tests reported failures"
-            exit 1
-          fi
-          grep -q "^OK -- " test.log || { echo "::error::no OK line -- the runner did not finish"; exit 1; }
+      - name: the gate
+        # `verify.sh` fetches the artefacts decision 948 keeps out of the tree
+        # -- the 28 MB fixture binary is `--require`d and the 141 MB tile
+        # pyramid is not, because the checks that need the pyramid skip and
+        # say so while the fixture is what this client exists to display. A
+        # run without it failed 38 checks and named `band.bare_fraction gave 0
+        # values` thirty-eight times rather than the one missing file.
+        #
+        # The script sets its own exit code AND greps its own logs. Both,
+        # measured: on this repo's first CI run Godot exited 0 with four
+        # scripts failing to load on a parse error, and until today the gate
+        # itself printed FAILED and returned success.
+        run: GODOT=./godot bash tools/verify.sh

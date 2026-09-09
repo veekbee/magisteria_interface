@@ -56,6 +56,14 @@ func is_loaded() -> bool:
     return n_cells > 0 and FileAccess.file_exists(_bin_path)
 
 
+## WHERE THE PAYLOAD SHOULD BE. Public so that a caller finding `is_loaded`
+## false can name the file rather than repeat its path as a literal -- the
+## manifest decides the name, and a second copy of it is a second thing to
+## get wrong when it changes.
+func binary_path() -> String:
+    return _bin_path
+
+
 func row_names(window: String, lattice: String = "") -> PackedStringArray:
     var out := PackedStringArray()
     for k in _rows:

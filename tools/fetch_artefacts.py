@@ -24,9 +24,24 @@ with an unknown-present one, which is strictly worse than not running: absent is
 a state the checker understands and reports, and wrong is the only state that
 fails.
 
-ABSENT IS VALID. A clone with none of these files is a working clone; the checks
-that need them skip and say so. Running this tool is therefore optional, and it
-is a no-op when everything is present and matching.
+ABSENT IS VALID, AND `--require` IS WHERE IT STOPS BEING VALID. A clone with
+none of these files is a working clone; the checks that need them skip and say
+so. Running this tool is therefore optional, and it is a no-op when everything
+is present and matching.
+
+But a GATE is not a clone. `--require <pin>` says that after this run every
+fetched row of that pin must be on disk, and exits non-zero otherwise --
+because the alternative is a green build that ran half of itself. The two
+artefacts here are not alike in this: the tile pyramid is 141 MB of near-field
+detail whose checks skip and say so, and the fixture binary is the artefact the
+client exists to display, read by 1,526 of the suite's checks. Absence of the
+first is a clone; absence of the second is a gate that did not run.
+
+WHAT MADE THIS NECESSARY. Decision 948 moved the fixture binary out of the tree
+and onto a release asset, and neither gate learned to bring it back. CI was red
+for thirty commits over four days on 38 failing checks that were one missing
+file, and the failure did not name the file where anyone was looking -- it
+named `band.bare_fraction gave 0 values` thirty-eight times.
 """
 from __future__ import annotations
 
@@ -143,6 +158,18 @@ def fetch_one(row: dict, timeout: float) -> str:
     return "fetched"
 
 
+def missing_required(rows: list[dict], required: set) -> list[dict]:
+    """Required rows whose bytes are not on disk.
+
+    ITS OWN FUNCTION SO THAT IT CAN HAVE A CONTROL. Three cases and two of
+    them are silent when wrong: a required row that is absent and not
+    reported is the gate this whole flag exists to prevent, and a row that is
+    reported when nobody required it turns every valid clone red.
+    """
+    return [r for r in rows
+            if r["pin"].resolve() in required and not r["path"].exists()]
+
+
 def selftest() -> int:
     """Exercise `host_base` against a pin that exists only for this check.
 
@@ -189,10 +216,26 @@ def selftest() -> int:
         if fetch_one(rows["a/one.png"], 1.0) != "no-host":
             problems.append("no host is not reported as no-host")
 
+        # `--require`'S THREE CASES, against a pin whose files do not exist.
+        here = pin.parent.resolve()
+        rows_list = wanted(pin)
+        if missing_required(rows_list, {here / "PIN"}):
+            pass
+        else:
+            problems.append("a required row that is absent was not reported missing")
+        if missing_required(rows_list, set()):
+            problems.append("a row nobody required was reported missing, so every valid "
+                            "clone would fail")
+        (pin.parent / "a").mkdir(parents=True, exist_ok=True)
+        (pin.parent / "a" / "one.png").write_bytes(b"")
+        if missing_required(rows_list, {here / "PIN"}):
+            problems.append("a required row that is PRESENT was reported missing")
+
     for p in problems:
         print(f"  SELFTEST: {p}", file=sys.stderr)
     print("  fetch selftest: %s" % ("FAILED" if problems else "host_base, row override and "
-                                    "no-host all behave; no URL decides a path"))
+                                    "no-host all behave; no URL decides a path; --require "
+                                    "reports an absent required row and only that"))
     return 1 if problems else 0
 
 
@@ -205,9 +248,24 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     help="check decision 972's three branches against a synthetic pin")
     ap.add_argument("--quiet", action="store_true",
                     help="tally only; a multi-file artefact makes a per-row log unreadable")
+    ap.add_argument("--require", action="append", default=[], metavar="PIN",
+                    help="fail unless every fetched row of this pin is present afterwards. "
+                         "For a gate, where an absent artefact is a run that did not happen "
+                         "rather than a valid clone.")
     a = ap.parse_args(argv)
     if a.selftest:
         return selftest()
+
+    required = set()
+    for r in a.require:
+        # Named by PIN PATH, not by file name, for the same reason a
+        # destination is the pin's key: one place decides what belongs to
+        # which artefact, and it is the pin.
+        pin_path = (ROOT / r).resolve()
+        if not pin_path.exists():
+            print(f"--require names {r}, which is not a pin in this tree.", file=sys.stderr)
+            return 1
+        required.add(pin_path)
 
     rows = [r for p in PINS for r in wanted(ROOT / p)]
     if not rows:
@@ -241,6 +299,21 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     # hosts: "fetched from the expected host" is not part of any pass.
     print("  %d rows: %s" % (len(rows),
                              ", ".join(f"{n} {k}" for k, n in sorted(tally.items()))))
+
+    # THE REQUIRED HALF, CHECKED AGAINST THE DISK AND NOT AGAINST THE OUTCOME.
+    # A row can report `matches` and a row can report `unreachable`; what a
+    # gate needs to know is whether the bytes are there now, which is one
+    # question with one answer.
+    missing = missing_required(rows, required)
+    for r in missing:
+        print(f"  REQUIRED AND ABSENT: {r['name']} ({r['pin'].relative_to(ROOT)})",
+              file=sys.stderr)
+    if missing:
+        print(f"  {len(missing)} required file(s) could not be brought in. This is a gate "
+              f"refusing to certify a tree it could not assemble, not a broken clone: "
+              f"without them the checks that read them fail one by one and name the "
+              f"symptom rather than the cause.", file=sys.stderr)
+        failed = True
     return 1 if failed else 0
 
 
