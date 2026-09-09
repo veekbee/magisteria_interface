@@ -60,7 +60,7 @@
     }
   },
   "classifier": {
-    "_FAKE": "slope thresholds invented. The pipeline already derives slope, aspect and distance-to-channel at 100 m (iota_magisteria/data/terrain_layers_output/), none of it vendored here yet; when those arrive this classifier reads them instead of re-deriving slope from the lattice.",
+    "_FAKE": "slope thresholds invented. The pipeline already derives slope, aspect and distance-to-channel at 100 m (magisteria/data/terrain_layers_output/), none of it vendored here yet; when those arrive this classifier reads them instead of re-deriving slope from the lattice.",
     "from": "slope of the parent lattice, and distance to a mapped channel where one is available",
     "playa_below_slope_deg": 0.6,
     "floor_below_slope_deg": 4.0,

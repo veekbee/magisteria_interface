@@ -33,7 +33,7 @@ wrong. The emitter verifies it where the rule lives.
 
 Usage:
     python3 tools/check_contract.py
-    python3 tools/check_contract.py --against ../iota_magisteria
+    python3 tools/check_contract.py --against ../magisteria
 """
 from __future__ import annotations
 

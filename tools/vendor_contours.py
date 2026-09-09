@@ -26,8 +26,8 @@ Neither is checkable after the fact by looking at the picture, which is what
 makes them worth a refusal instead of a note.
 
 Usage (from the client repo root):
-    python3 tools/vendor_contours.py --from ../iota_magisteria/data/contour_output \
-        --sim ../iota_magisteria
+    python3 tools/vendor_contours.py --from ../magisteria/data/contour_output \
+        --sim ../magisteria
 """
 from __future__ import annotations
 
