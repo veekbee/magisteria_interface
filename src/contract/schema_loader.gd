@@ -37,6 +37,21 @@ extends RefCounted
 ## this build refused the artefact and yielded zero rows, naming both versions
 ## and the artefact sha -- which is the mismatch rule working, and is the reason
 ## the constant is bumped by hand rather than read from the file.
+##
+## A MINOR ADVANCE IS TWO-SIDED, AND THE NEXT ONE IS PENDING. Decision 977
+## rules seasonal position across the wire as `band.phenology_index`; it is
+## authored in the producing registry at `wire_rung="fine"` and is not yet in a
+## vendored artefact. When it arrives it will be an ADDITION, so a minor
+## advance, and the row will carry `since` ahead of the constant below --
+## which means this build will MASK it and say so, correctly, and the far-field
+## tint will stay exactly as dark as it is now.
+##
+## That is the rule working and not a defect, but it is worth writing down
+## because the evidence is a report line rather than an error: vendoring the
+## artefact and the fixture is not the whole handover. The constant moves with
+## them, by hand, as one deliberate change -- and it is NOT moved in advance,
+## because a client claiming to understand a minor nobody has emitted would
+## stop masking rows it should still be masking.
 const CLIENT_MAJOR: int = 2
 const CLIENT_MINOR: int = 0
 
