@@ -1,0 +1,47 @@
+{
+  "_what": "A percept bundle, whole and small, as §20.4.5 rules it. Hand-authored so that the document's SHAPE can be read at a glance rather than reconstructed from a producer -- three residence cells, two river nodes, and one row of each interesting kind.",
+  "_why_it_is_here": "Conformance to §20.4.5 was reviewed and is now mechanical. `tests/run_headless.gd` asserts that every level of this document carries EXACTLY the names PerceptBundle.DECLARED lists, that every row rides a declared lattice and is as long as that lattice's axis, and that the document round-trips byte for byte. So a schema change that does not reach this file fails the gate, and so does an edit to this file that does not reach the schema.",
+  "_not_a_pinned_import": "unlike contract/schema.json this artefact is authored here, so what guards it is not a digest against an upstream but a diff: regenerating it is a deliberate, visible change to a small readable file.",
+  "_the_values_are_invented": "the numbers are placeholders chosen to be distinguishable -- nothing here is measured and no reader should quote one. What is real is the structure.",
+  "bundle": {
+    "header": {
+      "schema_version": {"major": 0, "minor": 1},
+      "producer": {
+        "kind": "fixture_passthrough",
+        "id": "golden",
+        "provenance": {"_note": "a golden document has no artefact behind it; this field exists to show that it is carried."}
+      },
+      "observer_session": "golden-session",
+      "moment": {"window": "deepest_winter", "day": 12, "tick": 0}
+    },
+    "body": {
+      "observation_point": [-1149743.5, 2107.25, 2231176.5],
+      "posture": "standing",
+      "locomotion": {"sustainable_speed_m_s": 5.0},
+      "readouts": []
+    },
+    "fields": {
+      "cell_keys": ["1401000101|0", "1401000101|1", "1401000102|0"],
+      "node_keys": ["1401000101", "1401000102"],
+      "rows": {
+        "band.pft_fractions": {
+          "lattice": "band",
+          "groups": ["grass", "shrub"],
+          "values": [[0.25, 0.5, 0.125], [0.75, 0.5, 0.875]]
+        },
+        "band.wetness": {
+          "lattice": "band",
+          "groups": [""],
+          "values": [[0.125, 0.25, 0.375]]
+        },
+        "node.streamflow": {
+          "lattice": "node",
+          "groups": [""],
+          "values": [[1.5, 2.25]]
+        }
+      },
+      "refinements": {}
+    },
+    "subjects": {}
+  }
+}

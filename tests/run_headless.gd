@@ -158,6 +158,11 @@ func _initialize() -> void:
     test_aspect_is_read_through_its_validity_byte_and_never_around_it()
     test_a_layer_decodes_into_the_range_its_pin_declares()
     test_the_classifier_reads_the_layers_and_can_reach_the_margin()
+    test_the_golden_bundle_carries_exactly_what_the_schema_declares()
+    test_the_golden_bundle_loads_checks_and_round_trips()
+    test_the_schema_refuses_an_undeclared_name_at_every_level()
+    test_no_consumer_paints_one_lattices_row_through_the_others_join()
+    test_probe_row_reads_a_node_row_through_the_residence_layers_own_node_id()
     stage_the_main_scene()
 
 
@@ -5162,35 +5167,81 @@ func test_the_passthrough_earns_nothing_and_hides_nothing() -> void:
     check(str(b.producer.get("kind", "")) == FixturePassthrough.KIND,
             "the bundle does not stamp which producer made it")
 
-    var band_rows := fl.row_names(window, "band")
-    check(band_rows.size() > 0 and b.rows.size() == band_rows.size(),
-            "the bundle carries %d rows against %d band rows in the fixture"
-            % [b.rows.size(), band_rows.size()])
+    # EVERY ROW ON EVERY LATTICE, which is the assertion 978 moved.
+    #
+    # This read `fl.row_names(window, "band")` and counted against it, which was
+    # exactly right while the fields region had one key axis and became the
+    # thing keeping node rows out the moment it had two. It is the existing
+    # assertion the conformance edit had to touch, and it is not a relaxation:
+    # the bundle must carry the fixture's rows on BOTH lattices now, and each
+    # row is still compared value by value rather than by name.
+    var by_lattice := {}
+    var expected := 0
+    for lattice in PerceptBundle.AXIS_OF_LATTICE:
+        by_lattice[str(lattice)] = fl.row_names(window, str(lattice))
+        expected += (by_lattice[str(lattice)] as PackedStringArray).size()
+    check(int(by_lattice["node"].size()) > 0,
+            "the fixture carries no node-lattice row, so this check cannot see 978 at all")
+    check(expected > 0 and b.rows.size() == expected,
+            "the bundle carries %d rows against %d in the fixture (%d band, %d node)"
+            % [b.rows.size(), expected, by_lattice["band"].size(), by_lattice["node"].size()])
     var compared := 0
     var worst := 0.0
-    for row in band_rows:
-        var groups := b.row_groups(row)
-        for gi in groups.size():
-            var mine := b.row_values(row, gi)
-            var theirs := fl.day_values(window, row, 12, gi)
-            check(mine.size() == theirs.size(),
-                    "row %s group %d is %d long in the bundle and %d in the fixture"
-                    % [row, gi, mine.size(), theirs.size()])
-            for i in mini(mine.size(), theirs.size()):
-                if is_nan(theirs[i]):
-                    check(is_nan(mine[i]), "row %s cell %d is nodata and the bundle carries %f"
-                            % [row, i, mine[i]])
-                    continue
-                worst = maxf(worst, absf(mine[i] - theirs[i]))
-                compared += 1
+    var per_lattice := {}
+    for lattice in by_lattice:
+        for row in (by_lattice[lattice] as PackedStringArray):
+            check(b.lattice_of(row) == str(lattice),
+                    "the bundle files %s on the %s lattice and the fixture says %s"
+                    % [row, b.lattice_of(row), str(lattice)])
+            # AND AGAINST ITS OWN AXIS. A node row measured against the
+            # residence axis is the projection 978 forbids, arriving through a
+            # test rather than through the schema.
+            check(b.axis_for(row).size() == fl.day_values(window, row, 12, 0).size(),
+                    "row %s is indexed by a %d-key axis and carries %d values"
+                    % [row, b.axis_for(row).size(),
+                            fl.day_values(window, row, 12, 0).size()])
+            var groups := b.row_groups(row)
+            for gi in groups.size():
+                var mine := b.row_values(row, gi)
+                var theirs := fl.day_values(window, row, 12, gi)
+                check(mine.size() == theirs.size(),
+                        "row %s group %d is %d long in the bundle and %d in the fixture"
+                        % [row, gi, mine.size(), theirs.size()])
+                for i in mini(mine.size(), theirs.size()):
+                    if is_nan(theirs[i]):
+                        check(is_nan(mine[i]),
+                                "row %s cell %d is nodata and the bundle carries %f"
+                                % [row, i, mine[i]])
+                        continue
+                    worst = maxf(worst, absf(mine[i] - theirs[i]))
+                    compared += 1
+                    per_lattice[str(lattice)] = int(per_lattice.get(str(lattice), 0)) + 1
     check(compared > 10000, "only %d values were compared" % compared)
+    check(int(per_lattice.get("node", 0)) > 1000,
+            "only %d node values were compared" % int(per_lattice.get("node", 0)))
     check(worst == 0.0, "the bundle moved a carried value by %s" % String.num(worst, 12))
+
+    # THE TWO KEY SPACES DO NOT MIX, and the refusals are the guard.
+    var a_cell := b.cell_keys[0]
+    var a_node := b.node_keys[0]
+    check(not is_nan(b.value_at(a_cell, "band.wetness")),
+            "a band row could not be read by residence key")
+    check(not is_nan(b.node_value_at(a_node, "node.streamflow")),
+            "a node row could not be read by node key")
+    check(is_nan(b.value_at(a_cell, "node.streamflow")),
+            "a node row answered to a residence key, which is the projection 978 forbids")
+    check(is_nan(b.node_value_at(a_node, "band.wetness")),
+            "a band row answered to a node key")
+    check(b.node_value_at(a_node, "node.streamflow")
+                    == fl.day_values(window, "node.streamflow", 12, 0)[
+                            fl.node_index_of(a_node)],
+            "the bundle's node axis disagrees with the fixture's node ordinal")
 
     # The key axis is the world's, not the moment's.
     var later := p.bundle_for(window, 40, _dev_observer())
     check(b.same_axis_as(later), "two moments of one world do not share a key axis")
-    print("passthrough: %d values carried verbatim, %d subjects, %d refinements"
-            % [compared, b.subjects.size(), b.refinements.size()])
+    print("passthrough: %d values carried verbatim (%s), %d subjects, %d refinements"
+            % [compared, str(per_lattice), b.subjects.size(), b.refinements.size()])
 
 
 func test_the_bundle_paints_the_pixels_the_fixture_did() -> void:
@@ -7880,3 +7931,310 @@ func test_the_classifier_reads_the_layers_and_can_reach_the_margin() -> void:
             % [fine_hits - (coarse_hits - fabricated), fabricated]
             + "from a channel. A distance transform is not sampled at the parent's scale the "
             + "way a slope is.")
+
+
+# ============================================================================
+# §20.4.5 conformance, against a golden bundle.
+# ============================================================================
+
+const GOLDEN_BUNDLE := "res://contract/percept_bundle_v0.golden.json"
+
+
+func golden_bundle() -> Dictionary:
+    var f := FileAccess.open(GOLDEN_BUNDLE, FileAccess.READ)
+    if f == null:
+        return {}
+    var parsed = JSON.parse_string(f.get_as_text())
+    return parsed if typeof(parsed) == TYPE_DICTIONARY else {}
+
+
+func test_the_golden_bundle_carries_exactly_what_the_schema_declares() -> void:
+    """CONFORMANCE TO §20.4.5, MADE MECHANICAL RATHER THAN REVIEWED.
+
+    Decision 980 lands `PerceptBundle` v0 as §20.4.5 and makes the corpus the
+    authority this prototype conforms to -- so the interesting failure is no
+    longer 'the code is wrong' but 'the code and the ruled shape have drifted
+    apart and nobody noticed'. A test that only exercised the code could not
+    see that at all.
+
+    So the golden document is checked BOTH WAYS at every level: every name the
+    schema declares appears in it, and every name in it is one the schema
+    declares. A field added to `DECLARED` without reaching the golden fails
+    here, and so does the reverse. That is the whole point of a golden and it
+    is why the check is an equality rather than a subset in either direction.
+
+    The values in it are invented and say so; what is asserted is structure."""
+    var doc := golden_bundle()
+    check(not doc.is_empty(), "no golden bundle at %s" % GOLDEN_BUNDLE)
+    if doc.is_empty():
+        return
+    check(str(doc.get("_the_values_are_invented", "")).length() > 20,
+            "the golden does not say its numbers are placeholders")
+    var g: Dictionary = doc.get("bundle", {})
+    check(not g.is_empty(), "the golden file carries no `bundle`")
+    if g.is_empty():
+        return
+
+    # EVERY LEVEL, BOTH DIRECTIONS.
+    var levels := {
+        "root": g,
+        "header": g.get("header", {}),
+        "producer": (g.get("header", {}) as Dictionary).get("producer", {}),
+        "moment": (g.get("header", {}) as Dictionary).get("moment", {}),
+        "body": g.get("body", {}),
+        "fields": g.get("fields", {}),
+    }
+    for level in levels:
+        var declared: Array = PerceptBundle.DECLARED[str(level)]
+        var present: Dictionary = levels[level]
+        for name in declared:
+            check(present.has(str(name)), "the golden's %s carries no `%s`, which the schema "
+                    % [str(level), str(name)] + "declares")
+        for name in present:
+            check(declared.has(str(name)), "the golden's %s carries `%s`, which the schema does "
+                    % [str(level), str(name)] + "not declare")
+    # AND THE ROW LEVEL, which is where 978 landed.
+    var rows: Dictionary = (g.get("fields", {}) as Dictionary).get("rows", {})
+    check(rows.size() >= 3, "the golden carries %d rows, too few to show the shapes" % rows.size())
+    for row in rows:
+        var r: Dictionary = rows[row]
+        for name in PerceptBundle.DECLARED["row"]:
+            check(r.has(str(name)), "the golden's row %s carries no `%s`" % [str(row), str(name)])
+        for name in r:
+            check(PerceptBundle.DECLARED["row"].has(str(name)),
+                    "the golden's row %s carries `%s`, which the schema does not declare"
+                    % [str(row), str(name)])
+
+    # BOTH LATTICES APPEAR, or the golden cannot show what 978 changed.
+    var seen := {}
+    for row in rows:
+        seen[str((rows[row] as Dictionary)["lattice"])] = true
+    for lattice in PerceptBundle.AXIS_OF_LATTICE:
+        check(seen.has(str(lattice)), "no golden row rides the %s lattice, so this document "
+                % str(lattice) + "cannot show one key axis per lattice")
+    print("golden: %d rows over %d lattices, every level's names equal to the schema's"
+            % [rows.size(), seen.size()])
+
+
+func test_the_golden_bundle_loads_checks_and_round_trips() -> void:
+    """THE DOCUMENT IS A DOCUMENT, not a shape someone wrote down.
+
+    `from_dict` accepts it, `check()` passes on it, and `to_dict` reproduces it
+    BYTE FOR BYTE -- decision 180's percept-as-pure-function extended to the
+    document that carries it, which is what makes a recorded stream replayable
+    against a pinned fixture digest.
+
+    Byte for byte and not field by field: a comparison that walked the fields
+    would pass over a key ORDER change, and two documents that differ in order
+    do not have the same digest, so a replay would not match."""
+    var doc := golden_bundle()
+    if doc.is_empty():
+        return
+    var g: Dictionary = doc.get("bundle", {})
+    var b := PerceptBundle.from_dict(g)
+    check(not b.refused, "the golden bundle was refused: %s" % b.refusal)
+    if b.refused:
+        return
+    var ok := b.check()
+    check(bool(ok["ok"]), "the golden bundle does not check: %s" % str(ok["why"]))
+
+    # THE FIXED-POINT FORM, AND IT HAS TO BE STATED CAREFULLY.
+    #
+    # What decision 180 needs is that writing a bundle, reading it, and writing
+    # it again produces the same bytes -- otherwise a recorded stream's digest
+    # moves under a replay that changed nothing.
+    #
+    # BOTH SIDES GO THROUGH THE PARSER, and that is not a dodge. A GDScript
+    # `int` written to JSON comes back a float: `{"day": 12}` reads as 12.0 and
+    # re-writes as `12.0`. So an in-memory document and its own reload differ
+    # in type while agreeing in value, and comparing the two would report a
+    # difference that no wire ever sees. What a reader and a digest see is the
+    # TEXT, so the text is what is compared, from the same starting point on
+    # both sides.
+    var reloaded := PerceptBundle.from_dict(JSON.parse_string(JSON.stringify(b.to_dict())))
+    check(not reloaded.refused, "the bundle's own output was refused on reload: %s"
+            % reloaded.refusal)
+    var again := JSON.stringify(JSON.parse_string(JSON.stringify(b.to_dict())), "  ")
+    var want := JSON.stringify(g, "  ")
+    check(again == want, "loading and re-saving the golden does not reproduce it. Either the "
+            + "schema moved or the file did; the form `to_dict` produces is:\n%s"
+            % again.substr(0, 700))
+    # AND ONCE MORE FROM THE RELOAD, which is the fixed point itself rather
+    # than agreement with one particular file.
+    check(JSON.stringify(reloaded.to_dict(), "  ") == JSON.stringify(b.to_dict(), "  "),
+            "a bundle and its own reload write different documents, so a recorded stream's "
+            + "digest moves under a replay that changed nothing")
+
+    # THE AXES ARE SEPARATE AND THE VALUES LAND WHERE THE KEYS SAY.
+    check(b.value_at("1401000101|1", "band.wetness") == 0.25,
+            "the golden's band row does not index by residence key")
+    check(b.node_value_at("1401000102", "node.streamflow") == 2.25,
+            "the golden's node row does not index by node key")
+    check(b.value_at("1401000101|0", "band.pft_fractions", 1) == 0.75,
+            "the golden's group axis does not index")
+    check(is_nan(b.value_at("1401000101|0", "node.streamflow")),
+            "the golden's node row answered to a residence key")
+    print("golden: loads, checks and round-trips at %d bytes" % again.length())
+
+
+func test_the_schema_refuses_an_undeclared_name_at_every_level() -> void:
+    """THE CLOSED WHITELIST, EXERCISED WHERE IT IS DECLARED RATHER THAN AT ONE
+    LEVEL AND ASSUMED FOR THE REST.
+
+    §20.4.5's two closure rules are deliberately different: the document's
+    STRUCTURE is a closed whitelist and an undeclared name refuses -- a refused
+    bundle is not a partially-loaded one -- while the ROWS INSIDE the fields
+    region version instead, because rows are the additive half the version pair
+    already governs. Collapsing them either way loses a property.
+
+    So this asserts refusal at every structural level including the row's own
+    shape, and the golden is the base each mutation is made from, which means a
+    level added to the schema without a golden entry is caught by the test
+    above and a level that stops refusing is caught here."""
+    var doc := golden_bundle()
+    if doc.is_empty():
+        return
+    var g: Dictionary = doc.get("bundle", {})
+    check(not PerceptBundle.from_dict(g).refused, "the unmutated golden is refused")
+
+    var at := {
+        "root": [],
+        "header": ["header"],
+        "producer": ["header", "producer"],
+        "moment": ["header", "moment"],
+        "body": ["body"],
+        "fields": ["fields"],
+    }
+    for level in at:
+        var mutated: Dictionary = g.duplicate(true)
+        var target: Dictionary = mutated
+        for step in (at[level] as Array):
+            target = target[str(step)]
+        target["_smuggled"] = "a name this schema does not declare"
+        var b := PerceptBundle.from_dict(mutated)
+        check(b.refused, "an undeclared name in `%s` was accepted" % str(level))
+        check(b.refusal.contains("_smuggled") and b.refusal.contains("closed"),
+                "the refusal for `%s` does not name what arrived or say why: %s"
+                % [str(level), b.refusal])
+        # A REFUSED BUNDLE IS NOT A PARTIALLY-LOADED ONE.
+        check(b.check()["ok"] == false, "a refused bundle passed its own check")
+        check(b.cell_keys.is_empty() and b.rows.is_empty(),
+                "a refused bundle carries %d keys and %d rows" % [b.cell_keys.size(),
+                        b.rows.size()])
+
+    # AND THE ROW'S OWN SHAPE, which is structure and not content.
+    var row_mutated: Dictionary = g.duplicate(true)
+    ((row_mutated["fields"]["rows"] as Dictionary)["band.wetness"]
+            as Dictionary)["_smuggled"] = true
+    var rb := PerceptBundle.from_dict(row_mutated)
+    check(rb.refused, "an undeclared name inside a row was accepted")
+    check(rb.refusal.contains("band.wetness"),
+            "the row refusal does not name the row: %s" % rb.refusal)
+
+    # BUT AN UNKNOWN ROW NAME IS CONTENT AND VERSIONS INSTEAD OF REFUSING.
+    var added: Dictionary = g.duplicate(true)
+    (added["fields"]["rows"] as Dictionary)["band.not_yet_invented"] = {
+        "lattice": "band", "groups": [""], "values": [[0.0, 0.0, 0.0]]}
+    var ab := PerceptBundle.from_dict(added)
+    check(not ab.refused, "an unknown ROW NAME refused, which breaks the additive bet the "
+            + "version pair already governs: %s" % ab.refusal)
+    check(ab.rows.has("band.not_yet_invented"), "the added row was dropped rather than carried")
+
+    # AND A ROW ON A LATTICE THE SCHEMA HAS NO AXIS FOR IS A CHECK FAILURE, not
+    # a refusal: it parsed, and it is unusable.
+    var wrong: Dictionary = g.duplicate(true)
+    ((wrong["fields"]["rows"] as Dictionary)["band.wetness"]
+            as Dictionary)["lattice"] = "parcel"
+    var wb := PerceptBundle.from_dict(wrong)
+    check(not wb.refused, "a row naming an unknown lattice refused at the structural level")
+    check(not bool(wb.check()["ok"]), "a row on an undeclared lattice passed check()")
+    check(str(wb.check()["why"]).contains("parcel"),
+            "the check does not name the lattice it does not know: %s" % str(wb.check()["why"]))
+    print("golden: refusal at %d structural levels plus the row shape; an unknown row NAME "
+            % at.size() + "versions instead")
+
+
+func test_no_consumer_paints_one_lattices_row_through_the_others_join() -> void:
+    """978 KEPT THE TWO KEY SPACES APART IN THE SCHEMA. This is the check that
+    a CONSUMER cannot put them back together.
+
+    `FieldOverlay`'s join is the residence one -- pixel to cell index -- and
+    channel 1 now also carries node rows. `node.streamflow` handed to
+    `paint_row` is 1,154 values indexed into a 5,684-cell join: the first 1,154
+    cells take a plausible number from the wrong river and the rest go nodata.
+    A basin painted through the wrong join looks like a basin, which is why
+    this refuses rather than producing a texture nobody would question.
+
+    The same thing one verb over: `probe.row` reads a node row through the
+    residence layer's OWN node id -- decision 891's resolution, carried -- and
+    never by splitting the residence key string, which 978 rejects as doing
+    A-side a resolution already done B-side."""
+    var fl := fixture()
+    var window := fl.windows[0]
+    var p := FixturePassthrough.over(fl)
+    var b := p.bundle_for(window, 12, _dev_observer())
+    var ov := FieldOverlay.new()
+    ov.bind(residence(), b, Color(0.6, 0.6, 0.55, 1.0))
+    check(ov.is_bound(), "the overlay did not bind")
+
+    var band := ov.paint_row(b, "band.wetness", 0, 0.0, 1.0)
+    check(bool(band.get("ok", false)), "a band row would not paint: %s" % str(band.get("why", "")))
+    var node := ov.paint_row(b, "node.streamflow", 0, 0.0, 100000.0)
+    check(not bool(node.get("ok", true)),
+            "a node row painted through the residence join, which is the projection 978 "
+            + "forbids arriving through a consumer")
+    check(str(node.get("why", "")).contains("node")
+                    and str(node.get("why", "")).contains("residence"),
+            "the refusal does not name both joins: %s" % str(node.get("why", "")))
+    check(not node.has("texture"), "a refused paint produced a texture anyway")
+
+    # AND THE FIXTURE AGREES ABOUT WHICH LATTICE EACH ROW IS ON, which is where
+    # the bundle read it from. Two homes for that fact is one too many.
+    for row in b.row_names():
+        check(b.lattice_of(row) == fl.lattice_of(window, row),
+                "the bundle files %s on %s and the fixture on %s"
+                % [row, b.lattice_of(row), fl.lattice_of(window, row)])
+    print("transducer: a node row is refused by the residence join and %d rows agree with the "
+            % b.rows.size() + "fixture about their lattice")
+
+
+func test_probe_row_reads_a_node_row_through_the_residence_layers_own_node_id() -> void:
+    """THE DEV VERB, WHICH IS EXEMPT BY CONTEXT AND NOT FROM BEING RIGHT.
+
+    `probe.row` reads the artefact directly on purpose -- it is a development
+    view of data the client holds whole. That exemption is about the boundary,
+    not about arithmetic: reading a 1,154-long node row at a cell index would
+    report a plausible flow from the wrong river, and a probe that lies is
+    worse than no probe."""
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    v.show_field("deepest_winter", "band.pft_fractions", 45)
+    var console := DevConsole.new()
+    console.producer_kind = str(v.bundle.producer.get("kind", ""))
+    var verbs := ConsoleVerbs.new()
+    verbs.bind(console, v)
+
+    var verts: PackedVector3Array = v.terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+    var centre := v.terrain.mesh_to_world(verts[5000], v.heightfield)
+    var at := "%f %f" % [centre.x, centre.y]
+    var lines := console.run("probe.row node.streamflow " + at)
+    var text := ""
+    for l in lines:
+        text += str(l) + "\n"
+    check(text.contains("[node lattice]"),
+            "probe.row does not say which lattice the row rides: %s" % text)
+    check(text.contains("at node ") and text.contains("ordinal"),
+            "probe.row does not name the node it read, so a reader cannot tell it from a cell "
+            + "read: %s" % text)
+    var band_lines := console.run("probe.row band.wetness " + at)
+    var band_text := ""
+    for l in band_lines:
+        band_text += str(l) + "\n"
+    check(band_text.contains("[band lattice]"), "probe.row does not label a band row: %s"
+            % band_text)
+    check(not band_text.contains("ordinal"), "a band row was read through the node axis")
+    print("probe.row: %s" % str(lines[1] if lines.size() > 1 else "no value line"))
+    console.free()
+    v.queue_free()

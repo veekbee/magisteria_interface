@@ -57,6 +57,14 @@ CONTOUR_PIN = ROOT / "assets" / "contours" / "PIN"
 TILES_PIN = ROOT / "assets" / "terrain" / "tiles" / "PIN"
 LAYERS_PIN = ROOT / "assets" / "terrain" / "layers" / "PIN"
 
+#: The percept bundle golden (§20.4.5). Not a pinned import -- it is authored
+#: here -- but it makes a claim ABOUT the contract, which is this tool's
+#: subject: each of its rows names a shipped row and rides the lattice that row
+#: declares. The structural half of §20.4.5's conformance is asserted in the
+#: headless gate, where the schema's own DECLARED map can be read; what belongs
+#: here is the half that compares two ARTEFACTS.
+GOLDEN_BUNDLE = ROOT / "contract" / "percept_bundle_v0.golden.json"
+
 
 def sha256(data: bytes) -> str:
     return hashlib.sha256(data).hexdigest()
@@ -127,6 +135,42 @@ def check_against(pin: dict, sim: Path) -> list[str]:
                 f"    PIN/vendored\n"
                 f"      is  {pin.get('file_sha256')}"]
     return []
+
+
+def check_golden(artefact: dict) -> list[str]:
+    """The golden bundle's rows against the contract's own row table.
+
+    ONE HOME PER QUANTITY, ACROSS TWO FILES. §20.4.5 rules that the fields
+    region CONTAINS the contract rather than forking it, so a golden row that
+    named a quantity the contract does not ship, or filed a shipped one on the
+    wrong lattice, would be the fork arriving through the example. Decision 978
+    made the lattice load-bearing: it decides which key axis a row is indexed
+    by, and a row on the wrong one is 1,154 values against a 5,684-key axis.
+    """
+    if not GOLDEN_BUNDLE.exists():
+        return [f"no percept bundle golden at {GOLDEN_BUNDLE.relative_to(ROOT)}"]
+    try:
+        doc = json.loads(GOLDEN_BUNDLE.read_text())
+    except json.JSONDecodeError as exc:
+        return [f"the percept bundle golden is not valid JSON: {exc}"]
+    lattice_of = {r["name"]: r.get("lattice") for r in artefact.get("rows", [])}
+    rows = doc.get("bundle", {}).get("fields", {}).get("rows", {})
+    if not rows:
+        return ["the percept bundle golden carries no rows"]
+    problems = []
+    for name, row in rows.items():
+        if name not in lattice_of:
+            problems.append(
+                f"the golden bundle carries row `{name}`, which contract/schema.json does "
+                f"not ship. The fields region contains the contract; a row that exists only "
+                f"in the example is a fork of it.")
+            continue
+        if row.get("lattice") != lattice_of[name]:
+            problems.append(
+                f"the golden bundle files `{name}` on the `{row.get('lattice')}` lattice and "
+                f"the contract declares `{lattice_of[name]}`. The lattice decides which key "
+                f"axis the row is indexed by (978), so this is not a label.")
+    return problems
 
 
 def check_multi(pin_path: Path, label: str) -> list[str]:
@@ -303,7 +347,9 @@ def main(argv=None) -> int:
                 + check_multi(FIXTURE_PIN, "fixture")
                 + check_multi(CONTOUR_PIN, "contours")
                 + check_multi(TILES_PIN, "tiles")
-                + check_multi(LAYERS_PIN, "layers"))
+                + check_multi(LAYERS_PIN, "layers")
+                + check_golden(json.loads(ARTEFACT_PATH.read_bytes())
+                               if ARTEFACT_PATH.exists() else {}))
     scope = "local"
     tallies = {}
     if a.against is not None:
@@ -328,6 +374,10 @@ def main(argv=None) -> int:
     print(f"contract OK ({scope}): v{v.get('major')}.{v.get('minor')}, "
           f"sha256 {pin.get('file_sha256', '')[:16]}…, "
           f"pinned at {pin.get('artefact_committed_at', '')[:12]}")
+    if GOLDEN_BUNDLE.exists():
+        n = len(json.loads(GOLDEN_BUNDLE.read_text())
+                .get("bundle", {}).get("fields", {}).get("rows", {}))
+        print(f"golden bundle OK: {n} row(s) on the contract's own lattices")
     for pp, label in ((TERRAIN_PIN, "terrain"), (FIXTURE_PIN, "fixture"),
                       (CONTOUR_PIN, "contours"), (TILES_PIN, "tiles"),
                       (LAYERS_PIN, "layers")):

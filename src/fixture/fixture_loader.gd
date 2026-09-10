@@ -76,6 +76,17 @@ func row_names(window: String, lattice: String = "") -> PackedStringArray:
     return out
 
 
+## Which lattice a row rides, as the manifest declares it. "" for a row this
+## fixture does not carry.
+##
+## READ, NOT INFERRED. Length would tell you today -- 5,684 against 1,154 --
+## and would stop telling you the moment two lattices happened to match, at
+## which point a river's flow paints over ground.
+func lattice_of(window: String, row: String) -> String:
+    var d: Variant = _rows.get("%s/%s" % [window, row], null)
+    return "" if d == null else str((d as Dictionary).get("lattice", "band"))
+
+
 ## The engine's node-axis position for a HUC10 id. Node-lattice rows are
 ## indexed by it.
 ##

@@ -21,29 +21,32 @@ extends RefCounted
 ## far side: a consumer in `src/transducer/` reads bundles and never reaches
 ## past one for the file underneath.
 ##
-## WHAT DOES NOT CROSS, AND WHY IT IS WORTH SAYING OUT LOUD:
+## WHAT CROSSES NOW AND DID NOT, AND WHAT STILL DOES NOT:
 ##
-##   NODE-LATTICE ROWS. `node.streamflow` is indexed by river node, not by
-##   residence cell, and channel 1 is keyed by residence key. A reach's flow is
-##   plainly something an observer could perceive, so this is a gap in the
-##   schema and not in the fixture: what key a node row rides on is a question
-##   for whoever lands the bundle corpus-side, and inventing an answer here
-##   would be inventing a wire.
+##   NODE-LATTICE ROWS CROSS (978). `node.streamflow` is indexed by river node
+##   and channel 1 carried one key axis, so it had nowhere to go. It has one:
+##   the fields region carries a key axis per lattice, and the node axis is
+##   the fixture's own `node_order` -- carried, not reconstructed by splitting
+##   the residence key, which 978 rejects as doing A-side a resolution that is
+##   already done B-side.
 ##
-##   THE CELL'S OWN YEAR. The far-field tint mixes phenology by where a cell
-##   sits in ITS OWN yearly range, which needs the whole year -- 365 days of a
-##   row, for every cell, to draw one day. No bundle carries that: a moment is
-##   a moment. Either the seasonal position is itself a carried row (a percept:
-##   how far through its year this ground looks) or the tint is asking for
-##   something no observer has. That is a producer-side question, so the tint
-##   stays on the fixture and outside the transducer subtree until it is
-##   answered.
+##   THE CELL'S OWN YEAR STILL DOES NOT, AND NOW HAS A ROW COMING (977). The
+##   far-field tint mixes phenology by where a cell sits in ITS OWN yearly
+##   range, which needs the whole year -- 365 days of a row, for every cell, to
+##   draw one day. No bundle carries that: a moment is a moment. 977 rules
+##   seasonal position across the wire as `band.phenology_index`; it is a
+##   registry row and does not exist yet, so the tint stays on the fixture and
+##   outside the transducer subtree until it arrives. Not stubbed: a stub here
+##   would be this repo authoring a row it does not own.
 
 const KIND := "fixture_passthrough"
 
 var _fl: FixtureLoader = null
 var _provenance: Dictionary = {}
 var _keys: PackedStringArray = PackedStringArray()
+## The node axis, in the engine's own order, straight from the fixture's
+## `node_order`. Never derived from `_keys`.
+var _node_keys: PackedStringArray = PackedStringArray()
 
 ## Cached channel 1, keyed by "window|day": the fields are a property of the
 ## moment, and a viewer asks for the same moment many times over while the
@@ -67,6 +70,13 @@ static func over(fl: FixtureLoader, id: String = "viewer") -> FixturePassthrough
     var pairs: Array = fl.manifest.get("cell_keys", {}).get("pairs", [])
     for pr in pairs:
         p._keys.append("%s|%d" % [str(pr[0]), int(pr[1])])
+    # READ, NOT INFERRED. The ids that appear in `cell_keys` are the same ids,
+    # and their order of first appearance agrees with the node order today --
+    # which is exactly the kind of agreement that holds until it does not. The
+    # fixture emits `node_order` for this purpose and a wrong node index draws
+    # the wrong river's flow while looking entirely plausible.
+    for huc10 in (fl.manifest.get("node_order", {}).get("ids", []) as Array):
+        p._node_keys.append(str(huc10))
     return p
 
 
@@ -97,32 +107,40 @@ func bundle_for(window: String, day: int, observer: Dictionary) -> PerceptBundle
     b.readouts = []
 
     b.cell_keys = _keys
+    b.node_keys = _node_keys
     b.rows = _fields_for(window, day)
     b.refinements = {}
     b.subjects = {}
     return b
 
 
-## Channel 1 for one moment: every band-lattice row the fixture carries, at
-## every group, indexed by the shared key axis.
+## Channel 1 for one moment: every row the fixture carries, at every group,
+## each indexed by ITS OWN lattice's key axis.
 ##
-## The fixture's band rows are already indexed by cell in the order `cell_keys`
-## lists them, so the "join" here is the identity -- which is the honest reason
-## the axis is what it is. A producer whose storage disagreed would map; this
-## one does not have to, and pretending otherwise would be ceremony.
+## The fixture's rows are already indexed the way each axis lists them -- band
+## rows by cell, node rows by node ordinal -- so the "join" here is the
+## identity on both, which is the honest reason the axes are what they are. A
+## producer whose storage disagreed would map; this one does not have to, and
+## pretending otherwise would be ceremony.
+##
+## THE LATTICE IS THE FIXTURE'S OWN DECLARATION, and it comes from the same
+## place the contract's does. `row_names(window, lattice)` filters on the
+## manifest's per-row `lattice` field; nothing here decides which lattice a row
+## is on, and nothing infers it from an array's length.
 func _fields_for(window: String, day: int) -> Dictionary:
     var ck := "%s|%d" % [window, day]
     if _fields_cache.has(ck):
         return _fields_cache[ck]
     var out := {}
-    for row in _fl.row_names(window, "band"):
-        var groups := _fl.taxon_groups(window, row)
-        if groups.is_empty():
-            groups = PackedStringArray([""])
-        var vals: Array = []
-        for gi in groups.size():
-            vals.append(_fl.day_values(window, row, day, gi))
-        out[row] = {"groups": groups, "values": vals}
+    for lattice in PerceptBundle.AXIS_OF_LATTICE:
+        for row in _fl.row_names(window, str(lattice)):
+            var groups := _fl.taxon_groups(window, row)
+            if groups.is_empty():
+                groups = PackedStringArray([""])
+            var vals: Array = []
+            for gi in groups.size():
+                vals.append(_fl.day_values(window, row, day, gi))
+            out[row] = {"lattice": str(lattice), "groups": groups, "values": vals}
     _fields_cache[ck] = out
     return out
 

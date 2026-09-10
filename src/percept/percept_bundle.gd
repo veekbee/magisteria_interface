@@ -16,8 +16,8 @@ extends RefCounted
 ##   header    -- which producer, which observer session, which moment
 ##   body      -- the percept of self: where the eyes are, the posture, what
 ##                movement needs. `readouts` is empty in v0, deliberately.
-##   fields    -- channel 1, the ambient background: the carried rows, keyed by
-##                residence key, plus a refinements overlay (empty here)
+##   fields    -- channel 1, the ambient background: the carried rows on ONE KEY
+##                AXIS PER LATTICE, plus a refinements overlay (empty here)
 ##   subjects  -- channel 2, individuated things (empty under passthrough)
 ##
 ## THE SCHEMA IS CLOSED, AND THE CLOSURE IS THE ENFORCEMENT. `from_dict`
@@ -35,14 +35,32 @@ extends RefCounted
 ## re-deriving it, so a row cannot come to mean two things by being described
 ## twice.
 ##
+## ONE KEY AXIS PER LATTICE, AND NO ROW IS PROJECTED ONTO ANOTHER'S (978).
+## Band rows ride the residence key, `huc10|band`. Node rows ride the node key,
+## which is the same HUC10 id the residence key's first component carries and
+## the flowline export's `node` field joins reaches to -- so the flow drape's
+## join is an identity against geometry the client already holds.
+##
+## A ROW'S LATTICE IS READ FROM THE CONTRACT AND NEVER INFERRED. Every row in
+## `contract/schema.json` declares `lattice`, and `node.streamflow` has shipped
+## with `dims=["node"]` since v1.0; only this prototype's single-axis fields
+## region collapsed it. Inferring an axis from an array's length would agree
+## today and draw the wrong river's flow the day two lattices happen to match.
+##
+## THE TWO ACCESSORS ARE SEPARATE ON PURPOSE. `value_at` takes a residence key
+## and `node_value_at` takes a node key; there is no accessor that takes "a
+## key" and works out which space it is in. Such a thing would accept a
+## residence key for a node row and answer plausibly, which is the projection
+## 978 forbids arriving through a convenience.
+##
 ## STORED COLUMNAR, READ AS A MAPPING. The sketch's form is
 ## `cells {residence_key -> {row -> value}}` and `value_at` answers exactly
-## that. Underneath, one key axis is shared by every row and each row is a
-## packed array indexed by it -- the same information transposed, and the
-## difference between a dictionary of 45,000 entries rebuilt every time the day
-## changes and fourteen array reads. The key axis is a property of the world,
-## not of the moment, so a consumer binds to it once and every later bundle
-## from the same world reuses that bind.
+## that. Underneath, each row is a packed array indexed by its own axis -- the
+## same information transposed, and the difference between a dictionary of
+## 45,000 entries rebuilt every time the day changes and fourteen array reads.
+## A key axis is a property of the world, not of the moment, so a consumer
+## binds to it once and every later bundle from the same world reuses that
+## bind.
 ##
 ## DETERMINISTIC (decision 180): one (world, observer, moment) produces one
 ## bundle, byte for byte, so a recorded stream replays.
@@ -67,8 +85,14 @@ const DECLARED := {
     "producer": ["kind", "id", "provenance"],
     "moment": ["window", "day", "tick"],
     "body": ["observation_point", "posture", "locomotion", "readouts"],
-    "fields": ["cell_keys", "rows", "refinements"],
+    "fields": ["cell_keys", "node_keys", "rows", "refinements"],
+    "row": ["lattice", "groups", "values"],
 }
+
+## Which declared key axis each lattice rides. The mapping lives here rather
+## than at each call site, so "which axis is this row on" has one answer and a
+## third lattice is one entry rather than a search.
+const AXIS_OF_LATTICE := {"band": "cell_keys", "node": "node_keys"}
 
 # -- header ------------------------------------------------------------------
 var producer: Dictionary = {}           ## {kind, id, provenance}
@@ -104,7 +128,20 @@ var readouts: Array = []
 ## to. A property of the world; identical across moments.
 var cell_keys: PackedStringArray = PackedStringArray()
 var _index: Dictionary = {}              ## residence key -> axis position, built on first ask
-## row name -> {"groups": PackedStringArray, "values": Array[PackedFloat64Array]}
+## THE NODE KEY AXIS: HUC10 ids in the engine's node order. The same ids the
+## residence key's first component carries, but the ORDER is the engine's own
+## and is read from the fixture's `node_order` rather than inferred from where
+## an id first appears in `cell_keys` -- that inference agrees today, rests on
+## cells being grouped by node ordinal, which nothing promises, and a wrong
+## node index draws the wrong river's flow while looking entirely plausible.
+##
+## And it is carried, never reconstructed. 978 rejects splitting the residence
+## key string client-side: that is a resolution done A-side of a resolution
+## decision 891 already does B-side.
+var node_keys: PackedStringArray = PackedStringArray()
+var _node_index: Dictionary = {}         ## node key -> axis position, built on first ask
+## row name -> {"lattice": String, "groups": PackedStringArray,
+##              "values": Array[PackedFloat64Array]}
 ## One entry per group; a row with no taxon axis has exactly one, named "".
 var rows: Dictionary = {}
 ## Conditional overlays, present only where earned. Empty under passthrough,
@@ -133,15 +170,64 @@ func as_vector3() -> Vector3:
     return Vector3(observation_point[0], observation_point[1], observation_point[2])
 
 
-## The value one cell carries for one row -- the sketch's `cells` mapping, as a
-## lookup. NAN where the cell is unkeyed, the row absent, or the wire said
+## The value one cell carries for one BAND row -- the sketch's `cells` mapping,
+## as a lookup. NAN where the cell is unkeyed, the row absent, or the wire said
 ## nodata; never 0.0, which is a real value for every row here.
+##
+## REFUSES A NODE ROW rather than indexing it with a residence position. The
+## two axes are different lengths today -- 5,684 against 1,154 -- so most such
+## reads would fall off the end and the rest would be a plausible number from
+## the wrong river.
 func value_at(residence_key: String, row: String, group: int = 0) -> float:
+    if lattice_of(row) != "band":
+        return NAN
     var i := index_of(residence_key)
     if i < 0:
         return NAN
     var vals := row_values(row, group)
     return NAN if i >= vals.size() else vals[i]
+
+
+## The value one river node carries for one NODE row. Its own key space, and
+## the symmetric refusal: a band row asked for by node key is the same mistake
+## the other way.
+func node_value_at(node_key: String, row: String, group: int = 0) -> float:
+    if lattice_of(row) != "node":
+        return NAN
+    var i := node_index_of(node_key)
+    if i < 0:
+        return NAN
+    var vals := row_values(row, group)
+    return NAN if i >= vals.size() else vals[i]
+
+
+## Which lattice a row rides, or "" if the bundle does not carry it. The
+## default for a row that arrived without one is "band", which is what every
+## row before 978 was.
+func lattice_of(row: String) -> String:
+    if not rows.has(row):
+        return ""
+    return str((rows[row] as Dictionary).get("lattice", "band"))
+
+
+## The key axis a row is indexed by, whichever lattice it is on.
+func axis_for(row: String) -> PackedStringArray:
+    var axis := str(AXIS_OF_LATTICE.get(lattice_of(row), ""))
+    if axis == "node_keys":
+        return node_keys
+    if axis == "cell_keys":
+        return cell_keys
+    return PackedStringArray()
+
+
+## Row names on one lattice, or all of them when `lattice` is "".
+func row_names_on(lattice: String = "") -> PackedStringArray:
+    var out := PackedStringArray()
+    for k in rows:
+        if lattice == "" or lattice_of(str(k)) == lattice:
+            out.append(str(k))
+    out.sort()
+    return out
 
 
 ## The row as the axis indexes it. Empty if the bundle does not carry it.
@@ -167,8 +253,8 @@ func row_names() -> PackedStringArray:
     return out
 
 
-## Position of one key on the axis, or -1. The reverse map is built on first
-## ask and kept: it depends on the world and not on the moment.
+## Position of one key on the residence axis, or -1. The reverse map is built
+## on first ask and kept: it depends on the world and not on the moment.
 func index_of(residence_key: String) -> int:
     if _index.is_empty() and not cell_keys.is_empty():
         for i in cell_keys.size():
@@ -176,12 +262,24 @@ func index_of(residence_key: String) -> int:
     return int(_index.get(residence_key, -1))
 
 
+## The same, on the node axis.
+func node_index_of(node_key: String) -> int:
+    if _node_index.is_empty() and not node_keys.is_empty():
+        for i in node_keys.size():
+            _node_index[node_keys[i]] = i
+    return int(_node_index.get(node_key, -1))
+
+
 ## Two bundles share a key axis when they describe the same world. A consumer
 ## that bound its own join against one may reuse it against the other, and this
 ## is the question it asks before doing so -- a mispainted basin is exactly what
 ## a silent axis change would look like.
 func same_axis_as(other: PerceptBundle) -> bool:
-    return other != null and cell_keys == other.cell_keys
+    # BOTH AXES. A consumer holding a flow join and a ground join has bound two
+    # of them, and an answer of "yes" that covered only one would be exactly as
+    # wrong as no check at all for the half it did not look at.
+    return (other != null and cell_keys == other.cell_keys
+            and node_keys == other.node_keys)
 
 
 ## Everything the schema declares must be true of a bundle before it is used.
@@ -210,10 +308,26 @@ func check() -> Dictionary:
         if groups.size() != vals.size():
             return {"ok": false, "why": "row %s has %d groups and %d value arrays"
                     % [str(row), groups.size(), vals.size()]}
+        # AGAINST THE ROW'S OWN AXIS, NOT AGAINST THE RESIDENCE AXIS (978).
+        # This loop used to compare every row to `cell_keys.size()`, which is
+        # the single-axis fields region collapsing a lattice that has been
+        # declared separately since v1.0. A node row was 1,154 long against a
+        # 5,684-cell axis and the only way to satisfy the check was not to
+        # carry it.
+        var lat := str(r.get("lattice", "band"))
+        if not AXIS_OF_LATTICE.has(lat):
+            return {"ok": false, "why": ("row %s declares lattice `%s`, which has no key axis "
+                    % [str(row), lat] + "in this schema. A lattice arrives by being declared "
+                    + "here with an axis, never by a row naming it.")}
+        var axis := axis_for(str(row))
+        if axis.is_empty():
+            return {"ok": false, "why": ("row %s rides the %s lattice and the bundle carries no "
+                    % [str(row), lat] + "key axis for it. A row with no axis is a column of "
+                    + "numbers nobody can join.")}
         for v in vals:
-            if (v as PackedFloat64Array).size() != cell_keys.size():
-                return {"ok": false, "why": ("row %s is %d long against a %d-cell key axis"
-                        % [str(row), (v as PackedFloat64Array).size(), cell_keys.size()])}
+            if (v as PackedFloat64Array).size() != axis.size():
+                return {"ok": false, "why": ("row %s is %d long against a %d-key %s axis"
+                        % [str(row), (v as PackedFloat64Array).size(), axis.size(), lat])}
     return {"ok": true, "why": ""}
 
 
@@ -246,9 +360,12 @@ func to_dict(with_fields: bool = true) -> Dictionary:
         var vals: Array = []
         for v in (r.get("values", []) as Array):
             vals.append(Array(v as PackedFloat64Array))
-        rows_out[row] = {"groups": Array(r.get("groups", PackedStringArray())), "values": vals}
+        rows_out[row] = {"lattice": str(r.get("lattice", "band")),
+                         "groups": Array(r.get("groups", PackedStringArray())),
+                         "values": vals}
     out["fields"] = {
         "cell_keys": Array(cell_keys),
+        "node_keys": Array(node_keys),
         "rows": rows_out,
         "refinements": refinements.duplicate(true),
     }
@@ -298,9 +415,20 @@ static func from_dict(doc: Dictionary) -> PerceptBundle:
         return _refuse(b, bad)
     for k in (fields.get("cell_keys", []) as Array):
         b.cell_keys.append(str(k))
+    for k in (fields.get("node_keys", []) as Array):
+        b.node_keys.append(str(k))
     var rows_in: Dictionary = fields.get("rows", {})
     for row in rows_in:
         var r: Dictionary = rows_in[row]
+        # THE ROW LEVEL IS CLOSED TOO, and this is the structure rather than
+        # the content: `lattice`, `groups`, `values` are the shape of a row and
+        # an undeclared name here is a document carrying something the schema
+        # does not have. What versions instead is which ROW NAMES arrive --
+        # unknown ones are skipped and reported per the mismatch rule, because
+        # rows are the additive half the version pair already governs.
+        var bad_row := _undeclared(r, "row")
+        if bad_row != "":
+            return _refuse(b, "row %s: %s" % [str(row), bad_row])
         var groups := PackedStringArray()
         for g in (r.get("groups", []) as Array):
             groups.append(str(g))
@@ -310,7 +438,8 @@ static func from_dict(doc: Dictionary) -> PerceptBundle:
             for x in (v as Array):
                 packed.append(float(x))
             vals.append(packed)
-        b.rows[str(row)] = {"groups": groups, "values": vals}
+        b.rows[str(row)] = {"lattice": str(r.get("lattice", "band")),
+                            "groups": groups, "values": vals}
     b.refinements = fields.get("refinements", {})
     b.subjects = doc.get("subjects", {})
     return b

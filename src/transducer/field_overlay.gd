@@ -105,6 +105,16 @@ func is_bound() -> bool:
 ## overlay bound against: the join is an array of cell indices, and against a
 ## different axis every one of them names another patch of ground. A basin
 ## painted through the wrong join looks like a basin.
+##
+## AND REFUSES A ROW FROM THE OTHER LATTICE, which is new with 978 and is the
+## same failure one level up. This overlay's join is the RESIDENCE join --
+## pixel to cell index -- and channel 1 now also carries node rows on their own
+## axis. `node.streamflow` handed in here is 1,154 values indexed into a
+## 5,684-cell join: the first 1,154 cells would take a plausible number from
+## the wrong river and the rest would go nodata, which is a basin painted
+## through the wrong join and looks like a basin. The bundle keeps the two key
+## spaces apart; a consumer that reached across them anyway would be doing
+## A-side exactly the projection 978 rejects.
 func paint_row(bundle: PerceptBundle, row: String, group: int,
                lo: float, hi: float) -> Dictionary:
     if not is_bound():
@@ -112,6 +122,12 @@ func paint_row(bundle: PerceptBundle, row: String, group: int,
     if _axis == null or not bundle.same_axis_as(_axis):
         return {"ok": false, "why": ("this bundle's key axis is not the one the overlay bound "
                 + "against, so the pixel-to-cell join does not describe it")}
+    var lattice := bundle.lattice_of(row)
+    if lattice != "" and lattice != "band":
+        return {"ok": false, "why": ("%s rides the %s lattice and this overlay's join is the "
+                % [row, lattice] + "residence one. A row indexed by river node painted "
+                + "through a pixel-to-cell join is a plausible number on the wrong ground; "
+                + "the flow drape is what draws this row, on the geometry it belongs to.")}
     var vals := bundle.row_values(row, group)
     if vals.is_empty():
         return {"ok": false, "why": "the bundle carries no row %s at group %d" % [row, group]}

@@ -29,17 +29,19 @@ extends RefCounted
 ##   alone:
 ##
 ##     the far-field tint reads a cell's WHOLE YEAR to place one day in its
-##     seasonal range. A bundle is one moment. Either seasonal position is a
-##     carried row -- how far through its year this ground looks, which is a
-##     thing an observer could plausibly see -- or the tint is asking for
-##     something nobody perceives.
+##     seasonal range. A bundle is one moment. Decision 977 rules seasonal
+##     position across the wire as `band.phenology_index`; it is a registry row
+##     and does not exist yet, so the tint stays outside until it arrives. Not
+##     stubbed -- a stub would be this repo authoring a row it does not own.
 ##
 ##     the vegetation scatter reads the same year through the tint's rule, and
 ##     additionally reads the fixture manifest for its quantisation bounds.
 ##
-##     the flow drape reads `node.streamflow`, which is indexed by river node
-##     and not by residence key, so channel 1 as it stands has nowhere to put
-##     it.
+##     the flow drape reads `node.streamflow`. Decision 978 gives it somewhere
+##     to be: the fields region carries one key axis per lattice and node rows
+##     ride the node key. So this entry has changed KIND -- it is no longer a
+##     row with nowhere to go, it is work not yet done -- and it stays on the
+##     list until the drape is built against a bundle rather than the fixture.
 ##
 ##     the dev UI -- the scrubber, the series plot, the probe panel -- reads
 ##     the artefact ON PURPOSE and is not transducer code. `CellProbe` is the

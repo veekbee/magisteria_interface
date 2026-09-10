@@ -304,10 +304,43 @@ func _probe_row(args: PackedStringArray) -> PackedStringArray:
     var window := str(view.shown.get("window", view.fixture.windows[0]))
     var day := int(view.shown.get("day", 0))
     var groups := view.fixture.taxon_groups(window, row)
+    var lattice := view.fixture.lattice_of(window, row)
     var out := PackedStringArray()
-    out.append("%s  %s day %d" % [row, window, day])
+    out.append("%s  %s day %d  [%s lattice]" % [row, window, day,
+            lattice if lattice != "" else "unknown"])
     if groups.is_empty():
         groups = PackedStringArray([""])
+    # A NODE ROW IS NOT INDEXED BY CELL, and reading it as though it were is
+    # the projection 978 forbids arriving through a dev verb. It is 1,154 long
+    # against 5,684 cells, so most positions would fall off the end and the
+    # rest would report a plausible flow from the wrong river.
+    #
+    # THE NODE ID COMES FROM THE RESIDENCE LAYER'S OWN INDEX, never from
+    # splitting the residence key: that resolution is decision 891's and is
+    # done B-side. The probe already carries it, because it needed it to name
+    # the cell at all.
+    if lattice == "node":
+        var at := view.cell_probe().at_world(w.x, w.y)
+        var huc := str(at.get("huc10", ""))
+        if huc == "":
+            out.append("  %s" % str(at.get("why", str(at.get("state", "no cell here")))))
+            return out
+        var ni := view.fixture.node_index_of(huc)
+        if ni < 0:
+            out.append("  node %s is not on this fixture's node axis" % huc)
+            return out
+        for gi in groups.size():
+            var nvals := view.fixture.day_values(window, row, day, gi)
+            var label := "" if str(groups[gi]) == "" else " [%s]" % str(groups[gi])
+            if ni >= nvals.size():
+                out.append("  node ordinal %d is past a %d-long row%s" % [ni, nvals.size(),
+                        label])
+            elif is_nan(nvals[ni]):
+                out.append("  nodata%s" % label)
+            else:
+                out.append("  %s%s   at node %s (ordinal %d)"
+                        % [String.num(nvals[ni], 6), label, huc, ni])
+        return out
     for gi in groups.size():
         var vals := view.fixture.day_values(window, row, day, gi)
         var r := view.cell_probe().at_world(w.x, w.y, vals)
