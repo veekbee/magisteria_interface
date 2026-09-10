@@ -10,7 +10,7 @@
   ],
   "source": {
     "repo": "git@github.com:veekbee/magisteria.git",
-    "path": "data/terrain_layer_tiles_output",
+    "path": "data/terrain_layer_tiles_v2_output",
     "_not": "data/terrain_layers_output -- the GeoTIFFs these are derived from. Those are named `_100m` and are NOT 100 m: their pixel is 92.6185 x 82.7865 m, non-square. These tiles are reprojected onto the height pyramid's grid, not relabelled."
   },
   "produced_by": "tools/build_terrain_layer_tiles.py",

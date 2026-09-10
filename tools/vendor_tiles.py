@@ -74,7 +74,8 @@ def keys_from(report: dict) -> list[str]:
     return out
 
 
-def build(src: Path, host_base: Optional[str], source_commit: Optional[str]) -> dict:
+def build(src: Path, host_base: Optional[str], source_commit: Optional[str],
+          source_path: str) -> dict:
     report = json.loads((src / "emitted.json").read_text())
     if not report.get("emitted", False):
         raise SystemExit(f"{src}/emitted.json says the run emitted nothing")
@@ -113,7 +114,14 @@ def build(src: Path, host_base: Optional[str], source_commit: Optional[str]) -> 
         "ruled_by": ["decision 890", "decision 948", "decision 972", "§16.5"],
         "source": {
             "repo": "git@github.com:veekbee/magisteria.git",
-            "path": "data/terrain_export_output/tiles",
+            # PASSED IN, NEVER HARDCODED. The literal here was correct only
+            # because this artefact has not moved; the sibling
+            # `vendor_layers.py` had the same line and went on naming the old
+            # producing directory after the producer emitted into a new one --
+            # every other field followed the bytes and this one did not, and
+            # nothing catches it, because `cross_repo` declares the artefact
+            # uncheckable against a checkout so no check reads the path.
+            "path": source_path,
             "_not": ("data/terrain_export_output/heightfield_overview.png -- the 1 km overview, "
                      "which is COMMITTED and decodes with different constants. See `encoding`."),
         },
@@ -178,6 +186,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     help="the host directory holding tiles/ and emitted.json")
     ap.add_argument("--source-commit", default=None,
                     help="the producing repo commit these bytes came to rest at")
+    ap.add_argument("--source-path", required=True,
+                    help="the producing repo's path these bytes were emitted to, "
+                         "repo-relative. Required: --from names a host slot, so there is "
+                         "nothing here to infer it from, and nothing downstream checks it.")
     ap.add_argument("--host-base", default=None,
                     help="URL prefix a row's key appends to. Omitting it writes a pin with no "
                          "host, which is a valid clone: the checks that need tiles skip.")
@@ -187,7 +199,7 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     base = a.host_base
     if base and not base.endswith("/"):
         base += "/"
-    pin = build(src, base, a.source_commit)
+    pin = build(src, base, a.source_commit, a.source_path)
     PIN.parent.mkdir(parents=True, exist_ok=True)
     PIN.write_text(json.dumps(pin, indent=2) + "\n")
     print(f"wrote {PIN.relative_to(ROOT)}: {len(pin['files'])} tiles, "

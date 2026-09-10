@@ -70,7 +70,8 @@ def keys_from(manifest: dict) -> list[str]:
     return out
 
 
-def build(src: Path, host_base: Optional[str], source_commit: Optional[str]) -> dict:
+def build(src: Path, host_base: Optional[str], source_commit: Optional[str],
+          source_path: str) -> dict:
     manifest = json.loads((src / MANIFEST).read_text())
     keys = keys_from(manifest)
     if not keys:
@@ -129,7 +130,23 @@ def build(src: Path, host_base: Optional[str], source_commit: Optional[str]) -> 
         "ruled_by": manifest.get("ruled_by"),
         "source": {
             "repo": "git@github.com:veekbee/magisteria.git",
-            "path": "data/terrain_layer_tiles_output",
+            # PASSED IN, NEVER HARDCODED, AND THAT COST A WRONG PIN ONCE.
+            # This read `data/terrain_layer_tiles_output` as a literal. When
+            # the producer emitted a four-layer pyramid into a NEW directory
+            # -- its own, not a rewrite -- everything else in the pin followed
+            # the bytes and this one field went on naming the old one. Nothing
+            # catches it: `cross_repo` declares this artefact not checkable
+            # against a checkout, so the path is pure provenance and no check
+            # reads it. What made it matter was that the producing side had
+            # said it would delete the old directory once this field named the
+            # new one.
+            #
+            # It is REQUIRED rather than defaulted, because only the operator
+            # knows which upstream directory the bytes came from: by vendor
+            # time they have been copied to a host slot whose name is the
+            # host's, not the producer's, so there is nothing here to infer it
+            # from.
+            "path": source_path,
             "_not": ("data/terrain_layers_output -- the GeoTIFFs these are derived from. Those "
                      "are named `_100m` and are NOT 100 m: their pixel is 92.6185 x 82.7865 m, "
                      "non-square. These tiles are reprojected onto the height pyramid's grid, "
@@ -193,6 +210,10 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
                     help="the host directory holding <layer>/ and " + MANIFEST)
     ap.add_argument("--source-commit", default=None,
                     help="the producing repo commit these bytes came to rest at")
+    ap.add_argument("--source-path", required=True,
+                    help="the producing repo's path these bytes were emitted to, "
+                         "repo-relative. Required: it cannot be inferred from --from, which "
+                         "names a host slot, and nothing downstream checks it.")
     ap.add_argument("--host-base", default=None,
                     help="URL prefix a row's key appends to. Omitting it writes a pin with no "
                          "host, which is a valid clone: the checks that need layers skip.")
@@ -202,12 +223,13 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     base = a.host_base
     if base and not base.endswith("/"):
         base += "/"
-    pin = build(src, base, a.source_commit)
+    pin = build(src, base, a.source_commit, a.source_path)
     PIN.parent.mkdir(parents=True, exist_ok=True)
     PIN.write_text(json.dumps(pin, indent=2) + "\n")
     print(f"wrote {PIN.relative_to(ROOT)}: {len(pin['files'])} tiles over "
           f"{len(pin['layers'])} layers, {pin['fetched']['total_bytes']} bytes, host_base "
           f"{'set' if base else 'NOT SET (a valid clone)'}")
+    print(f"  source: {pin['source']['path']} at {pin['source_commit']}")
     return 0
 
 

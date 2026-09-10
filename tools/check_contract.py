@@ -195,6 +195,21 @@ def check_multi(pin_path: Path, label: str) -> list[str]:
     # not there.
     fetched = set((pin.get("fetched") or {}).get("files", {}))
     problems = []
+    # PROVENANCE IS NOT VERIFIABLE HERE AND ITS ABSENCE IS. These pins declare
+    # themselves uncheckable against a simulation checkout -- the bytes are
+    # fetched on both sides, so `git show <commit>:<path>` has nothing to show
+    # -- which means no check ever reads `source.path` and a wrong one is
+    # invisible. One did go wrong: a vendor tool hardcoded the producing
+    # directory and kept naming the old one after the producer moved. The path
+    # cannot be checked from here, but a MISSING one can, and that is the
+    # failure mode the fix at the other end (a required argument) would turn
+    # into if anyone gave it an empty string.
+    src = pin.get("source", {})
+    if not str(src.get("path", "")).strip():
+        problems.append(f"{label} PIN names no source path, so the bytes have no provenance "
+                        f"at all")
+    if not str(pin.get("source_commit", "") or "").strip():
+        problems.append(f"{label} PIN names no source commit")
     # THE SKIP STAYS LOUD AND STOPS BEING 496 LINES. A per-file line was right
     # for a one-file artefact and unreadable for a pyramid; what has to survive
     # is that the skip is visible and names what it wanted, so absent rows are
