@@ -271,11 +271,12 @@ func classifier_source() -> String:
     if _layers == null:
         return ("the parent lattice's own gradient. The derived layers are not fetched: "
                 + "`python3 tools/fetch_artefacts.py`.")
-    return ("slope at z=%d (%s m), the level nearest this parent spacing; distance-to-channel "
+    return ("slope at z=%d (%s m), the level nearest this parent spacing, and HAND at z=0 -- "
             % [_layer_z, String.num(_layers.pixel_size_of(TerrainLayers.SLOPE, _layer_z), 0)]
-            + "at z=0 (%s m) always, because a distance transform does not average. Both from "
-            % String.num(_layers.pixel_size_of(TerrainLayers.DISTANCE, 0), 0)
-            + "assets/terrain/layers/")
+            + "the two inputs decision 985 names. Both from assets/terrain/layers/. A slope "
+            + "averages and is read at the scale it is used at; HAND is a height above a "
+            + "specific feature and is read at the finest level, for the same reason a "
+            + "distance transform is.")
 
 
 func is_loaded() -> bool:
@@ -347,12 +348,23 @@ func weights_at(w: Vector2) -> Dictionary:
         return {"floor": 1.0}
     var chain := slope_weights(deg)
 
+    # THE MARGIN RIDES HAND, NOT DISTANCE. 985 conditions on HAND and slope,
+    # and those are the two inputs here. It is also the better field for this
+    # class on its own merits: a wide flat floodplain stays low above its
+    # drainage for kilometres, and that depositional ground is exactly what the
+    # margin row describes, while a horizontal distance would have cut it off
+    # at a fixed radius that no floodplain has.
+    #
+    # NAN IS FULL STRENGTH AND NOT ZERO. Absent HAND means the cell is outside
+    # the basin or a filled descent reaches no channel -- endorheic and
+    # edge-draining ground, 6.3 million pixels. Undrained upland is not a
+    # floodplain, so no margin applies rather than the maximum applying.
     var r := 0.0
-    var d_channel := distance_to_channel_m(w)
-    if not is_nan(d_channel):
-        var near := float(c.get("riparian_within_m", 150.0))
-        var mhalf := 0.5 * maxf(0.0, float(c.get("riparian_blend_m", 0.0)))
-        r = 1.0 - _ramp(d_channel, near, mhalf)
+    var hand := hand_m(w)
+    if not is_nan(hand):
+        var below := float(c.get("riparian_below_hand_m", 10.0))
+        var mhalf := 0.5 * maxf(0.0, float(c.get("riparian_blend_hand_m", 0.0)))
+        r = 1.0 - _ramp(hand, below, mhalf)
 
     var out := {}
     if r > 0.0:
@@ -687,6 +699,13 @@ func lattice_slope_degrees_at(w: Vector2) -> float:
 ## the layers -- there is nothing to re-derive it from, and a client that
 ## guessed would be inventing a channel network.
 ##
+## NO LONGER CONDITIONS ANYTHING. Decision 985 names HAND and slope, and the
+## margin's membership moved to HAND when that layer landed. This is kept
+## because it is the horizontal sibling that VALIDATES the vertical one -- HAND
+## rises monotonically across eight distance bands, which is the check that the
+## two were derived against the same network -- and because a reader asking
+## "how far is the water" should not have to compute it from a height.
+##
 ## READ AT THE FINEST LEVEL ALWAYS, AND NOT AT THE PARENT'S. This is the one
 ## place the "sample a quantity at the scale you are using it" rule inverts,
 ## and it took a failing test to see it.
@@ -717,20 +736,49 @@ func distance_to_channel_m(w: Vector2) -> float:
 ## vertical error becomes a horizontal one at gain 1/slope and half a metre on
 ## a 2% slope moves the waterline twenty-five metres.
 ##
-## NO HAND RASTER IS VENDORED, so this returns 1.0 everywhere and `taper_source`
-## says why. Wired rather than waited for: a mechanism with nowhere to plug in
-## is one that gets rebuilt when the data lands.
-func taper_at(_w: Vector2) -> float:
-    return 1.0
+## LIVE NOW: this returned 1.0 everywhere for as long as no HAND raster was
+## vendored, and said so. The layer landed, so the mechanism that was wired
+## rather than waited for is plugged in without being rebuilt -- which is the
+## whole reason it was wired.
+##
+## SATURATING, NOT A CUT. `floor_fraction` at the drainage, full strength above
+## `full_strength_above_m`, smoothstep between: convention 1, and the same
+## reason the strata blend rather than switch.
+##
+## NAN IS FULL STRENGTH. Absent HAND is outside the basin, or ground whose
+## filled descent reaches no channel at all. Undrained upland is not a
+## floodplain, so the honest default is no suppression -- and defaulting the
+## other way would have flattened 6.3 million pixels of real relief on the
+## strength of a missing value.
+func taper_at(w: Vector2) -> float:
+    var h: Dictionary = rows.get("hand_taper", {})
+    var hand := hand_m(w)
+    if is_nan(hand):
+        return 1.0
+    var floor_fraction := clampf(float(h.get("floor_fraction", 0.15)), 0.0, 1.0)
+    var full_above := maxf(1.0e-6, float(h.get("full_strength_above_m", 25.0)))
+    # Centred so the ramp spans [0, full_above] exactly: `_ramp` measures from
+    # `centre - half`, so a centre of half the span with half its width puts
+    # the foot at zero and the shoulder at `full_above`.
+    var t := _ramp(hand, 0.5 * full_above, 0.5 * full_above)
+    return floor_fraction + (1.0 - floor_fraction) * t
+
+
+## Height above the nearest drainage, metres, or NAN. NAN without the layers --
+## there is nothing to re-derive it from without a channel network and a fill.
+func hand_m(w: Vector2) -> float:
+    return NAN if _layers == null else _layers.hand_m(w.x, w.y, 0)
 
 
 func taper_source() -> String:
-    if _layers == null:
-        return ("no HAND raster and no derived layers, so the taper is 1.0 everywhere.")
-    return ("distance-to-channel is vendored and HAND is not, so the taper is still 1.0. They "
-            + "are not substitutes: one is horizontal distance to a channel and the other is "
-            + "height above it, and it is the height that says whether ground is depositional. "
-            + "Decision 985 conditions amplitude continuously on HAND and slope, which "
-            + "supersedes the per-class selection this taper was drafted beside, so the "
-            + "mechanism is 985's to build and not this method's to guess at. The distance "
-            + "layer is in use -- it is what makes `riparian_margin` reachable in `classify`.")
+    if _layers == null or not _layers.has(TerrainLayers.HAND):
+        return ("no HAND layer, so the taper is 1.0 everywhere and the amplitude is "
+                + "conditioned on slope alone. Decision 985 names both.")
+    var h: Dictionary = rows.get("hand_taper", {})
+    return ("HAND at z=0, from assets/terrain/layers/: %s of full amplitude at the drainage, "
+            % String.num(float(h.get("floor_fraction", 0.15)), 2)
+            + "full above %s m, smoothstep between. Absent HAND is full strength -- undrained "
+            % String.num(float(h.get("full_strength_above_m", 25.0)), 0)
+            + "upland is not a floodplain. Distance-to-channel no longer conditions anything: "
+            + "985 names HAND and slope, and the horizontal sibling's job is now to VALIDATE "
+            + "the vertical one, which it does monotonically across eight distance bands.")

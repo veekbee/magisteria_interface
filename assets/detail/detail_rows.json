@@ -68,17 +68,20 @@
     "floor_below_slope_deg": 4.0,
     "slope_below_slope_deg": 22.0,
     "talus_above_slope_deg": 22.0,
-    "riparian_within_m": 150.0,
+    "riparian_below_hand_m": 10.0,
+    "riparian_blend_hand_m": 8.0,
+    "_margin_rides_hand": "decision 985 conditions amplitude on HAND and slope, so the margin's membership is height above the nearest drainage and not horizontal distance to it. It is also the better field for this class: a wide flat floodplain stays low above its drainage for kilometres, and that depositional ground is what this row describes, while a fixed horizontal radius cuts it off at a distance no floodplain has. `riparian_within_m` was the distance form and is retired; distance-to-channel is still vendored and its job is now to VALIDATE HAND rather than to condition anything.",
+    "_hand_is_order_4_only": "HAND here is measured to the order-4 network, so a cell's nearest DRAINAGE can be kilometres away and hundreds of metres below -- basin-wide median 192 m, not the tens of metres a denser network would give. 10 m therefore selects true valley floors rather than a wide band. If these membership functions turn out to want a more local field, the lever is switching both HAND and distance-to-channel to the order-2 network together, since the two must agree about what a channel is.",
     "blend_deg": 0.4,
-    "riparian_blend_m": 60.0,
-    "_FAKE_blends": "both blend widths are invented, like every other number here. What is real is that they are NON-ZERO and narrower than the gaps between the centres they sit on: a width wider than a band would make two boundaries overlap and the compact support that keeps this cheap would be lost. A calibration replaces them with widths measured from how fast the strata actually give way to each other."
+    "_FAKE_blends": "every blend width here is invented, like every other number in this file. What is real is that they are NON-ZERO and narrower than the gaps between the centres they sit on: a width wider than a band would make two boundaries overlap and the compact support that keeps this cheap would be lost. A calibration replaces them with widths measured from how fast the strata actually give way to each other."
   },
   "hand_taper": {
     "_FAKE": "the taper's shape and both constants are invented; the MECHANISM is \u00a72b's and is the lead one for the water margin.",
     "_what": "roughness amplitude tapers with height above nearest drainage: suppressed near channels and on floodplains, which are depositional and genuinely smooth, full strength upslope.",
     "full_strength_above_m": 25.0,
     "floor_fraction": 0.15,
-    "_absent_today": "no HAND raster is vendored, so the taper evaluates to 1.0 everywhere and says so. It is wired rather than waited for: a mechanism with nowhere to plug in is a mechanism that gets rebuilt when the data lands."
+    "_live_now": "the HAND layer landed and this mechanism was plugged in without being rebuilt, which is the whole reason it was wired before the data existed. `floor_fraction` of full amplitude at the drainage, full strength above `full_strength_above_m`, smoothstep between -- saturating rather than cut, per convention 1.",
+    "_absent_hand_is_full_strength": "NAN HAND means outside the basin, or ground whose filled descent reaches no channel at all -- 6,301,722 px of endorheic and edge-draining ground. Undrained upland is not a floodplain, so the honest default is no suppression. Defaulting the other way would have flattened all of it on the strength of a missing value."
   },
   "_target_is_sub_metre": "0.25 m, not 1 m. The gate measured real ground: the p50 gap between one reported height and the next equals the cell size at every resolution, so 1 m ground passes the underfoot criterion at the stub's 5.0 m/s and FAILS at the 0.7 m/s a real load-bearing envelope reports. A synthesis target of 1 m would have inherited that failure."
 }

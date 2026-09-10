@@ -14,8 +14,8 @@
     "_not": "data/terrain_layers_output -- the GeoTIFFs these are derived from. Those are named `_100m` and are NOT 100 m: their pixel is 92.6185 x 82.7865 m, non-square. These tiles are reprojected onto the height pyramid's grid, not relabelled."
   },
   "produced_by": "tools/build_terrain_layer_tiles.py",
-  "source_commit": "1caa0fc6703fb0820daef7fdcbb61c9d29d85ebd",
-  "emitted_at_utc": "2026-09-09T01:11:25Z",
+  "source_commit": "8fab77f8c702139761fa1e294b11315011d9c24e",
+  "emitted_at_utc": "2026-09-10T21:59:28Z",
   "vendored_by": "tools/vendor_layers.py",
   "grid": {
     "read_from": "data/terrain_export_output/terrain_export.json",
@@ -37,7 +37,8 @@
     "u16": {
       "used_by": [
         "slope",
-        "distance_to_channel"
+        "distance_to_channel",
+        "hand"
       ],
       "dtype": "uint8 x 3",
       "channels": {
@@ -318,6 +319,88 @@
       "bytes": 67880115,
       "px_dem_has_ground_layer_does_not": 0,
       "share_dem_has_ground_layer_does_not": 0.0
+    },
+    "hand": {
+      "source": "data/terrain_layers_output/hand_100m.tif",
+      "unit": "metres",
+      "note": "height above nearest drainage -- \u00a725 backlog 228, the input decision 985 conditions the detail function's amplitude on beside slope. Derived by `build_hand_layer.py` against the SAME order-4 network `distance_to_channel` uses, so the vertical and horizontal siblings cannot disagree about what a channel is. Its nodata is already a validity state and not a legal value: NaN where the cell is outside the basin or its filled descent reaches no channel (8.8% of the basin, the endorheic and edge-draining ground), which the shared mask carries without a sentinel.",
+      "encoding_kind": "u16",
+      "stats": {
+        "min": 0.0,
+        "max": 2865.546875,
+        "quantisation_step": 0.04372610972930082
+      },
+      "levels": [
+        {
+          "z": 0,
+          "pixel_size_m": 100.0,
+          "width_px": 9980,
+          "height_px": 14860,
+          "tiles_x": 20,
+          "tiles_y": 30,
+          "tile_px": 512,
+          "written": 316,
+          "empty_skipped": 284
+        },
+        {
+          "z": 1,
+          "pixel_size_m": 200.0,
+          "width_px": 4990,
+          "height_px": 7430,
+          "tiles_x": 10,
+          "tiles_y": 15,
+          "tile_px": 512,
+          "written": 94,
+          "empty_skipped": 56
+        },
+        {
+          "z": 2,
+          "pixel_size_m": 400.0,
+          "width_px": 2495,
+          "height_px": 3715,
+          "tiles_x": 5,
+          "tiles_y": 8,
+          "tile_px": 512,
+          "written": 29,
+          "empty_skipped": 11
+        },
+        {
+          "z": 3,
+          "pixel_size_m": 800.0,
+          "width_px": 1248,
+          "height_px": 1858,
+          "tiles_x": 3,
+          "tiles_y": 4,
+          "tile_px": 512,
+          "written": 11,
+          "empty_skipped": 1
+        },
+        {
+          "z": 4,
+          "pixel_size_m": 1600.0,
+          "width_px": 624,
+          "height_px": 929,
+          "tiles_x": 2,
+          "tiles_y": 2,
+          "tile_px": 512,
+          "written": 4,
+          "empty_skipped": 0
+        },
+        {
+          "z": 5,
+          "pixel_size_m": 3200.0,
+          "width_px": 312,
+          "height_px": 465,
+          "tiles_x": 1,
+          "tiles_y": 1,
+          "tile_px": 512,
+          "written": 1,
+          "empty_skipped": 0
+        }
+      ],
+      "bytes": 140116858,
+      "px_dem_has_ground_layer_does_not": 6301722,
+      "share_dem_has_ground_layer_does_not": 0.087736
     }
   },
   "files": {
@@ -1808,13 +1891,468 @@
     "distance_to_channel/4/1_0.png": "4efd6cdcccaee1c10ea0f49d5169df0e0bfa383a61284e6fafda7c12bc0d041e",
     "distance_to_channel/4/0_1.png": "cd7e1599baa3587c332cadcd3e40994034c4977f4ffa616376113ab042c7bb66",
     "distance_to_channel/4/1_1.png": "116a1d0e22742dc47d5bd47e09aa09ab8489638323b5c63c10e3f80d4025e2b4",
-    "distance_to_channel/5/0_0.png": "8158eb81a7bc1042ffec110a4032d494c44f3dc9403811cc3ee11ce8dee530d3"
+    "distance_to_channel/5/0_0.png": "8158eb81a7bc1042ffec110a4032d494c44f3dc9403811cc3ee11ce8dee530d3",
+    "hand/0/12_0.png": "f9fc13340fde8c57f5a925f7c518c33fa353a6c10a8da348aa06fe44017dcac9",
+    "hand/0/13_0.png": "b57584ca9777fd394e4553f11c4ea60da06dc829169ef97575ce4b19f2d8e566",
+    "hand/0/11_1.png": "e47a58ff7669a3995599d564a5758a2f841e0144ff71e1fe69d4aa7b8f15c768",
+    "hand/0/12_1.png": "efbf400107059dd738e9b3ca54af27e4ec1db4d4174d645c9b3782f801780997",
+    "hand/0/13_1.png": "99f8a723c3e60c0ae040fc86dba6bf2d15222173ce8aeda25ab3136851ea0e04",
+    "hand/0/14_1.png": "7bf1a3dc2a6e67b639bb7b86281aa1560f3d451310a5b1906caa630a0661d6c4",
+    "hand/0/11_2.png": "aa740c436b467436fed24c546d23ff8167671e06311869f5e3c42b950458e1b9",
+    "hand/0/12_2.png": "5b5993f1f0c805a635111aa73c20f9a21212d58b7b7afd5d8b1e1b8c75bb58d5",
+    "hand/0/13_2.png": "b27431d578df9559f265ca67fcd7925dcef20cbe51822cfaa2af020cb723c1b5",
+    "hand/0/14_2.png": "16449785e687b14fe15171dec30b6870be6d38df968cdc97978268b1052924ea",
+    "hand/0/15_2.png": "5b90fe97f5e02383b8a578f47e604b04f6b34f9c165b3cc2e946f07eeef7dcb8",
+    "hand/0/16_2.png": "26c5b8731164a2e89fbc71da26dd7ea648789b32a9ad044a4760fc1b6f937135",
+    "hand/0/11_3.png": "fc5636813bc0e721d8575f94d504d132c487c34c4a5f5d0e1138ecd730743272",
+    "hand/0/12_3.png": "ef86493bb38c4b4e6773c617c4840ad474dea1bc00954433499fc0d6213e649c",
+    "hand/0/13_3.png": "bd019f6f67b3bee3c790423aa8612106f3747f08d8f44670caf09c0b5bbcd7d5",
+    "hand/0/14_3.png": "2856b464a3067dc9bc60b0889c9ceb3e0327f2f87d7716c2be1dc6cc81fa84f7",
+    "hand/0/15_3.png": "eefd742e451ad8aa5707bb17964dd2b7426a8f969ba27b9e82c7d624a6fca6e9",
+    "hand/0/16_3.png": "0553a0f1b168eafe491a4927bab61791c6b99fda89da1f0dbf33045c995d0cf5",
+    "hand/0/17_3.png": "df954acd76adcb6c06cb8393928f0f457167f203468a61d32d3094092ccef4de",
+    "hand/0/11_4.png": "2c339d4c62d739b8ba1d671ea38485b0981ad7ce0cd449de9e7db70e0970ad55",
+    "hand/0/12_4.png": "e0457489ec2da37ceffa60a8445c4cd21861105a8278fc99c4412a73f90a7901",
+    "hand/0/13_4.png": "c7466f6e33ec7369ce3ad432aa3078f0b6e1ae43868057b45b5f73310b68a316",
+    "hand/0/14_4.png": "f2c14c0103ae10ef275911e38e4c3c63ee722706d3683338d413087a0f04cb3b",
+    "hand/0/15_4.png": "78644a500016226f037c28aa4731cdb9c39d73ad95744d8c76b6107bf1518b38",
+    "hand/0/16_4.png": "c09075f06b0c3c5fa7dba7efa465f5f0234b9d845c9db164aaf9dd81e7f3f8ff",
+    "hand/0/17_4.png": "3aa4cb81db3f77caf5d4625418dd17070de8f29f02b14af617816260c082f2f1",
+    "hand/0/10_5.png": "1eb43a7a95f029c6ad846b449390a6c54f46d519d4fa18c8794804603c23fbdc",
+    "hand/0/11_5.png": "52490e2f8e27d881234bb76eec17542d10c9602fd2dd7e274c9f8598ce14d7b7",
+    "hand/0/12_5.png": "7d8d10bcb7c8d72a1ff40f8d010db17ca66a182dd0074dbbfa2d8e406410c770",
+    "hand/0/13_5.png": "b7a95ca0923f0ed0ff631ff90bac05655ad9fbe0664a9a8a1416c25f5cceec9d",
+    "hand/0/14_5.png": "af5f5d38d62eba23d5c3b435a5121d2066b77aba998bfb3a02e14c521617dbe8",
+    "hand/0/15_5.png": "03308942b95fa17ab1f31c6dd7a35827bb7a8b656f1740c64dbb711bbc36fac3",
+    "hand/0/16_5.png": "a4ea5a1165ce0d68e39317d4afdf75dce0225958ab4b8285edb26b1dd9930a61",
+    "hand/0/17_5.png": "9192dc976655fd83c0b3f54772a235d9f8d514a119e911841499cb957e4ae852",
+    "hand/0/10_6.png": "bbfb9163164e60aaf85736b36661be08b7d78611735c0873ad215d13cced7e26",
+    "hand/0/11_6.png": "ad0ad2a4351c654effbdc84fd808ced8086527724d9aae5e28c0baae388f5ffc",
+    "hand/0/12_6.png": "5c195d53ab2e39008ede0c29c1eca7e6e94fb92ae1fcc8b7b111b62dee522c09",
+    "hand/0/13_6.png": "85587988b0163b493ac6f8145534136364b787319e4ae6c9324b8b9e8aa9b2c0",
+    "hand/0/14_6.png": "350f4347ee9931896b5235109bb68d816d3fe0c8c01dd5d0e31080313674cd52",
+    "hand/0/15_6.png": "487f8d11c1f56480ad1f6bc97252793a001da480821fe7bfb12fa770e381ba38",
+    "hand/0/16_6.png": "cc0c3dff5f678821f999c3d0141956631a18aed4df9f65caf5cdcd586895a04e",
+    "hand/0/17_6.png": "1b6b737763c7ce1acda89fb3a075db0cd5387dd7647895915be9084ae98122db",
+    "hand/0/3_7.png": "d3f926bea10a4155c77be1b92fc8f944e09a0740861c15986152a89edfb7593c",
+    "hand/0/9_7.png": "da9cd9f0ad94d7fbd0149c0eaf09600c0c11927655a7148af52b35679004bb3a",
+    "hand/0/10_7.png": "35495a44c994141ae8f4aca027c5049e635ff7362cea9b28e8a718458ec0988d",
+    "hand/0/11_7.png": "276eeae8d9cc3b4b40432245041f48642839380a19800b11a4129edb23091739",
+    "hand/0/12_7.png": "16880a08c672ddc45b1b23c444f71116c1f0c028e71afe9674ed6e994bd521c8",
+    "hand/0/13_7.png": "7a4894963dcefba3fbca42e19a33865248ed471cf2508c4651b5b84bd77a08d3",
+    "hand/0/14_7.png": "4b9d1a4f2b0e5663cdb95b66962c7904358d654dc5de2716549eca754710b402",
+    "hand/0/15_7.png": "c167dcfdc8a50ce860d79a27e90499ddcadc8e637a090b53234923c530f8a0e5",
+    "hand/0/16_7.png": "00c873d973e5ab7e863d8d1169c547bfaed4337d833805480060f961f794bc86",
+    "hand/0/17_7.png": "f8753b6aa0683c698604cd40d96c0e1b065d65e4477dceeec3ea4c893c227d9e",
+    "hand/0/18_7.png": "71a65e4152f7af8596192a3cf04c25912e057f1d0b804bce0410f12dde6ecc08",
+    "hand/0/19_7.png": "608958c1fb30128ea67eb3733fe9e4c7026392656ff474daaaf1ea4b2e1d456d",
+    "hand/0/2_8.png": "28007912b97a827b7036044057603ca4469941278f665523e59f5dc860ed46aa",
+    "hand/0/3_8.png": "268d768f5c5a9771c0e0fac40d6b25bfd50c34a47e352e2971043c56dd508034",
+    "hand/0/9_8.png": "cdac378c7b93f0ee88a55a47c8d887ab8d5eb3e1f95736310b70cebe78298ba8",
+    "hand/0/10_8.png": "0b6111a1a493f1cc71b458257da4fd9835e02e1aaff3979907c93395cdbdd678",
+    "hand/0/11_8.png": "e56c61e92be0c60305ad6787ab115df066b916338d25b237e576a3a6269053a1",
+    "hand/0/12_8.png": "07fc347c9e2f99d02c3e4dc609e0954f2441f20500c6bce13541e8f1501d7671",
+    "hand/0/13_8.png": "d165eb07ef438631dd6cc57a2b18120355d14b02e10aeaa2803452bac678c784",
+    "hand/0/14_8.png": "22ffa5434cf3d7ffe4b2d01f05429839e4e81c742a4a5b3f3936df6d7c7bb3da",
+    "hand/0/15_8.png": "de9e7fd2a4e8af2acb041b3abaaa6f13c15748824f93d09d64e394685d374dfc",
+    "hand/0/16_8.png": "9ce21dcfe714a2d96bd320f883896008532306070f18cca5e28421b58133309c",
+    "hand/0/17_8.png": "15eab8b41f824a542e06a53ade2d93367c7deb874785842ab45d3a5d172aa678",
+    "hand/0/18_8.png": "bd638c24c4b48d2ec3ee42f41ca109832e8be0eef6ae37f188835ce8b95c169a",
+    "hand/0/19_8.png": "7c7e69d7f654eab71e607ce3c35e14e7004c60b96ec647311398bc3029eeca0d",
+    "hand/0/2_9.png": "321281c8ca4608f1084e3f4d4642e0220b13cf236becd08c31b4cb7e929bc2f7",
+    "hand/0/3_9.png": "834350486ffa1814bb25c5d9bcb3076129d919b79f6e5698027515f92f0ec6b4",
+    "hand/0/4_9.png": "a5ef000ba8d1b4409fab82714a714d67c859f355930e0ade7055ed74532a05c6",
+    "hand/0/8_9.png": "664a61c8f369c2776b98eef0c6e994ae5e9231ccb1396aa6fb536d434df2cf49",
+    "hand/0/9_9.png": "167e9d86f62c2adf492fa70bc7d989ab1b8e9c6cd3687c8129f046c6115d97d5",
+    "hand/0/10_9.png": "8c6265925725908d6b98f8200e1e56c1ae343a2edf907610b61e8c7c910ae1d6",
+    "hand/0/11_9.png": "af77ad1b47d2bbc4d21184243ce24c86293357e0d2a79f476d2faa4ecc297195",
+    "hand/0/12_9.png": "c06fb41e9f2e1587982607c38a5f599acf973a7be1d99164c63c9295999225d8",
+    "hand/0/13_9.png": "7bdf64946006093c1da01f9a3c9381506149279f0e4e86410b73fce5e7f8d895",
+    "hand/0/14_9.png": "d9d0735a90c0890c239388ba6570012ac0239546864b0eef377fdd2d64430090",
+    "hand/0/15_9.png": "eb0f91bf99bb1e8347f57950589ff98e2969f041f05dc3cabb8a5024ad1bde6d",
+    "hand/0/16_9.png": "ad1fb17e6f76d2bfe0486a95b9d5cb5e0977530a303b725fa940529ff6188a19",
+    "hand/0/17_9.png": "3b8242484f135ddbf1e73f8f39121ccf9d74c65367a2f795e67fd558f6474da1",
+    "hand/0/18_9.png": "3739da0c41d82a911cb51955abf18c15f51e251c1e6cc0d6c59628c0eb31f29c",
+    "hand/0/19_9.png": "fc7946ac8ea98e09b1fe2a6e5c018e9517585dc64fa39164ae5d387a2b11627c",
+    "hand/0/2_10.png": "f9559f8a64d778830cd54533c42cc8661aa5e4887c765a1f20bd35cb2e4ba7a8",
+    "hand/0/3_10.png": "413b1a693528cab10997f7a3dd04dd34ab2839a0fa15ca321dcbf45047afec45",
+    "hand/0/4_10.png": "cfa2fcbb61475855207d85dd6aedd8478f910e7988c397dbab082af8d2a48775",
+    "hand/0/8_10.png": "0c0edbcbe0a3216ad8f2b6006c3a1739fcc1de37274adc2561d99abb3e92124d",
+    "hand/0/9_10.png": "3fe44d401cbd85c89a78d3a25231829659d2d759cc8ab82c68e3d0ca84fb0271",
+    "hand/0/10_10.png": "57e1a77a83be5987d44c2831bc580ab877b33d6f8d7ff8df474854246459cc6d",
+    "hand/0/11_10.png": "8edb74a2fb7cbf618f950fdc4d1151dd536adaa79c1ae1611192a61d2d6e3528",
+    "hand/0/12_10.png": "7cf2a4194e57f6380820c5b757606a4e7c323be1ebc08cba42d7b8f7fbcfd523",
+    "hand/0/13_10.png": "87a44cbae43c3a94c27607ad106a0d0f2bda2c78b0b96cf08c994df00f2527ee",
+    "hand/0/14_10.png": "0fc85009c996669afe299b64e96c2698b9177892f959e0980b4a51da32667d48",
+    "hand/0/15_10.png": "318933327331ff9c98b1f5f21991997d3b429f9134b2b61265dcffb5047f401d",
+    "hand/0/16_10.png": "fd14132efbd449e982e5f546e2c5240ac2cc0cbf1ae6f77b347ae841d5d58d61",
+    "hand/0/17_10.png": "5f2c5585e7848394d9df241a0276183a137380e9aa116cb30c6f25a93049c61f",
+    "hand/0/18_10.png": "12d9254a3fe8e5b2556294276247b1aacc7e9a4a0506bf1c6916180035d5dcd9",
+    "hand/0/2_11.png": "0b1990f65bcdd51a2514c73aaa97c5b31febe21dc38f40f8174e2224f2710582",
+    "hand/0/3_11.png": "be81c4f63705b9c87370444641367bbe3cde9bfede13f4dcbfac62f5ca80f0c9",
+    "hand/0/4_11.png": "255aa55ac0e8b8e60711034e99f0d23052b2e1cdd759a83ace101814b7beeb23",
+    "hand/0/5_11.png": "61392dfa2aa47c148235918caa9a81fde6fb9933f3e37689f258354e234cbe5a",
+    "hand/0/6_11.png": "c71d67972c6903a294db2a288b3e0e4221ed286951b07507103badacb6fc4c4d",
+    "hand/0/7_11.png": "a335fad592964085f601c72cd2dbe159360c400667109f951f0c75d3183fd0c6",
+    "hand/0/8_11.png": "da46acc4e9058952739061937141d5224496c4de101870937c72f7b454f16a2f",
+    "hand/0/9_11.png": "fa509a1b430d87fe25e1a1c8899db8215c0a83871cb1191fc7f3ff628e4cf45e",
+    "hand/0/10_11.png": "452ce199b893a9cdaf8b2e245ed06fa39622e5fad2ed587de8acf30003a97e1a",
+    "hand/0/11_11.png": "b2cbabcd9cd84508cc9a249960c03c866cf4992bb336f5184ddd7c6d5071e91b",
+    "hand/0/12_11.png": "bbb6193243af43859014572adfeccefd8ad1e80531116489e20987493f7e6f8e",
+    "hand/0/13_11.png": "1782ac6c8b4a0db82ca8e8b82d52173dac05e03c64244a327fe02f37ecbee22a",
+    "hand/0/14_11.png": "81c3215a33266e7c0d65ad40f2c2a4a39beb19688a1c3f246fae7ec60d42491b",
+    "hand/0/15_11.png": "f5f4db1a14c8125bf058729a45091f2295f8f2483eed87e226d78e8d3d6fe666",
+    "hand/0/16_11.png": "3bd88e2715d54add45e31d3bc78cae90c50825864f27fb3a37ac80cd0e795684",
+    "hand/0/17_11.png": "8a5a68b1bb6d4f17330e710d6265e639e9738645feeed45e1cb4944bf1b3a039",
+    "hand/0/18_11.png": "89787435cbe511b7875e600899232e27e71a233e1b40ddd21f94c2675e1d8b8c",
+    "hand/0/1_12.png": "8baafdbd587c1f987496f1412098b7c1b410129d51f7c50854f92205876c18b6",
+    "hand/0/2_12.png": "c054c191a4de8bf9280ab83fdd3452c39cb22c4ac56811a4ccebf2ec5feaaea8",
+    "hand/0/3_12.png": "45007af0621ff74525a434171a499253489ed841d1d07885c465949e2a8ca8bf",
+    "hand/0/4_12.png": "7cc0cb59cc7678ff16465909855ee8fb5f0bf8a4b810770392462c2f844bd7ac",
+    "hand/0/5_12.png": "e0dc6a515733a9981566074d55cd9f257966ebcf799eb844d693d17660321f2a",
+    "hand/0/6_12.png": "c2e32d50e0d6f727d0a24ed3fe2a553860407afa1c47b490068021b041327cc2",
+    "hand/0/7_12.png": "16d566b6f2b6a9cee54ae2ef0cd890ac8f06604173d9db6feba08bbc946644a6",
+    "hand/0/8_12.png": "7a80a0234856b9460af4d0af8bec139e113bf982ff5da76db6d08261da6fe781",
+    "hand/0/9_12.png": "1a818d37b5b56a3f26701868dca34a93549de9d0e20fb95a97dae1b8fdcad11a",
+    "hand/0/10_12.png": "3b56786d8b0733e100919f4c1c716dafaa71238f9ee33810b098bcd9e73b3b7f",
+    "hand/0/11_12.png": "31f63b96c36f6f7914e5da7957edd85c93fc77f753d00c79b1f721b4bf734dda",
+    "hand/0/12_12.png": "fb564429cef8373075df983da7191c25066fb394410774fdc8a864b169c968fc",
+    "hand/0/13_12.png": "e99eb780e40c7c61df573bc59511f5c44254f7d0b2c19ca7a2cb6c3665eeaa71",
+    "hand/0/14_12.png": "bbdf321496f9c0d9a0ee64b17da468d26051e3b96bada016048e923651d57095",
+    "hand/0/15_12.png": "493d4ce36d8b8abd0f75c59a382f58dd855b6598377c8267d61370f0325485d3",
+    "hand/0/16_12.png": "c64d0d0c2ece60fadf0750d288868dde313f59b547e146f00dd2ee0aefdb5622",
+    "hand/0/17_12.png": "c842deba2f9437c193e3bac089b267db11c6db17241f36d90018411ce4fda0c7",
+    "hand/0/1_13.png": "b61d7c87d62e6b39d7054b0aecf0bf5d6e8f81bd2551f52eb26c395c09976615",
+    "hand/0/2_13.png": "6b48c1eb5565c8c9f8bfb1bb6ee09724c4787176d4bb974a9e0ed81ea192982a",
+    "hand/0/3_13.png": "73fc763a9090932ce5c79cb302c3851b36893968d65c6fb659c43c9e62e1e775",
+    "hand/0/4_13.png": "2edd1a7bedab09832c7db58ca8ce1b842e65145a09e94c69fd4a5dda87ef3125",
+    "hand/0/5_13.png": "9b0422ef4fd2c0c294d437c22c5a995943316a4c38fb787e8e933def6fb59c21",
+    "hand/0/6_13.png": "a6b7da511c2e4dffc49cc1ddcf1313bf50a18c416987352dca01fa6da2604d75",
+    "hand/0/7_13.png": "74cb9b0f36e18ccce7907e1afb1db4604d0b261a46c135a727e13427b77e9bb0",
+    "hand/0/8_13.png": "87db3393941564501a486d6862fc8880378e66cb1843af2fe9ed3193e6be6172",
+    "hand/0/9_13.png": "edbbb2d6911673fc6788711a6bbab1e35b17911de45d1cc1c0751dfac2d394e2",
+    "hand/0/10_13.png": "5bc67147073139a5788b43ec85151c778cd557491ce25d17e4d021471788419d",
+    "hand/0/11_13.png": "36da8a1635a700b7617af4eb2de0dc01a702deb645752ea48805925a2736ee5f",
+    "hand/0/12_13.png": "12ee3cadf2e585ec01f31c14dffa211f711f912d725fec93f833877ab2b92e2b",
+    "hand/0/13_13.png": "0f0fdbf52da382e5906369ec865e68597d90ca90c6303ca1d84553707a4c3338",
+    "hand/0/14_13.png": "96975cd09e9f8063e8f353933c1b927ce0aad8ec0081b32d222233d45f517bfd",
+    "hand/0/15_13.png": "9ad17a4f56c8b4cf7eb9fa954cdd2815f1a01d6a4e1008890d94897e568985ba",
+    "hand/0/16_13.png": "105c3b4067a7d7b6e100baf5e2d78693410911b3c56d41ed602659c1ce336d43",
+    "hand/0/17_13.png": "8d9f7fb2a5da4ae62950c823d2d6db20a20fb2353a924248f9ae6326dce41d05",
+    "hand/0/1_14.png": "1e802e3d302c95b8957a0411657f96f77e60b03913dc27a2a9dc5da373df5f20",
+    "hand/0/2_14.png": "fc80f27b964ceb0758ca8317888164e3da24fe98c31945fc77d9bd57490b2063",
+    "hand/0/3_14.png": "a72b47886123409d96c495cf59d8ac8cedf7a9e39ea51d901279152403bfaec9",
+    "hand/0/4_14.png": "743b00dd58d51cebf77ef54846e00733c8cb21c8a35e86430a8116e65d7e1f4a",
+    "hand/0/5_14.png": "d869d562ecb799e473a5ceccfe2657973439f4b179da51b390d79ec798d59f2a",
+    "hand/0/6_14.png": "59105bf36f7460cee718679b10b98d13d65bc049628a6a2588ae50feadb49021",
+    "hand/0/7_14.png": "2c6507a420aff04773008f07d787c5fdfe6ef2badb01671083793228767b8e60",
+    "hand/0/8_14.png": "7f9b10369940df297d14b48b73d1288c59a52801b35a3fa763397852cc959f89",
+    "hand/0/9_14.png": "861b69eb4a0156c36c71b8ac38217b991573851bd5d10c07b79acb51a1575867",
+    "hand/0/10_14.png": "a2f2abee644c225b1d96747e103dbfbdd98588064bf3cc3b5f604433e453bc82",
+    "hand/0/11_14.png": "f0f47d3202e345a433fe511b9013c422a1022ff4becee085ab7110de9017037f",
+    "hand/0/12_14.png": "ce1ed7a9c963c29c7645d30e3dfd1f0a6f39b225e32f5cb8bb98e8ff9b888729",
+    "hand/0/13_14.png": "9b8d2462982e6cc7be167a07dee7d2d486bf0c5786401718153a046dc2631cdd",
+    "hand/0/14_14.png": "95a1d76f32979f5c43333300d9b17ac9aaa83cb59778130ec62cbee00a395e18",
+    "hand/0/15_14.png": "480365b8686d0a645a1272b3f55be40974f3e0766d26df998d04fe743dbf9cb7",
+    "hand/0/16_14.png": "fb8bcf420f0f038552462f098f2a19101f00088164c76a9487de2e87c18ccd19",
+    "hand/0/17_14.png": "df4aeaef7a2dec9c63601c7759b7453394b6e08994f8a1387db119080ee71552",
+    "hand/0/1_15.png": "7e4330eb6049bc0c53daf577e063829c4b06a75ef51cbec956a58c7d48fe0c16",
+    "hand/0/2_15.png": "b4e6a51b5f874f9ee209ff8aa89d4d82916bf0799561066c250dbbe6b807fb56",
+    "hand/0/3_15.png": "7684cf6a4c3a95845e6566550f4b388cc8e727531ed8e34d046b104641e755bb",
+    "hand/0/4_15.png": "c09a1b8074b5537baa342d68a0780b2b98a746f48ff48cfb5f7e0fd1c8c7998b",
+    "hand/0/5_15.png": "99b1856f12d326fcad455c54afe7769f46e733b78ffe34dfce7f80d2a1164066",
+    "hand/0/6_15.png": "3f76eefbb8a84b223fa06f1a0a59d9ad2c400ba62390eee753c4892887b9e2e2",
+    "hand/0/7_15.png": "0fa46faee7f4980ed6469cc82d37f15c71a97fa7538c96a1b5fca41d662e5193",
+    "hand/0/8_15.png": "368d868d299062c50b1d10fa4429fc4c16f5041af4c5cfa37fd8ab916ad4e9fe",
+    "hand/0/9_15.png": "7e800738a4704aef3c5e42d137cef03063ff8ebf7022c7cb63930778e346c9b4",
+    "hand/0/10_15.png": "b9c11d5a9f587da762e4e693866216d72b319ded22f59a0f8f91701efca9da86",
+    "hand/0/11_15.png": "d48c67f07401e54caf8351e1519b8a7be8dfff1a1a931646ec1f1cc2ad8ad3fb",
+    "hand/0/12_15.png": "54f219bab569b872b7b37c609287b859d69cdaa32f90d162b11039f0a9462456",
+    "hand/0/13_15.png": "b84dc79279d8ae57b2b6d82c16e7291d181fa3fc513c5d856e0889eff90e7a45",
+    "hand/0/14_15.png": "f064db93dd89841861fce5936ba0a749bf36fbc80850b56648c08bcc1a91fc88",
+    "hand/0/15_15.png": "5c4648ef9e8a430f0201855954e390a69722cd9ef8baa00ee700ae4ebb2f6f9f",
+    "hand/0/16_15.png": "c57fa3481c46c9196eef1574c1738c98a48dfcc15bed2488cee0cd9c3d7a9350",
+    "hand/0/1_16.png": "8cee3db06d035f1f372057362c3433dff2eb80bc252ca6d344e8548b769ae5e5",
+    "hand/0/2_16.png": "0e66bdc62ce64c4ec86b749299f4d6edfcd32da09276048f8c679687d31fb70d",
+    "hand/0/3_16.png": "48e1d32414f5495c69f2e45fd1f0beeb9a5307118490e6928ba48ef770e8fd27",
+    "hand/0/4_16.png": "6962cd02a063175b8013f6e6254f29dc5223fd943d4b8531061623593df1b571",
+    "hand/0/5_16.png": "af6b41a46184df24f16ddc51b9ec4e82834cfc3e648d768ce7ebf01499a0a409",
+    "hand/0/6_16.png": "373335597c02d40daf908d3fc1e75999d34c6245bca352600c728b2c5597703a",
+    "hand/0/7_16.png": "fa066cffb8a716312e80cc226e908659aa3f419d420be6e0206346edd423368a",
+    "hand/0/8_16.png": "9d51484056d87d3532825ffac14308e83a4a5a11401c15222b236e297bf729a8",
+    "hand/0/9_16.png": "955122b48e37d64a020a8bcb17d4351c24da4bcc6c7b14f27c7456219f221d97",
+    "hand/0/10_16.png": "fe2c85d52ab4bfd2aedb72011e53be4e86a580ff6f0748d5c224449bb68cdd7e",
+    "hand/0/11_16.png": "e209fe02e37319a758326acdcfdf080cf09b4c2319b11250e8e54fa47f098291",
+    "hand/0/12_16.png": "84592d5cc87b30e04224beee1f481c65e6bf09c6f5c8b05f14d9e3689844ed22",
+    "hand/0/13_16.png": "5c365e8bb761d9dc774a2612040c681508f80d0a623098033aa8c16388ca7792",
+    "hand/0/14_16.png": "ead089afd81d41ea51b19c6d3c7d12e4a4b7a26cf3403054c986d5063f03a9e0",
+    "hand/0/15_16.png": "c8507355689fd98f212255bd9595731ac2670d17ea250b89e2b679ee5962671c",
+    "hand/0/16_16.png": "72906e94e27618f20c35a5695c1a006514d11f8cb4af917e23c084126f0943b6",
+    "hand/0/1_17.png": "4bed5f57a29ef5923e8e73134d6598dd29adee3aabd13204ddf97afd1c6f9c28",
+    "hand/0/2_17.png": "ac15c8083bc0e8e256f49137cdce05e083581f8c171a6c77185949252613b9dd",
+    "hand/0/3_17.png": "2c465112046b58a897a6d78ef3a3c2e501d85bf2573ec6e1fbde5877a5d7e93b",
+    "hand/0/4_17.png": "a9448a0f0e890e9ab12fd527471232cd74df56815535edcba81670987f160e24",
+    "hand/0/5_17.png": "35a2a2d0b611a2375d0bf9710cadf4832351c1270fda2c73fc93d01ca692213d",
+    "hand/0/6_17.png": "668995ae42c1040cc9079d96eec4cbe8d9261227470f1522d44d14eac5b6b070",
+    "hand/0/7_17.png": "ac395e2e2d7078d685a0e2358b5e0da9150c6c1c0626180fa4c87282b4e3ec48",
+    "hand/0/8_17.png": "9299bec00922c4cd2462b96b5b9c5ba3d3f676c8d73201be9048d2556e139f71",
+    "hand/0/9_17.png": "ff6cf726225b24de6f0e1684560faee40937777744df308297d10430a44c8f90",
+    "hand/0/10_17.png": "8fac1975ecc9afc6d0122a5aafc540976d233ba4cf970c78165c6705ffc6cc3e",
+    "hand/0/11_17.png": "31d8da20ec28610095778ac52742cfc6faa1a7c0b05a3d8c716073053fea56e2",
+    "hand/0/12_17.png": "b34a57be6e43f45aac7fd61fd9bb6deffad6ce901e7565373700ec060dce82cc",
+    "hand/0/13_17.png": "9ba5b15dfd21c19301e544c43fe3b3160789d5ce2a045054326d8f644053b4d0",
+    "hand/0/14_17.png": "37518fef5668a564fb6695f8bacfe022ea81680c4df2c91de0cfdf272526ab86",
+    "hand/0/15_17.png": "151254ce005a2de411d14d70b73774da78722d9a06d4de30945f7b47060c3311",
+    "hand/0/1_18.png": "d140b0019e95e3ba4823f0a4dfe1b654256f489910ef8a4552906728d9885d61",
+    "hand/0/2_18.png": "0534d52734281e9f049bd37528045d06f929ded94b60d1bfa8a82634ddbbd7b3",
+    "hand/0/3_18.png": "ae28969598c7253c57d665099a5788e923d2f9aaed2f46b403128758711b638d",
+    "hand/0/4_18.png": "86b2bd97225dad57fa6d6a7a6875c8714b5434181ee95f3f59b9659be91f6977",
+    "hand/0/5_18.png": "1c4504a3d1cf743bd5f606be7d29a83b7a005b101a682a9b552be4fab530959f",
+    "hand/0/6_18.png": "8b9c31080a8546724722538e33853503259d2a7018be85aeb3bd4077a448fba8",
+    "hand/0/7_18.png": "6767b738fcd595de4b98bccb72cab8051c4df3a2028cbbbfa0f7d9803c273ca6",
+    "hand/0/8_18.png": "c88cd9884ce6bfe2c8c564425178d67c7bbdc470bb32f933d223d1a5bf0f3d24",
+    "hand/0/9_18.png": "40623d0bc462a285e6bc99c4cc1c30c9a81ba10d48bf1666ee63f7ebcca423ed",
+    "hand/0/10_18.png": "ba67e11a17507c6fda1a7addf7e98b502acc045347d4aec23fd2377ed7bc6e08",
+    "hand/0/11_18.png": "d6682512c9fbd4ffb5b8f69f2c79dc5efd8236cc7584cb9013a0d549cd90ef50",
+    "hand/0/12_18.png": "de799a2c90901dc8310ff0fca7f5be3c9d2d9c44106e9aeb75d35cd475c550e6",
+    "hand/0/13_18.png": "679e60895beb34d9de976101e0c591332596c4ad4401a77e8697b2fa3c840fa8",
+    "hand/0/14_18.png": "a501c747864c579012c26dab164935d6545ffedbbe1085031dfd405743f2279b",
+    "hand/0/1_19.png": "acddf2b62954d3236920a5e3e7ed3f80d27b7da1ef05038aabe2743d9f4049e2",
+    "hand/0/2_19.png": "43bfc390c5597114b0327df44d62d0b85a8428a0701dcf03a6216fd0a01f6b0a",
+    "hand/0/3_19.png": "090a7c16c33ded1b4ee5e29835a8e7ffb899ca6aa8eb62298cff6e695468e541",
+    "hand/0/4_19.png": "cd6c8130a14a92ac8ab3ef318c7118df2494355341d76096ff249826ec9f1b40",
+    "hand/0/5_19.png": "45f83644a970902c6f355651964c888ec5ea00ce883a9e16e5ae0336fa63ddb7",
+    "hand/0/6_19.png": "b47158c5cc0bad737a366d7aa7b08fa3ba65844326c2a8cad20fdb2ac06aa892",
+    "hand/0/7_19.png": "f7eecead5f5149a6d07c27e129dbd6a14968a4b160ec212d14bf5a91d0b96f66",
+    "hand/0/8_19.png": "189b1ca3f0a149ddd476cfadcece94112bdc605808ea152aaf2a44bdd37155fc",
+    "hand/0/9_19.png": "b0f554471c0ceb3d41bbe221c59d3a23f4aa8e6728102b08d1aa6b683566ead0",
+    "hand/0/10_19.png": "8052a36f6820f969915cc86f1ced62462473797425a6175d602e4a921d12f226",
+    "hand/0/11_19.png": "4dc8e356e25e85a443c93c9aea30fdf888bbad0f09e8313e260bea2ce2e2c1db",
+    "hand/0/12_19.png": "c512748cf1b897e5984ad95246718aefe8830b4381efd0c2e3c38d8aae8c48a8",
+    "hand/0/13_19.png": "6ef5e9c5096e72105d99fb733f84d7e54eb0f0dccd77a92f4af2f1afe88c9384",
+    "hand/0/0_20.png": "d0d03f6d662d17b7df721193eb0bdeeb8064432f9e80d9d09d3f9fcb17330902",
+    "hand/0/1_20.png": "e45721fc725b2add682672ee391ec6ad7a3bffb84ce8bd42862d4f7527caf223",
+    "hand/0/2_20.png": "ad3b69c7d940ac7ef550351851380cd4fc5d5b839cca5e1aa63a1418dc204176",
+    "hand/0/3_20.png": "84126e3ffc206fb33ff36545bc04844ff823a44b124c2c35f88929bf7e4006f2",
+    "hand/0/4_20.png": "07b70db220a05144762cc5bfd413acdcb3e50fe24fa008c28341d5f07f2aa3b6",
+    "hand/0/5_20.png": "da27aacce6e797b4a90adcda84264e8c8a017e3f63b2573a21791cc29327adfb",
+    "hand/0/6_20.png": "61cebd275bcb1b0d224b533c1d1bb0ba99f685df40a773aec4c82ca7d715d9d4",
+    "hand/0/7_20.png": "bce266fcdc9ce80ff7722f9b3e9aa3cfa70cd513927f8709adaf1ae6d79a7d96",
+    "hand/0/8_20.png": "eeb8d25c651c58dd478bf754f394d03033b24ed4557d2a036687c5136dde33be",
+    "hand/0/9_20.png": "2610c914f384aa5cf146eff1c57fc5b822ec83f69ca9acab3debeb2bc241ad36",
+    "hand/0/10_20.png": "7dfc820f4a91050e0104d639330f273e404fcf327a8570c063a66ee067d52da1",
+    "hand/0/11_20.png": "8cb60dcefad86db947912267917def01665b4f02ad64667b50ff1b362612d99f",
+    "hand/0/12_20.png": "dad82766fe284e280e5bb29eac273da655b76dcd65be1f9229a26e99c4eb1d32",
+    "hand/0/13_20.png": "32dd226a525beb3d1e3329d046bfe3d1ff58b95eee6ddec3c8eb838a619bf537",
+    "hand/0/1_21.png": "2419ee7e0df22659918247fb504af2c4b225b97a7971994cc26f082b451848fb",
+    "hand/0/2_21.png": "84a7d62b9d1ca5812e3071106cb7f57800ef21f8c9aaa254e8e5258ec144c5be",
+    "hand/0/3_21.png": "b8f26666d79dde20e6ca09580fbf264251d034ffeaa4d2f8b6e3136f657a3883",
+    "hand/0/4_21.png": "078ba94f07010f3aa1d0a14bd9f5d9e9c02eb293609bcc14ae8ec27ae3413798",
+    "hand/0/5_21.png": "74447fe10190658171329f6aaad4f21fbd2f82b103cc2ba2b5125ed7b2ee07cc",
+    "hand/0/6_21.png": "78f595dffff2081ff74670b0cedcbe0c7726baac5af5f7f33a87d41dde10751e",
+    "hand/0/7_21.png": "e30aaf7d756010a3920d0830cf645d7ef81bc24d32f32adddc7d0b2b2b2eecb4",
+    "hand/0/8_21.png": "ff74dabdd7c2f87137e601b8d8bcbf7ec600f165d4427bd642e13135075892a0",
+    "hand/0/9_21.png": "0f5746e90feb99e0039f53cf25814da2c68bd6f6748f05ac7ca203e965b518a0",
+    "hand/0/10_21.png": "460cb962afa6e58783895f20ef7c83663356753c32adc3d1c02e4c33d2868d1c",
+    "hand/0/11_21.png": "acfeb72d63960dff5d8bf8dd1a035227f791ff0843696ff0245040e5c8d62751",
+    "hand/0/12_21.png": "7bfbc44c575bc7141ab6209e118417930b36cb1b2a63d0ca7baee7a4804c14b8",
+    "hand/0/13_21.png": "ee0a6300d1fa0ad7c38f147a0d649b0179086899fad9aa84eabeb284e5f3b373",
+    "hand/0/14_21.png": "5da44a0d6003cdfd587401b346a9b77dd9a1ecd6f8a355d151f326b16e568da4",
+    "hand/0/1_22.png": "1a5f724086acb5d977a8a07f54b17921190e80e2fac5f3b2e3754f15e3a82f08",
+    "hand/0/2_22.png": "e6b312d2db4b55af3912dae89097b52c29430de27d0b6dfb27ea62260f0b0471",
+    "hand/0/3_22.png": "30e6721efc5a52a699d2b4c9de02a21a6861a9990dd559e051ba92c2fd1e052f",
+    "hand/0/4_22.png": "de01f14972bf6557c51c6a906597692a55d563ba021528a84181a54c94051c97",
+    "hand/0/5_22.png": "cb83c9d4653db9e3cf88b370f1387a84d5dee891ee05c6b4d195bd98938b90fd",
+    "hand/0/6_22.png": "6a8cf1110f86bf057907af692019b57fe67f11b8cb172e0f7c345a2cf791e34f",
+    "hand/0/7_22.png": "ccf9c73b22b3fc415d05a02db3d4eb7b54ca89051898fd875a465cdf875c7696",
+    "hand/0/8_22.png": "db050d6a788d3f1ec3be3c99d9ff1655784dddec65b5b70d0d665099f42c47af",
+    "hand/0/9_22.png": "c72ee2021c9117aa2cdd9789abd0156013e294d20531a536be2b8ef7629f293e",
+    "hand/0/10_22.png": "a55a8e31f360557a167742b64e51ba596c356e08251b60564548b8b0ba5e0701",
+    "hand/0/11_22.png": "d53eb2cce533e5f4219ce82a761b5a475f728f205dec8e76b52bf64ed62de294",
+    "hand/0/12_22.png": "80b0e9ca3df0cf7fb61753a8ea1e4746cefc023ce9c60155a44314a6d643eec3",
+    "hand/0/13_22.png": "d60471b59f9ac966e1257c40366f0412cd7d09e524d1890140746e308b547c01",
+    "hand/0/14_22.png": "0e6d1b48b411656b88059fc1b1842d0024edaf4dd1a5cad67939372a27c09df5",
+    "hand/0/2_23.png": "28e35f2dac3ac919e2e8178eb4a8dcacb62110fe1597c6f729a9633142a88ac4",
+    "hand/0/3_23.png": "6ccba0166ddd957ab4e28a3e476399aa79b7adf4a33ceab4979a9eac885b6ff2",
+    "hand/0/4_23.png": "ec05cf6d95fff16a5cc83bde367ab33d21bc76eb2166ccda25554cad6113a575",
+    "hand/0/5_23.png": "2747cdd73d6b8128d586e498acffb06dfff7d609c10305545c042b6fe175be69",
+    "hand/0/6_23.png": "11ae95100388a4f82731185ae4a824b30deb2531f8707614f29f33f5920bbc85",
+    "hand/0/7_23.png": "13d9d4f3592e9581d87357e0a352d1177dfa8fe9b62191224f71b4789295d8a0",
+    "hand/0/8_23.png": "4ea032bee816cb82b325d87f10dcd588286754a67dedc6b877a677aa15c9c572",
+    "hand/0/9_23.png": "cf04d22cf21547c3a2080e84eee96f82b20708e8062c4371acabfda436355137",
+    "hand/0/10_23.png": "6d40b768ce26941c46c6c529c27af06005bda350a168659153d91578f354a193",
+    "hand/0/11_23.png": "3a40585c79e5e90dae2de3fa8f4a8e3a9758190afa5b71e69156541436370df7",
+    "hand/0/12_23.png": "5a241c02bfe0b509a5867ae15515bfc2fdd26f11946368d42fe10463444fb209",
+    "hand/0/13_23.png": "812d938076d42e6dcb3dbb01989c85347e8d1ddeb2efbc4b6f30e54b6f513dc7",
+    "hand/0/4_24.png": "41c3b875937e932ed420844a2710e0663ac24e27fd2b318073f44b7d88843a1c",
+    "hand/0/5_24.png": "d59a78e28e173b9edd49c2adda96e2df5b772b5165084440686de99af75e7709",
+    "hand/0/6_24.png": "4afcf02e2957fd86358473162bef5828e54a677814e48800d9f0bd18fd1417db",
+    "hand/0/7_24.png": "5696dd79156f8ff85a2162a3d14291cffb0bb8c7a94b0a5a5df4beb5722a1681",
+    "hand/0/8_24.png": "8485ab8e63a5d09361e31d056bc24b0469e8ccc4ce4138c3e594e38423deb108",
+    "hand/0/9_24.png": "2a2b78479260a7071574a8f17068f544be8d795af64f0aa09a039b21df9c0ec5",
+    "hand/0/10_24.png": "0c30872765e660f4bb6bb21dbaeae06def7304906228c6bea172b0b0dc903090",
+    "hand/0/11_24.png": "f0bef1e4fb3e66d6d75c73ed75408c88e7a7d767a3e45b33c45177acd760575a",
+    "hand/0/12_24.png": "3533d6a0a4282e12a4942b0c54ac54718df6c2ea159605c9b48e7a5e4ada143a",
+    "hand/0/13_24.png": "a90ae96aca516e3130004994a2d86bef5a1c89af7fb618bea3ee8850a0984f1c",
+    "hand/0/5_25.png": "546af469a5c481c0fb15029dc3df64621283cdc02e4bea860de8463aa6e1a794",
+    "hand/0/6_25.png": "890f78502b92cc0b2702a2a3046393d1c53e4ac38ad1b0bff5565ac3a5c1ca99",
+    "hand/0/7_25.png": "db9a73aef2e4b89fca1acab1ccbaac64b591c21aeb37e1c45b30410d27f81ee9",
+    "hand/0/8_25.png": "07a2cef84a6b8a6c8fb2451bdf978ad4d604070ed15c404abca37bdd95676bfc",
+    "hand/0/9_25.png": "7dc1cba0d8a2eef9bb6f7851d44578b6459052fbda848f3254554e2cea19770d",
+    "hand/0/10_25.png": "a6f48332715fe4956839002a15ae13d2f737100dc7a8f10d1cccc36e57fe372e",
+    "hand/0/11_25.png": "31108f642d4ca7c49511c50cc3dd40b39f22cc02c2a6084873d4fa614348ccc7",
+    "hand/0/12_25.png": "a71b991fdd49ead25183f86c15090a6c21af35e6a14c0d3c088f100c20066ada",
+    "hand/0/13_25.png": "840b2e27ae2f151bfe1565cb47bd9f5cffe0c7223e9fd61b467932465453c4e5",
+    "hand/0/7_26.png": "990fa1e7fcb20a1f46377e760b4ac280feb299be13eee1a0193417ff57c49c66",
+    "hand/0/8_26.png": "c146bb406d1f1592d43df508f8e4cf4bed8a9ada0c692285b20bb423308ac53d",
+    "hand/0/9_26.png": "6128964de2120efdc4263aea0644bc389cb08f58f2b907aec6a22a46c0b0e280",
+    "hand/0/10_26.png": "476a2ede2fe0e4ee38ab442b2b46b1456bc9d8c164fef05d215e4141818406aa",
+    "hand/0/11_26.png": "3f9c08a9e75582bb16aac125fbd5c7cfe9206162f592c166923d3c935a2f4125",
+    "hand/1/5_0.png": "56b0581dbdb0a9cc236b8b1a63a85bca6a3e375ce12851eb4153d20426117677",
+    "hand/1/6_0.png": "968f18bf675b6592293bb408a3b3a1afdbd9e564af341aff830bd10bc3a23783",
+    "hand/1/7_0.png": "86b1fdb87077a6d3130ab67e0453864d8829fa5f18ec48503e9300a250b494e9",
+    "hand/1/5_1.png": "13c798d4f7006a9bfb56b3c93cef30267cbe2020de9fadda5af846b370d524d9",
+    "hand/1/6_1.png": "4f3cab6c35518c9f1f31d8ae34081fb33cdc85a3005dc692e21f462aaca72fb2",
+    "hand/1/7_1.png": "99648bb54f13fb05ab478bf53334abf8fd3989121e7d0766b13d0cd5794f692b",
+    "hand/1/8_1.png": "321c4f7b66e9aa072ab233b28e4d897c4ab533045964c82885178f57db1c4a02",
+    "hand/1/5_2.png": "8ee3719456c0b97e708502a79c04bda70e80e89222fd76aa08910a805e95ffa7",
+    "hand/1/6_2.png": "9606af3363074da861dab8a2cd0605110b504f0064f09575df7ed3fb7998e366",
+    "hand/1/7_2.png": "909beb16a7122078ee91409c068b680d700a5062553dd267827058ce042a490e",
+    "hand/1/8_2.png": "caf2efd05928a8e6be9d94630dd92e05f19b6a3c51673315b534451d14de07fd",
+    "hand/1/1_3.png": "7e7ca7bae41d8866ab42362cb6bb6289da6d3d544b01abfc4042d64abec74b1e",
+    "hand/1/4_3.png": "8fd0b927ff27f9008f9441bd516373e7087d9fe18928344173d13a21521fd2b5",
+    "hand/1/5_3.png": "41cf534ad8be7ddb028135221d00a32ac793a1b06a10f6d4971949e305e7cd5d",
+    "hand/1/6_3.png": "4ba9bea6eb6f294b16feaa7a1c10dbab9cdafa3305e0ca32615974aa8cfef7d5",
+    "hand/1/7_3.png": "ffb4940fb77ffaa5838ae3754c8a8443c795c0cff1cf9a71194762d036010be5",
+    "hand/1/8_3.png": "863476465fe49e6361882b89cf80efc3d2e3d8ae602977c82ac7ebe5762e2bbe",
+    "hand/1/9_3.png": "67485312ec580521250954ba282afc0a03c5aac6dbf96802a4803f2ab322e9ab",
+    "hand/1/1_4.png": "80a80d4e19cd3231a0156a4624a68ccae146181216fc6764c2a51cc5dcbf6317",
+    "hand/1/2_4.png": "3aeda216b89c1726500186d5f52798dc33f22045de53ad361c433f4063d0a7d6",
+    "hand/1/4_4.png": "e345ba1fd0eb67af8116f41904a6e6522162cc775cea923b3f55381991adce59",
+    "hand/1/5_4.png": "deb1904ad167b1521297a18497f9efe618625f223dd784bcb209cfac8b5fec3c",
+    "hand/1/6_4.png": "5c2f243c85fc2ead36f328d2b8df8fd34dbe60f61dca5d6477664699457afb23",
+    "hand/1/7_4.png": "bb3f34a4e272ecf1ec12c1ce5773efdedf28ac946ae4af3c0f2caef4c592a66e",
+    "hand/1/8_4.png": "adeba87b8b7a190fa0d610d37265f9f74b8ec7bcf17853b96cef14c63d8eb8ec",
+    "hand/1/9_4.png": "cd37b612019071aef934cf04c18d3f7334c16acd5dc3943ec2910293cad64da7",
+    "hand/1/1_5.png": "e7028baaa3d76a7c8ae6b1dab09afc0ed012b14b051cfcad5de145af6c28d554",
+    "hand/1/2_5.png": "11cd51660d8f7d806a69787911897fe4f3a77d4251257a0f6fa9e2a4912327e5",
+    "hand/1/3_5.png": "cda264565bf73abf718566258cc35d591b86220a170e4404b4321c0750d105cc",
+    "hand/1/4_5.png": "977cda4d75983af7aee992e401a2eefc6c1222333e2e64d3b1b8846d59dcdc22",
+    "hand/1/5_5.png": "591e3226692b07a75a0c09352decc907b54c3b775f66ca747da805682acf98b1",
+    "hand/1/6_5.png": "6a6c97db8a30e8c6c4cffce5c29973b7a5e56582b147a922063709853bcfdd6c",
+    "hand/1/7_5.png": "6d3a7df6f68c4fe7cd23198f48a46c5f9cce1dfb3a043e0d0aa9ac29620cce0d",
+    "hand/1/8_5.png": "a3446210c7c4a5afd7fecb01b1896601477622bf8252197f8f8bbb52e6caaf01",
+    "hand/1/9_5.png": "04086998163fb7053b472ba4b1566d9f4eef5ce3199ea7032ecedd64edd349fe",
+    "hand/1/0_6.png": "9ba6364e8dffd92a230d6824ab9608d9e94de0a2a45d952a4d861ce1bf75572e",
+    "hand/1/1_6.png": "7478afc3a84d5bec4bfc7fa6b96ed95ade1d3a2c1e533458e1e31658ae5fb19b",
+    "hand/1/2_6.png": "5e52b903a23bf1ad5023a5091ee96abed605b463ef4b98f6980fca186c77189b",
+    "hand/1/3_6.png": "338880293b87432a188dac0e50a9e195a217bc7a4a88808d67ca2a71809f67a1",
+    "hand/1/4_6.png": "51f5954bf1afbc4fffc064b81834a7ad68dee47cd809914b82800289e005bfd0",
+    "hand/1/5_6.png": "de76d8f4e186a1952c7289dfdb7bd3276f71b3620c9e103d25cf281be77b32c3",
+    "hand/1/6_6.png": "0ab952c5b8e085998e96ffac5faa1a7f36d1b7094d5063d800bdcf169d26a0f8",
+    "hand/1/7_6.png": "946cf36ec3254f77712add9d9cb2ac2a41ed6693cea5eb8827271de4bb859cc8",
+    "hand/1/8_6.png": "0b15edbf180a7aa6a250780ed7252cee35f8727b7c9449d5d15858fc927f0883",
+    "hand/1/0_7.png": "232b61b063e92879bca677ac51940a749ce309f2b3a87025f9701727aba62641",
+    "hand/1/1_7.png": "a486f97592c2d63db7a3fb1f1753c199b115c6b25768134353b2f5a8733076f6",
+    "hand/1/2_7.png": "a79fa1298204b7d61babe51318242936256dcc7080ca667f3678432e5ef26054",
+    "hand/1/3_7.png": "9be3cd63ea7076bf2ab72a7abac218e156d3ee7d336a7aed9041693002bc5707",
+    "hand/1/4_7.png": "09d8d5694ff6962e43337a10f54c8399175907ef0526d8cadc477192caefa257",
+    "hand/1/5_7.png": "72f2c6bf7721593b572f766b42b346b258b5fffd5ddd834a0ef9a22020a63d1b",
+    "hand/1/6_7.png": "0699bbf6650286da8d1ca725f7b0b334bdbc07f38c4dfe2a06f3cf9b001cbef8",
+    "hand/1/7_7.png": "fc5364d298df18062954cfccd65f0871fa699393fe80ce35fcbc316c17375a36",
+    "hand/1/8_7.png": "2fe4c1f5cd8ba5103fbcccfc2a8973d57c2d2141f138c1728ce0faf5f04238f2",
+    "hand/1/0_8.png": "fd0e5821fcec436287bdcc8072e4cc833a1332d309bed0f38e5847a680b9dd04",
+    "hand/1/1_8.png": "97d58a8bf3d217a4a617af7ccd227d90a16fb9addf3ca39a999061248e2a41c8",
+    "hand/1/2_8.png": "c60c639d3402a928e8fe2510ad9defb8a3708613fbe5b331f95a3f8157e513d1",
+    "hand/1/3_8.png": "d662431c0ec00c14845b3da6687911cfa09e52d0cac2b02cf9b2b5af12ec2c6a",
+    "hand/1/4_8.png": "e92e6ba4195b23ed01a6d88844358ee9e084d53a5b3d3f74c0d25b90a9acc26e",
+    "hand/1/5_8.png": "45c00ce6d0603eef1b8d01ebf01f8f3e40e8ee5fa152ae768f0c1b65cfdf9281",
+    "hand/1/6_8.png": "aa1f9bb925cc08e3e1c0ae19cd01a34102ec89e9395bda58abf23ab39094e253",
+    "hand/1/7_8.png": "67725445c26733bec82c3e4d9ed3002ebe9e3cc9adeba1609a81ee4f48d012d6",
+    "hand/1/8_8.png": "bccc9f4a8de43c36c1fe4b1041f5d7eceb968e5279fba864f9e77cf1bd98eb0b",
+    "hand/1/0_9.png": "07abb3abae7beb78971c14b1df76ba9c53e295006bae56f389997a35164324a0",
+    "hand/1/1_9.png": "e5bc9a03397372c7d1a95d2069ef17fae2bc86a6721dbf3a04be142ebfb7cd5b",
+    "hand/1/2_9.png": "2fbaf3b7c37fbe263069fa1721c81d3049a1ef7421d87e3fa01e14930a4a7503",
+    "hand/1/3_9.png": "e07d16533e533e962913f171a60f63f09956dcaec29047c35050e52fd1cdc2ec",
+    "hand/1/4_9.png": "97f7f972c28a6e7ce30e4660d313de1594750b0171041a5d304532b50c3c50ab",
+    "hand/1/5_9.png": "d06d6ebf76c881441b99742a9ef277d00a3454b59113be8907b549acc55fe56b",
+    "hand/1/6_9.png": "cb763074a2ae94508577b91a3b55fa88f7b7b0c3ad4db8e5da772f27a6b5f04b",
+    "hand/1/7_9.png": "b2f44707c1600640462ef2c2e78f455403adb30454ac4a798bfdd2de8f8d6373",
+    "hand/1/0_10.png": "663dd5dad0799a3d3390e18c0cfea09387e15a03b5ba5bbe4fa4d58e77a17d44",
+    "hand/1/1_10.png": "fe3cc5dd94cd1289b249aa34a60bbc2a816075e9df9118ba42796e12305a3588",
+    "hand/1/2_10.png": "61b5940a0dc68ecd6294688716dd39f05f1438f9976fd419291d97bdc5776bd7",
+    "hand/1/3_10.png": "e8939907599d546eac6de01d1df3fe40764c5980507e49e8b0dd5ebe85264cee",
+    "hand/1/4_10.png": "c36afeba8e7ec59928ac9b8d3ebeccb9c18b082852c9f6b3ebd1a28162151cfe",
+    "hand/1/5_10.png": "82005a48ae205d3bd7777c8efa647a4bac862f7f346e00be126af0fd14ba922b",
+    "hand/1/6_10.png": "e395a3a58e7c310ceecb760f3d2bf7b2744af1b68cc3736f7cf847ccc0f872cd",
+    "hand/1/7_10.png": "c5c905f253b4aa2964259382c1fa0141ebbed473b9c77ba6a584738c4e235344",
+    "hand/1/0_11.png": "26731c76d2a94a37ddc771a0dd60c32a2cd006a4dc0ed5f288bf6311ee10f4a8",
+    "hand/1/1_11.png": "c5063024d3ecfea26869a4ad63b377124b5e800b41bd10e463a151230b834b14",
+    "hand/1/2_11.png": "dd6db541d66c118427a655f321e8e520430b682e4a5ce2bc1137c91e065cea8b",
+    "hand/1/3_11.png": "6b498a3c735896cd11da88f587a878455edc684a2455cd1d7cffbad350586a55",
+    "hand/1/4_11.png": "dc908b45ba32b7af13b7ba108e81cf8f2ded539bef5fdcb22bd07d3c29027467",
+    "hand/1/5_11.png": "f90bd795e45c78ca59056b637723af5b9e3901295a39226d3f4aee6f6971ada2",
+    "hand/1/6_11.png": "0b2333413742bdb5c28f0a07e25a1a46281f640cda0e555d2e61ada992676ceb",
+    "hand/1/7_11.png": "2538b039493f619eb31f087a70bd159cdb07d1fa113249d24313c138860042ba",
+    "hand/1/2_12.png": "64839af8fdb4e5b9167b3879ca49526a6d7750a79ebda9d095c7354d479cee7d",
+    "hand/1/3_12.png": "4c16054d004cc6567f29996e095d374d12e743da8c3af09fc8f2698864315641",
+    "hand/1/4_12.png": "8be6b600430af2f0f664da7f8390a2c91cb657a2c9731dea4350187eb396b226",
+    "hand/1/5_12.png": "b7269511652cfd37dd2711f34a96683fefb59d7847b5e363f36f562885ceaaaf",
+    "hand/1/6_12.png": "15a10186bf31c8fafcce91ee7faf81f276cc1705b07dcef1c7d5288eb8a38880",
+    "hand/1/3_13.png": "1846ec0699ff51f3c79ec8985296c811be268e86f2f8068f5303ef448be1d6c8",
+    "hand/1/4_13.png": "adfb8fbb56adcfd3a3f22e0474d4ebf84a0b7b248b8819d23a0d460c60079005",
+    "hand/1/5_13.png": "24e48d340db2066ca9959e980f946e9ecec1f58df9b9b6d447be6198814df318",
+    "hand/2/2_0.png": "ce69bb909dba27d186942210d3e841bebb89aa2aae2d98ca7c1e8af047bd1d07",
+    "hand/2/3_0.png": "ccc6832d1cf828bb11d0e9475d24df82c359a3038670e7ce73b532d7f7c8e565",
+    "hand/2/4_0.png": "42297c9fe2e22579e2614da57347090ad4b712705dc5cb18d7cdb626668d10c5",
+    "hand/2/0_1.png": "396030b2ba81330aa2f4714109d9e3956004efbf83f89fbaf2ff9fb0abc1e175",
+    "hand/2/2_1.png": "c924c88cf73e4bdcd2504c36b0cf6a3ed97386db308d70273581b1abb8bb6d49",
+    "hand/2/3_1.png": "50ef5eaac8b010b13a2ea123cbf5bc6625002e6f09801076c6a834e5b7235b4c",
+    "hand/2/4_1.png": "c4f76b6100b9a913ebe12c8241611e4353f5446d5d52ccefdc25e561ab8258cb",
+    "hand/2/0_2.png": "97bdec16b267e5d2cac50240f6e4088d435eec586390cf3aa3dc0ca6f0fc143b",
+    "hand/2/1_2.png": "396b552f3b4e13d0e6e087aaf9f2eb97f0ed3f70e35fac462c3a35aed167c709",
+    "hand/2/2_2.png": "cae1942578e9641b6525bd5513c952d29154a369cbc67056f2b841d03bcbf947",
+    "hand/2/3_2.png": "ca30a3ccddd8a069672a41d72b382d6bbc75207f7c5996c4b1622a9cf95b8e54",
+    "hand/2/4_2.png": "9e1909797c4b507657cf5b421bfe8c57166b99c2d7ac43c8057de79ac887dfeb",
+    "hand/2/0_3.png": "d1016ff85695a32bfee4d08d21c02dc11eb7ca4c01acff2aa9c387933dafad78",
+    "hand/2/1_3.png": "1c256df306a959f8b679788685a50335a83f6b79f15854ca13f1679f04ca9643",
+    "hand/2/2_3.png": "1815b70ec62dd45112f4803d886b4ecefd408a35939d963dc6ff91c9354b0097",
+    "hand/2/3_3.png": "c6cf9a1c10c0695e59fa5a80a6e442b9246a264da9a1ab120f098c0f77f69141",
+    "hand/2/4_3.png": "45e812de352cc5fd8c00735a4df7ec7b6f6b3090ba0c5a6081b9e9e8fc62b220",
+    "hand/2/0_4.png": "1e85065d2b950249bbae7af8d3f167ec75bdd4101d45e8d99fab1ace2cdc6fa1",
+    "hand/2/1_4.png": "626c408bcf46e358ccdcff0ae72c15ab27b3ef42e2e4a9c59c274489317dfcd9",
+    "hand/2/2_4.png": "8f7c2978f66bdd37c5449460a3b4e55a50de46014ce9be10a224fc42c576e8f1",
+    "hand/2/3_4.png": "e07d9e2b976b26a1e9d1aa4462a8c5823d71c4354e6845025e7693157d0cf35d",
+    "hand/2/4_4.png": "9581953f79f30d9610533e70796cca4d386c37f7a140000f1c02c255275f22b6",
+    "hand/2/0_5.png": "cba014edb83cce724c6e15cead0e190067f1caadd84589d98306241ecdcc0fc9",
+    "hand/2/1_5.png": "d4bd5723eb37d3c84bcc39df3edd4856e483ebbffd080b178d1b62221193f97a",
+    "hand/2/2_5.png": "b874568bab1857214921981a7573b78cf890ef659f0aed3865e0b26fe0c5fde1",
+    "hand/2/3_5.png": "481714c247bb9223faead83f9372b31d11e7392062126e43db76aae2216bd428",
+    "hand/2/1_6.png": "903079ccbc7bc8d7dbc8c172dc5517fe5c6512ad28f0d9e062e8a4aa5ae2f0f0",
+    "hand/2/2_6.png": "2b79820b8805a494fc6833851257ee7907d2ba31d481187586d2285113dcd5e8",
+    "hand/2/3_6.png": "b3ab7ba1efa80117c83da0203a0aa2ffa90db4fa64cfe2c5e2031fc7f31d5694",
+    "hand/3/0_0.png": "14162bdcfa3010079281552d028b91740730b74110603e1a64cd9ee70c2a6041",
+    "hand/3/1_0.png": "9be1d6d2dfb2230908d3568e224a02d3c30815f85c6b82ad6f71062fbc0dd25b",
+    "hand/3/2_0.png": "cdd338738947b888a21fec7652b281f543e002b0a9030bc429b321efcf45a6fe",
+    "hand/3/0_1.png": "40f32da399969c11aa686c5cc364f2b37e8b1bc76905d08dd14b06909627c241",
+    "hand/3/1_1.png": "f6f86b54c0975f071590bb72a43d767b4be2647ab53cb00da249eaa9f068baac",
+    "hand/3/2_1.png": "4913f94cc9835c0524274c3947e6b857b8042ed41fd6adfa7ed95f44981fcc60",
+    "hand/3/0_2.png": "c91c76b0df6b948afba85b75d5436d37540972900aff40c9ea2a0041df0e06b7",
+    "hand/3/1_2.png": "48562b217b7f3437206fde93050b34cd89b1185205af78f51514f366d7bc6ff5",
+    "hand/3/2_2.png": "a5914ec024e769bbb3a83c9b1b58d1fd82704bf1f02d71bc963d558c68c73246",
+    "hand/3/0_3.png": "332db5b1eecf444979b0bca94c910e6ce72e61a8754fe1bac21d58c21d702e8a",
+    "hand/3/1_3.png": "52aae089739ae0799f4724c43c3606532621686d787773221ce53b0b4afb561a",
+    "hand/4/0_0.png": "2e5aaa68241bc41c0402e09d45aaf416da1cfb1f45094f9c3fa64699e3a75954",
+    "hand/4/1_0.png": "5f42c34b6e6e1ec387088835ac7b69e29a7280943d132baa1515e8db0ef44215",
+    "hand/4/0_1.png": "acf6523d746da2e5d2220262670356c14a1831f2a1235d46f615fb4b77ff3594",
+    "hand/4/1_1.png": "20c990828b54f223bb5a804ac4a0bd7b8125d6a23ef1e5b70008f9a4d121a591",
+    "hand/5/0_0.png": "dc1639602eb8019bc72f773418bac066fa37c66b8afcbe2a74db026439477581"
   },
   "fetched": {
     "_what": "every row above. None of these bytes is committed; tools/fetch_artefacts.py is the only sanctioned way they arrive, and a clone with none of them is a working clone.",
-    "host_base": "file:///Users/victoriabarnes/project_magisteria/artefact_host/terrain-layers-v1/",
+    "host_base": "file:///Users/victoriabarnes/project_magisteria/artefact_host/terrain-layers-v2/",
     "_host_base_is": "decision 972: a prefix each row's key appends to. NOT authoritative -- the digest is the whole of the check -- and a row's own `host` overrides it. It exists so that a move of hosting stays the one-field edit decision 948 rules, which 1,038 absolute URLs would have quietly stopped being.",
-    "total_bytes": 455466375,
+    "total_bytes": 595583233,
     "files": {
       "slope/0/12_0.png": {
         "bytes": 89594
@@ -6279,6 +6817,1371 @@
       },
       "distance_to_channel/5/0_0.png": {
         "bytes": 143620
+      },
+      "hand/0/12_0.png": {
+        "bytes": 71928
+      },
+      "hand/0/13_0.png": {
+        "bytes": 329827
+      },
+      "hand/0/11_1.png": {
+        "bytes": 5272
+      },
+      "hand/0/12_1.png": {
+        "bytes": 345085
+      },
+      "hand/0/13_1.png": {
+        "bytes": 383157
+      },
+      "hand/0/14_1.png": {
+        "bytes": 147646
+      },
+      "hand/0/11_2.png": {
+        "bytes": 104241
+      },
+      "hand/0/12_2.png": {
+        "bytes": 414326
+      },
+      "hand/0/13_2.png": {
+        "bytes": 356888
+      },
+      "hand/0/14_2.png": {
+        "bytes": 254770
+      },
+      "hand/0/15_2.png": {
+        "bytes": 36555
+      },
+      "hand/0/16_2.png": {
+        "bytes": 23142
+      },
+      "hand/0/11_3.png": {
+        "bytes": 154255
+      },
+      "hand/0/12_3.png": {
+        "bytes": 365760
+      },
+      "hand/0/13_3.png": {
+        "bytes": 342842
+      },
+      "hand/0/14_3.png": {
+        "bytes": 386468
+      },
+      "hand/0/15_3.png": {
+        "bytes": 293218
+      },
+      "hand/0/16_3.png": {
+        "bytes": 296878
+      },
+      "hand/0/17_3.png": {
+        "bytes": 77452
+      },
+      "hand/0/11_4.png": {
+        "bytes": 249496
+      },
+      "hand/0/12_4.png": {
+        "bytes": 367336
+      },
+      "hand/0/13_4.png": {
+        "bytes": 398193
+      },
+      "hand/0/14_4.png": {
+        "bytes": 399103
+      },
+      "hand/0/15_4.png": {
+        "bytes": 348794
+      },
+      "hand/0/16_4.png": {
+        "bytes": 361059
+      },
+      "hand/0/17_4.png": {
+        "bytes": 19595
+      },
+      "hand/0/10_5.png": {
+        "bytes": 3997
+      },
+      "hand/0/11_5.png": {
+        "bytes": 306410
+      },
+      "hand/0/12_5.png": {
+        "bytes": 429378
+      },
+      "hand/0/13_5.png": {
+        "bytes": 423048
+      },
+      "hand/0/14_5.png": {
+        "bytes": 415181
+      },
+      "hand/0/15_5.png": {
+        "bytes": 380282
+      },
+      "hand/0/16_5.png": {
+        "bytes": 401471
+      },
+      "hand/0/17_5.png": {
+        "bytes": 185031
+      },
+      "hand/0/10_6.png": {
+        "bytes": 248718
+      },
+      "hand/0/11_6.png": {
+        "bytes": 432833
+      },
+      "hand/0/12_6.png": {
+        "bytes": 405363
+      },
+      "hand/0/13_6.png": {
+        "bytes": 427333
+      },
+      "hand/0/14_6.png": {
+        "bytes": 439297
+      },
+      "hand/0/15_6.png": {
+        "bytes": 403741
+      },
+      "hand/0/16_6.png": {
+        "bytes": 416894
+      },
+      "hand/0/17_6.png": {
+        "bytes": 387655
+      },
+      "hand/0/3_7.png": {
+        "bytes": 84473
+      },
+      "hand/0/9_7.png": {
+        "bytes": 2329
+      },
+      "hand/0/10_7.png": {
+        "bytes": 377726
+      },
+      "hand/0/11_7.png": {
+        "bytes": 464775
+      },
+      "hand/0/12_7.png": {
+        "bytes": 393874
+      },
+      "hand/0/13_7.png": {
+        "bytes": 411196
+      },
+      "hand/0/14_7.png": {
+        "bytes": 433147
+      },
+      "hand/0/15_7.png": {
+        "bytes": 442693
+      },
+      "hand/0/16_7.png": {
+        "bytes": 448661
+      },
+      "hand/0/17_7.png": {
+        "bytes": 423107
+      },
+      "hand/0/18_7.png": {
+        "bytes": 234895
+      },
+      "hand/0/19_7.png": {
+        "bytes": 113618
+      },
+      "hand/0/2_8.png": {
+        "bytes": 4371
+      },
+      "hand/0/3_8.png": {
+        "bytes": 292504
+      },
+      "hand/0/9_8.png": {
+        "bytes": 110903
+      },
+      "hand/0/10_8.png": {
+        "bytes": 422649
+      },
+      "hand/0/11_8.png": {
+        "bytes": 450501
+      },
+      "hand/0/12_8.png": {
+        "bytes": 465231
+      },
+      "hand/0/13_8.png": {
+        "bytes": 458523
+      },
+      "hand/0/14_8.png": {
+        "bytes": 476827
+      },
+      "hand/0/15_8.png": {
+        "bytes": 464620
+      },
+      "hand/0/16_8.png": {
+        "bytes": 460224
+      },
+      "hand/0/17_8.png": {
+        "bytes": 451826
+      },
+      "hand/0/18_8.png": {
+        "bytes": 450704
+      },
+      "hand/0/19_8.png": {
+        "bytes": 141249
+      },
+      "hand/0/2_9.png": {
+        "bytes": 78673
+      },
+      "hand/0/3_9.png": {
+        "bytes": 215540
+      },
+      "hand/0/4_9.png": {
+        "bytes": 38426
+      },
+      "hand/0/8_9.png": {
+        "bytes": 1384
+      },
+      "hand/0/9_9.png": {
+        "bytes": 277413
+      },
+      "hand/0/10_9.png": {
+        "bytes": 420769
+      },
+      "hand/0/11_9.png": {
+        "bytes": 420606
+      },
+      "hand/0/12_9.png": {
+        "bytes": 450063
+      },
+      "hand/0/13_9.png": {
+        "bytes": 417998
+      },
+      "hand/0/14_9.png": {
+        "bytes": 433859
+      },
+      "hand/0/15_9.png": {
+        "bytes": 447334
+      },
+      "hand/0/16_9.png": {
+        "bytes": 461908
+      },
+      "hand/0/17_9.png": {
+        "bytes": 459918
+      },
+      "hand/0/18_9.png": {
+        "bytes": 283790
+      },
+      "hand/0/19_9.png": {
+        "bytes": 10760
+      },
+      "hand/0/2_10.png": {
+        "bytes": 68105
+      },
+      "hand/0/3_10.png": {
+        "bytes": 179910
+      },
+      "hand/0/4_10.png": {
+        "bytes": 350985
+      },
+      "hand/0/8_10.png": {
+        "bytes": 130277
+      },
+      "hand/0/9_10.png": {
+        "bytes": 432993
+      },
+      "hand/0/10_10.png": {
+        "bytes": 412848
+      },
+      "hand/0/11_10.png": {
+        "bytes": 399667
+      },
+      "hand/0/12_10.png": {
+        "bytes": 425050
+      },
+      "hand/0/13_10.png": {
+        "bytes": 451527
+      },
+      "hand/0/14_10.png": {
+        "bytes": 443089
+      },
+      "hand/0/15_10.png": {
+        "bytes": 421217
+      },
+      "hand/0/16_10.png": {
+        "bytes": 475258
+      },
+      "hand/0/17_10.png": {
+        "bytes": 379247
+      },
+      "hand/0/18_10.png": {
+        "bytes": 3346
+      },
+      "hand/0/2_11.png": {
+        "bytes": 251671
+      },
+      "hand/0/3_11.png": {
+        "bytes": 232051
+      },
+      "hand/0/4_11.png": {
+        "bytes": 314965
+      },
+      "hand/0/5_11.png": {
+        "bytes": 59033
+      },
+      "hand/0/6_11.png": {
+        "bytes": 33737
+      },
+      "hand/0/7_11.png": {
+        "bytes": 5517
+      },
+      "hand/0/8_11.png": {
+        "bytes": 230494
+      },
+      "hand/0/9_11.png": {
+        "bytes": 441856
+      },
+      "hand/0/10_11.png": {
+        "bytes": 440527
+      },
+      "hand/0/11_11.png": {
+        "bytes": 449770
+      },
+      "hand/0/12_11.png": {
+        "bytes": 433907
+      },
+      "hand/0/13_11.png": {
+        "bytes": 434036
+      },
+      "hand/0/14_11.png": {
+        "bytes": 431717
+      },
+      "hand/0/15_11.png": {
+        "bytes": 430586
+      },
+      "hand/0/16_11.png": {
+        "bytes": 444380
+      },
+      "hand/0/17_11.png": {
+        "bytes": 408915
+      },
+      "hand/0/18_11.png": {
+        "bytes": 8894
+      },
+      "hand/0/1_12.png": {
+        "bytes": 16474
+      },
+      "hand/0/2_12.png": {
+        "bytes": 183567
+      },
+      "hand/0/3_12.png": {
+        "bytes": 438644
+      },
+      "hand/0/4_12.png": {
+        "bytes": 427817
+      },
+      "hand/0/5_12.png": {
+        "bytes": 435474
+      },
+      "hand/0/6_12.png": {
+        "bytes": 436901
+      },
+      "hand/0/7_12.png": {
+        "bytes": 345111
+      },
+      "hand/0/8_12.png": {
+        "bytes": 443868
+      },
+      "hand/0/9_12.png": {
+        "bytes": 442817
+      },
+      "hand/0/10_12.png": {
+        "bytes": 429001
+      },
+      "hand/0/11_12.png": {
+        "bytes": 446378
+      },
+      "hand/0/12_12.png": {
+        "bytes": 428213
+      },
+      "hand/0/13_12.png": {
+        "bytes": 409603
+      },
+      "hand/0/14_12.png": {
+        "bytes": 443138
+      },
+      "hand/0/15_12.png": {
+        "bytes": 446920
+      },
+      "hand/0/16_12.png": {
+        "bytes": 276389
+      },
+      "hand/0/17_12.png": {
+        "bytes": 69198
+      },
+      "hand/0/1_13.png": {
+        "bytes": 219927
+      },
+      "hand/0/2_13.png": {
+        "bytes": 420114
+      },
+      "hand/0/3_13.png": {
+        "bytes": 393963
+      },
+      "hand/0/4_13.png": {
+        "bytes": 437344
+      },
+      "hand/0/5_13.png": {
+        "bytes": 401817
+      },
+      "hand/0/6_13.png": {
+        "bytes": 381631
+      },
+      "hand/0/7_13.png": {
+        "bytes": 405931
+      },
+      "hand/0/8_13.png": {
+        "bytes": 416205
+      },
+      "hand/0/9_13.png": {
+        "bytes": 435771
+      },
+      "hand/0/10_13.png": {
+        "bytes": 428373
+      },
+      "hand/0/11_13.png": {
+        "bytes": 416007
+      },
+      "hand/0/12_13.png": {
+        "bytes": 401416
+      },
+      "hand/0/13_13.png": {
+        "bytes": 420958
+      },
+      "hand/0/14_13.png": {
+        "bytes": 448714
+      },
+      "hand/0/15_13.png": {
+        "bytes": 456713
+      },
+      "hand/0/16_13.png": {
+        "bytes": 293850
+      },
+      "hand/0/17_13.png": {
+        "bytes": 13858
+      },
+      "hand/0/1_14.png": {
+        "bytes": 141784
+      },
+      "hand/0/2_14.png": {
+        "bytes": 320421
+      },
+      "hand/0/3_14.png": {
+        "bytes": 410525
+      },
+      "hand/0/4_14.png": {
+        "bytes": 441797
+      },
+      "hand/0/5_14.png": {
+        "bytes": 430141
+      },
+      "hand/0/6_14.png": {
+        "bytes": 455151
+      },
+      "hand/0/7_14.png": {
+        "bytes": 439783
+      },
+      "hand/0/8_14.png": {
+        "bytes": 394062
+      },
+      "hand/0/9_14.png": {
+        "bytes": 400746
+      },
+      "hand/0/10_14.png": {
+        "bytes": 424879
+      },
+      "hand/0/11_14.png": {
+        "bytes": 369189
+      },
+      "hand/0/12_14.png": {
+        "bytes": 408612
+      },
+      "hand/0/13_14.png": {
+        "bytes": 389326
+      },
+      "hand/0/14_14.png": {
+        "bytes": 409115
+      },
+      "hand/0/15_14.png": {
+        "bytes": 423151
+      },
+      "hand/0/16_14.png": {
+        "bytes": 432636
+      },
+      "hand/0/17_14.png": {
+        "bytes": 40492
+      },
+      "hand/0/1_15.png": {
+        "bytes": 22835
+      },
+      "hand/0/2_15.png": {
+        "bytes": 257062
+      },
+      "hand/0/3_15.png": {
+        "bytes": 383602
+      },
+      "hand/0/4_15.png": {
+        "bytes": 453101
+      },
+      "hand/0/5_15.png": {
+        "bytes": 445916
+      },
+      "hand/0/6_15.png": {
+        "bytes": 375756
+      },
+      "hand/0/7_15.png": {
+        "bytes": 445519
+      },
+      "hand/0/8_15.png": {
+        "bytes": 393848
+      },
+      "hand/0/9_15.png": {
+        "bytes": 384721
+      },
+      "hand/0/10_15.png": {
+        "bytes": 407518
+      },
+      "hand/0/11_15.png": {
+        "bytes": 392257
+      },
+      "hand/0/12_15.png": {
+        "bytes": 423923
+      },
+      "hand/0/13_15.png": {
+        "bytes": 358073
+      },
+      "hand/0/14_15.png": {
+        "bytes": 374264
+      },
+      "hand/0/15_15.png": {
+        "bytes": 422500
+      },
+      "hand/0/16_15.png": {
+        "bytes": 174757
+      },
+      "hand/0/1_16.png": {
+        "bytes": 112698
+      },
+      "hand/0/2_16.png": {
+        "bytes": 386527
+      },
+      "hand/0/3_16.png": {
+        "bytes": 404007
+      },
+      "hand/0/4_16.png": {
+        "bytes": 408766
+      },
+      "hand/0/5_16.png": {
+        "bytes": 385202
+      },
+      "hand/0/6_16.png": {
+        "bytes": 381449
+      },
+      "hand/0/7_16.png": {
+        "bytes": 366258
+      },
+      "hand/0/8_16.png": {
+        "bytes": 370603
+      },
+      "hand/0/9_16.png": {
+        "bytes": 362313
+      },
+      "hand/0/10_16.png": {
+        "bytes": 376217
+      },
+      "hand/0/11_16.png": {
+        "bytes": 379312
+      },
+      "hand/0/12_16.png": {
+        "bytes": 413475
+      },
+      "hand/0/13_16.png": {
+        "bytes": 365089
+      },
+      "hand/0/14_16.png": {
+        "bytes": 368967
+      },
+      "hand/0/15_16.png": {
+        "bytes": 308532
+      },
+      "hand/0/16_16.png": {
+        "bytes": 67062
+      },
+      "hand/0/1_17.png": {
+        "bytes": 4431
+      },
+      "hand/0/2_17.png": {
+        "bytes": 350545
+      },
+      "hand/0/3_17.png": {
+        "bytes": 406996
+      },
+      "hand/0/4_17.png": {
+        "bytes": 444423
+      },
+      "hand/0/5_17.png": {
+        "bytes": 414966
+      },
+      "hand/0/6_17.png": {
+        "bytes": 404965
+      },
+      "hand/0/7_17.png": {
+        "bytes": 421242
+      },
+      "hand/0/8_17.png": {
+        "bytes": 369225
+      },
+      "hand/0/9_17.png": {
+        "bytes": 323272
+      },
+      "hand/0/10_17.png": {
+        "bytes": 377012
+      },
+      "hand/0/11_17.png": {
+        "bytes": 376037
+      },
+      "hand/0/12_17.png": {
+        "bytes": 395394
+      },
+      "hand/0/13_17.png": {
+        "bytes": 372178
+      },
+      "hand/0/14_17.png": {
+        "bytes": 151852
+      },
+      "hand/0/15_17.png": {
+        "bytes": 12077
+      },
+      "hand/0/1_18.png": {
+        "bytes": 13631
+      },
+      "hand/0/2_18.png": {
+        "bytes": 357489
+      },
+      "hand/0/3_18.png": {
+        "bytes": 415509
+      },
+      "hand/0/4_18.png": {
+        "bytes": 434588
+      },
+      "hand/0/5_18.png": {
+        "bytes": 431326
+      },
+      "hand/0/6_18.png": {
+        "bytes": 421821
+      },
+      "hand/0/7_18.png": {
+        "bytes": 428211
+      },
+      "hand/0/8_18.png": {
+        "bytes": 391422
+      },
+      "hand/0/9_18.png": {
+        "bytes": 347999
+      },
+      "hand/0/10_18.png": {
+        "bytes": 337025
+      },
+      "hand/0/11_18.png": {
+        "bytes": 350854
+      },
+      "hand/0/12_18.png": {
+        "bytes": 381064
+      },
+      "hand/0/13_18.png": {
+        "bytes": 313152
+      },
+      "hand/0/14_18.png": {
+        "bytes": 2415
+      },
+      "hand/0/1_19.png": {
+        "bytes": 88744
+      },
+      "hand/0/2_19.png": {
+        "bytes": 325416
+      },
+      "hand/0/3_19.png": {
+        "bytes": 342467
+      },
+      "hand/0/4_19.png": {
+        "bytes": 354191
+      },
+      "hand/0/5_19.png": {
+        "bytes": 409851
+      },
+      "hand/0/6_19.png": {
+        "bytes": 456236
+      },
+      "hand/0/7_19.png": {
+        "bytes": 463481
+      },
+      "hand/0/8_19.png": {
+        "bytes": 447667
+      },
+      "hand/0/9_19.png": {
+        "bytes": 416739
+      },
+      "hand/0/10_19.png": {
+        "bytes": 369623
+      },
+      "hand/0/11_19.png": {
+        "bytes": 364239
+      },
+      "hand/0/12_19.png": {
+        "bytes": 376956
+      },
+      "hand/0/13_19.png": {
+        "bytes": 202157
+      },
+      "hand/0/0_20.png": {
+        "bytes": 28242
+      },
+      "hand/0/1_20.png": {
+        "bytes": 290000
+      },
+      "hand/0/2_20.png": {
+        "bytes": 384867
+      },
+      "hand/0/3_20.png": {
+        "bytes": 367904
+      },
+      "hand/0/4_20.png": {
+        "bytes": 336980
+      },
+      "hand/0/5_20.png": {
+        "bytes": 324041
+      },
+      "hand/0/6_20.png": {
+        "bytes": 330746
+      },
+      "hand/0/7_20.png": {
+        "bytes": 444281
+      },
+      "hand/0/8_20.png": {
+        "bytes": 449255
+      },
+      "hand/0/9_20.png": {
+        "bytes": 459914
+      },
+      "hand/0/10_20.png": {
+        "bytes": 433856
+      },
+      "hand/0/11_20.png": {
+        "bytes": 413884
+      },
+      "hand/0/12_20.png": {
+        "bytes": 404059
+      },
+      "hand/0/13_20.png": {
+        "bytes": 230336
+      },
+      "hand/0/1_21.png": {
+        "bytes": 169395
+      },
+      "hand/0/2_21.png": {
+        "bytes": 368367
+      },
+      "hand/0/3_21.png": {
+        "bytes": 305214
+      },
+      "hand/0/4_21.png": {
+        "bytes": 334747
+      },
+      "hand/0/5_21.png": {
+        "bytes": 327075
+      },
+      "hand/0/6_21.png": {
+        "bytes": 276099
+      },
+      "hand/0/7_21.png": {
+        "bytes": 300819
+      },
+      "hand/0/8_21.png": {
+        "bytes": 464385
+      },
+      "hand/0/9_21.png": {
+        "bytes": 439129
+      },
+      "hand/0/10_21.png": {
+        "bytes": 426977
+      },
+      "hand/0/11_21.png": {
+        "bytes": 460052
+      },
+      "hand/0/12_21.png": {
+        "bytes": 446914
+      },
+      "hand/0/13_21.png": {
+        "bytes": 163565
+      },
+      "hand/0/14_21.png": {
+        "bytes": 28076
+      },
+      "hand/0/1_22.png": {
+        "bytes": 5741
+      },
+      "hand/0/2_22.png": {
+        "bytes": 220380
+      },
+      "hand/0/3_22.png": {
+        "bytes": 272120
+      },
+      "hand/0/4_22.png": {
+        "bytes": 293782
+      },
+      "hand/0/5_22.png": {
+        "bytes": 383035
+      },
+      "hand/0/6_22.png": {
+        "bytes": 294845
+      },
+      "hand/0/7_22.png": {
+        "bytes": 284765
+      },
+      "hand/0/8_22.png": {
+        "bytes": 428131
+      },
+      "hand/0/9_22.png": {
+        "bytes": 444017
+      },
+      "hand/0/10_22.png": {
+        "bytes": 429725
+      },
+      "hand/0/11_22.png": {
+        "bytes": 466809
+      },
+      "hand/0/12_22.png": {
+        "bytes": 459357
+      },
+      "hand/0/13_22.png": {
+        "bytes": 433220
+      },
+      "hand/0/14_22.png": {
+        "bytes": 10626
+      },
+      "hand/0/2_23.png": {
+        "bytes": 3701
+      },
+      "hand/0/3_23.png": {
+        "bytes": 102839
+      },
+      "hand/0/4_23.png": {
+        "bytes": 306948
+      },
+      "hand/0/5_23.png": {
+        "bytes": 326638
+      },
+      "hand/0/6_23.png": {
+        "bytes": 290080
+      },
+      "hand/0/7_23.png": {
+        "bytes": 328364
+      },
+      "hand/0/8_23.png": {
+        "bytes": 425103
+      },
+      "hand/0/9_23.png": {
+        "bytes": 429166
+      },
+      "hand/0/10_23.png": {
+        "bytes": 392225
+      },
+      "hand/0/11_23.png": {
+        "bytes": 400797
+      },
+      "hand/0/12_23.png": {
+        "bytes": 401327
+      },
+      "hand/0/13_23.png": {
+        "bytes": 77329
+      },
+      "hand/0/4_24.png": {
+        "bytes": 17035
+      },
+      "hand/0/5_24.png": {
+        "bytes": 202655
+      },
+      "hand/0/6_24.png": {
+        "bytes": 360188
+      },
+      "hand/0/7_24.png": {
+        "bytes": 356257
+      },
+      "hand/0/8_24.png": {
+        "bytes": 399614
+      },
+      "hand/0/9_24.png": {
+        "bytes": 387030
+      },
+      "hand/0/10_24.png": {
+        "bytes": 326816
+      },
+      "hand/0/11_24.png": {
+        "bytes": 321898
+      },
+      "hand/0/12_24.png": {
+        "bytes": 317445
+      },
+      "hand/0/13_24.png": {
+        "bytes": 10669
+      },
+      "hand/0/5_25.png": {
+        "bytes": 26594
+      },
+      "hand/0/6_25.png": {
+        "bytes": 179925
+      },
+      "hand/0/7_25.png": {
+        "bytes": 342570
+      },
+      "hand/0/8_25.png": {
+        "bytes": 430316
+      },
+      "hand/0/9_25.png": {
+        "bytes": 377741
+      },
+      "hand/0/10_25.png": {
+        "bytes": 368371
+      },
+      "hand/0/11_25.png": {
+        "bytes": 392773
+      },
+      "hand/0/12_25.png": {
+        "bytes": 62668
+      },
+      "hand/0/13_25.png": {
+        "bytes": 3743
+      },
+      "hand/0/7_26.png": {
+        "bytes": 43875
+      },
+      "hand/0/8_26.png": {
+        "bytes": 240338
+      },
+      "hand/0/9_26.png": {
+        "bytes": 259568
+      },
+      "hand/0/10_26.png": {
+        "bytes": 119746
+      },
+      "hand/0/11_26.png": {
+        "bytes": 138567
+      },
+      "hand/1/5_0.png": {
+        "bytes": 2305
+      },
+      "hand/1/6_0.png": {
+        "bytes": 312238
+      },
+      "hand/1/7_0.png": {
+        "bytes": 42926
+      },
+      "hand/1/5_1.png": {
+        "bytes": 73589
+      },
+      "hand/1/6_1.png": {
+        "bytes": 408850
+      },
+      "hand/1/7_1.png": {
+        "bytes": 273092
+      },
+      "hand/1/8_1.png": {
+        "bytes": 114888
+      },
+      "hand/1/5_2.png": {
+        "bytes": 157301
+      },
+      "hand/1/6_2.png": {
+        "bytes": 443844
+      },
+      "hand/1/7_2.png": {
+        "bytes": 421806
+      },
+      "hand/1/8_2.png": {
+        "bytes": 267357
+      },
+      "hand/1/1_3.png": {
+        "bytes": 25247
+      },
+      "hand/1/4_3.png": {
+        "bytes": 1380
+      },
+      "hand/1/5_3.png": {
+        "bytes": 415940
+      },
+      "hand/1/6_3.png": {
+        "bytes": 445709
+      },
+      "hand/1/7_3.png": {
+        "bytes": 466195
+      },
+      "hand/1/8_3.png": {
+        "bytes": 460342
+      },
+      "hand/1/9_3.png": {
+        "bytes": 97243
+      },
+      "hand/1/1_4.png": {
+        "bytes": 166238
+      },
+      "hand/1/2_4.png": {
+        "bytes": 12247
+      },
+      "hand/1/4_4.png": {
+        "bytes": 109555
+      },
+      "hand/1/5_4.png": {
+        "bytes": 462788
+      },
+      "hand/1/6_4.png": {
+        "bytes": 485401
+      },
+      "hand/1/7_4.png": {
+        "bytes": 491758
+      },
+      "hand/1/8_4.png": {
+        "bytes": 498794
+      },
+      "hand/1/9_4.png": {
+        "bytes": 243905
+      },
+      "hand/1/1_5.png": {
+        "bytes": 200340
+      },
+      "hand/1/2_5.png": {
+        "bytes": 199160
+      },
+      "hand/1/3_5.png": {
+        "bytes": 12063
+      },
+      "hand/1/4_5.png": {
+        "bytes": 336805
+      },
+      "hand/1/5_5.png": {
+        "bytes": 461052
+      },
+      "hand/1/6_5.png": {
+        "bytes": 474360
+      },
+      "hand/1/7_5.png": {
+        "bytes": 470654
+      },
+      "hand/1/8_5.png": {
+        "bytes": 466385
+      },
+      "hand/1/9_5.png": {
+        "bytes": 4107
+      },
+      "hand/1/0_6.png": {
+        "bytes": 66735
+      },
+      "hand/1/1_6.png": {
+        "bytes": 388950
+      },
+      "hand/1/2_6.png": {
+        "bytes": 460370
+      },
+      "hand/1/3_6.png": {
+        "bytes": 429030
+      },
+      "hand/1/4_6.png": {
+        "bytes": 472831
+      },
+      "hand/1/5_6.png": {
+        "bytes": 467598
+      },
+      "hand/1/6_6.png": {
+        "bytes": 451634
+      },
+      "hand/1/7_6.png": {
+        "bytes": 488845
+      },
+      "hand/1/8_6.png": {
+        "bytes": 180846
+      },
+      "hand/1/0_7.png": {
+        "bytes": 46746
+      },
+      "hand/1/1_7.png": {
+        "bytes": 375751
+      },
+      "hand/1/2_7.png": {
+        "bytes": 479765
+      },
+      "hand/1/3_7.png": {
+        "bytes": 468109
+      },
+      "hand/1/4_7.png": {
+        "bytes": 426990
+      },
+      "hand/1/5_7.png": {
+        "bytes": 434526
+      },
+      "hand/1/6_7.png": {
+        "bytes": 432341
+      },
+      "hand/1/7_7.png": {
+        "bytes": 443262
+      },
+      "hand/1/8_7.png": {
+        "bytes": 179053
+      },
+      "hand/1/0_8.png": {
+        "bytes": 35406
+      },
+      "hand/1/1_8.png": {
+        "bytes": 426885
+      },
+      "hand/1/2_8.png": {
+        "bytes": 448878
+      },
+      "hand/1/3_8.png": {
+        "bytes": 430519
+      },
+      "hand/1/4_8.png": {
+        "bytes": 397872
+      },
+      "hand/1/5_8.png": {
+        "bytes": 411317
+      },
+      "hand/1/6_8.png": {
+        "bytes": 420777
+      },
+      "hand/1/7_8.png": {
+        "bytes": 232199
+      },
+      "hand/1/8_8.png": {
+        "bytes": 19892
+      },
+      "hand/1/0_9.png": {
+        "bytes": 31388
+      },
+      "hand/1/1_9.png": {
+        "bytes": 400413
+      },
+      "hand/1/2_9.png": {
+        "bytes": 445549
+      },
+      "hand/1/3_9.png": {
+        "bytes": 479614
+      },
+      "hand/1/4_9.png": {
+        "bytes": 439757
+      },
+      "hand/1/5_9.png": {
+        "bytes": 394567
+      },
+      "hand/1/6_9.png": {
+        "bytes": 348554
+      },
+      "hand/1/7_9.png": {
+        "bytes": 1342
+      },
+      "hand/1/0_10.png": {
+        "bytes": 137634
+      },
+      "hand/1/1_10.png": {
+        "bytes": 398430
+      },
+      "hand/1/2_10.png": {
+        "bytes": 375572
+      },
+      "hand/1/3_10.png": {
+        "bytes": 382237
+      },
+      "hand/1/4_10.png": {
+        "bytes": 489337
+      },
+      "hand/1/5_10.png": {
+        "bytes": 472745
+      },
+      "hand/1/6_10.png": {
+        "bytes": 340328
+      },
+      "hand/1/7_10.png": {
+        "bytes": 9663
+      },
+      "hand/1/0_11.png": {
+        "bytes": 2470
+      },
+      "hand/1/1_11.png": {
+        "bytes": 181552
+      },
+      "hand/1/2_11.png": {
+        "bytes": 377100
+      },
+      "hand/1/3_11.png": {
+        "bytes": 352988
+      },
+      "hand/1/4_11.png": {
+        "bytes": 464889
+      },
+      "hand/1/5_11.png": {
+        "bytes": 458627
+      },
+      "hand/1/6_11.png": {
+        "bytes": 371236
+      },
+      "hand/1/7_11.png": {
+        "bytes": 4081
+      },
+      "hand/1/2_12.png": {
+        "bytes": 76054
+      },
+      "hand/1/3_12.png": {
+        "bytes": 345134
+      },
+      "hand/1/4_12.png": {
+        "bytes": 435579
+      },
+      "hand/1/5_12.png": {
+        "bytes": 398616
+      },
+      "hand/1/6_12.png": {
+        "bytes": 115727
+      },
+      "hand/1/3_13.png": {
+        "bytes": 13720
+      },
+      "hand/1/4_13.png": {
+        "bytes": 141407
+      },
+      "hand/1/5_13.png": {
+        "bytes": 74541
+      },
+      "hand/2/2_0.png": {
+        "bytes": 22453
+      },
+      "hand/2/3_0.png": {
+        "bytes": 280712
+      },
+      "hand/2/4_0.png": {
+        "bytes": 33916
+      },
+      "hand/2/0_1.png": {
+        "bytes": 8173
+      },
+      "hand/2/2_1.png": {
+        "bytes": 156763
+      },
+      "hand/2/3_1.png": {
+        "bytes": 475020
+      },
+      "hand/2/4_1.png": {
+        "bytes": 223564
+      },
+      "hand/2/0_2.png": {
+        "bytes": 102412
+      },
+      "hand/2/1_2.png": {
+        "bytes": 61782
+      },
+      "hand/2/2_2.png": {
+        "bytes": 367340
+      },
+      "hand/2/3_2.png": {
+        "bytes": 510757
+      },
+      "hand/2/4_2.png": {
+        "bytes": 324585
+      },
+      "hand/2/0_3.png": {
+        "bytes": 237603
+      },
+      "hand/2/1_3.png": {
+        "bytes": 489109
+      },
+      "hand/2/2_3.png": {
+        "bytes": 482536
+      },
+      "hand/2/3_3.png": {
+        "bytes": 486197
+      },
+      "hand/2/4_3.png": {
+        "bytes": 99068
+      },
+      "hand/2/0_4.png": {
+        "bytes": 242107
+      },
+      "hand/2/1_4.png": {
+        "bytes": 481187
+      },
+      "hand/2/2_4.png": {
+        "bytes": 441183
+      },
+      "hand/2/3_4.png": {
+        "bytes": 271788
+      },
+      "hand/2/4_4.png": {
+        "bytes": 6752
+      },
+      "hand/2/0_5.png": {
+        "bytes": 201125
+      },
+      "hand/2/1_5.png": {
+        "bytes": 411766
+      },
+      "hand/2/2_5.png": {
+        "bytes": 499304
+      },
+      "hand/2/3_5.png": {
+        "bytes": 195795
+      },
+      "hand/2/1_6.png": {
+        "bytes": 119577
+      },
+      "hand/2/2_6.png": {
+        "bytes": 283844
+      },
+      "hand/2/3_6.png": {
+        "bytes": 34280
+      },
+      "hand/3/0_0.png": {
+        "bytes": 3119
+      },
+      "hand/3/1_0.png": {
+        "bytes": 249972
+      },
+      "hand/3/2_0.png": {
+        "bytes": 71076
+      },
+      "hand/3/0_1.png": {
+        "bytes": 239829
+      },
+      "hand/3/1_1.png": {
+        "bytes": 487010
+      },
+      "hand/3/2_1.png": {
+        "bytes": 113950
+      },
+      "hand/3/0_2.png": {
+        "bytes": 357940
+      },
+      "hand/3/1_2.png": {
+        "bytes": 374507
+      },
+      "hand/3/2_2.png": {
+        "bytes": 2659
+      },
+      "hand/3/0_3.png": {
+        "bytes": 34355
+      },
+      "hand/3/1_3.png": {
+        "bytes": 86369
+      },
+      "hand/4/0_0.png": {
+        "bytes": 259774
+      },
+      "hand/4/1_0.png": {
+        "bytes": 51085
+      },
+      "hand/4/0_1.png": {
+        "bytes": 228732
+      },
+      "hand/4/1_1.png": {
+        "bytes": 1415
+      },
+      "hand/5/0_0.png": {
+        "bytes": 144383
       }
     }
   }

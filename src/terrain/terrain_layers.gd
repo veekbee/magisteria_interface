@@ -63,6 +63,24 @@ const DIR := "res://assets/terrain/layers/"
 const SLOPE := "slope"
 const ASPECT := "aspect"
 const DISTANCE := "distance_to_channel"
+## Height above nearest drainage, metres. Decision 985 conditions the detail
+## function's amplitude on this and on slope.
+##
+## ITS NODATA IS ALREADY A VALIDITY STATE and needed no new mechanism: absent
+## where the cell is outside the basin OR where a filled descent reaches no
+## channel -- the endorheic and edge-draining ground, 6,301,722 px. That is why
+## it writes 316 tiles at z=0 against the other three's 346: thirty tiles are
+## entirely outside any drainage and are absent rather than filled.
+##
+## SO ITS KEY SET IS A SUBSET AND NOT AN EQUAL. The three landed layers share
+## the DEM's own mask tile for tile; this one is narrower, legitimately, and a
+## consumer must read a NAN here as "no drainage relationship" rather than as a
+## fetch that did not happen.
+##
+## DERIVED AGAINST THE SAME ORDER-4 NETWORK `distance_to_channel` USES, so the
+## vertical and horizontal siblings cannot disagree about what a channel is --
+## which matters because the conditioning reads both.
+const HAND := "hand"
 
 ## Aspect's third state. The other two reuse `TilePyramid`'s absence names,
 ## because "no tile was ever written here" means the same thing about the same
@@ -258,6 +276,13 @@ func slope_degrees_at(wx: float, wy: float, z: int = 0) -> float:
 
 func distance_to_channel_m(wx: float, wy: float, z: int = 0) -> float:
     return value_at(DISTANCE, wx, wy, z)
+
+
+## Height above the nearest order-4 drainage, metres. NAN outside the basin and
+## NAN where a filled descent reaches no channel at all -- both are real states
+## and neither is a height.
+func hand_m(wx: float, wy: float, z: int = 0) -> float:
+    return value_at(HAND, wx, wy, z)
 
 
 ## A decoded tile's three raw channels. Empty dictionary for every absence.

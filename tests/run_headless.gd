@@ -167,6 +167,7 @@ func _initialize() -> void:
     test_a_withheld_node_draws_as_no_information_and_not_as_no_water()
     test_the_amplitude_field_has_no_step_on_a_class_boundary()
     test_the_blend_cannot_break_the_exactness_at_a_parent_node()
+    test_hand_conditions_the_amplitude_and_absence_is_full_strength()
     stage_the_main_scene()
 
 
@@ -7725,7 +7726,7 @@ func test_the_layers_ride_the_pyramids_own_grid() -> void:
             % [String.num(tl.origin_x, 6), String.num(tl.origin_y, 6),
                     String.num(tp.origin_x, 6), String.num(tp.origin_y, 6)])
     check(Array(tl.names()) == [TerrainLayers.ASPECT, TerrainLayers.DISTANCE,
-            TerrainLayers.SLOPE],
+            TerrainLayers.HAND, TerrainLayers.SLOPE],
             "the pin names %s" % str(Array(tl.names())))
     # z = 0 IS THE FINEST HERE TOO, with the same control as the pyramid's.
     check(tl.pixel_size_of(TerrainLayers.SLOPE, 0)
@@ -7737,27 +7738,43 @@ func test_the_layers_ride_the_pyramids_own_grid() -> void:
                     "%s z=%d is %s m and the pyramid's is %s m" % [str(name), z,
                             String.num(tl.pixel_size_of(str(name), z), 1),
                             String.num(tp.pixel_size_of(z), 1)])
-    # THE KEY SETS ARE IDENTICAL, which is the strong form: not "the same
-    # count" but the same tiles, so a layer never has ground where the height
-    # pyramid has none.
-    var missing := 0
+    # NO LAYER EVER KEYS GROUND THE HEIGHT PYRAMID DOES NOT -- the direction
+    # that matters, asserted for all four. A layer claiming ground the client
+    # is not drawing would have to be checked against the terrain at every
+    # read; the reverse is legitimate and is per layer.
     var extra := 0
-    for k in tp.keys:
-        for name in tl.names():
-            if not tl.keys.has("%s/%s" % [str(name), str(k)]):
-                missing += 1
     for k in tl.keys:
         var parts := str(k).split("/", true, 1)
         if parts.size() == 2 and not tp.keys.has(parts[1]):
             extra += 1
-    check(missing == 0, "%d height tiles have no layer tile beside them" % missing)
     check(extra == 0, "%d layer tiles name ground the height pyramid does not key" % extra)
+
+    # THE THREE THAT SHARE THE DEM'S MASK ARE EQUAL, TILE FOR TILE. `hand` is
+    # NOT, and that is the layer being honest rather than a gap: it is absent
+    # where a filled descent reaches no channel -- endorheic and edge-draining
+    # ground -- so thirty of its z=0 tiles were never written.
+    var equal_layers := [TerrainLayers.SLOPE, TerrainLayers.ASPECT, TerrainLayers.DISTANCE]
+    var missing := 0
+    var hand_short := 0
+    for k in tp.keys:
+        for name in equal_layers:
+            if not tl.keys.has("%s/%s" % [str(name), str(k)]):
+                missing += 1
+        if not tl.keys.has("%s/%s" % [TerrainLayers.HAND, str(k)]):
+            hand_short += 1
+    check(missing == 0, "%d height tiles have no layer tile beside them" % missing)
+    check(hand_short > 0, "hand keys every tile the pyramid does, so the drainage mask this "
+            + "layer is supposed to carry is not narrowing anything")
+    check(hand_short < tp.keys.size() / 4, "hand is missing %d of %d tiles, which is not a rim "
+            % [hand_short, tp.keys.size()] + "of undrained ground but most of the basin")
     var inv := tl.inventory()
-    check(int(inv["keyed"]) == tp.keys.size() * 3,
-            "%d layer tiles against %d height tiles times three"
-            % [int(inv["keyed"]), tp.keys.size()])
-    print("layers: %d tiles over %d layers on the pyramid's own grid, key sets identical, "
-            % [int(inv["keyed"]), tl.names().size()] + "%d present" % int(inv["present"]))
+    check(int(inv["keyed"]) == tp.keys.size() * 3 + (tp.keys.size() - hand_short),
+            "%d layer tiles against %d expected" % [int(inv["keyed"]),
+                    tp.keys.size() * 3 + (tp.keys.size() - hand_short)])
+    print("layers: hand keys %d of the pyramid's %d tiles -- %d are outside any drainage"
+            % [tp.keys.size() - hand_short, tp.keys.size(), hand_short])
+    print("layers: %d tiles over %d layers on the pyramid's own grid, %d present"
+            % [int(inv["keyed"]), tl.names().size(), int(inv["present"])])
 
 
 func test_aspect_is_read_through_its_validity_byte_and_never_around_it() -> void:
@@ -7933,14 +7950,20 @@ func test_the_classifier_reads_the_layers_and_can_reach_the_margin() -> void:
             "%s%% of the basin classified as margin, which is a threshold swallowing the map"
             % String.num(100.0 * float(seen.get("riparian_margin", 0)) / float(total), 1))
 
-    # A SLOPE AVERAGES AND A DISTANCE DOES NOT, and this is the control that
-    # found it -- after two wrong predictions, both of which this measurement
-    # refused.
+    # A SLOPE AVERAGES AND A FIELD MEASURED TO A FEATURE DOES NOT, and this is
+    # the control that found it -- after two wrong predictions, both of which
+    # this measurement refused.
     #
-    # The first version of this class read BOTH layers at the level nearest the
-    # parent spacing: "sample a quantity at the scale you are using it", which
-    # is right for slope and inverts for a distance transform. The mean of a
+    # An earlier version read BOTH layers at the level nearest the parent
+    # spacing: "sample a quantity at the scale you are using it", which is
+    # right for slope and inverts for a distance transform. The mean of a
     # distance field over 800 m is not the distance of anything.
+    #
+    # THE RULE OUTLIVED THE CALLER. Distance no longer conditions the margin --
+    # decision 985 names HAND and slope, and the membership moved -- but HAND
+    # is measured to the same network and is read at z=0 for exactly the reason
+    # measured here. So this stays as the evidence for that reading rather than
+    # being deleted with the caller it was written for.
     #
     # WHAT WAS PREDICTED AND WHAT WAS MEASURED. First guess: the margin would
     # be MORE reachable at a fine parent because a 150 m band cannot sit on an
@@ -7985,9 +8008,15 @@ func test_the_classifier_reads_the_layers_and_can_reach_the_margin() -> void:
     check(fine_hits > coarse_hits * 2, "the coarse read found %d margins against the fine "
             % coarse_hits + "read's %d, so it is not erasing the class and this reading is "
             % fine_hits + "wrong")
-    check(with_layers.classifier_source().contains("does not average"),
-            "the source line does not say why distance is read at a different level from "
-            + "slope: %s" % with_layers.classifier_source())
+    # THE SOURCE LINE HAS TO NAME BOTH LEVELS AND WHY THEY DIFFER. Which level
+    # a quantity is read at is a decision this class makes twice, differently,
+    # for reasons that are not symmetric -- so a report that gave one number
+    # would be hiding the half a reader would question.
+    var src := with_layers.classifier_source()
+    check(src.contains("z=3") and src.contains("z=0"),
+            "the source line does not name both levels: %s" % src)
+    check(src.contains("averages") and src.contains("finest"),
+            "the source line does not say why the two are read differently: %s" % src)
     print("layers: classified %d points -- %s -- from %s"
             % [total, str(seen), with_layers.classifier_source()])
     print("layers: over %d points a %s m margin test reads %d hits at z=0 and %d at z=3 -- "
@@ -8609,3 +8638,97 @@ func test_the_blend_cannot_break_the_exactness_at_a_parent_node() -> void:
             % [between, nodes] + "almost nothing")
     print("985: the blended term is exactly zero at all %d parent nodes and non-zero at %d "
             % [nodes, between] + "of %d midpoints" % nodes)
+
+
+func test_hand_conditions_the_amplitude_and_absence_is_full_strength() -> void:
+    """985's SECOND CONDITIONING INPUT, LIVE.
+
+    `taper_at` returned 1.0 everywhere for as long as no HAND raster was
+    vendored, and said so. The layer landed and the mechanism that was wired
+    rather than waited for plugged in without being rebuilt -- which is the
+    whole reason it was wired before the data existed.
+
+    THE ABSENCE RULE IS THE PART WORTH ASSERTING. HAND is NAN outside the basin
+    AND where a filled descent reaches no channel at all -- 6.3 million pixels
+    of endorheic and edge-draining ground. Undrained upland is not a floodplain,
+    so absent HAND is FULL strength. Defaulting the other way would have
+    flattened all of it on the strength of a missing value, and it would have
+    looked like a working taper."""
+    var hf := heightfield()
+    var tl := terrain_layers()
+    var df := DetailField.load_from(hf, DetailField.ROWS_PATH, 0.0, tl)
+    check(df.is_loaded(), "the detail rows did not load")
+    if not df.is_loaded() or not tl.is_loaded():
+        print("985: no layers fetched -- skipping, and saying so")
+        return
+    check(tl.has(TerrainLayers.HAND), "the layers pin carries no hand layer")
+    if not tl.has(TerrainLayers.HAND):
+        return
+    check(df.taper_source().contains("HAND at z=0"),
+            "the taper does not say it is reading HAND: %s" % df.taper_source())
+
+    var h: Dictionary = df.rows["hand_taper"]
+    var floor_fraction := float(h["floor_fraction"])
+    var full_above := float(h["full_strength_above_m"])
+    check(floor_fraction > 0.0 and floor_fraction < 1.0,
+            "the floor fraction is %s, so the taper either does nothing or erases the row"
+            % String.num(floor_fraction, 3))
+
+    # SWEPT OVER REAL GROUND, and bucketed by the HAND the layer actually
+    # reports -- so this measures the field and not the arithmetic.
+    var at_drainage := 0
+    var high_up := 0
+    var absent := 0
+    var worst_low := 0.0
+    var worst_high := 1.0
+    var out_of_range := 0
+    var seen := 0
+    for ty in range(300, 1200, 17):
+        for tx in range(200, 900, 19):
+            var w := hf.texel_to_world(float(tx), float(ty))
+            if is_nan(hf.height_at_world(w.x, w.y)):
+                continue
+            var hand := df.hand_m(w)
+            var taper := df.taper_at(w)
+            seen += 1
+            if taper < floor_fraction - 1.0e-9 or taper > 1.0 + 1.0e-9:
+                out_of_range += 1
+            if is_nan(hand):
+                absent += 1
+                # THE RULE: no drainage relationship is full strength.
+                if taper != 1.0:
+                    worst_high = minf(worst_high, taper)
+            elif hand <= 1.0:
+                at_drainage += 1
+                worst_low = maxf(worst_low, taper)
+            elif hand >= full_above:
+                high_up += 1
+                if taper != 1.0:
+                    worst_high = minf(worst_high, taper)
+    check(seen > 500, "only %d places were swept" % seen)
+    check(out_of_range == 0, "%d tapers fell outside [floor, 1]" % out_of_range)
+    check(at_drainage > 0, "no sample sat within a metre of its drainage, so the suppressed "
+            + "end of the taper is untested")
+    check(high_up > 0, "no sample sat above the full-strength height")
+    check(worst_low < floor_fraction + 0.2,
+            "at the drainage the taper reaches only %s, against a floor of %s"
+            % [String.num(worst_low, 3), String.num(floor_fraction, 3)])
+    check(worst_high == 1.0, "a sample above the full-strength height, or with no drainage at "
+            + "all, was tapered to %s" % String.num(worst_high, 4))
+    check(absent > 0, "no sample lacked a HAND value, so the absence rule is untested here")
+
+    # MONOTONE AND SATURATING, driven directly so every height is exercised
+    # rather than only the ones this basin has.
+    var prev := -1.0
+    var jumps := 0
+    for i in 2000:
+        var probe := float(i) * 0.05
+        var t := floor_fraction + (1.0 - floor_fraction) * DetailField._ramp(
+                probe, 0.5 * full_above, 0.5 * full_above)
+        if t < prev - 1.0e-12:
+            jumps += 1
+        prev = t
+    check(jumps == 0, "the taper is not monotone in HAND (%d reversals)" % jumps)
+    print("985: taper live on HAND -- %d samples, %d at the drainage (worst %s), %d above %s m, "
+            % [seen, at_drainage, String.num(worst_low, 2), high_up, String.num(full_above, 0)]
+            + "%d with no drainage at all and all of those at full strength" % absent)

@@ -203,7 +203,7 @@
     32.0,
     64.0
   ],
-  "measured_at_utc": "2026-09-10T22:06:35",
+  "measured_at_utc": "2026-09-10T22:44:59",
   "measurement": "variogram of the synthesized detail surface, per landform",
   "parameters_are": "PLACEHOLDER rows from assets/detail/detail_rows.json, every value invented. What is checked is that the surface delivers what the rows declare; when measured targets land they drop into the same comparison.",
   "parent_spacing_m": 1000.0,
