@@ -30,14 +30,14 @@ extends RefCounted
 ##   the residence key, which 978 rejects as doing A-side a resolution that is
 ##   already done B-side.
 ##
-##   THE CELL'S OWN YEAR STILL DOES NOT, AND NOW HAS A ROW COMING (977). The
-##   far-field tint mixes phenology by where a cell sits in ITS OWN yearly
+##   THE CELL'S OWN YEAR STILL DOES NOT, AND THE ROW IT NEEDS IS WRITTEN (977).
+##   The far-field tint mixes phenology by where a cell sits in ITS OWN yearly
 ##   range, which needs the whole year -- 365 days of a row, for every cell, to
 ##   draw one day. No bundle carries that: a moment is a moment. 977 rules
-##   seasonal position across the wire as `band.phenology_index`; it is a
-##   registry row and does not exist yet, so the tint stays on the fixture and
-##   outside the transducer subtree until it arrives. Not stubbed: a stub here
-##   would be this repo authoring a row it does not own.
+##   seasonal position across the wire as `band.phenology_index`, and it is
+##   AUTHORED upstream and carried by no artefact here. So the tint waits on
+##   transport rather than on a ruling. Not stubbed: a stub here would be this
+##   repo authoring a row it does not own.
 
 const KIND := "fixture_passthrough"
 

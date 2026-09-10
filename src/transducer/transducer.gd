@@ -30,9 +30,11 @@ extends RefCounted
 ##
 ##     the far-field tint reads a cell's WHOLE YEAR to place one day in its
 ##     seasonal range. A bundle is one moment. Decision 977 rules seasonal
-##     position across the wire as `band.phenology_index`; it is a registry row
-##     and does not exist yet, so the tint stays outside until it arrives. Not
-##     stubbed -- a stub would be this repo authoring a row it does not own.
+##     position across the wire as `band.phenology_index`, which is AUTHORED in
+##     the producing registry and not in any artefact vendored here -- so what
+##     stands between the tint and this subtree is transport, not design. It
+##     stays outside until the row is carried. Not stubbed: a stub would be
+##     this repo authoring a row it does not own.
 ##
 ##     the vegetation scatter reads the same year through the tint's rule, and
 ##     additionally reads the fixture manifest for its quantisation bounds.
