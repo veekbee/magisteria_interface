@@ -134,8 +134,27 @@ static func load_from(pin_path: String = PIN_PATH) -> TerrainLayers:
     return tl
 
 
+## Whether the PIN parsed and names something. NOT whether the bytes are here.
 func is_loaded() -> bool:
     return not layers.is_empty() and not keys.is_empty()
+
+
+## WHETHER ANY OF THE BYTES ARE ACTUALLY ON THIS DISK.
+##
+## SEPARATE FROM `is_loaded` BECAUSE THE PIN IS COMMITTED AND THE TILES ARE
+## NOT. A clone always has the manifest, so `is_loaded` is true in a tree with
+## none of the 437 MB in it -- which is the correct answer to "does this client
+## know what the layers are" and the wrong one to "can I read a value". Two
+## rounds of tests asked the first while meaning the second, passed locally
+## where the bytes exist, and failed in CI where they do not.
+##
+## A caller that wants a value asks this; a caller that wants to report what
+## the artefact IS asks `is_loaded`.
+func is_fetched() -> bool:
+    for k in keys:
+        if FileAccess.file_exists(DIR + str(k)):
+            return true
+    return false
 
 
 func names() -> PackedStringArray:

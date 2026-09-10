@@ -8659,10 +8659,15 @@ func test_hand_conditions_the_amplitude_and_absence_is_full_strength() -> void:
     var df := DetailField.load_from(hf, DetailField.ROWS_PATH, 0.0, tl)
     check(df.is_loaded(), "the detail rows did not load")
     if not df.is_loaded() or not tl.is_loaded():
-        print("985: no layers fetched -- skipping, and saying so")
+        print("985: no layer pin -- skipping, and saying so")
         return
+    # THE PIN IS COMMITTED AND THE BYTES ARE NOT, so `is_loaded` is true in a
+    # clone with none of them. Asking it and meaning "can I read a value" is
+    # how the last two rounds of layer tests failed CI while passing here.
     check(tl.has(TerrainLayers.HAND), "the layers pin carries no hand layer")
-    if not tl.has(TerrainLayers.HAND):
+    if not tl.has(TerrainLayers.HAND) or not tl.is_fetched():
+        print("985: the layer pin is here and the tiles are not -- skipping the read half, "
+                + "and saying so")
         return
     check(df.taper_source().contains("HAND at z=0"),
             "the taper does not say it is reading HAND: %s" % df.taper_source())
