@@ -429,7 +429,10 @@ func set_producer(kind: String) -> Dictionary:
 func bundle_at(window: String, day: int) -> PerceptBundle:
     if producer_kind == MockProducer.KIND and mock != null:
         return mock.bundle_for(window, day, observer, cell_centres())
-    return producer.bundle_for(window, day, observer)
+    # NULL RATHER THAN A CRASH. `bind_fields` is what makes a producer, and a
+    # caller reaching for a moment before then is asking about a world that has
+    # not been opened -- which is a sentence a consumer can print.
+    return null if producer == null else producer.bundle_for(window, day, observer)
 
 
 ## Paint one row-day onto the terrain. Bounds come from the CONTRACT.
@@ -525,17 +528,22 @@ func _bounds_for(row: String) -> Vector2:
 
 ## M3: paint streamflow on the flowlines for one day, and report what the
 ## provisional display mapping did with it.
+## THROUGH A BUNDLE, NOT THE FIXTURE (978). The drape asks for a moment's
+## percept and looks its row up by the node id already sitting on the geometry.
+## Nothing here reads `node.streamflow` out of the artefact and hands it over,
+## which is what this method did until node rows had a key axis to ride.
 func show_flow(window: String, day: int) -> Dictionary:
-    if drape == null or fixture == null:
-        return {"ok": false, "why": "no drape or fixture"}
-    var vals := fixture.day_values(window, "node.streamflow", day)
-    if vals.is_empty():
-        return {"ok": false, "why": "no streamflow for %s day %d" % [window, day]}
+    if drape == null:
+        return {"ok": false, "why": "no drape"}
+    var b := bundle_at(window, day)
+    if b == null:
+        return {"ok": false, "why": "no producer is bound, so there is no moment to draw"}
     if _flow_display == null:
         _flow_display = FlowDisplay.new()
-    var m := drape.paint_flow(vals, fixture, _flow_display)
+    var m := drape.paint_flow(b, _flow_display)
     if m == null:
-        return {"ok": false, "why": "nothing to paint"}
+        var why := drape.why_refused()
+        return {"ok": false, "why": why if why != "" else "nothing to paint"}
     if _flow_mi == null:
         _flow_mi = MeshInstance3D.new()
         _flow_mi.name = "Flow"

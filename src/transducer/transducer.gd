@@ -37,11 +37,12 @@ extends RefCounted
 ##     the vegetation scatter reads the same year through the tint's rule, and
 ##     additionally reads the fixture manifest for its quantisation bounds.
 ##
-##     the flow drape reads `node.streamflow`. Decision 978 gives it somewhere
-##     to be: the fields region carries one key axis per lattice and node rows
-##     ride the node key. So this entry has changed KIND -- it is no longer a
-##     row with nowhere to go, it is work not yet done -- and it stays on the
-##     list until the drape is built against a bundle rather than the fixture.
+##     -- the flow drape has LEFT this list. It read `node.streamflow`, which
+##     had no key axis to ride until decision 978 gave node rows their own; it
+##     is inside the subtree now and paints from a bundle. It is recorded here
+##     rather than deleted because it is the only entry that ever left, and how
+##     an exclusion ends is worth as much as why it began: the row did not
+##     become perceivable, the wire acquired somewhere to put it.
 ##
 ##     the dev UI -- the scrubber, the series plot, the probe panel -- reads
 ##     the artefact ON PURPOSE and is not transducer code. `CellProbe` is the

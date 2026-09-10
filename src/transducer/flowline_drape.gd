@@ -3,6 +3,20 @@ extends RefCounted
 
 ## Flowlines draped onto the terrain surface. M1; M3 lights them by `comid`.
 ##
+## IN THE TRANSDUCER SUBTREE, AND IT WAS THE FILE THAT COULD NOT BE. This was
+## the last of `transducer.gd`'s three exclusions with a reason rather than a
+## backlog behind it: `node.streamflow` is indexed by river node, channel 1
+## carried one key axis, and there was nowhere on the wire to put it. Decision
+## 978 gives node rows their own key axis, so the drape reads a bundle now and
+## the exclusion is gone rather than explained.
+##
+## THE GEOMETRY IS NOT THE PERCEPT, and that is why the whole file moves rather
+## than splitting. `build` drapes the flowline export -- the map, which the
+## client already holds and draws at M1 -- and reaches for no artefact of its
+## own. What crosses the seam is `paint_flow`, which turns world state into
+## colour. §20.4.5 puts it exactly this way: the join is an identity against
+## geometry the client already holds rather than a projection anybody computes.
+##
 ## Each reach keeps its NHD `comid` as the mesh's name, because M3 keys
 ## streamflow onto it and a drawn line with no key can never be lit. Reaches
 ## are grouped into ONE mesh per stream order rather than one node per reach:
@@ -28,6 +42,7 @@ var flow_mesh: ArrayMesh = null
 var _flow_verts: PackedVector3Array = PackedVector3Array()
 var _reach_node: PackedStringArray = PackedStringArray()   ## per reach
 var _reach_span: PackedInt32Array = PackedInt32Array()     ## start,count pairs
+var _why_refused: String = ""
 
 
 func build(reaches: Array, hf: Heightfield, tm: TerrainMesh) -> Dictionary:
@@ -104,24 +119,56 @@ func build(reaches: Array, hf: Heightfield, tm: TerrainMesh) -> Dictionary:
     return order_meshes
 
 
-## Repaint the flow mesh for one day. `flow_of_node` is looked up per reach;
-## a reach with no node is drawn as NO_FLOW rather than skipped -- the channel
-## exists on the ground whatever the fixture can say about it, and hiding it
-## would make the map disagree with M1's.
-func paint_flow(values: PackedFloat64Array, fl: FixtureLoader,
-                disp: FlowDisplay) -> ArrayMesh:
+## The row this drape draws. Named once, here, because it is the one thing
+## about the wire this file knows.
+const ROW := "node.streamflow"
+
+
+## Repaint the flow mesh for one moment, from a bundle.
+##
+## THE JOIN IS AN IDENTITY AND THAT IS THE WHOLE POINT. A reach carries a
+## `node` from the flowline export; the bundle's node axis is keyed by the same
+## HUC10 ids. So this looks a value up by the string already sitting on the
+## geometry -- no ordinal is computed here, no residence key is split, and
+## nothing about the fixture's storage order reaches this file. Decision 978
+## rejected client-side reconstruction of the node precisely so that this
+## method could be a lookup.
+##
+## A REACH IS NEVER SKIPPED. The channel exists on the ground whatever the wire
+## can say about it, and hiding it would make this map disagree with M1's. What
+## changed is the COLOUR: a reach nothing is known about is drawn NO_INFO and
+## never NO_FLOW, because the second is a statement about the world. Under the
+## passthrough the two look the same because nothing is withheld; under a
+## producer that gives an observer what they have earned, everything beyond the
+## earned horizon takes this path, and a basin of dry rivers is what it would
+## have looked like.
+func paint_flow(bundle: PerceptBundle, disp: FlowDisplay) -> ArrayMesh:
     if _flow_verts.is_empty():
         return null
+    if bundle == null:
+        return null
     disp.reset_counts()
+    # THE ROW HAS TO BE ON THE LATTICE IT CLAIMS. A `node.streamflow` filed on
+    # the band lattice would be 5,684 values under a node key and every lookup
+    # would miss -- silently, as an all-NO_INFO basin. Better to draw nothing
+    # and say why.
+    var lattice := bundle.lattice_of(ROW)
+    if lattice != "node":
+        _why_refused = ("the bundle carries no %s on the node lattice (it says `%s`), so "
+                % [ROW, lattice] + "there is nothing to paint these reaches with")
+        return null
+    _why_refused = ""
     var colours := PackedColorArray()
     colours.resize(_flow_verts.size())
     for i in _reach_node.size():
         var node := _reach_node[i]
-        var idx := -1 if node == "" else fl.node_index_of(node)
-        var v := NAN
-        if idx >= 0 and idx < values.size():
-            v = values[idx]
-        var col := disp.colour_for(v)
+        var col: Color
+        if node == "":
+            col = disp.colour_for_absence(FlowDisplay.NO_NODE)
+        elif bundle.node_index_of(node) < 0:
+            col = disp.colour_for_absence(FlowDisplay.NOT_KEYED)
+        else:
+            col = disp.colour_for(bundle.node_value_at(node, ROW))
         var start := _reach_span[i * 2]
         var count := _reach_span[i * 2 + 1]
         for k in count:
@@ -133,3 +180,8 @@ func paint_flow(values: PackedFloat64Array, fl: FixtureLoader,
     flow_mesh = ArrayMesh.new()
     flow_mesh.add_surface_from_arrays(Mesh.PRIMITIVE_LINES, arrays)
     return flow_mesh
+
+
+## Why the last paint produced nothing, when it did.
+func why_refused() -> String:
+    return _why_refused

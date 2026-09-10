@@ -163,6 +163,8 @@ func _initialize() -> void:
     test_the_schema_refuses_an_undeclared_name_at_every_level()
     test_no_consumer_paints_one_lattices_row_through_the_others_join()
     test_probe_row_reads_a_node_row_through_the_residence_layers_own_node_id()
+    test_the_flow_drape_paints_from_a_bundle_and_never_from_the_fixture()
+    test_a_withheld_node_draws_as_no_information_and_not_as_no_water()
     stage_the_main_scene()
 
 
@@ -1175,6 +1177,26 @@ func test_the_flow_mapping_distinguishes_zero_from_below_scale() -> void:
     var desc := d.describe()
     check(bool(desc["provisional"]), "the mapping does not declare itself provisional")
     check(str(desc["why_provisional"]).length() > 60, "no reason given for provisionality")
+
+    # AND THE FOURTH STATE, WHICH THIS FILE WAS DRAWING AS THE FIRST.
+    # `colour_for(NAN)` returned NO_FLOW: a reach nothing was known about was
+    # drawn as a channel with no water in it, in a file whose whole subject is
+    # not doing that. Harmless against a fixture that answers for every node;
+    # the plausible-zero in its purest form against a producer that withholds.
+    var unknown := d.colour_for_absence(FlowDisplay.NOT_KEYED)
+    check(not unknown.is_equal_approx(zero),
+            "nothing-known and no-water render identically, which is the plausible zero this "
+            + "display exists to avoid")
+    check(not unknown.is_equal_approx(mid), "nothing-known renders as a value on the ramp")
+    check(d.colour_for(NAN).is_equal_approx(unknown),
+            "a NAN value renders as something other than nothing-known")
+    # THREE REASONS, COUNTED APART. One colour is a display decision; one count
+    # would lose the only distinction that matters later -- a defect in the
+    # map, the percept working, and the world.
+    d.colour_for_absence(FlowDisplay.NO_NODE)
+    check(d.n_not_keyed == 1 and d.n_no_node == 1 and d.n_nodata == 1,
+            "the three ways of knowing nothing are not counted apart: %s"
+            % str(d.describe()["counts"]))
 
 
 func test_quantisation_uses_the_realised_range_not_the_contracts() -> void:
@@ -8237,4 +8259,143 @@ func test_probe_row_reads_a_node_row_through_the_residence_layers_own_node_id() 
     check(not band_text.contains("ordinal"), "a band row was read through the node axis")
     print("probe.row: %s" % str(lines[1] if lines.size() > 1 else "no value line"))
     console.free()
+    v.queue_free()
+
+
+func test_the_flow_drape_paints_from_a_bundle_and_never_from_the_fixture() -> void:
+    """ITEM 3: THE EXCLUSION THAT LEFT THE LIST.
+
+    `node.streamflow` is indexed by river node, channel 1 carried one key axis,
+    and the drape read the artefact because there was nowhere on the wire to
+    put the row. 978 gives node rows their own axis, so this paints from a
+    bundle and the join is an identity: a reach carries a `node` from the
+    flowline export and the bundle's node axis is keyed by the same HUC10 ids.
+
+    WHAT IS ASSERTED IS THE JOIN AND NOT THE PLUMBING. Every reach that has a
+    node and is keyed takes the value the bundle carries for that node, checked
+    against the bundle itself rather than against the fixture -- a drape that
+    painted the right number through the wrong ordinal would look identical
+    from outside."""
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    var r := v.show_flow("deepest_winter", 45)
+    check(bool(r.get("ok", false)), "the drape would not paint from a bundle: %s"
+            % str(r.get("why", "?")))
+    if not bool(r.get("ok", false)):
+        v.queue_free()
+        return
+    var counts: Dictionary = r["counts"]
+    check(int(r["known"]) > 20000, "only %d reaches were painted from a value" % int(r["known"]))
+    check(int(counts["in_scale"]) > 0 and int(counts["zero"]) > 0,
+            "the basin came out all one state: %s" % str(counts))
+
+    # THE JOIN, SPOT-CHECKED AGAINST THE BUNDLE. Not against the fixture: what
+    # is being checked is that the drape reads the wire, so the wire is the
+    # authority the comparison uses.
+    var b := v.bundle_at("deepest_winter", 45)
+    var flow := v.fixture.day_values("deepest_winter", "node.streamflow", 45)
+    var checked := 0
+    for huc in [b.node_keys[0], b.node_keys[500], b.node_keys[b.node_keys.size() - 1]]:
+        var mine := b.node_value_at(str(huc), FlowlineDrape.ROW)
+        var theirs := flow[v.fixture.node_index_of(str(huc))]
+        if is_nan(theirs):
+            check(is_nan(mine), "node %s is nodata and the bundle carries %f" % [str(huc), mine])
+        else:
+            check(mine == theirs, "node %s reads %s on the wire and %s in the fixture"
+                    % [str(huc), String.num(mine, 9), String.num(theirs, 9)])
+        checked += 1
+    check(checked == 3, "only %d nodes were spot-checked" % checked)
+
+    # THE DRAPE IS IN THE SUBTREE AND THE SUBTREE'S RULE HOLDS FOR IT.
+    check(FlowlineDrape.new().get_script().resource_path.begins_with(Transducer.SUBTREE),
+            "the flow drape is not inside the transducer subtree")
+    print("flow: %d reaches known, %d not -- %s" % [int(r["known"]), int(r["unknown"]),
+            str(counts)])
+    v.queue_free()
+
+
+func test_a_withheld_node_draws_as_no_information_and_not_as_no_water() -> void:
+    """THE DEFECT THIS ITEM ACTUALLY FIXES, DEMONSTRATED ON A WITHHOLDING WIRE.
+
+    Against the passthrough nothing is withheld, so the old code and the new
+    one draw the same basin and no test over the fixture could tell them apart.
+    The interesting bundle is one that carries FEWER nodes than the map has
+    reaches -- which is what an earned horizon is -- and the old drape drew
+    every one of those as NO_FLOW: a dry river, which is a statement about the
+    world rather than about what an observer was given.
+
+    So this builds that bundle by truncating the node axis, which is the
+    cheapest honest stand-in for a producer that withholds, and asserts the
+    colour."""
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    var full := v.bundle_at("deepest_winter", 45)
+    check(full != null and not full.node_keys.is_empty(), "no bundle to truncate")
+    if full == null:
+        v.queue_free()
+        return
+
+    # A WIRE THAT CARRIES A TENTH OF THE BASIN'S NODES.
+    var narrow := PerceptBundle.from_dict(full.to_dict())
+    var kept := PackedStringArray()
+    var keep := int(full.node_keys.size() / 10)
+    for i in keep:
+        kept.append(full.node_keys[i])
+    narrow.node_keys = kept
+    var row: Dictionary = narrow.rows[FlowlineDrape.ROW]
+    var trimmed := PackedFloat64Array()
+    for i in keep:
+        trimmed.append((row["values"][0] as PackedFloat64Array)[i])
+    row["values"] = [trimmed]
+    narrow.rows[FlowlineDrape.ROW] = row
+    check(bool(narrow.check()["ok"]), "the narrowed bundle does not check: %s"
+            % str(narrow.check()["why"]))
+
+    var disp := FlowDisplay.new()
+    var mesh := v.drape.paint_flow(narrow, disp)
+    check(mesh != null, "the narrowed bundle painted nothing: %s" % v.drape.why_refused())
+    var d := disp.describe()
+    var counts: Dictionary = d["counts"]
+    check(int(counts["not_keyed"]) > 1000,
+            "only %d reaches fell outside the narrowed wire, so this is not testing a "
+            % int(counts["not_keyed"]) + "withholding producer")
+    check(int(d["known"]) > 0, "the narrowed wire painted no values at all")
+    # THE WHOLE POINT: those reaches are NOT drawn as no water -- and "not the
+    # same colour" is too weak a claim to be worth making. Two greys an eighth
+    # of a step apart would pass an inequality and be one colour on screen, so
+    # what is asserted is a SEPARATION, and a generous one because this is a
+    # legibility claim being made without a photograph.
+    var sep := (absf(FlowDisplay.NO_INFO.r - FlowDisplay.NO_FLOW.r)
+            + absf(FlowDisplay.NO_INFO.g - FlowDisplay.NO_FLOW.g)
+            + absf(FlowDisplay.NO_INFO.b - FlowDisplay.NO_FLOW.b))
+    check(sep > 0.3, "nothing-known and no-water are %s apart in total channel distance, "
+            % String.num(sep, 3) + "which is not a difference a viewer would see")
+    # AND ON THE OTHER SIDE OF THE RAMP TOO: NO_INFO must not read as a value.
+    for probe in [0.0, 1e-9, 0.001, 1.0, 900.0]:
+        var c := FlowDisplay.new().colour_for(float(probe))
+        check(not c.is_equal_approx(FlowDisplay.NO_INFO),
+                "a flow of %s renders as nothing-known" % String.num(float(probe), 9))
+    # AND THE COUNTS SEPARATE THE MAP'S GAP FROM THE WIRE'S.
+    var wide := FlowDisplay.new()
+    v.drape.paint_flow(full, wide)
+    check(wide.n_not_keyed == 0, "%d reaches are unkeyed even on the full wire, so the "
+            % wide.n_not_keyed + "flowline export names nodes the fixture's axis does not")
+    check(wide.n_no_node == disp.n_no_node,
+            "the map's own gap moved when the wire narrowed: %d against %d"
+            % [wide.n_no_node, disp.n_no_node])
+
+    # AND A ROW ON THE WRONG LATTICE REFUSES RATHER THAN PAINTING AN EMPTY MAP.
+    var wrong := PerceptBundle.from_dict(full.to_dict())
+    (wrong.rows[FlowlineDrape.ROW] as Dictionary)["lattice"] = "band"
+    check(v.drape.paint_flow(wrong, FlowDisplay.new()) == null,
+            "a streamflow row filed on the band lattice painted anyway")
+    check(v.drape.why_refused().contains("node lattice"),
+            "the refusal does not say what was wrong: %s" % v.drape.why_refused())
+    print("flow: a wire carrying %d of %d nodes leaves %d reaches NO_INFO, %d NO_NODE, and "
+            % [keep, full.node_keys.size(), int(counts["not_keyed"]), int(counts["no_node"])]
+            + "%d still painted from a value" % int(d["known"]))
     v.queue_free()
