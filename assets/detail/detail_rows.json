@@ -63,11 +63,15 @@
     "_FAKE": "thresholds invented, and only the thresholds. Slope and distance-to-channel are now REAL: they are vendored at assets/terrain/layers/ (source data/terrain_layers_output/, reprojected onto the tile grid by the producer) and DetailField reads them at the level nearest its own parent spacing. A clone without them falls back to the lattice's own gradient and classifier_source() says which was used.",
     "_riparian_was_unreachable": "until the distance layer arrived, `riparian_margin` was a row nothing could return -- the only field available was slope re-derived from a kilometre lattice, and there was no channel network to measure distance from. It is tested FIRST in the classifier now, because a margin on a 3-degree slope is a margin and asking about slope first would file it as `floor` and never reach the question.",
     "from": "slope and distance-to-channel from assets/terrain/layers/ where fetched, sampled at the level nearest the parent spacing; the parent lattice's own gradient otherwise",
+    "_these_are_centres_not_cuts": "decision 985 rejects a hard landform classifier conditioning amplitude at runtime -- an amplitude step on a class boundary is a rendered seam on a line no landform owns -- and convention 1 says the same generally. So each threshold below is the CENTRE of a smoothstep of width `blend_deg`, and DetailField.weights_at returns a mixture that sums to exactly 1. Calibration still stratifies by landform; only the runtime blends.",
     "playa_below_slope_deg": 0.6,
     "floor_below_slope_deg": 4.0,
     "slope_below_slope_deg": 22.0,
     "talus_above_slope_deg": 22.0,
-    "riparian_within_m": 150.0
+    "riparian_within_m": 150.0,
+    "blend_deg": 0.4,
+    "riparian_blend_m": 60.0,
+    "_FAKE_blends": "both blend widths are invented, like every other number here. What is real is that they are NON-ZERO and narrower than the gaps between the centres they sit on: a width wider than a band would make two boundaries overlap and the compact support that keeps this cheap would be lost. A calibration replaces them with widths measured from how fast the strata actually give way to each other."
   },
   "hand_taper": {
     "_FAKE": "the taper's shape and both constants are invented; the MECHANISM is \u00a72b's and is the lead one for the water margin.",

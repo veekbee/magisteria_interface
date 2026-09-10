@@ -165,6 +165,8 @@ func _initialize() -> void:
     test_probe_row_reads_a_node_row_through_the_residence_layers_own_node_id()
     test_the_flow_drape_paints_from_a_bundle_and_never_from_the_fixture()
     test_a_withheld_node_draws_as_no_information_and_not_as_no_water()
+    test_the_amplitude_field_has_no_step_on_a_class_boundary()
+    test_the_blend_cannot_break_the_exactness_at_a_parent_node()
     stage_the_main_scene()
 
 
@@ -8440,3 +8442,170 @@ func test_a_withheld_node_draws_as_no_information_and_not_as_no_water() -> void:
             % [keep, full.node_keys.size(), int(counts["not_keyed"]), int(counts["no_node"])]
             + "%d still painted from a value" % int(d["known"]))
     v.queue_free()
+
+
+# ============================================================================
+# Decision 985: runtime conditions continuously, calibration stratifies.
+# ============================================================================
+
+func test_the_amplitude_field_has_no_step_on_a_class_boundary() -> void:
+    """985 REJECTS A HARD LANDFORM CLASSIFIER CONDITIONING AMPLITUDE AT RUNTIME,
+    and this class was one: `classify` picked a class and the class picked an
+    amplitude, so every threshold in the rows was a rendered seam -- a crease
+    across ground that does not change, on a line no landform owns. Convention
+    1 says the same generally: a hard threshold anywhere is a bug.
+
+    The chain is swept in SLOPE rather than through world positions, because
+    the property is a fact about the arithmetic and driving it through the
+    basin would exercise only the slopes this basin happens to have.
+
+    The control is the step the old form had. Without it, 'the field is
+    continuous' is a claim about a number nobody has compared to anything."""
+    var df := detail_field()
+    check(df.is_loaded(), "the detail rows did not load")
+    if not df.is_loaded():
+        return
+    var c: Dictionary = df.rows["classifier"]
+    var centres := [float(c["playa_below_slope_deg"]), float(c["floor_below_slope_deg"]),
+            float(c["slope_below_slope_deg"])]
+    check(float(c.get("blend_deg", 0.0)) > 0.0,
+            "the rows declare no blend width, so every centre is still a cut")
+
+    # A PARTITION OF UNITY, SWEPT ACROSS EVERY BOUNDARY.
+    var worst_sum := 0.0
+    var negative := 0
+    var support := {}
+    var samples := 0
+    for i in 9000:
+        var deg := float(i) * 0.005          # 0 .. 45 degrees
+        var wts := df.slope_weights(deg)
+        var sum := 0.0
+        var live := 0
+        for name in wts:
+            var v := float(wts[name])
+            if v < 0.0:
+                negative += 1
+            sum += v
+            if v != 0.0:
+                live += 1
+        worst_sum = maxf(worst_sum, absf(sum - 1.0))
+        support[live] = int(support.get(live, 0)) + 1
+        samples += 1
+    check(negative == 0, "%d weights came out negative" % negative)
+    check(worst_sum < 1.0e-12, "the weights sum to 1 only within %s" % String.num(worst_sum, 15))
+
+    # CONTINUITY IS NOT "THE STEP IS SMALL", AND MEASURING IT THAT WAY IS WHAT
+    # THIS TEST GOT WRONG FIRST.
+    #
+    # The blended amplitude runs from 0.04 m to 1.6 m across a 0.4-degree
+    # blend, so its slope is about 3.9 m per degree and ANY sweep reports a
+    # step: 0.0197 m at 0.005-degree spacing, which is the derivative and not a
+    # discontinuity. A threshold on that number would have been a threshold on
+    # the sampling rate -- the same mistake the underfoot criterion made
+    # against a raster, one field over.
+    #
+    # What separates a continuous function from a stepped one is that HALVING
+    # THE SPACING HALVES THE STEP. A class boundary's jump does not shrink at
+    # all, because it is a jump.
+    var fine_h := 0.0005
+    var coarse_h := 0.001
+    var blend_fine := _worst_amplitude_step(df, fine_h, false)
+    var blend_coarse := _worst_amplitude_step(df, coarse_h, false)
+    var hard_fine := _worst_amplitude_step(df, fine_h, true)
+    var hard_coarse := _worst_amplitude_step(df, coarse_h, true)
+    var blend_ratio: float = blend_coarse / maxf(blend_fine, 1.0e-12)
+    var hard_ratio: float = hard_coarse / maxf(hard_fine, 1.0e-12)
+    check(absf(blend_ratio - 2.0) < 0.15,
+            "halving the sweep spacing changed the blended field's largest step by %sx, and a "
+            % String.num(blend_ratio, 3) + "continuous function's would halve")
+    check(hard_ratio < 1.05,
+            "the hard classifier's largest step shrank by %sx when the spacing halved, so it "
+            % String.num(hard_ratio, 3) + "is not the discontinuity this is contrasted against")
+    check(hard_fine > 20.0 * blend_fine,
+            "at %s degrees the hard form steps %s m and the blend steps %s m, which is not "
+            % [String.num(fine_h, 4), String.num(hard_fine, 4), String.num(blend_fine, 6)]
+            + "the removal this claims")
+
+    # COMPACT SUPPORT: away from a boundary exactly one stratum is live, and
+    # never more than two. This is what makes the blend cost one or two noise
+    # fields instead of five.
+    check(not support.has(0), "some slope has no stratum at all")
+    check(int(support.get(1, 0)) > samples / 2,
+            "only %d of %d slopes have a single stratum, so the bands overlap and the support "
+            % [int(support.get(1, 0)), samples] + "is not compact")
+    var most := 0
+    for k in support:
+        most = maxi(most, int(k))
+    check(most <= 2, "%d strata are live at once; the blend widths overlap their bands" % most)
+
+    check(centres.size() == 3, "the rows declare %d slope centres" % centres.size())
+    print("985: weights sum to 1 within %s over %d slopes, at most %d strata live at once. "
+            % [String.num(worst_sum, 15), samples, most]
+            + "Halving the sweep spacing takes the blend's largest step %s m -> %s m (%sx) "
+            % [String.num(blend_coarse, 6), String.num(blend_fine, 6),
+                    String.num(blend_ratio, 2)]
+            + "and leaves the hard classifier's at %s m (%sx)"
+            % [String.num(hard_fine, 3), String.num(hard_ratio, 2)])
+
+
+## The largest change in conditioned amplitude between adjacent samples of a
+## slope sweep at spacing `h`. `hard` selects the retired class-picking form.
+##
+## THE TWO FORMS ARE MEASURED BY THE SAME INSTRUMENT AT THE SAME SPACINGS,
+## because the claim is about how each RESPONDS to the spacing and a
+## comparison at one spacing cannot see that at all.
+func _worst_amplitude_step(df: DetailField, h: float, hard: bool) -> float:
+    var worst := 0.0
+    var prev := NAN
+    var deg := 0.0
+    while deg <= 45.0:
+        var amp := 0.0
+        if hard:
+            amp = df.amplitude_for(df.classify_by_slope(deg))
+        else:
+            var wts := df.slope_weights(deg)
+            for name in wts:
+                amp += float(wts[name]) * df.amplitude_for(str(name))
+        if not is_nan(prev):
+            worst = maxf(worst, absf(amp - prev))
+        prev = amp
+        deg += h
+    return worst
+
+
+func test_the_blend_cannot_break_the_exactness_at_a_parent_node() -> void:
+    """THE ONE GUARD THE WHOLE METHOD RESTS ON, AND IT IS INDIFFERENT TO WHAT
+    CONDITIONS THE AMPLITUDE.
+
+    Every stratum's term is identically zero at a parent node, so any weighted
+    sum of them is zero there -- for ANY weights, including ones nobody has
+    calibrated. That is worth asserting after the conditioning changed rather
+    than reasoning about, because it is the property a bad blend would break
+    silently: a field that was exact before and is 2e-5 off now would look
+    identical everywhere a person could see."""
+    var hf := heightfield()
+    var df := detail_field()
+    if not df.is_loaded():
+        return
+    var nodes := 0
+    var off := 0
+    var between := 0
+    for iy in range(600, 900, 7):
+        for ix in range(300, 700, 11):
+            var node := df.parent_node(ix, iy)
+            if is_nan(hf.height_at_world(node.x, node.y)):
+                continue
+            nodes += 1
+            if df.detail_at(node) != 0.0:
+                off += 1
+            # AND NON-ZERO BETWEEN THEM, or a field that refined nothing would
+            # pass the line above by doing nothing.
+            var mid := df.parent_node(ix, iy) + Vector2(df.parent_spacing_m * 0.5, 0.0)
+            if df.detail_at(mid) != 0.0:
+                between += 1
+    check(nodes > 200, "only %d parent nodes were tested" % nodes)
+    check(off == 0, "%d of %d parent nodes carry a non-zero blended detail term" % [off, nodes])
+    check(between > nodes / 2, "only %d of %d midpoints moved, so the blended field is refining "
+            % [between, nodes] + "almost nothing")
+    print("985: the blended term is exactly zero at all %d parent nodes and non-zero at %d "
+            % [nodes, between] + "of %d midpoints" % nodes)

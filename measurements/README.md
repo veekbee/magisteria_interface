@@ -1713,20 +1713,22 @@ on it produced a second finding rather than a pass:
 | on the synthesised surface | |
 |---|---:|
 | metres between height changes (p50) | **1.0 m — the sampling step** |
-| vertical swing over 5 m of walking | 0.123 m |
+| vertical swing over 5 m of walking | 0.131 m |
 | vertical swing over 0.7 m of walking | 0.0168 m |
 
-*The swing figures moved from 0.139 m / 0.0167 m when the derived terrain layers landed: the
-landform classifier reads real slope and distance-to-channel now instead of re-deriving slope from a
-kilometre lattice, so the same places fall into different amplitude rows. The finding below is
-unchanged and does not depend on either pair.*
+*These figures have moved twice and the finding has not. 0.139 m → 0.123 m when the derived terrain
+layers landed and the classifier began reading real slope; 0.123 m → 0.131 m when decision 985
+replaced class selection with continuous conditioning, so a position is now a mixture of strata
+rather than one of them. Neither the argument below nor the refusal depends on any of the three
+pairs — which is the point of recording them as what the present surface does rather than as
+targets (§23.425).*
 
 **A raster cannot report a gap smaller than one cell; a continuous function has no cell.** It returns
 a different height at every representable position, so the gap comes out as whatever step the
 instrument used — and a synthesizer of one micrometre amplitude would measure exactly as well as one
 of a metre. The criterion is satisfied trivially and says nothing.
 
-So **walk mode is not opened on it.** What a body would actually feel is the swing — 12 cm of
+So **walk mode is not opened on it.** What a body would actually feel is the swing — 13 cm of
 undulation per second at running pace, 1.7 cm at a load-bearing one — and the criterion has no
 clause about that. Adding one is a design question about how much ground movement is enough, not a
 threshold to pick, and it is carried rather than answered.

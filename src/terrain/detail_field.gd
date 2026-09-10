@@ -305,15 +305,150 @@ func height_at(w: Vector2) -> float:
     return base + detail_at(w)
 
 
-## The detail term alone. Exactly zero at every parent lattice node.
+## HOW MUCH OF EACH LANDFORM STRATUM APPLIES HERE. Sums to exactly 1.
+##
+## DECISION 985 REJECTS A HARD LANDFORM CLASSIFIER CONDITIONING AMPLITUDE AT
+## RUNTIME, and this class was one: `classify` picked a class and the class
+## picked an amplitude. An amplitude step on a class boundary is a RENDERED
+## SEAM on a line no landform owns -- a visible crease where two invented
+## thresholds meet, running across ground that does not change. Convention 1
+## says the same thing generally: a hard threshold anywhere is a bug, and the
+## fix is a clamped ramp.
+##
+## SO CALIBRATION STRATIFIES AND RUNTIME BLENDS. The rows stay per-landform,
+## because that is how a calibration is measured and how 986's bands are
+## graded; what changes is that a POSITION is no longer in one stratum. It is
+## in a mixture, and the mixture varies smoothly.
+##
+## COMPACT SUPPORT, WHICH MAKES THIS CHEAPER THAN IT LOOKS. The weights are
+## built as a telescoping chain of smoothsteps over the slope boundaries --
+## `1-S1, S1-S2, S2-S3, S3` -- so they sum to 1 by construction rather than by
+## normalising, and each is EXACTLY zero outside its own band. Away from a
+## boundary exactly one stratum is non-zero, and inside one exactly two are, so
+## a typical evaluation costs one or two noise fields rather than five. A
+## Gaussian-style kernel would have been non-zero everywhere and cost all five
+## at every sample, for a contribution below the float32 position quantum.
+##
+## THE MARGIN RIDES ITS OWN CONDITION, not the slope chain: a margin on a
+## 3-degree slope is a margin. It is blended over the whole chain rather than
+## added to it -- `(1-r) * chain + r * riparian` -- so the sum stays 1.
+##
+## WHAT CONDITIONS IT IS SLOPE AND, WHEN IT EXISTS, HAND. 985 names both. No
+## HAND raster is vendored, so the margin's condition is distance-to-channel --
+## HAND's horizontal sibling, already in use for this class, and stated here as
+## the stand-in it is rather than passed off as the thing 985 asked for.
+func weights_at(w: Vector2) -> Dictionary:
+    var c: Dictionary = rows.get("classifier", {})
+    var deg := slope_degrees_at(w)
+    if is_nan(deg):
+        # No slope anywhere -- the layer has a hole and the lattice could not
+        # answer either. One stratum at full weight, the same answer the hard
+        # classifier gave, because there is nothing here to blend BETWEEN.
+        return {"floor": 1.0}
+    var chain := slope_weights(deg)
+
+    var r := 0.0
+    var d_channel := distance_to_channel_m(w)
+    if not is_nan(d_channel):
+        var near := float(c.get("riparian_within_m", 150.0))
+        var mhalf := 0.5 * maxf(0.0, float(c.get("riparian_blend_m", 0.0)))
+        r = 1.0 - _ramp(d_channel, near, mhalf)
+
+    var out := {}
+    if r > 0.0:
+        out["riparian_margin"] = r
+    for name in chain:
+        var v: float = float(chain[name]) * (1.0 - r)
+        # EXACTLY ZERO IS DROPPED AND NOTHING ELSE IS. This is not a tolerance:
+        # the chain's terms are identically zero outside their bands, so the
+        # entries left out contribute nothing at all rather than something
+        # small. A threshold here would be the hard cut this method exists to
+        # remove, reintroduced as an optimisation.
+        if v != 0.0:
+            out[str(name)] = v
+    return out
+
+
+## WHAT THE HARD CLASSIFIER WOULD HAVE ANSWERED AT ONE SLOPE.
+##
+## KEPT ONLY AS THE CONTROL FOR WHAT THE BLEND REMOVED. Nothing at runtime
+## calls it: an amplitude picked this way steps at every centre, which is the
+## rendered seam 985 rejects. It is here so the gate can measure the step
+## rather than assert that one used to exist, and so that a reader comparing
+## the two forms can see them side by side.
+func classify_by_slope(deg: float) -> String:
+    var c: Dictionary = rows.get("classifier", {})
+    if deg < float(c.get("playa_below_slope_deg", 0.6)):
+        return "playa"
+    if deg < float(c.get("floor_below_slope_deg", 4.0)):
+        return "floor"
+    if deg < float(c.get("slope_below_slope_deg", 22.0)):
+        return "slope"
+    return "talus"
+
+
+## THE SLOPE CHAIN ALONE, as a function of degrees.
+##
+## SEPARATED FROM `weights_at` SO IT CAN BE DRIVEN DIRECTLY. The property that
+## matters -- that these sum to exactly 1 and that each is exactly 0 outside
+## its band -- is a fact about the arithmetic, and asserting it through a world
+## position would test it only at whatever slopes the basin happens to have.
+## Every boundary is exercised by sweeping this instead.
+##
+## TELESCOPING, SO THE SUM IS 1 BY CONSTRUCTION AND NOT BY NORMALISING.
+## `(1-S1) + (S1-S2) + (S2-S3) + S3` cancels to 1 for any S at all, so the
+## partition survives a change to the ramp shape, a change to the centres, and
+## a calibration that moves both.
+func slope_weights(deg: float) -> Dictionary:
+    var c: Dictionary = rows.get("classifier", {})
+    var half := 0.5 * maxf(0.0, float(c.get("blend_deg", 0.0)))
+    var s1 := _ramp(deg, float(c.get("playa_below_slope_deg", 0.6)), half)
+    var s2 := _ramp(deg, float(c.get("floor_below_slope_deg", 4.0)), half)
+    var s3 := _ramp(deg, float(c.get("slope_below_slope_deg", 22.0)), half)
+    return {"playa": 1.0 - s1, "floor": s1 - s2, "slope": s2 - s3, "talus": s3}
+
+
+## A smoothstep from 0 to 1 across `centre +/- half`. C1 at both ends, which is
+## what makes the blended field C1 where 985 requires it: the product rule
+## needs the weight's derivative to exist, and a linear ramp's does not at its
+## corners.
+static func _ramp(x: float, centre: float, half: float) -> float:
+    if half <= 0.0:
+        return 0.0 if x < centre else 1.0
+    var t: float = clampf((x - (centre - half)) / (2.0 * half), 0.0, 1.0)
+    return t * t * (3.0 - 2.0 * t)
+
+
+## The detail term. Exactly zero at every parent lattice node.
+##
+## NAMING A LANDFORM ASKS FOR THAT STRATUM ALONE, which is the CALIBRATION
+## path: `tools/measure_variogram.gd` scores each stratum against its own row,
+## and 986 grades `S_q(l)` per stratum. Asking without one gets the blended
+## field, which is what a body stands on.
+##
+## THE BLEND CANNOT BREAK THE EXACTNESS, and that is not luck. Every stratum's
+## term is identically zero at a parent node, so any weighted sum of them is
+## zero there too -- for any weights at all, including ones nobody has
+## calibrated yet. The one guard the whole method rests on is indifferent to
+## what conditions the amplitude.
 func detail_at(w: Vector2, landform: String = "") -> float:
     if not is_loaded():
         return 0.0
-    var name := landform if landform != "" else classify(w)
-    var p := row(name)
+    if landform != "":
+        return _stratum_detail(w, landform)
+    var total := 0.0
+    var weights := weights_at(w)
+    for name in weights:
+        total += float(weights[name]) * _stratum_detail(w, str(name))
+    return total
+
+
+## One stratum's own detail term, at its own amplitude.
+func _stratum_detail(w: Vector2, landform: String) -> float:
+    var p := row(landform)
     if p.is_empty():
         return 0.0
-    var amp := amplitude_for(name) * taper_at(w)
+    var amp := amplitude_for(landform) * taper_at(w)
     if amp <= 0.0:
         return 0.0
     # f(x) minus its own coarse component. See the header: this is what makes
@@ -475,7 +610,20 @@ static func _dot_grad(ix: int, iy: int, dx: float, dy: float) -> float:
     return cos(a) * dx + sin(a) * dy
 
 
-## WHICH LANDFORM CLASS A POINT IS IN.
+## WHICH LANDFORM STRATUM A POINT IS MOST OF -- FOR CALIBRATION AND REPORTING,
+## AND NOT FOR CONDITIONING THE AMPLITUDE.
+##
+## DECISION 985 RETIRED THIS METHOD'S OLD JOB. It used to pick the class whose
+## row the detail term was evaluated at, which put an amplitude step on every
+## class boundary -- a rendered seam on a line no landform owns. `weights_at`
+## does that now, continuously. What a hard answer is still the right tool for
+## is stratifying a MEASUREMENT: 986 grades `S_q(l)` per landform stratum, and
+## a measurement has to know which stratum a sample belongs to.
+##
+## SO IT RETURNS THE HEAVIEST WEIGHT rather than re-deriving a decision from
+## the thresholds. Two implementations of "which class is this" would be two
+## things to keep in step, and the one that decided nothing at runtime would be
+## the one nobody noticed drifting.
 ##
 ## FROM THE DERIVED LAYERS WHERE THIS CLONE HAS THEM, and from the parent
 ## lattice's own gradient where it does not. The rows' `_FAKE` note used to
@@ -495,21 +643,15 @@ static func _dot_grad(ix: int, iy: int, dx: float, dy: float) -> float:
 ## first would file it as `floor` and never reach the question. The thresholds
 ## are still fake rows and still say so.
 func classify(w: Vector2) -> String:
-    var c: Dictionary = rows.get("classifier", {})
-    var near := float(c.get("riparian_within_m", 150.0))
-    var d_channel := distance_to_channel_m(w)
-    if not is_nan(d_channel) and d_channel <= near:
-        return "riparian_margin"
-    var deg := slope_degrees_at(w)
-    if is_nan(deg):
-        return "floor"
-    if deg < float(c.get("playa_below_slope_deg", 0.6)):
-        return "playa"
-    if deg < float(c.get("floor_below_slope_deg", 4.0)):
-        return "floor"
-    if deg < float(c.get("slope_below_slope_deg", 22.0)):
-        return "slope"
-    return "talus"
+    var best := ""
+    var best_w := -1.0
+    var weights := weights_at(w)
+    for name in weights:
+        var v := float(weights[name])
+        if v > best_w:
+            best_w = v
+            best = str(name)
+    return best if best != "" else "floor"
 
 
 ## SLOPE IN DEGREES, from the layer where there is one.

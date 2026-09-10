@@ -18,7 +18,7 @@
     "places": 12,
     "vertical_swing_over_0_7_m": {
       "max": 0.0812099330073579,
-      "mean": 0.0235618282498725,
+      "mean": 0.0235491941555779,
       "min": 0.000664130615859904,
       "n": 12,
       "p50": 0.0167944129093485,
@@ -26,10 +26,10 @@
     },
     "vertical_swing_over_5_m": {
       "max": 0.646307983455245,
-      "mean": 0.192204434693622,
+      "mean": 0.192871589930519,
       "min": 0.00690718400437618,
       "n": 12,
-      "p50": 0.122532640415557,
+      "p50": 0.130538503258322,
       "p95": 0.646307983455245
     }
   },
@@ -97,7 +97,7 @@
       "p95": 252.284542625278
     }
   },
-  "measured_at_utc": "2026-09-09T08:10:48",
+  "measured_at_utc": "2026-09-10T22:06:44",
   "measurement": "ground relief at the overview and at the tile pyramid",
   "places": [
     {
@@ -950,12 +950,12 @@
     "_what": "the same discs measured against a near-field patch of the tile pyramid, built and seamed to the coarse mesh at each place. THIS IS THE ACCEPTANCE METRIC: the residual is how far a plant on the drawn surface stands from the ground the data holds, and it is what streaming buys down. Frame time is a budget to stay inside rather than the thing being bought.",
     "_worst_residual_is_zero_because": "the patch's vertices ARE the pyramid's texel centres, so at the points the data actually holds a value the drawn surface reproduces it exactly. That is the design and this is it stated, not a measurement of it -- read the next two figures for that.",
     "build_ms": {
-      "max": 73.0,
-      "mean": 44.2,
-      "min": 30.0,
+      "max": 76.0,
+      "mean": 46.15,
+      "min": 32.0,
       "n": 60,
-      "p50": 38.0,
-      "p95": 70.0
+      "p50": 40.0,
+      "p95": 71.0
     },
     "coarse_residual_anywhere_m": {
       "max": 429.503099325102,
