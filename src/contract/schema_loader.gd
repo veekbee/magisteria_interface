@@ -168,6 +168,10 @@ static func _load(doc: SchemaTypes.Document, raw: Dictionary) -> SchemaTypes.Doc
         if row.since > CLIENT_MINOR:
             doc.reports.append("%s: %s has since=%d, ahead of client minor %d -- undeclared, not zero"
                     % [SKIP_SINCE_AHEAD_OF_CLIENT, row.name, row.since, CLIENT_MINOR])
+            # NAMED AS WELL AS REPORTED. The report is for a person; this is
+            # for a caller that has to tell "the artefact never had this row"
+            # from "this build was not written against it yet".
+            doc.masked_rows.append(row.name)
             continue
 
         if row.has_taxon_rung:

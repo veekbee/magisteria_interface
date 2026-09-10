@@ -81,6 +81,16 @@ class Document extends RefCounted:
     var envelope: Envelope = null
     var rows: Array = []            ## of Row, in artefact order
     var reports: Array = []         ## of String -- see SchemaLoader.reports
+    ## Names the artefact declared and this build did not read, because their
+    ## `since` is ahead of `SchemaLoader.CLIENT_MINOR`.
+    ##
+    ## A SET, NOT A SENTENCE. The mask was recorded only as prose in `reports`,
+    ## which meant a consumer that wanted to KNOW what had been withheld had to
+    ## parse English. "Undeclared, never zero" is a promise about behaviour and
+    ## this is the half of it a caller can act on: the row is absent from
+    ## `rows`, and it is named here, so an absence can be explained rather than
+    ## merely observed.
+    var masked_rows: PackedStringArray = PackedStringArray()
     var refused: bool = false
     var refusal_reason: String = ""
 

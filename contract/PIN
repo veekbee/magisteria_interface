@@ -11,16 +11,17 @@
     "repo": "git@github.com:veekbee/magisteria.git",
     "path": "data/schema_output/schema.json"
   },
-  "file_sha256": "b44a2280919732b7e4795603bbe658888e7e6f6789285832c14f53b7c6a8393b",
+  "file_sha256": "f849bd84d72e9762d3d8125b2952c3cb2d065999f7255a6660378622a53e65b9",
   "_file_sha256_note": "sha256 of contract/schema.json's BYTES. This is what the local half of the check verifies, and it needs no JSON parser to do it.",
-  "artefact_committed_at": "296786473668823e860e273b55f16f1d2c47ddf0",
+  "artefact_committed_at": "9b2e8ab562e867aa9abf70248c379e8092ee4796",
   "_artefact_committed_at_note": "The simulation-repo commit these bytes come from -- the last commit to touch that path. The cross-repo half compares `git show <this>:<path>` against file_sha256.",
-  "emitted_at_commit": "repo@c62347c5ec6d9200f96153f4c5f37560cc11129e",
+  "emitted_at_commit": "repo@5f66f7cffe3f8c44ded757676f7a0307f6e60481",
   "_emitted_at_commit_note": "provenance.commit: the tree state tools/emit_schema.py read. Distinct from artefact_committed_at, which is where the emitted bytes came to rest.",
-  "declared_content_digest_sha256": "d5f9a545655d0c945c46f358bdead75c90b71cab6f6f6c01c5dcd77b3aee8941",
+  "declared_content_digest_sha256": "e46898147f05e65fe58dc54dd2bc0ee21d889e6bc6e68dedc49690246a3ae524",
   "_declared_content_digest_note": "The artefact's own claim about its canonical content, which excludes `since`. Recorded, not verified here: only the emitter can recompute it, and faking that check client-side would be a second implementation of the canonicalisation rule.",
   "version": {
     "major": 2,
-    "minor": 0
-  }
+    "minor": 1
+  },
+  "_v2_1_note": "v2.1 adds one carried row, `band.phenology_index` (decision 977), and moves nothing else. The version DERIVED itself from the emitter's diff of the previous artefact -- decision 895 -- and this client reached the same pair independently before the artefact existed, by comparing the registry's carried set with the vendored one: 39 declared, 9 carried, 8 vendored, one row added, nothing removed or renamed, therefore minor. The readback agreeing is the point of the boundary. NOTE that `SchemaLoader.CLIENT_MINOR` is deliberately still 0, so the new row is MASKED and reported rather than read: this build was not written against it, and the fixture carrying it does not exist yet. See the note at that constant."
 }

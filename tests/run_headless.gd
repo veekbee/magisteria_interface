@@ -219,13 +219,54 @@ func test_real_artefact_loads_clean() -> void:
             if r.dims.has(axis):
                 used = true
         check(used, "ladder %s is declared and no carried row references it" % axis)
-    # A skip here would mean the shipped artefact carries something this build
-    # cannot read -- which is exactly what CI exists to catch on a bump.
-    check(doc.reports.is_empty(),
-            "the shipped contract produced reports, which the pinned version should not: %s"
-            % str(doc.reports))
-    print("real artefact: v%s, %d rows, %d reports"
-            % [doc.envelope.version.as_string(), doc.rows.size(), doc.reports.size()])
+    # THE CLIENT IS ONE MINOR BEHIND THE ARTEFACT, DELIBERATELY, AND THIS PINS
+    # THAT RATHER THAN TOLERATING IT.
+    #
+    # This read `doc.reports.is_empty()` -- right while the client was written
+    # against the pinned version, and wrong the moment v2.1 landed with
+    # `band.phenology_index` (decision 977) ahead of `CLIENT_MINOR`. The
+    # constant is not bumped until the fixture carrying the row exists, so the
+    # correct state is a masked row and two reports about it.
+    #
+    # Relaxing this to "reports are allowed" would have thrown away the check
+    # entirely. What it asserts instead is the EXACT lag: which rows are
+    # carried, which one is masked, and that the mask is reported as
+    # undeclared rather than as a zero. When the fixture lands and the
+    # constant moves, this test fails and tells whoever moved it what to
+    # expect -- which is the same two-file discipline the pin itself has.
+    var carried := PackedStringArray()
+    for r in doc.rows:
+        carried.append(r.name)
+    var ahead := doc.masked_rows
+    # AGAINST THE ARTEFACT'S OWN COUNT, so a row that vanished for a third
+    # reason -- malformed, unknown value_kind, a rung outside its domain --
+    # cannot hide inside "carried plus masked".
+    var raw = JSON.parse_string(FileAccess.open("res://contract/schema.json",
+            FileAccess.READ).get_as_text())
+    var declared := int((raw as Dictionary).get("row_count", -1))
+    check(doc.rows.size() + ahead.size() == declared,
+            "%d carried plus %d masked does not account for the artefact's %d rows"
+            % [doc.rows.size(), ahead.size(), declared])
+    for name in ahead:
+        check(not carried.has(str(name)),
+                "%s is both carried and masked" % str(name))
+        check(doc.row_named(str(name)) == null,
+                "%s is masked and still reachable by name, which is the difference between "
+                % str(name) + "undeclared and zero")
+    var since_reports := 0
+    for rep in doc.reports:
+        if str(rep).begins_with(SchemaLoader.SKIP_SINCE_AHEAD_OF_CLIENT):
+            since_reports += 1
+        else:
+            check(str(rep).contains("server minor ahead"),
+                    "the shipped contract produced a report that is not the expected lag: %s"
+                    % str(rep))
+    check(since_reports == ahead.size(),
+            "%d rows are ahead of this client and %d were reported; a mask that is not "
+            % [ahead.size(), since_reports] + "reported is a row that vanished")
+    print("real artefact: v%s, %d rows carried, %d masked ahead of client minor %d (%s)"
+            % [doc.envelope.version.as_string(), doc.rows.size(), ahead.size(),
+                    SchemaLoader.CLIENT_MINOR, str(Array(ahead))])
 
 
 func test_conditional_fields_are_presence_not_empty_string() -> void:
