@@ -186,7 +186,8 @@ func sub_at(world: Vector2, life_form: String) -> Dictionary:
     # asks the scatter's own refinement map, so a probe-vs-drawn disagreement
     # here can only mean the build wrote something else.
     var cell_key := "%s|%d" % [str(cell.get("huc10", "")), int(cell.get("band", -1))]
-    var node := str(_sc.refinements.get("%s|%s" % [cell_key, life_form], life_form))
+    var node := str(_sc.refinements.get(
+            PerceptBundle.refinement_key(cell_key, life_form), life_form))
     out["node"] = node
     out["rung"] = "" if _fs == null else _fs.rung_of(node)
     out["refined"] = node != life_form

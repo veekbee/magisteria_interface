@@ -122,7 +122,10 @@ func _refine(eye: PackedFloat64Array, cell_centres: Dictionary) -> Dictionary:
         for parent in _nodes_by_parent:
             var choices: Array = _nodes_by_parent[parent]
             var pick := _choose(str(key), str(parent), choices.size())
-            out["%s|%s" % [str(key), str(parent)]] = str(choices[pick])
+            # THE KEY FORMAT IS THE BUNDLE'S, not this producer's. It is read
+            # by a consumer in another subtree, and two files agreeing about a
+            # string by having each written it is the agreement that ends.
+            out[PerceptBundle.refinement_key(str(key), str(parent))] = str(choices[pick])
     return out
 
 

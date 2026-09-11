@@ -170,6 +170,9 @@ func _initialize() -> void:
     test_hand_conditions_the_amplitude_and_absence_is_full_strength()
     test_the_detail_is_band_limited_below_the_parent_spacing()
     test_the_field_is_c1_and_says_which_term_binds()
+    test_a_token_rotates_at_all_three_boundaries_and_nowhere_else()
+    test_a_rotation_is_not_an_erasure_and_the_map_rides_the_envelope()
+    test_the_skin_keys_on_precision_and_dies_with_the_token()
     stage_the_main_scene()
 
 
@@ -8884,3 +8887,414 @@ func test_the_field_is_c1_and_says_which_term_binds() -> void:
             "heightfield.gd no longer records why the detail function needs its interpolant")
     print("985: fade C2 at both knots, weights C2 at theirs, Catmull-Rom C1 -- so the field is "
             + "C1, at 985's floor, and the binding term is the one the exactness requires")
+
+
+# ============================================================================
+# Phase 8 lane B4/B5: the token issuer, and the skin that consumes it.
+# ============================================================================
+
+## One subject's drawn look, as a string a consumer could remember it by. The
+## attack in the skin test is a dictionary lookup, so the key has to be what a
+## consumer can actually see -- a colour, at the precision an eye or a frame
+## buffer has, and not a float the consumer would have no way to read.
+static func _look_of(seed: int) -> String:
+    var c := RungSkin.tint_delta(seed, 1.0)
+    return "%d,%d,%d" % [int(round(c.r * 255.0)), int(round(c.g * 255.0)),
+            int(round(c.b * 255.0))]
+
+
+func test_a_token_rotates_at_all_three_boundaries_and_nowhere_else() -> void:
+    """DECISION 368'S THREE BOUNDARIES, EACH ONE SHOWN.
+
+    A consumer that treats a token as a durable identity is correct against
+    every producer that never rotates one, which is every producer this repo
+    has. The defect is invisible until live B, so the rotation has to be
+    exercised before then or not at all -- which is the whole reason a toy
+    issuer is worth building.
+
+    The interesting case is the fourth check in the envelope group. A
+    per-subject ordinal kept in the map entry is the obvious implementation and
+    it is wrong: the entry is dropped at exit, so the ordinal restarts, and a
+    returning subject is handed the token it left with. An exit rotation that
+    rotates back is worse than none, because it looks like one."""
+    var iss := TokenIssuer.for_session("session-a", 0x5eed)
+    var t0 := iss.observe("subject-1", "life_form")
+    check(t0.length() == TokenIssuer.TOKEN_HEX,
+            "a token is %d hex digits and the class declares %d"
+                    % [t0.length(), TokenIssuer.TOKEN_HEX])
+    check(not t0.contains("subject-1"),
+            "the subject's own id is inside its token, which is a global id in a costume")
+
+    # STABLE WHERE NOTHING HAPPENED. Tracking a moving body across frames is
+    # the thing a name is FOR; an issuer that rotated per moment would have
+    # closed the leak by making channel 2 useless.
+    for _i in 50:
+        iss.observe("subject-1", "life_form")
+    check(iss.token_for("subject-1") == t0,
+            "the token moved over fifty moments with no boundary crossed, so nothing "
+            + "downstream can follow a subject at all")
+
+    # 1. THE RUNG CHANGED.
+    var t1 := iss.observe("subject-1", "specific")
+    check(t1 != t0, "the observer's rung changed and the name did not")
+
+    # 2. THE SUBJECT LEFT THE ENVELOPE.
+    iss.left_envelope("subject-1")
+    check(iss.token_for("subject-1") == "",
+            "a subject outside the envelope still has a name")
+    check(not iss.is_resident("subject-1"), "the map kept a subject that left")
+    var t2 := iss.observe("subject-1", "specific")
+    check(t2 != t1, "a subject left the envelope and came back to the same name")
+    # The control for the per-subject-ordinal defect: leave, and return AT THE
+    # ORIGINAL RUNG. Every earlier name must stay spent.
+    iss.left_envelope("subject-1")
+    var t3 := iss.observe("subject-1", "life_form")
+    check(t3 != t0 and t3 != t1 and t3 != t2,
+            "a returning subject was handed a name it had already spent, so the exit "
+            + "boundary rotates in a cycle rather than forward")
+
+    # 3. RESTORATION.
+    var t4 := iss.observe("subject-2", "life_form")
+    var before := iss.epoch()
+    iss.restore()
+    check(iss.resident() == 0, "restoration left %d tokens live" % iss.resident())
+    check(iss.epoch() == before + 1, "restoration did not move the epoch")
+    check(iss.observe("subject-2", "life_form") != t4, "restoration did not rotate")
+    check(iss.observe("subject-1", "life_form") != t3, "restoration did not rotate")
+
+    var rot := iss.rotations()
+    for b in TokenIssuer.BOUNDARIES:
+        check(int(rot.get(b, 0)) > 0,
+                "boundary %s never fired, so this test is not exercising it" % str(b))
+
+    # PER OBSERVER, NEVER GLOBAL. One subject, two sessions, two names -- the
+    # property 20.4.3 rules and the one a stable id would break outright.
+    var sa := TokenIssuer.for_session("session-a", 0x5eed)
+    var sb := TokenIssuer.for_session("session-b", 0x5eed)
+    check(sa.observe("subject-1", "life_form") != sb.observe("subject-1", "life_form"),
+            "two observers were handed one name for one subject, which is the global id "
+            + "the per-observer rule exists to refuse")
+
+    # OPAQUE MEANS UNREPRODUCIBLE WITHOUT THE SALT. A party holding the subject
+    # list and the session name, but not the producer's salt, gets nothing.
+    var guess := TokenIssuer.for_session("session-a", 0x0badbeef)
+    check(guess.observe("subject-1", "life_form")
+                    != TokenIssuer.for_session("session-a", 0x5eed)
+                            .observe("subject-1", "life_form"),
+            "the same inputs under a different salt produced the same token, so the "
+            + "derivation is a pure function of identity and is invertible by anyone "
+            + "who can enumerate subjects")
+
+    # DETERMINISTIC OVER THE EPISODE, which is the narrowing of decision 180
+    # the class header states. Same salt, same call sequence, same names.
+    var r1 := TokenIssuer.for_session("s", 11)
+    var r2 := TokenIssuer.for_session("s", 11)
+    var same := true
+    for i in 20:
+        var who := "subj-%d" % (i % 5)
+        if r1.observe(who, "life_form") != r2.observe(who, "life_form"):
+            same = false
+        if i % 7 == 0:
+            r1.left_envelope(who)
+            r2.left_envelope(who)
+    check(same, "replaying an episode from its start reissued different tokens, so a "
+            + "recorded channel-2 stream cannot be replayed at all")
+
+    # AND THE NAMES DO NOT COLLIDE OVER A SESSION'S LENGTH. The map is bounded
+    # by occupancy; the issuance count is not, and a birthday collision hands
+    # two subjects one name.
+    var many := TokenIssuer.for_session("s", 7)
+    var seen := {}
+    for i in 20000:
+        var who := "subj-%d" % i
+        seen[many.observe(who, "life_form")] = true
+        many.left_envelope(who)
+    check(seen.size() == many.issued(),
+            "%d issuances produced %d distinct tokens" % [many.issued(), seen.size()])
+    print("tokens: %d issued with no collision; rotates at %s and holds still over 50 "
+            % [many.issued(), str(TokenIssuer.BOUNDARIES)] + "moments in between")
+
+
+func test_a_rotation_is_not_an_erasure_and_the_map_rides_the_envelope() -> void:
+    """WHAT ROTATION BUYS, AND WHAT IT DOES NOT -- BOTH MEASURED.
+
+    An honest mechanism is one nobody over-reads later, and the way a bound
+    stops being read is that only its good half was ever demonstrated. So both
+    halves are here: the cross-episode case rotation closes, and the
+    within-episode case it does not and was never meant to.
+
+    The second half asserts a WEAKNESS, deliberately. If it ever starts
+    failing, something has changed that this file should be told about."""
+    var subjects := ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"]
+
+    # THE HALF THAT IS BOUGHT. A consumer remembers every name it resolved,
+    # then the episode ends. Nothing it holds appears again.
+    var iss := TokenIssuer.for_session("observer", 0x1234)
+    var memory := {}
+    for s in subjects:
+        memory[iss.observe(s, "specific")] = s
+    iss.restore()
+    var carried := 0
+    for s in subjects:
+        if memory.has(iss.observe(s, "specific")):
+            carried += 1
+    check(carried == 0,
+            "%d of %d names survived a restoration, so a client carries a dictionary "
+                    % [carried, subjects.size()]
+            + "through the boundary that was supposed to spend it")
+
+    # THE HALF THAT IS NOT, SHOWN WORKING. Within an episode a subject's
+    # position is unchanged either side of a rotation, so a consumer matches
+    # the two by where they are. No wire encoding prevents this and the
+    # mechanism does not claim to.
+    var at := {}
+    for i in subjects.size():
+        at[subjects[i]] = Vector2(float(i) * 100.0, 0.0)
+    var ep := TokenIssuer.for_session("observer", 0x99)
+    var where := {}                         # token -> position, before
+    for s in subjects:
+        where[ep.observe(s, "life_form")] = at[s] as Vector2
+    var relinked := 0
+    var still_named := 0
+    for s in subjects:
+        # The rung boundary rotates the name. Checked rather than assumed: if
+        # the names had NOT changed, the relink below would succeed for a
+        # reason that says nothing about positions.
+        if where.has(ep.observe(s, "specific")):
+            still_named += 1
+        var here: Vector2 = at[s]
+        for tok in where:
+            if (where[tok] as Vector2).distance_to(here) < 1.0:
+                # the old name at this position; the consumer has re-linked
+                relinked += 1
+                break
+    check(still_named == 0, "%d of %d names survived the rung boundary, so the relink below "
+            % [still_named, subjects.size()] + "proves nothing about position")
+    check(relinked == subjects.size(),
+            "within-episode positional linkage failed for %d of %d subjects. That is not "
+                    % [subjects.size() - relinked, subjects.size()]
+            + "a success: 20.4.3 states this bound openly and the client should not come "
+            + "to believe rotation does more than it does.")
+
+    # THE MAP RIDES THE ENVELOPE AND NOT THE ROSTER. The distinction is the
+    # difference between a structure sized by who is nearby and one sized by
+    # who exists, and both are bounded, which is why the wrong one survives
+    # review.
+    var roster := 5000
+    var envelope := 40
+    var e := TokenIssuer.for_session("observer", 5)
+    for i in roster:
+        e.observe("r-%d" % i, "life_form")
+        if i >= envelope:
+            e.left_envelope("r-%d" % (i - envelope))
+    check(e.issued() == roster, "%d subjects passed through and %d names were issued"
+            % [roster, e.issued()])
+    check(e.resident() == envelope,
+            "the map holds %d entries after %d subjects passed through an envelope of "
+                    % [e.resident(), roster]
+            + "%d. A map sized against the roster is correct and bounded and wrong by "
+                    % envelope
+            + "two orders of magnitude.")
+    print("tokens: %d issued over the episode, %d resident -- the map is %dx smaller than "
+            % [e.issued(), e.resident(), roster / envelope]
+            + "the roster; cross-episode linkage 0 of %d, within-episode %d of %d and "
+                    % [subjects.size(), relinked, subjects.size()]
+            + "openly so")
+
+
+func test_the_skin_keys_on_precision_and_dies_with_the_token() -> void:
+    """B5, AND THE ONE PROPERTY THAT MAKES THE SEED RULE LOAD-BEARING.
+
+    Two things the skin has to get right, and one of them is not testable here
+    on purpose. Amplitude keying on carried precision rather than on
+    distance-to-truth is enforced by WHERE THIS FILE LIVES: the transducer
+    subtree's dependency scan is what makes truth unreachable, and an assertion
+    here that the skin does not use the truth would be a guard that cannot
+    fail. Structure, not a test.
+
+    The one that is testable is the seed. A perturbation seeded on anything
+    that outlives a token is a visual fingerprint, and 'the look is the same
+    look' re-identifies a subject one layer below the name that rotated. So the
+    attack is run twice -- once against the token seed, once against a stable
+    seed as the negative control -- because a re-identification count of zero
+    means nothing unless the same experiment can produce a non-zero one."""
+    # THE AMPLITUDE. Zero at exact, and exactly zero.
+    check(RungSkin.amplitude_for(1.0) == 0.0,
+            "the skin leaves a residue of %s at the finest rung, which is a permanent lie "
+                    % String.num(RungSkin.amplitude_for(1.0), 9)
+            + "about the finest thing this client knows")
+    check(RungSkin.amplitude_for(0.0) == 1.0, "the coarsest rung is not at full amplitude")
+    var prev := 2.0
+    for i in 101:
+        var p := float(i) / 100.0
+        var a := RungSkin.amplitude_for(p)
+        check(a <= prev + 1.0e-9, "the amplitude rose as the precision improved, at p=%s"
+                % String.num(p, 2))
+        prev = a
+    # Flat at both ends, so a subject drifting toward a boundary does not have
+    # the wobble stop dead as it arrives.
+    var h := 1.0e-4
+    for end_p in [0.0, 1.0]:
+        var x := float(end_p)
+        var slope: float = (RungSkin.amplitude_for(x + h) - RungSkin.amplitude_for(x - h)) / (2.0 * h)
+        check(absf(slope) < 1.0e-3, "the amplitude's slope at p=%s is %s"
+                % [String.num(x, 0), String.num(slope, 6)])
+    # The finest rung on the ladder, and an unknown one, both add nothing.
+    check(RungSkin.amplitude_for(RungSkin.precision_of_rung("specific")) == 0.0,
+            "the finest rung on the ladder is not at zero amplitude")
+    check(RungSkin.amplitude_for(RungSkin.precision_of_rung("nonesuch-rung")) == 0.0,
+            "a rung name this client does not know drew full wobble. An unrecognised rung "
+            + "means the skin does not know how coarse this is; the honest answer is to "
+            + "add nothing, not to paint the basin.")
+    check(RungSkin.rung_delta("specific") == Color(0.0, 0.0, 0.0, 0.0),
+            "the finest rung carries a colour step, so the client never draws what it was "
+            + "given unskinned")
+    for r in RungSkin.RUNGS:
+        check(RungSkin.tint_delta(RungSkin.seed_for_subject("tok", "hue"),
+                RungSkin.amplitude_for(RungSkin.precision_of_rung(str(r)))).a == 0.0,
+                "the skin moved alpha at rung %s. A skin that can make a thing transparent "
+                        % str(r) + "can make it absent.")
+
+    # THE SEAM SURVIVES THE WOBBLE, as a measurement. A skin whose noise
+    # straddles its own rung step looks like it is reporting something and is
+    # reporting the hash.
+    var margin := RungSkin.separation_margin()
+    check(margin > 0.0,
+            "two adjacent rungs overlap by %s once both are wobbled as far as they go, so "
+                    % String.num(-margin, 4)
+            + "the rung a thing is drawn at is not readable off the picture")
+
+    # ROTATION CHANGES THE LOOK, AT EACH BOUNDARY. Amplitude is held at 1.0
+    # throughout so that only the seed differs -- comparing the look at two
+    # rungs would move the rung step and the amplitude too, and would pass
+    # whether or not the seed had anything to do with it.
+    var iss := TokenIssuer.for_session("observer", 0x777)
+    var w := _look_of(RungSkin.seed_for_subject(iss.observe("s1", "life_form"), "hue"))
+    var moves := {
+        TokenIssuer.RUNG_CHANGE: func() -> void: iss.observe("s1", "specific"),
+        TokenIssuer.ENVELOPE_EXIT: func() -> void: iss.left_envelope("s1"),
+        TokenIssuer.RESTORATION: func() -> void: iss.restore(),
+    }
+    for boundary in TokenIssuer.BOUNDARIES:
+        (moves[boundary] as Callable).call()
+        # READ WITHOUT ROTATING AGAIN. Where the move left the subject
+        # resident, its name is already the rotated one; where the move
+        # emptied the entry, one observation at the rung it is already at
+        # re-issues without crossing a second boundary. Observing blind would
+        # have made every case a rung change and the test would pass whichever
+        # boundary was broken.
+        var tok := iss.token_for("s1")
+        if tok == "":
+            tok = iss.observe("s1", "specific")
+        var after := _look_of(RungSkin.seed_for_subject(tok, "hue"))
+        check(after != w,
+                "the token rotated at %s and the look did not. The wobble is then a "
+                        % str(boundary)
+                + "fingerprint that outlives the name, which rebuilds the linkage the "
+                + "rotation was for one layer down.")
+        w = after
+
+    # THE ATTACK, RUN BOTH WAYS. A consumer remembers what each subject LOOKED
+    # like in one episode and tries the lookup in the next.
+    var subjects := ["s1", "s2", "s3", "s4", "s5", "s6", "s7", "s8"]
+    var ep := TokenIssuer.for_session("observer", 0x2468)
+    var by_look := {}
+    for s in subjects:
+        by_look[_look_of(RungSkin.seed_for_subject(ep.observe(s, "life_form"), "hue"))] = s
+    ep.restore()
+    var hits := 0
+    for s in subjects:
+        var look := _look_of(RungSkin.seed_for_subject(ep.observe(s, "life_form"), "hue"))
+        if str(by_look.get(look, "")) == s:
+            hits += 1
+    check(hits == 0, "%d of %d subjects were re-identified from their look alone after a "
+            % [hits, subjects.size()] + "restoration")
+
+    # THE CONTROL. The same experiment with the seed keyed on the subject
+    # instead of on its name -- which is what any stable seed amounts to.
+    var control := {}
+    for s in subjects:
+        control[_look_of(StableHash.of_name("%s/hue" % s))] = s
+    var control_hits := 0
+    for s in subjects:
+        if str(control.get(_look_of(StableHash.of_name("%s/hue" % s)), "")) == s:
+            control_hits += 1
+    check(control_hits == subjects.size(),
+            "the stable-seeded control re-identified %d of %d, so the zero above is a "
+                    % [control_hits, subjects.size()]
+            + "property of the experiment rather than of the seed rule")
+
+    # CHANNEL-1 FLORA SEEDS ON THE GROUND, and that is not a loosening: a
+    # background plant carries no name because it is not individuated on the
+    # wire at all, so there is no identity for a look to outlive.
+    var k1 := VegetationScatter.placement_key(
+            VegetationScatter.family_key("grass"), Vector2(100.0, 200.0), 30.0)
+    var k2 := VegetationScatter.placement_key(
+            VegetationScatter.family_key("grass"), Vector2(160.0, 200.0), 30.0)
+    check(k1 != k2, "two sub-cells share a placement key, so this check proves nothing")
+    check(RungSkin.seed_for_placement(k1, "hue") != RungSkin.seed_for_placement(k2, "hue"),
+            "two stands of one family got one wobble, so the skin is flat where the "
+            + "placement is not")
+    check(RungSkin.seed_for_placement(k1, "hue") == RungSkin.seed_for_placement(k1, "hue"),
+            "one stand's wobble moved between two reads of it")
+    check(RungSkin.seed_for_placement(k1, "hue") != RungSkin.seed_for_placement(k1, "height"),
+            "two attributes of one stand share a seed, so they wobble together and the "
+            + "skin reports one number twice")
+
+    # AND IT COMPUTES FROM BUNDLE CONTENTS ALONE, which was one of the five
+    # tests the bundle's fields were chosen against. Running it is the whole
+    # point of building the skin before anything draws it.
+    var fs := family_set()
+    var fl := fixture()
+    if fs.is_loaded() and not fs.nodes().is_empty():
+        var mock := MockProducer.over(FixturePassthrough.over(fl), fs)
+        var centres := {}
+        for i in 6:
+            for j in 6:
+                centres["cell|%d_%d" % [i, j]] = Vector2(float(i) * 10000.0, float(j) * 10000.0)
+        var observer := _dev_observer()
+        observer["ground_point"] = PackedFloat64Array([0.0, 0.0, 0.0])
+        var b := mock.bundle_for(fl.windows[0], 0, observer, centres)
+        var near := "cell|0_0"
+        var far := "cell|5_5"
+        # THE LIFE FORM HAS TO BE ONE THE MOCK CAN REFINE, and asking for the
+        # first family instead is how this was written the first time: `grass`
+        # has no specific-rung asset, so it is never refined anywhere, and the
+        # skin correctly read the coarse rung under the observer's own feet.
+        # A test that picks its subject by ordinal rather than by property
+        # fails on correct code.
+        var life := fs.parent_of(str(fs.nodes()[0]))
+        check(RungSkin.refined_node(b, near, life) != "",
+                "the cell under the observer carries no overlay, so the skin has no "
+                + "boundary to read")
+        check(RungSkin.refined_node(b, far, life) == "",
+                "a cell three envelopes away carries an overlay")
+        check(RungSkin.earned_rung(b, near, life) == "specific"
+                        and RungSkin.earned_rung(b, far, life) == "life_form",
+                "the skin reads the same rung either side of the mock's boundary")
+        check(RungSkin.amplitude_for(RungSkin.precision_of_rung(
+                        RungSkin.earned_rung(b, near, life))) == 0.0,
+                "the refined cell still draws a wobble")
+        check(RungSkin.amplitude_for(RungSkin.precision_of_rung(
+                        RungSkin.earned_rung(b, far, life))) > 0.5,
+                "the unrefined cell draws almost no wobble, so the boundary is invisible")
+        # A FAMILY WITH NOWHERE FINER TO GO READS COARSE EVERYWHERE, including
+        # under the observer. That is the skin reporting the wire honestly:
+        # nothing was earned there because there is nothing there to earn.
+        var unrefinable := ""
+        for lfn in fs.life_forms():
+            if fs.parent_of(str(lfn)) == "" and RungSkin.refined_node(b, near, str(lfn)) == "":
+                unrefinable = str(lfn)
+                break
+        check(unrefinable != "" and RungSkin.earned_rung(b, near, unrefinable) == "life_form",
+                "a family with no finer node was drawn as refined, or this basin's families "
+                + "all have specific assets and this check no longer bites")
+    check(RungSkin.DEV_ONLY and not RungSkin.enabled(false),
+            "the skin draws in a release build. Its perturbing half is a transducer adding "
+            + "what the producer did not send, which is a corpus question this repo does "
+            + "not answer by shipping it.")
+    print("skin: amplitude 0 at the finest rung, rungs separated by %s beyond the widest "
+            % String.num(margin, 3)
+            + "wobble, 0 of %d re-identified across a restoration against %d of %d for a "
+                    % [subjects.size(), control_hits, subjects.size()]
+            + "stable seed")

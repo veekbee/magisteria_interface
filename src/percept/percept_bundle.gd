@@ -150,9 +150,22 @@ var rows: Dictionary = {}
 var refinements: Dictionary = {}
 
 # -- subjects (channel 2) ----------------------------------------------------
-## token -> subject percept. Empty under passthrough: the fixture individuates
-## nothing, and inventing subjects from it would be a mock wearing a stub's
-## name.
+## token -> subject percept. Empty under BOTH stand-in producers, which
+## §20.4.5 states as a rule and not as a stage: the fixture individuates
+## nothing, so subjects invented from it would be a mock wearing a stub's name.
+## The keys are §20.4.3's per-observer tokens, and `TokenIssuer` is the toy
+## issuer that mints them -- built so a consumer's handling of rotation can be
+## exercised before a producer with real subjects exists, not so that this
+## region can be filled early.
+##
+## AND THE CLOSED WHITELIST STOPS AT THIS REGION'S DOOR. Every other level of
+## the document is checked against `DECLARED`; the inside of a subject is not,
+## because what a subject percept CONTAINS is not ruled anywhere this repo can
+## read, and declaring it here would be the prototype authoring the corpus
+## rather than conforming to it. So the gap is named: today the region is
+## always empty and the hole cannot be reached, and the day a producer fills it
+## the structure rule has a hole exactly where channel 2's content goes. That
+## is a question for the side that owns §20.4.5, and it is in the handback.
 var subjects: Dictionary = {}
 
 ## Set when a document was refused, with the reason. A refused bundle is not a
@@ -268,6 +281,25 @@ func node_index_of(node_key: String) -> int:
         for i in node_keys.size():
             _node_index[node_keys[i]] = i
     return int(_node_index.get(node_key, -1))
+
+
+## HOW AN OVERLAY IS KEYED, IN ONE PLACE. A refinement names a cell and the
+## taxon axis being refined within it, so the key is the pair. The format lives
+## here rather than at the producer that writes it, because the reader is a
+## different file from the writer and a string format with two authors is a
+## format that can drift between them by a character.
+static func refinement_key(residence_key: String, axis_node: String) -> String:
+    return "%s|%s" % [residence_key, axis_node]
+
+
+## The node one cell's axis is refined to, or "" where no overlay is present.
+##
+## "" IS THE COARSE RUNG, NOT A MISSED READ. Overlays are sent only where they
+## are earned, so absence is the common case and the answer a consumer wants:
+## draw the axis node itself. A caller that treated absence as a failure would
+## refuse most of the basin.
+func refined_to(residence_key: String, axis_node: String) -> String:
+    return str(refinements.get(refinement_key(residence_key, axis_node), ""))
 
 
 ## Two bundles share a key axis when they describe the same world. A consumer

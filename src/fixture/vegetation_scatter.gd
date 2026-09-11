@@ -578,7 +578,12 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 # rung boundary falls BETWEEN cells and never inside one, which
                 # is what makes "no frame draws one subject at two rungs" a
                 # property of the placement rather than a hope about it.
-                var node := str(refinements.get("%s|%s" % [cell_key_s, life_form], life_form))
+                # KEYED THROUGH THE BUNDLE'S OWN FORMAT. The overlay arrives
+                # from a bundle, so the bundle says how it is keyed; this line
+                # spelled the pair out itself, as did three others in three
+                # subtrees, which is four chances for one string to drift.
+                var node := str(refinements.get(
+                        PerceptBundle.refinement_key(cell_key_s, life_form), life_form))
                 if not _fs.can_draw(node):
                     node = life_form
                 var phen := phenology_for(seasons[gi], cell, bio)

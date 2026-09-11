@@ -22,7 +22,19 @@ extends RefCounted
 ## WHAT IS INSIDE IT TODAY, AND WHAT IS NOT.
 ##
 ##   Inside: the channel-1 ground paint. `FieldOverlay` binds its pixel-to-cell
-##   join to a bundle's key axis and paints rows out of bundles.
+##   join to a bundle's key axis and paints rows out of bundles. `DebugPlayer`
+##   moves a body at the speed the bundle's locomotion reports. `FlowlineDrape`
+##   paints a reach from `node.streamflow` -- see below, it is the one entry
+##   that ever left the exclusion list.
+##
+##   `RungSkin` is inside for a reason worth stating, because it is the first
+##   file here whose membership is ENFORCEMENT rather than description. The
+##   skin's amplitude is required to key on the precision a percept carries and
+##   never on how far that percept is from the truth, and the only way to hold
+##   that is to put the skin somewhere the truth cannot be reached from. A test
+##   asserting it does not use the truth would pass in a tree where the truth
+##   was one call away, because the assertion would have nothing to look at.
+##   The scan is the guarantee; the directory is the mechanism.
 ##
 ##   Outside, with reasons rather than by omission -- the reasons are the
 ##   finding, and each is a producer-side question this repo must not answer
