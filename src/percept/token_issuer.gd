@@ -20,14 +20,36 @@ extends RefCounted
 ## list of subjects could recompute every token for every observer. The salt
 ## stays on this side of the interface; only the token is carried.
 ##
-## THAT COSTS SOMETHING AND THE COST IS STATED. Decision 180 asks that one
-## `(world, observer, moment)` produce one bundle byte for byte, and a token is
-## in the bundle. A token cannot also be a pure function of the moment -- see
-## the counter below -- so determinism here is over the EPISODE: replaying a
-## session from its start reissues the same tokens in the same order, and
-## replaying one moment out of the middle of it does not. That is a real
-## narrowing of 180's scope for channel 2, and it is written here rather than
-## discovered later.
+## A TOKEN NEEDS STATE THAT OUTLIVES THE RESIDENT ENTRY, AND THAT SETTLES
+## WHERE THE ISSUER LIVES.
+##
+## §20.4.5 asks that one `(world, observer, moment)` produce one bundle byte
+## for byte -- decision 180's percept-as-pure-function extended to the document
+## that carries it. (Filed against 180 here first, wrongly: 180 is the prefix
+## invariant, about what a percept may SAY. This is about what a document may
+## be NAMED, and the correction matters because the wrong rule is the one a
+## later reader finds.)
+##
+## Two of the three boundaries are functions of the present state -- mix the
+## rung in, mix the epoch in. The third is not: "has left the envelope and come
+## back" is history, and a derivation from state alone hands a returning
+## subject the name it left with. So an issuer must keep something, and the
+## counter below is that something.
+##
+## "PURE FUNCTION OF THE MOMENT" NEVER MEANT "RECOMPUTABLE FROM NOTHING": a
+## moment is a world state, and every registered array in a simulation is
+## history by that test. So the question is not whether the issuer holds state
+## but WHOSE state it is. This one is client-local, which genuinely is outside
+## `(world, observer, moment)` -- so determinism HERE is over the episode, and
+## replaying one moment out of the middle of a session does not reproduce it.
+## Held by B as registered state, restored under decision 932's mapping like
+## anything else, it is inside the world and §20.4.5 holds unchanged.
+##
+## WHICH IS THE ACTUAL CONSEQUENCE, AND IT IS A CONSTRAINT RATHER THAN A
+## WEAKENING: a transducer holding state that determines wire content is
+## authoring the wire. **The token issuer cannot be the transducer.** It is B's,
+## and this file is correctly a toy -- not because it is unfinished, but
+## because the finished one cannot live in this repo at all.
 ##
 ## WHAT IT DOES NOT DO, SAID PLAINLY. Rotation closes the durable case: a
 ## client cannot carry a name across episodes and re-identify a subject from

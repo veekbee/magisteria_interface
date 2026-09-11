@@ -56,6 +56,7 @@ FIXTURE_PIN = ROOT / "assets" / "fixture" / "PIN"
 CONTOUR_PIN = ROOT / "assets" / "contours" / "PIN"
 TILES_PIN = ROOT / "assets" / "terrain" / "tiles" / "PIN"
 LAYERS_PIN = ROOT / "assets" / "terrain" / "layers" / "PIN"
+DETAIL_PIN = ROOT / "assets" / "detail" / "PIN"
 
 #: The percept bundle golden (§20.4.5). Not a pinned import -- it is authored
 #: here -- but it makes a claim ABOUT the contract, which is this tool's
@@ -363,6 +364,7 @@ def main(argv=None) -> int:
                 + check_multi(CONTOUR_PIN, "contours")
                 + check_multi(TILES_PIN, "tiles")
                 + check_multi(LAYERS_PIN, "layers")
+                + check_multi(DETAIL_PIN, "detail")
                 + check_golden(json.loads(ARTEFACT_PATH.read_bytes())
                                if ARTEFACT_PATH.exists() else {}))
     scope = "local"
@@ -372,7 +374,7 @@ def main(argv=None) -> int:
         problems += check_against(pin, sim)
         for pp, label in ((TERRAIN_PIN, "terrain"), (FIXTURE_PIN, "fixture"),
                           (CONTOUR_PIN, "contours"), (TILES_PIN, "tiles"),
-                          (LAYERS_PIN, "layers")):
+                          (LAYERS_PIN, "layers"), (DETAIL_PIN, "detail")):
             probs, tally = check_against_multi(sim, pp, label)
             problems += probs
             if pp.exists():
@@ -395,7 +397,7 @@ def main(argv=None) -> int:
         print(f"golden bundle OK: {n} row(s) on the contract's own lattices")
     for pp, label in ((TERRAIN_PIN, "terrain"), (FIXTURE_PIN, "fixture"),
                       (CONTOUR_PIN, "contours"), (TILES_PIN, "tiles"),
-                      (LAYERS_PIN, "layers")):
+                      (LAYERS_PIN, "layers"), (DETAIL_PIN, "detail")):
         if pp.exists():
             d = json.loads(pp.read_text())
             names = d.get("files", {})

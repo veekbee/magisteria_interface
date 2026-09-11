@@ -46,6 +46,33 @@ const CLASSES := ["playa", "floor", "slope", "talus", "riparian_margin"]
 ## asking for a millimetre under a kilometre parent would ask for twenty.
 const MAX_OCTAVES := 12
 
+## Salts, so that three uses of one mixer cannot collide. Published like
+## everything else `d` reads, and named rather than spelled at the call site.
+const SALT_GRADIENT := 0x67726164        ## "grad"
+const SALT_RESIDUAL := 0x72657364        ## "resd"
+
+## The sample set `residual_rms` is measured over -- a PURE FUNCTION OF THE
+## SEED AND THE LATTICE, so it is reproducible in any language rather than a
+## number someone measured once. The offsets come from the mixer and not from a
+## regular sub-grid, because a regular sampling coarser than the finest octave
+## reports its own step rather than the field's, which is the sampling mistake
+## this repo has now made in three different places.
+const RESIDUAL_SAMPLES := 4096
+const RESIDUAL_BLOCK_CELLS := 16
+
+## The order the strata are summed in. FIXED, and not a dictionary's iteration
+## order: floating-point addition is not associative, and the conformance
+## tolerance is 1e-15 m, which is inside the range a reordering moves.
+const STRATA_ORDER := ["playa", "floor", "slope", "talus", "riparian_margin"]
+
+## WHICH PRECISION THE POSITION ARRIVED IN. The arithmetic below is float64
+## either way; what this decides is the ONE comparison that has to be done in
+## the caller's own precision -- whether a position is exactly a parent node.
+## A `Vector2` carries float32, and the float32 rounding of a node is not the
+## node, so a float64 comparison against a float32 carrier's position never
+## fires and the exactness silently stops holding for the renderer.
+enum { CARRIER_F32, CARRIER_F64 }
+
 var rows: Dictionary = {}
 ## Where the rows came from. Part of what makes two fields the SAME FUNCTION --
 ## see `same_function_as`, and the guard that needed it.
@@ -55,6 +82,43 @@ var why_absent: String = ""
 ## Metres between parent lattice samples. The detail is exactly zero on this
 ## grid and everything below it is synthesised.
 var parent_spacing_m: float = 0.0
+
+## THE PARENT LATTICE'S CORNER, AS A FIELD AND NOT A READ THROUGH THE RASTER.
+##
+## This file has always said the parent lattice is named separately from the
+## heightfield's texel grid, because exactness is defined against the grid
+## BEING REFINED and reading it off whichever raster happened to be loaded
+## would tie it to the wrong thing. The prose said it; the arithmetic still
+## reached through `_hf`. It is a field now, defaulted from the heightfield,
+## and that completes a separation the file already claimed.
+##
+## AND IT IS THE ONE NUMBER THE CLIENT CANNOT GET RIGHT FROM A DECIMAL. The
+## export carries the corner as `-1809292.9365744274`; Godot's string-to-double
+## returns the double 2.22e-10 m from that value where the correctly rounded
+## one is 1.10e-11 m away -- the FARTHER of the two neighbours, a full ulp out.
+## At a float32 render that is nine orders below the position quantum and
+## cannot matter. In float64 it moves every parent node by an ulp, so the exact
+## node test misses and property 2 -- the one property stated as exact rather
+## than within tolerance -- fails against a reference that read the same
+## decimal correctly. Hence the setter: a caller holding the corner's BITS can
+## put them here, which is the same rule the conformance vectors already apply
+## to every other position they carry.
+var parent_origin_x: float = 0.0
+var parent_origin_y: float = 0.0
+
+## THE PUBLISHED WORLD SEED, and the name it is derived from. 985 names a world
+## seed among `d`'s three inputs; a hex literal in a source file is not one,
+## because a seed exists so that a world can be RE-SEEDED and naming a second
+## world should be a legible act with a reproducible consequence. The rows
+## carry the name and the seed, and `StableHash.of_name` is the derivation.
+var world_name: String = ""
+var world_seed: int = 0
+
+## `rms(f - P[f])` per landform at THIS field's parent spacing. Read from the
+## rows where they publish it for this lattice, computed where they do not --
+## see `residual_rms_for`, which is also where the one gap in the artefact is
+## recorded.
+var _residual: Dictionary = {}
 
 ## Finest wavelength the function synthesises, metres. Read from the octave
 ## count of the coarsest row rather than declared, so it cannot drift from what
@@ -123,6 +187,8 @@ static func load_from(hf: Heightfield, path: String = ROWS_PATH,
     var df := DetailField.new()
     df._hf = hf
     df.parent_spacing_m = spacing_m if spacing_m > 0.0 else hf.pixel_size_m
+    df.parent_origin_x = hf.origin_x
+    df.parent_origin_y = hf.origin_y
     df.bind_layers(layers)
     if not FileAccess.file_exists(path):
         df.why_absent = "no parameter rows at %s" % path
@@ -134,6 +200,18 @@ static func load_from(hf: Heightfield, path: String = ROWS_PATH,
         return df
     df.rows = parsed
     df.rows_path = path
+    # THE SEED IS REQUIRED AND ITS ABSENCE IS A REFUSAL, not a default. A rows
+    # file with no `world_seed` describes a world that cannot be re-seeded,
+    # which is not the function 985 rules; and defaulting to a constant here
+    # would make every clone agree with itself and with nothing else.
+    df.world_name = str(df.rows.get("world_name", ""))
+    if not df.rows.has("world_seed"):
+        df.why_absent = (("%s declares no `world_seed`. " % path)
+                + "985 names a published world seed among `d`'s three inputs, and these rows "
+                + "name none, so there is no function to evaluate rather than a slightly "
+                + "different one.")
+        return df
+    df.world_seed = int(df.rows["world_seed"])
     df.calibrated_at_parent_m = float(df.rows.get("calibrated_at_parent_m", 0.0))
     if df.calibrated_at_parent_m <= 0.0:
         # NOT A SILENT 1:1. A rows file that does not say which parent its
@@ -197,6 +275,15 @@ func for_parent(spacing_m: float) -> DetailField:
     df.calibrated_at_parent_m = calibrated_at_parent_m
     df.calibration_note = calibration_note
     df.why_absent = why_absent
+    df.world_name = world_name
+    df.world_seed = world_seed
+    df.parent_origin_x = parent_origin_x
+    df.parent_origin_y = parent_origin_y
+    # THE RESIDUAL IS NOT CARRIED ACROSS. `rms(f - P[f])` is a property of the
+    # row, the seed AND THE LATTICE -- a different parent is a different octave
+    # ladder and a different subtraction -- so copying it here would apply one
+    # lattice's normalisation to another's surface, which is the shape of the
+    # defect this constant was published to remove.
     df.parent_spacing_m = spacing_m
     df._layer_z = df.level_for_spacing(spacing_m)
     df.finest_m = INF
@@ -221,6 +308,7 @@ func same_function_as(other: DetailField) -> bool:
     if other == null:
         return false
     return (rows_path == other.rows_path
+            and world_seed == other.world_seed
             and is_equal_approx(calibrated_at_parent_m, other.calibrated_at_parent_m))
 
 
@@ -339,14 +427,25 @@ func height_at(w: Vector2) -> float:
 ## HAND's horizontal sibling, already in use for this class, and stated here as
 ## the stand-in it is rather than passed off as the thing 985 asked for.
 func weights_at(w: Vector2) -> Dictionary:
+    return weights_for(slope_degrees_at(w), hand_m(w))
+
+
+## THE SAME MIXTURE, WITH ITS TWO CONDITIONS GIVEN RATHER THAN SAMPLED.
+##
+## Separated from the position for the reason `slope_weights` was: the property
+## that matters is a fact about the arithmetic, and driving it through a world
+## position tests it only at whatever slopes and heights the basin happens to
+## have. It is also the shape the published function takes -- slope and HAND
+## are arguments to `d`, and which raster they were read from, at which level,
+## is the caller's question and has its own answer.
+func weights_for(slope_deg: float, hand: float) -> Dictionary:
     var c: Dictionary = rows.get("classifier", {})
-    var deg := slope_degrees_at(w)
-    if is_nan(deg):
+    if is_nan(slope_deg):
         # No slope anywhere -- the layer has a hole and the lattice could not
         # answer either. One stratum at full weight, the same answer the hard
         # classifier gave, because there is nothing here to blend BETWEEN.
         return {"floor": 1.0}
-    var chain := slope_weights(deg)
+    var chain := slope_weights(slope_deg)
 
     # THE MARGIN RIDES HAND, NOT DISTANCE. 985 conditions on HAND and slope,
     # and those are the two inputs here. It is also the better field for this
@@ -355,12 +454,11 @@ func weights_at(w: Vector2) -> Dictionary:
     # margin row describes, while a horizontal distance would have cut it off
     # at a fixed radius that no floodplain has.
     #
-    # NAN IS FULL STRENGTH AND NOT ZERO. Absent HAND means the cell is outside
-    # the basin or a filled descent reaches no channel -- endorheic and
+    # NAN IS NO MARGIN AND NOT THE MAXIMUM. Absent HAND means the cell is
+    # outside the basin or a filled descent reaches no channel -- endorheic and
     # edge-draining ground, 6.3 million pixels. Undrained upland is not a
-    # floodplain, so no margin applies rather than the maximum applying.
+    # floodplain.
     var r := 0.0
-    var hand := hand_m(w)
     if not is_nan(hand):
         var below := float(c.get("riparian_below_hand_m", 10.0))
         var mhalf := 0.5 * maxf(0.0, float(c.get("riparian_blend_hand_m", 0.0)))
@@ -446,59 +544,179 @@ static func _ramp(x: float, centre: float, half: float) -> float:
 func detail_at(w: Vector2, landform: String = "") -> float:
     if not is_loaded():
         return 0.0
+    # THE CARRIER IS CONCEDED HERE AND NOWHERE ELSE. A `Vector2` is single
+    # precision and this basin's eastings pass 1.3 million metres, where a
+    # float32 step is 0.125 m on one axis and 0.25 m on the other -- coarser
+    # than the finest wavelength the function synthesises. That costs almost
+    # nothing on this ladder (the finest octaves carry under a thousandth of
+    # the variance) and the rendering is not re-plumbed for it. What it does
+    # cost is the GRADING, which happens below a metre, so the conformance path
+    # takes float64 and this one says out loud that it does not.
+    return detail_at64(float(w.x), float(w.y), slope_degrees_at(w), hand_m(w),
+            landform, CARRIER_F32)
+
+
+## `d(x, y)` AT FULL PRECISION, WITH ITS CONDITIONING GIVEN RATHER THAN SAMPLED.
+##
+## This is the published function's own signature: position, slope, HAND. The
+## conditioning fields are arguments and not raster reads, which is what keeps
+## `d` pure, keeps the conformance vectors self-contained, and keeps "do two
+## implementations sample the same layers the same way" a separate question
+## from "do two implementations of `d` agree".
+func detail_at64(x: float, y: float, slope_deg: float, hand: float,
+                 landform: String = "", carrier: int = CARRIER_F64) -> float:
+    if not is_loaded():
+        return 0.0
     if landform != "":
-        return _stratum_detail(w, landform)
+        return _stratum_detail64(x, y, landform, hand, carrier)
+    var weights := weights_for(slope_deg, hand)
     var total := 0.0
-    var weights := weights_at(w)
-    for name in weights:
-        total += float(weights[name]) * _stratum_detail(w, str(name))
+    # IN A FIXED ORDER. A zero-weight stratum is skipped rather than added as
+    # `0.0 * d`, which is the same float64 either way and one noise field
+    # cheaper -- the strata have compact support, so most positions are one
+    # stratum and no position is more than two.
+    for name in STRATA_ORDER:
+        if not weights.has(name):
+            continue
+        var wgt := float(weights[name])
+        if wgt == 0.0:
+            continue
+        total += wgt * _stratum_detail64(x, y, str(name), hand, carrier)
     return total
 
 
 ## One stratum's own detail term, at its own amplitude.
-func _stratum_detail(w: Vector2, landform: String) -> float:
+##
+## THE AMPLITUDE IS DIVIDED BY THE RESIDUAL, and that division is the fix for a
+## defect that would have been invisible in both implementations at once. The
+## rows' units block has always read "standard deviation of the detail term" --
+## the sd of what the function ADDS. `f` is normalised to unit variance and
+## then `P[f]` is subtracted from it, so what lands is `A * rms(f - P[f])`,
+## which is 3.5x to 4.4x short of `A` on these rows. Decision 986's bands are
+## measured from the residual on real ground, so grading the under-delivered
+## surface against them would have failed for a reason nobody could see: two
+## conforming implementations computing the same wrong number and agreeing
+## perfectly.
+func _stratum_detail64(x: float, y: float, landform: String, hand: float,
+                       carrier: int) -> float:
     var p := row(landform)
     if p.is_empty():
         return 0.0
-    var amp := amplitude_for(landform) * taper_at(w)
-    if amp <= 0.0:
+    var rms := residual_rms_for(landform)
+    if rms <= 0.0:
         return 0.0
-    # f(x) minus its own coarse component. See the header: this is what makes
-    # the sum exact at every parent sample.
-    return amp * (_noise(w, p) - _coarse_component(w, p))
+    var amp := amplitude_for(landform) / rms
+    return amp * taper_for(hand) * (_noise64(x, y, p) - _coarse_component64(x, y, p, carrier))
+
+
+## `rms(f - P[f])` for one row on THIS field's parent lattice.
+##
+## A PURE FUNCTION OF THE ROW, THE LATTICE AND THE SEED, published beside the
+## rows so that no consumer estimates it. It is read where the artefact carries
+## it for the parent being refined, and computed by the artefact's own recipe
+## where it does not -- which is reproduction rather than estimation, because
+## the sample set is itself a published function of the seed.
+##
+## AND THE LATTICE IS PART OF IT, WHICH IS EASY TO MISS. The first cut of this
+## artefact published one number per row, for the 100 m parent the near-field
+## patches refine. The far field refines the 1 km overview, where the ladder is
+## twelve rungs instead of nine and the subtraction removes a different band.
+## Measured here at -6.2% to +3.8% across the rows, and independently at
+## -5.1% to +6.6% on the producing side: small, silent, and the same class of
+## error the constant was published to remove. The rows now carry the number
+## at every spacing anyone refines, and the computed path below stays as the
+## fallback it was written to be.
+func residual_rms_for(landform: String) -> float:
+    if _residual.has(landform):
+        return float(_residual[landform])
+    var p := row(landform)
+    var v := NAN
+    # BY SPACING AND NOT BY PYRAMID LEVEL. Which parents get refined is a fact
+    # about consumers, not about the pyramid, and a level nobody refines needs
+    # no normalisation published. The keys are compared as numbers rather than
+    # as strings so that "100" and "100.0" are the same lattice.
+    for key in (p.get("residual_rms_by_parent_m", {}) as Dictionary):
+        if is_equal_approx(float(str(key)), parent_spacing_m):
+            v = float((p["residual_rms_by_parent_m"] as Dictionary)[key])
+            break
+    if is_nan(v):
+        # The scalar is the SHIPPED parent's value, so it is only read when it
+        # is that parent -- never as a default for an unlisted one.
+        var at := float((rows.get("parent", {}) as Dictionary).get("spacing_m", 0.0))
+        var scalar := float(p.get("residual_rms", 0.0))
+        if scalar > 0.0 and at > 0.0 and is_equal_approx(at, parent_spacing_m):
+            v = scalar
+    if is_nan(v) or v <= 0.0:
+        v = compute_residual_rms(landform)
+    _residual[landform] = v
+    return v
+
+
+## Which of the two the number came from, for a report that has to say whether
+## a constant was read or reproduced.
+func residual_source(landform: String) -> String:
+    var p := row(landform)
+    for key in (p.get("residual_rms_by_parent_m", {}) as Dictionary):
+        if is_equal_approx(float(str(key)), parent_spacing_m):
+            return "published at %s m" % String.num(parent_spacing_m, 0)
+    var at := float((rows.get("parent", {}) as Dictionary).get("spacing_m", 0.0))
+    if float(p.get("residual_rms", 0.0)) > 0.0 and is_equal_approx(at, parent_spacing_m):
+        return "published, the artefact's own parent"
+    return ("recomputed by the published recipe: the rows carry no residual for a %s m parent"
+            % String.num(parent_spacing_m, 0))
+
+
+## The published recipe, evaluated. Four thousand positions drawn from the
+## mixer over a sixteen-cell block at the lattice origin, and the RMS of the
+## residual over them.
+func compute_residual_rms(landform: String) -> float:
+    var p := row(landform)
+    if p.is_empty() or parent_spacing_m <= 0.0:
+        return 0.0
+    var span := float(RESIDUAL_BLOCK_CELLS) * parent_spacing_m
+    var acc := 0.0
+    for k in RESIDUAL_SAMPLES:
+        var u := StableHash.unit(StableHash.over([world_seed, SALT_RESIDUAL, 0, k]))
+        var v := StableHash.unit(StableHash.over([world_seed, SALT_RESIDUAL, 1, k]))
+        var px := parent_origin_x + u * span
+        var py := parent_origin_y - v * span
+        var r := _noise64(px, py, p) - _coarse_component64(px, py, p, CARRIER_F64)
+        acc += r * r
+    return sqrt(acc / float(RESIDUAL_SAMPLES))
 
 
 ## `f` sampled on the parent lattice and interpolated back with the same
 ## Catmull-Rom the heightfield uses. Interpolating, so it equals `f` at nodes.
-func _coarse_component(w: Vector2, p: Dictionary) -> float:
-    var t := parent_coord(w)
+func _coarse_component64(x: float, y: float, p: Dictionary, carrier: int) -> float:
+    var tx_c := (x - parent_origin_x) / parent_spacing_m - 0.5
+    var ty_c := (parent_origin_y - y) / parent_spacing_m - 0.5
     # THE NODE CASE IS TAKEN DIRECTLY, AND THE TEST FOR IT IS AN EXACT
     # COMPARISON OF POSITIONS, not a tolerance on the cell coordinate.
     #
-    # The method is exact in exact arithmetic: at a node the interpolant
-    # returns the sample it interpolates. What is not exact is the coordinate.
-    # A world position here arrives in a `Vector2`, which is SINGLE precision,
-    # and this basin's eastings pass 1.3 million metres -- where a float32 step
-    # is 0.125 m. So a "point" is a box an eighth of a metre across, and the
-    # cell coordinate of a node comes out 6.1e-5 cells away from an integer
-    # rather than 1e-13. A first attempt used an epsilon of a billionth of a
-    # cell and never fired; the detail measured 2e-5 m on the lattice, which
-    # is nothing to look at and is not zero, and "exactly" is the whole of the
-    # constraint.
+    # The method is exact in exact arithmetic; the coordinate is not. A
+    # division and a subtraction put a node's cell coordinate a few ulp off an
+    # integer, and an epsilon large enough to cover that would be a flat spot
+    # around every node -- measured at 0.06 m across, on a surface whose whole
+    # claim is that it is ZERO there and not merely small.
     #
-    # An epsilon large enough to cover the quantisation would be a 0.06 m flat
-    # spot around every node. Comparing the POSITIONS instead has neither
-    # problem: a consumer computes node positions the same way this does and
-    # gets the identical float32, and there is no representable point strictly
-    # between a node and half an ulp of it to flatten.
-    var nx: int = int(round(t.x))
-    var ny: int = int(round(t.y))
-    if parent_node(nx, ny) == w:
-        return _noise(w, p)
-    var x0 := int(floor(t.x))
-    var y0 := int(floor(t.y))
-    var tx := t.x - float(x0)
-    var ty := t.y - float(y0)
+    # AND THE COMPARISON IS DONE IN THE CALLER'S PRECISION. A consumer that
+    # built this position through a `Vector2` holds the float32 rounding of a
+    # node, which is not the node; comparing that against the float64 node
+    # never fires, and the exactness would hold for the conformance vectors and
+    # quietly stop holding for everything that draws.
+    var nx := int(round(tx_c))
+    var ny := int(round(ty_c))
+    var wx := parent_origin_x + (float(nx) + 0.5) * parent_spacing_m
+    var wy := parent_origin_y - (float(ny) + 0.5) * parent_spacing_m
+    var on_node := (wx == x and wy == y) if carrier == CARRIER_F64 \
+            else Vector2(wx, wy) == Vector2(x, y)
+    if on_node:
+        return _noise64(x, y, p)
+
+    var x0 := int(floor(tx_c))
+    var y0 := int(floor(ty_c))
+    var tx := tx_c - float(x0)
+    var ty := ty_c - float(y0)
     var name := str(p.get("_name", ""))
     var entry: Array = _stencil.get(name, [])
     var stencil := PackedFloat64Array()
@@ -508,7 +726,15 @@ func _coarse_component(w: Vector2, p: Dictionary) -> float:
         stencil.resize(16)
         for j in 4:
             for i in 4:
-                stencil[j * 4 + i] = _noise(parent_node(x0 - 1 + i, y0 - 1 + j), p)
+                # THE STENCIL NODES ARE BUILT IN float64. They used to come
+                # through `parent_node`, which returns a `Vector2`, so the
+                # sixteen samples `P[f]` is built from were taken up to an
+                # eighth of a metre away from the nodes they were supposed to
+                # be at. The node case short-circuits, so exactness survived
+                # and nothing failed; what moved was every off-node value.
+                stencil[j * 4 + i] = _noise64(
+                        parent_origin_x + (float(x0 - 1 + i) + 0.5) * parent_spacing_m,
+                        parent_origin_y - (float(y0 - 1 + j) + 0.5) * parent_spacing_m, p)
         _stencil[name] = [x0, y0, stencil]
     var rows_v := PackedFloat64Array()
     rows_v.resize(4)
@@ -526,13 +752,24 @@ func _coarse_component(w: Vector2, p: Dictionary) -> float:
 ## arithmetic uses, and reading it off `world_to_texel` would have tied it to
 ## whichever raster happened to be loaded.
 func parent_coord(w: Vector2) -> Vector2:
-    return Vector2((w.x - _hf.origin_x) / parent_spacing_m - 0.5,
-                   (_hf.origin_y - w.y) / parent_spacing_m - 0.5)
+    return Vector2((w.x - parent_origin_x) / parent_spacing_m - 0.5,
+                   (parent_origin_y - w.y) / parent_spacing_m - 0.5)
 
 
 func parent_node(ix: int, iy: int) -> Vector2:
-    return Vector2(_hf.origin_x + (float(ix) + 0.5) * parent_spacing_m,
-                   _hf.origin_y - (float(iy) + 0.5) * parent_spacing_m)
+    return Vector2(parent_origin_x + (float(ix) + 0.5) * parent_spacing_m,
+                   parent_origin_y - (float(iy) + 0.5) * parent_spacing_m)
+
+
+## The same node, at the precision the lattice is actually defined in. The
+## `Vector2` form above is what a renderer compares against; this is what the
+## arithmetic uses and what a conformance vector is written in.
+func parent_node_x(ix: int) -> float:
+    return parent_origin_x + (float(ix) + 0.5) * parent_spacing_m
+
+
+func parent_node_y(iy: int) -> float:
+    return parent_origin_y - (float(iy) + 0.5) * parent_spacing_m
 
 
 ## Fractional Brownian motion over gradient noise, band-limited between the
@@ -541,28 +778,27 @@ func parent_node(ix: int, iy: int) -> Vector2:
 ## ANISOTROPY IS A COORDINATE SCALE, applied before sampling: a hillside's
 ## roughness is lineated downslope and an isotropic field is visibly not a
 ## hillside. The ratio is a fake row; the mechanism is not.
-func _noise(w: Vector2, p: Dictionary) -> float:
+func _noise64(x: float, y: float, p: Dictionary) -> float:
     var octaves := octaves_for(str(p.get("_name", "")))
-    if octaves <= 1 and p.has("finest_wavelength_m"):
-        octaves = clampi(int(ceil(log(parent_spacing_m
-                / float(p["finest_wavelength_m"])) / log(2.0))), 1, MAX_OCTAVES)
     var slope := float(p.get("spectral_slope", 1.0))
     var ratio := maxf(0.05, float(p.get("anisotropy", 1.0)))
     var theta := deg_to_rad(float(p.get("orientation_deg", 0.0)))
     var c := cos(theta)
     var s := sin(theta)
-    var along := (w.x * c + w.y * s) / ratio
-    var across := -w.x * s + w.y * c
-    var q := Vector2(along, across)
+    var along := (x * c + y * s) / ratio
+    var across := -x * s + y * c
 
     var total := 0.0
     var norm := 0.0
     var wavelength := parent_spacing_m
     var amp := 1.0
-    for _o in octaves:
+    # THE LADDER STARTS AT HALF THE PARENT SPACING, which is property 3 before
+    # the subtraction has done anything: `d` may only carry what the parent
+    # cannot, and the parent carries everything at and above its own spacing.
+    for o in octaves:
         wavelength *= 0.5
         amp *= pow(0.5, slope)
-        total += amp * _gradient_noise(q / wavelength)
+        total += amp * _gradient_noise(along / wavelength, across / wavelength, o)
         norm += amp * amp
     return 0.0 if norm <= 0.0 else total / sqrt(norm)
 
@@ -599,17 +835,17 @@ func orientation_note() -> String:
 ## Gradient noise on the unit lattice: hashed gradients at the corners, dotted
 ## with the offset, blended with a quintic fade. Zero mean, band-limited to one
 ## lattice spacing, and a pure function of position.
-func _gradient_noise(q: Vector2) -> float:
-    var x0 := int(floor(q.x))
-    var y0 := int(floor(q.y))
-    var fx := q.x - float(x0)
-    var fy := q.y - float(y0)
+func _gradient_noise(qx: float, qy: float, octave: int) -> float:
+    var x0 := int(floor(qx))
+    var y0 := int(floor(qy))
+    var fx := qx - float(x0)
+    var fy := qy - float(y0)
     var ux := _fade(fx)
     var uy := _fade(fy)
-    var n00 := _dot_grad(x0, y0, fx, fy)
-    var n10 := _dot_grad(x0 + 1, y0, fx - 1.0, fy)
-    var n01 := _dot_grad(x0, y0 + 1, fx, fy - 1.0)
-    var n11 := _dot_grad(x0 + 1, y0 + 1, fx - 1.0, fy - 1.0)
+    var n00 := _dot_grad(x0, y0, octave, fx, fy)
+    var n10 := _dot_grad(x0 + 1, y0, octave, fx - 1.0, fy)
+    var n01 := _dot_grad(x0, y0 + 1, octave, fx, fy - 1.0)
+    var n11 := _dot_grad(x0 + 1, y0 + 1, octave, fx - 1.0, fy - 1.0)
     return lerpf(lerpf(n00, n10, ux), lerpf(n01, n11, ux), uy)
 
 
@@ -617,8 +853,21 @@ static func _fade(t: float) -> float:
     return t * t * t * (t * (t * 6.0 - 15.0) + 10.0)
 
 
-static func _dot_grad(ix: int, iy: int, dx: float, dy: float) -> float:
-    var a := TAU * StableHash.unit(StableHash.of3(ix, iy, 0x9e37))
+## A hashed unit gradient at a lattice node, dotted with the offset.
+##
+## THE OCTAVE INDEX IS IN THE KEY, AND IT WAS NOT. §16.5.1 names "quantised
+## position plus octave index" and this keyed on position alone, with one salt
+## at every octave. Each octave halves the lattice, so every second node of the
+## finer octave landed on a coarser one carrying the IDENTICAL gradient vector:
+## the octaves were aligned copies of one field rather than independent draws
+## of it, which is not the fBm the exponent rows describe. Nothing looked
+## wrong, because a sum of aligned copies is still a plausible-looking surface.
+##
+## AND THE WORLD SEED IS IN IT. `0x9e37` was the whole of the world's identity
+## and it was a constant in this file.
+func _dot_grad(ix: int, iy: int, octave: int, dx: float, dy: float) -> float:
+    var a := TAU * StableHash.unit(
+            StableHash.of5(world_seed, SALT_GRADIENT, octave, ix, iy))
     return cos(a) * dx + sin(a) * dy
 
 
@@ -751,8 +1000,12 @@ func distance_to_channel_m(w: Vector2) -> float:
 ## other way would have flattened 6.3 million pixels of real relief on the
 ## strength of a missing value.
 func taper_at(w: Vector2) -> float:
+    return taper_for(hand_m(w))
+
+
+## The same taper, with HAND given rather than sampled -- `d`'s own signature.
+func taper_for(hand: float) -> float:
     var h: Dictionary = rows.get("hand_taper", {})
-    var hand := hand_m(w)
     if is_nan(hand):
         return 1.0
     var floor_fraction := clampf(float(h.get("floor_fraction", 0.15)), 0.0, 1.0)

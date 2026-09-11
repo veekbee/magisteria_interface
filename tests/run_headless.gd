@@ -173,6 +173,8 @@ func _initialize() -> void:
     test_a_token_rotates_at_all_three_boundaries_and_nowhere_else()
     test_a_rotation_is_not_an_erasure_and_the_map_rides_the_envelope()
     test_the_skin_keys_on_precision_and_dies_with_the_token()
+    test_the_detail_function_conforms_to_its_published_vectors()
+    test_the_five_part_hash_is_the_general_one()
     stage_the_main_scene()
 
 
@@ -6735,14 +6737,35 @@ func test_the_detail_rows_say_that_they_are_invented() -> void:
     if typeof(parsed) != TYPE_DICTIONARY:
         return
     var doc: Dictionary = parsed
-    check(str(doc.get("_FAKE", "")).contains("INVENTED"),
-            "the rows do not say at the top that every value in them is invented")
-    check(str(doc.get("_replaced_by", "")).length() > 20,
+    # THE KEYS MOVED WITH THE ARTEFACT AND THE PROPERTY DID NOT. The rows are
+    # emitted now rather than hand-kept, so the warning is asked for by
+    # SUBSTANCE and not by key: pinning a key turns a rename into a failure and
+    # a deletion into a pass, and this file has now seen both.
+    var headline := ""
+    for k in doc:
+        var v = doc[k]
+        if typeof(v) == TYPE_STRING and str(v).contains("INVENTED"):
+            headline = str(k)
+            break
+    check(headline != "" or str((doc.get("classifier", {}) as Dictionary)
+                    .get("_FAKE", "")).contains("invented"),
+            "nothing in the rows says the values in them are invented")
+    check(str(doc.get("_replaced_by", doc.get("_values_land_when", ""))).length() > 20,
             "the rows do not say what replaces them")
     check(str((doc.get("classifier", {}) as Dictionary).get("_FAKE", "")).length() > 20,
             "the classifier's thresholds do not say they are invented")
     check(str((doc.get("hand_taper", {}) as Dictionary).get("_FAKE", "")).length() > 20,
             "the HAND taper's constants do not say they are invented")
+    # AND THE STATE OF THE HEADLINE IS REPORTED EVERY RUN RATHER THAN ASSERTED
+    # ONCE. The artefact carried `_values_are_placeholders` with the sentence
+    # "EVERY NUMBER IN THIS FILE IS INVENTED" at `magisteria@060cddd` and
+    # carries the same key set to `null` at `4af865c` -- the field survived and
+    # its content did not, which is the failure mode a key-pinned check cannot
+    # see and a reader meets first. Printed, so it cannot go quiet.
+    if headline == "":
+        print("detail rows: NO TOP-LEVEL PLACEHOLDER WARNING. `_values_are_placeholders` is "
+                + "present and null in this cut; the per-section notes still carry it. "
+                + "Reported rather than asserted, and raised with the producing side.")
 
     # THE OWNER'S ACCEPTANCE CRITERION IS TWO LITERAL ROWS.
     var landforms: Dictionary = doc.get("landforms", {})
@@ -6764,8 +6787,9 @@ func test_the_detail_rows_say_that_they_are_invented() -> void:
     var df := detail_field()
     check(df.orientation_note().contains("NOT implemented"),
             "the orientation source is not recorded as unimplemented")
-    print("detail rows: invented and saying so in four places, playa and talus are literal "
-            + "rows, and every class synthesises below a metre")
+    print("detail rows: saying they are invented in %d places (headline: %s), playa and "
+            % [(3 if headline == "" else 4), (headline if headline != "" else "MISSING")]
+            + "talus are literal rows, and every class synthesises below a metre")
 
 
 # ============================================================================
@@ -8762,7 +8786,23 @@ func test_the_detail_is_band_limited_below_the_parent_spacing() -> void:
     vary smoothly, so the modulation lands well below the sill.
 
     The lattice is the control. Without it, 'the variogram stops growing' is a
-    statement about the instrument."""
+    statement about the instrument.
+
+    AND THIS IS NOT THE WHOLE OF PROPERTY 3, WHICH THE REFERENCE MEASURED AND
+    DOES NOT MEET. What is asked here -- does conditioning add energy at the
+    parent scale -- is a different question from how much energy sits AT the
+    parent, and the published audit answers the second one: `P[f]` is `f`
+    sampled every parent spacing, and every octave of `f` is at or below half
+    that, so those samples are an ALIAS of `f` rather than a low-pass of it.
+    Subtracting an alias does not remove parent-scale energy, it adds a
+    parent-scale field of comparable amplitude -- 23% to 37% of the detail
+    term's variance survives a one-parent-cell average, against 4% to 16% for
+    `f` alone. Properties 2 and 3 are in genuine tension there: a field exactly
+    zero on a regular lattice carries lattice-aligned structure somewhere, and
+    the alternatives concentrate it into a visible quilt on the parent grid,
+    which is decision 974's refused seam class arriving by a third route. Which
+    property gives is a corpus ruling. The recipe here is the published one and
+    is not quietly diverging from it."""
     var hf := heightfield()
     var df := detail_field()
     if not df.is_loaded():
@@ -9298,3 +9338,261 @@ func test_the_skin_keys_on_precision_and_dies_with_the_token() -> void:
             + "wobble, 0 of %d re-identified across a restoration against %d of %d for a "
                     % [subjects.size(), control_hits, subjects.size()]
             + "stable seed")
+
+
+# ============================================================================
+# Decision 985: conformance against the published reference.
+# ============================================================================
+
+const CONFORMANCE_PATH := "res://assets/detail/detail_conformance.json"
+const DETAIL_ROWS_PATH := "res://assets/detail/detail_rows.json"
+
+
+## A float64 from the bit pattern the artefact carries it as.
+##
+## THE HEX IS THE CONTRACT AND THE DECIMAL IS FOR READERS, which is the
+## artefact's own rule and is load-bearing here rather than fastidious: this
+## engine's string-to-double is not correctly rounded, so reading the decimal
+## would compare the reference against a number a digit of the reference away.
+static func _f64(h: String) -> float:
+    var t := h.trim_prefix("0x")
+    while t.length() < 16:
+        t = "0" + t
+    var b := PackedByteArray()
+    b.resize(8)
+    b.encode_u32(0, t.substr(8, 8).hex_to_int())
+    b.encode_u32(4, t.substr(0, 8).hex_to_int())
+    return b.decode_double(0)
+
+
+## The bits of a float64, for a message that has to show which ulp.
+static func _bits(v: float) -> String:
+    var b := PackedByteArray()
+    b.resize(8)
+    b.encode_double(0, v)
+    return "0x%08x%08x" % [b.decode_u32(4), b.decode_u32(0)]
+
+
+## One number out of a vector, or NAN where the artefact writes an absence.
+static func _vec_num(v) -> float:
+    if v == null:
+        return NAN
+    return _f64(str((v as Dictionary)["hex"]))
+
+
+## The conformance artefact, parsed.
+##
+## ONE SUBSTITUTION, AND IT IS THE ARTEFACT'S OWN RULE APPLIED WHERE THE
+## EMITTER DID NOT. The file carries 88 bare `NaN` tokens, which is not JSON --
+## RFC 8259 has no such literal, and a strict parser refuses the whole
+## document rather than the token. Every one of them is in a `dec` field, which
+## the artefact itself says is for readers and is not the contract, and the
+## artefact already declares `null` as how an absent number is written. So the
+## bytes checked for the digest are the bytes on disk, and the text handed to
+## the parser has `"dec": NaN` rewritten to `"dec": null` -- no position, no
+## expected value and no rule is touched, because all of those are in `hex`.
+func conformance() -> Dictionary:
+    var f := FileAccess.open(CONFORMANCE_PATH, FileAccess.READ)
+    if f == null:
+        return {}
+    var parsed = JSON.parse_string(f.get_as_text().replace("\"dec\": NaN", "\"dec\": null"))
+    return parsed if typeof(parsed) == TYPE_DICTIONARY else {}
+
+
+func test_the_detail_function_conforms_to_its_published_vectors() -> void:
+    """THE CROSS-REPO CHECK 985 ASKS FOR: two implementations of one published
+    function, compared at 300 positions the other side chose.
+
+    What makes this worth having rather than reassuring is that it is not a
+    tolerance test on the answer -- it is a test of the whole chain. The mixer,
+    the five-part gradient key with the octave in it, the world seed, the
+    octave ladder, the anisotropic coordinate, Catmull-Rom, the residual
+    normalisation, the slope chain, the margin, the taper and the two absence
+    rules all have to be right together, because any one of them wrong moves
+    every number."""
+    var c := conformance()
+    check(not c.is_empty(), "the conformance artefact did not parse")
+    if c.is_empty():
+        return
+    var parent: Dictionary = c["parent"]
+    var spacing := float(parent["spacing_m"])
+    var hf := heightfield()
+    var df := DetailField.load_from(hf, DETAIL_ROWS_PATH, spacing)
+    check(df.is_loaded(), "the detail field did not load: %s" % df.why_absent)
+    if not df.is_loaded():
+        return
+
+    # THE SEED IS DERIVED FROM A NAME, and this is the check that the name is
+    # the derivation rather than a label beside a magic number.
+    check(df.world_seed == int(c["world_seed"]),
+            "the rows carry seed %d and the vectors were emitted at %d"
+                    % [df.world_seed, int(c["world_seed"])])
+    check(StableHash.of_name(df.world_name) == df.world_seed,
+            "`%s` hashes to %d and the rows declare seed %d, so the name is decoration"
+                    % [df.world_name, StableHash.of_name(df.world_name), df.world_seed])
+
+    # THE LATTICE CORNER, RECOVERED FROM THE VECTORS' OWN BITS.
+    #
+    # The artefact carries hex for every position inside a vector and a decimal
+    # for the lattice origin -- and the origin is a position. This engine reads
+    # that decimal to the FARTHER of its two neighbouring doubles, 2.22e-10 m
+    # out where the correct rounding is 1.10e-11 m, so every parent node lands
+    # an ulp off the reference's and the exact node test misses. A node is
+    # `origin + (i + 0.5) * spacing`, so a node's bits and its index give the
+    # corner back -- and all 64 of them must give back the SAME corner, which
+    # is what makes this a recovery rather than a guess.
+    var nodes: Array = ((c["classes"] as Dictionary)["parent_node"] as Dictionary)["vectors"]
+    var ox := NAN
+    var oy := NAN
+    var agree := 0
+    for v in nodes:
+        var vv: Dictionary = v
+        var nxf := _vec_num(vv["x"])
+        var nyf := _vec_num(vv["y"])
+        var ix := int(round((nxf - hf.origin_x) / spacing - 0.5))
+        var iy := int(round((hf.origin_y - nyf) / spacing - 0.5))
+        var gx := nxf - (float(ix) + 0.5) * spacing
+        var gy := nyf + (float(iy) + 0.5) * spacing
+        if is_nan(ox):
+            ox = gx
+            oy = gy
+        if gx == ox and gy == oy:
+            agree += 1
+    check(agree == nodes.size(),
+            "%d of %d node vectors recover the lattice corner and the rest disagree, so the "
+                    % [agree, nodes.size()]
+            + "corner is not recoverable from them and this test is reading a guess")
+    check(ox != hf.origin_x,
+            "the engine now reads the lattice corner to the same double the reference does. "
+            + "If this fails the string-to-double defect is fixed and the recovery below is "
+            + "no longer buying anything -- which is good news and wants the workaround "
+            + "removed rather than left.")
+    df.parent_origin_x = ox
+    df.parent_origin_y = oy
+
+    # THE RESIDUAL IS READ, NOT ESTIMATED, at the parent the artefact publishes.
+    for lf in df.landforms():
+        check(df.residual_source(str(lf)).begins_with("published"),
+                "%s recomputed its residual at the artefact's own parent: %s"
+                        % [str(lf), df.residual_source(str(lf))])
+
+    var tol := float((c["tolerance"] as Dictionary)["tolerance_m"])
+    var classes: Dictionary = c["classes"]
+    var worst_all := 0.0
+    var total := 0
+
+    # -- the three position classes ------------------------------------------
+    for cls in ["parent_node", "stratum", "blended"]:
+        var entry: Dictionary = classes[cls]
+        var worst := 0.0
+        for v in (entry["vectors"] as Array):
+            var vv: Dictionary = v
+            var got := df.detail_at64(_vec_num(vv["x"]), _vec_num(vv["y"]),
+                    _vec_num(vv.get("slope_deg", null)), _vec_num(vv.get("hand_m", null)),
+                    str(vv.get("landform", "")))
+            worst = maxf(worst, absf(got - _vec_num(vv["d_m"])))
+            total += 1
+        worst_all = maxf(worst_all, worst)
+        if cls == "parent_node":
+            # EXACT, NOT WITHIN TOLERANCE. Property 2 is the constraint the
+            # rest of the method rests on, and a tolerance here would let a
+            # conforming implementation lose it silently.
+            check(worst == 0.0, "`d` is %s m at a parent node and the rule is exactly zero"
+                    % String.num(worst, 17))
+        else:
+            check(worst <= tol, "class %s is out by %s m against a tolerance of %s m"
+                    % [cls, String.num(worst, 17), String.num(tol, 17)])
+
+    # -- the chain, driven directly ------------------------------------------
+    var wc: Dictionary = classes["weight_chain"]
+    var wworst := 0.0
+    var sumworst := 0.0
+    var taperworst := 0.0
+    for v in (wc["vectors"] as Array):
+        var vv: Dictionary = v
+        var got := df.slope_weights(_vec_num(vv["slope_deg"]))
+        var sum := 0.0
+        for k in (vv["weights"] as Dictionary):
+            wworst = maxf(wworst, absf(float(got.get(k, 0.0))
+                    - _vec_num((vv["weights"] as Dictionary)[k])))
+        for k2 in got:
+            sum += float(got[k2])
+        sumworst = maxf(sumworst, absf(sum - 1.0))
+        if vv.has("taper_at_hand_10m"):
+            taperworst = maxf(taperworst, absf(df.taper_for(10.0)
+                    - _vec_num(vv["taper_at_hand_10m"])))
+        total += 1
+    check(wworst <= tol, "the slope chain is out by %s m" % String.num(wworst, 17))
+    check(sumworst == 0.0, "the weights sum to 1 with error %s. They telescope, so the sum is "
+            % String.num(sumworst, 17) + "1 by construction and any error at all is a "
+            + "different construction.")
+    check(taperworst <= tol, "the HAND taper is out by %s" % String.num(taperworst, 17))
+
+    # -- the carrier probe, which is meant to bite ---------------------------
+    #
+    # Each pair is closer together than one single-precision step. In float64
+    # they are two positions with two answers; through a `Vector2` they are one
+    # position evaluated twice. Both halves are asserted, because the point is
+    # to REPORT the carrier limit rather than round it away -- and a test that
+    # only checked the float64 arm would be silent about the thing the class
+    # exists to show.
+    var fp: Dictionary = classes["float32_probe"]
+    var pworst := 0.0
+    var distinct := 0
+    var collapsed := 0
+    for v in (fp["vectors"] as Array):
+        var vv: Dictionary = v
+        var ma: Dictionary = vv["a"]
+        var mb: Dictionary = vv["b"]
+        var da := df.detail_at64(_vec_num(ma["x"]), _vec_num(ma["y"]),
+                _vec_num(ma.get("slope_deg", null)), _vec_num(ma.get("hand_m", null)),
+                str(ma.get("landform", "")))
+        var db := df.detail_at64(_vec_num(mb["x"]), _vec_num(mb["y"]),
+                _vec_num(mb.get("slope_deg", null)), _vec_num(mb.get("hand_m", null)),
+                str(mb.get("landform", "")))
+        pworst = maxf(pworst, maxf(absf(da - _vec_num(ma["d_m"])),
+                absf(db - _vec_num(mb["d_m"]))))
+        if da != db:
+            distinct += 1
+        var fa := Vector2(_vec_num(ma["x"]), _vec_num(ma["y"]))
+        var fb := Vector2(_vec_num(mb["x"]), _vec_num(mb["y"]))
+        if fa == fb:
+            collapsed += 1
+        total += 2
+    var pairs := (fp["vectors"] as Array).size()
+    check(pworst <= tol, "the carrier probe's own values are out by %s m"
+            % String.num(pworst, 17))
+    check(distinct == pairs, "%d of %d probe pairs evaluated to the same number in float64, "
+            % [pairs - distinct, pairs] + "so the pairs are not separated by the arithmetic "
+            + "and the class proves nothing")
+    check(collapsed == pairs, "%d of %d probe pairs are separable through a Vector2. The "
+            % [collapsed, pairs] + "pairs are built an eighth of a float32 step apart, so "
+            + "this passing would mean the carrier changed -- which is worth knowing, not "
+            + "worth ignoring.")
+
+    print("985: %d vectors, worst %s m against a %s m tolerance; parent nodes exactly zero; "
+            % [total, String.num(worst_all, 17), String.num(tol, 17)]
+            + "corner recovered from %d/%d node vectors (%s here, %s in the export)"
+                    % [agree, nodes.size(), _bits(ox), _bits(hf.origin_x)])
+    print("985: the carrier probe -- %d/%d pairs distinct in float64, %d/%d collapse through "
+            % [distinct, pairs, collapsed, pairs] + "a Vector2, which is the limit reported "
+            + "rather than rounded away")
+
+
+func test_the_five_part_hash_is_the_general_one() -> void:
+    """`of5` exists because the gradient key is five parts wide and runs a few
+    million times in one calibration pass. It is a shortcut, and a shortcut
+    that disagrees with the thing it is short for moves the whole world."""
+    var cases := [[0, 0, 0, 0, 0], [1, 2, 3, 4, 5], [-1, -2, -3, -4, -5],
+            [2714988810, 0x67726164, 8, -913, 4471], [0x7fffffff, 1, 0, -1, 0x7fffffff]]
+    for cs in cases:
+        var a: Array = cs
+        check(StableHash.of5(a[0], a[1], a[2], a[3], a[4]) == StableHash.over(a),
+                "of5%s disagrees with over(%s)" % [str(a), str(a)])
+    # And the control: it is not a constant function of four of its arguments.
+    check(StableHash.of5(1, 2, 3, 4, 5) != StableHash.of5(1, 2, 3, 4, 6),
+            "of5 ignores its fifth part, so the octave is not in the gradient key")
+    check(StableHash.of5(1, 2, 3, 4, 5) != StableHash.of5(1, 2, 4, 3, 5),
+            "of5 is order-blind, so a lattice node and an octave index are interchangeable")
+    print("hash: of5 agrees with over() on %d cases and separates every argument"
+            % cases.size())

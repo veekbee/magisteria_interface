@@ -1,0 +1,38 @@
+{
+  "_form": "The claim about decision 985's two published artefacts. The files are DATA; this is the claim about them. Both are COMMITTED, not fetched -- 15.9 KB and 204 KB against decision 948's ~10 MB threshold -- so absent is a failure here and not a working clone.",
+  "artefact": "decision 985's detail-function rows and the conformance vectors for `d(x, y)`",
+  "ruled_by": [
+    "decision 985",
+    "decision 986",
+    "decision 1004",
+    "\u00a716.5.1",
+    "\u00a723.977"
+  ],
+  "source": {
+    "repo": "git@github.com:veekbee/magisteria.git",
+    "path": "data/detail_rows_output, data/detail_conformance_output",
+    "_reference_implementation": "sim/detail.py is authoritative and this client conforms to it. The vectors are how that conformance is checked rather than asserted: 300 positions the producing side chose, each carrying the float64 BIT PATTERN of its position and its expected value."
+  },
+  "produced_by": "tools/build_detail_rows.py, tools/emit_detail_conformance.py",
+  "source_commit": "4af865c",
+  "vendored_by": "copied verbatim; no transform, so no vendor tool of its own",
+  "_amended": "the first cut of these two (magisteria@060cddd) was superseded before it was vendored: `residual_rms` was published for one parent lattice and this client refines two. The rows now carry `residual_rms_by_parent_m` at every spacing anyone refines.",
+  "files": {
+    "detail_rows.json": "3b5fd73ad5f0ae808c46fe500d4620c7e0549bab6101e31d50e8df0877b709b8",
+    "detail_conformance.json": "e04c30c25413de41dae24455e0e28c99a79436fac2357a696db9c2b8527f6e89"
+  },
+  "cross_repo": {
+    "_what": "how each file above is checkable against `source_commit` in a simulation checkout. Both are byte copies: nothing is transformed on the way in, which is the point of vendoring a reference's own output.",
+    "files": {
+      "detail_rows.json": {
+        "upstream": "data/detail_rows_output/detail_rows.json",
+        "how": "bytes"
+      },
+      "detail_conformance.json": {
+        "upstream": "data/detail_conformance_output/detail_conformance.json",
+        "how": "bytes"
+      }
+    }
+  },
+  "_the_conformance_file_is_not_valid_json": "it carries 88 bare `NaN` tokens, which RFC 8259 has no literal for, so a strict parser refuses the whole document rather than the token. Every one is in a `dec` field -- which the artefact itself says is for readers and is not the contract -- and the artefact already declares `null` as how an absent number is written. The gate hashes the bytes on disk and substitutes `\"dec\": NaN` -> `\"dec\": null` before parsing. Raised with the producing side; this note goes when the emitter does it."
+}

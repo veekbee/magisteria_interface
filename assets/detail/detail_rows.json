@@ -1,10 +1,48 @@
 {
-  "_what": "Per-landform parameters for the metre-scale detail function.",
-  "_FAKE": "EVERY NUMBER IN THIS FILE IS INVENTED. Not measured, not fitted, not derived -- chosen so the function has something to run on and so the shapes of the rows are settled before the data arrives. They are replaced wholesale by calibration rows measured from real metre ground, not adjusted. A reader quoting a figure from here is quoting a placeholder.",
-  "_replaced_by": "per-landform variograms, roughness spectra and drainage anisotropy measured from a real 1 m test window, plus the HAND taper. Sim-session side.",
-  "_the_shape_is_the_deliverable": "what is real here is the row SCHEMA -- which quantities a landform class carries and how the function consumes them. The values land into these slots.",
+  "artefact": "decision 985's detail-function rows: the published inputs to `d(x, y)`",
+  "generated_by": "tools/build_detail_rows.py",
+  "generated_from": [
+    "/Users/victoriabarnes/project_magisteria/magisteria_interface/assets/detail/detail_rows.json"
+  ],
+  "generated_at_utc": "2026-09-11T05:32:40Z",
+  "ruled_by": [
+    "decision 985",
+    "decision 986",
+    "decision 1004",
+    "\u00a716.5.1",
+    "\u00a723.977",
+    "\u00a716.10 mitigations 1-3"
+  ],
+  "reference_implementation": "sim/detail.py -- authoritative; the transducer conforms",
+  "_values_are_placeholders": null,
+  "_values_land_when": "decision 986 rules the grading form (plain or detrended) and the mapping from backlog 229's measured strata to these landform rows. The SCHEMA, the seed and the normalisation are settled here; the numbers are not, and \u00a723.425 forbids choosing them from what the synthesizer currently produces.",
+  "world_name": "magisteria/colorado-basin/0",
+  "world_seed": 2714988810,
+  "_world_seed_is": "FNV-1a 32 over `world_name`'s UTF-8 bytes -- `StableHash.of_name`. Derived from a name and not written as a literal, because a seed exists so a world can be re-seeded and editing a hex constant in a source file is not that. 985 names a published world seed among `d`'s three inputs; the client's stage-0 recipe carried a salt (`0x9e37`) instead, which is not one.",
+  "hash": {
+    "name": "StableHash.mix32 / StableHash.over",
+    "source": "magisteria_interface/src/util/stable_hash.gd; sim/detail.py mirrors it",
+    "_one_mixer": "convention 4: the client already keys \u00a716.6's placement on this mixer, so `d` does not get a second one. \u00a716.10 mitigation 3 is 'hash specified' and this is the specification.",
+    "gradient_key": [
+      "world_seed",
+      "SALT_GRADIENT",
+      "octave",
+      "ix",
+      "iy"
+    ],
+    "_octave_is_in_the_key": "\u00a716.5.1 item 1 names 'quantised position plus octave index'. Without the octave the gradient at lattice node (i, j) of one octave is the same vector as at (i, j) of the next, and since each octave halves the lattice, every second node of the finer octave lands on a coarser one carrying an identical gradient -- aligned copies of one field rather than independent draws of it."
+  },
+  "parent": {
+    "crs": "EPSG:5070",
+    "origin": [
+      -1809292.9365744274,
+      2356726.304046243
+    ],
+    "spacing_m": 100.0,
+    "read_from": "data/terrain_layer_tiles_v2_output/terrain_layer_tiles.json",
+    "_why_100_m": "decision 1004: real 10 m is calibration-only and 100 m is the finest shipped level, so there is no provisional parent here."
+  },
   "calibrated_at_parent_m": 1000.0,
-  "_calibrated_at_is": "which parent lattice these amplitudes belong to. `amplitude_m` is the standard deviation of what the function ADDS BELOW the parent, so the same ground calibrated against a 1000 m lattice and against a 100 m one carries two different numbers -- the finer parent already holds the 1000-100 m band. DetailField rescales by the row's own `spectral_slope`, which is the fBm exponent, so one row serves every level. A row may override this; the file-level value is the default, the same shape decision 972 gave `host_base`. Placeholder like everything else here: these amplitudes were invented against the shipped 1 km overview, so that is what they are declared at.",
   "units": {
     "amplitude_m": "standard deviation of the detail term at the parent spacing it was calibrated at, metres. See `_calibrated_at_is`: this number is NOT scale free and a calibration that does not say which parent it measured is unusable at a second level",
     "spectral_slope": "fBm Hurst-like exponent; higher is smoother between octaves",
@@ -14,6 +52,25 @@
     "orientation_deg": "constant orientation of the anisotropy for this class, degrees. Orientation by local aspect or drainage is NOT implemented -- see DetailField.orientation_note for the measured reason -- and `orientation_source` records what the calibration will want."
   },
   "landforms": {
+    "floor": {
+      "amplitude_m": 0.18,
+      "spectral_slope": 0.95,
+      "anisotropy": 1.4,
+      "finest_wavelength_m": 0.25,
+      "orientation_deg": 30.0,
+      "_orientation_source_wanted": "aspect",
+      "parent_spacing_m": 1000.0,
+      "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
+      "residual_rms": 0.2664668760424955,
+      "octaves_at_parent": 9,
+      "amplitude_m_at_parent": 0.020196332177435345,
+      "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
+      "residual_rms_by_parent_m": {
+        "100": 0.2664668760424955,
+        "1000": 0.27701601834167405
+      },
+      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
+    },
     "playa": {
       "amplitude_m": 0.04,
       "spectral_slope": 1.2,
@@ -21,33 +78,18 @@
       "_why_this_class": "the owner's acceptance criterion names it: a playa is smooth. It is a literal parameter row for that reason.",
       "finest_wavelength_m": 0.25,
       "orientation_deg": 0.0,
-      "_orientation_source_wanted": "none"
-    },
-    "floor": {
-      "amplitude_m": 0.18,
-      "spectral_slope": 0.95,
-      "anisotropy": 1.4,
-      "finest_wavelength_m": 0.25,
-      "orientation_deg": 30.0,
-      "_orientation_source_wanted": "aspect"
-    },
-    "slope": {
-      "amplitude_m": 0.55,
-      "spectral_slope": 0.8,
-      "anisotropy": 2.0,
-      "_why_anisotropic": "downslope lineation is what a hillside has and an isotropic field does not; the ratio is invented, the mechanism is not",
-      "finest_wavelength_m": 0.25,
-      "orientation_deg": 75.0,
-      "_orientation_source_wanted": "aspect"
-    },
-    "talus": {
-      "amplitude_m": 1.6,
-      "spectral_slope": 0.55,
-      "anisotropy": 1.2,
-      "_why_this_class": "the other half of the owner's criterion: rocky slopes are rough. Its amplitude is fortyfold the playa's, which is the discrimination the variogram test has to be able to see.",
-      "finest_wavelength_m": 0.25,
-      "orientation_deg": 75.0,
-      "_orientation_source_wanted": "aspect"
+      "_orientation_source_wanted": "none",
+      "parent_spacing_m": 1000.0,
+      "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
+      "residual_rms": 0.28898968536725633,
+      "octaves_at_parent": 9,
+      "amplitude_m_at_parent": 0.0025238293779207732,
+      "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
+      "residual_rms_by_parent_m": {
+        "100": 0.28898968536725633,
+        "1000": 0.27105945260775044
+      },
+      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
     },
     "riparian_margin": {
       "amplitude_m": 0.09,
@@ -56,7 +98,58 @@
       "_why_its_own_class": "margins are their own calibration classes and are never interpolated between neighbours. A shoreline is where vertical error converts to horizontal error at 1/slope, so this row is the one whose amplitude matters most and is least free.",
       "finest_wavelength_m": 0.25,
       "orientation_deg": 15.0,
-      "_orientation_source_wanted": "channel"
+      "_orientation_source_wanted": "channel",
+      "parent_spacing_m": 1000.0,
+      "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
+      "residual_rms": 0.2283654474288456,
+      "octaves_at_parent": 9,
+      "amplitude_m_at_parent": 0.007148954112518532,
+      "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
+      "residual_rms_by_parent_m": {
+        "100": 0.2283654474288456,
+        "1000": 0.2335523438849696
+      },
+      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
+    },
+    "slope": {
+      "amplitude_m": 0.55,
+      "spectral_slope": 0.8,
+      "anisotropy": 2.0,
+      "_why_anisotropic": "downslope lineation is what a hillside has and an isotropic field does not; the ratio is invented, the mechanism is not",
+      "finest_wavelength_m": 0.25,
+      "orientation_deg": 75.0,
+      "_orientation_source_wanted": "aspect",
+      "parent_spacing_m": 1000.0,
+      "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
+      "residual_rms": 0.2548107102385988,
+      "octaves_at_parent": 9,
+      "amplitude_m_at_parent": 0.08716912558536125,
+      "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
+      "residual_rms_by_parent_m": {
+        "100": 0.2548107102385988,
+        "1000": 0.26841954238816335
+      },
+      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
+    },
+    "talus": {
+      "amplitude_m": 1.6,
+      "spectral_slope": 0.55,
+      "anisotropy": 1.2,
+      "_why_this_class": "the other half of the owner's criterion: rocky slopes are rough. Its amplitude is fortyfold the playa's, which is the discrimination the variogram test has to be able to see.",
+      "finest_wavelength_m": 0.25,
+      "orientation_deg": 75.0,
+      "_orientation_source_wanted": "aspect",
+      "parent_spacing_m": 1000.0,
+      "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
+      "residual_rms": 0.2661343450101737,
+      "octaves_at_parent": 9,
+      "amplitude_m_at_parent": 0.45094126900231263,
+      "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
+      "residual_rms_by_parent_m": {
+        "100": 0.2661343450101737,
+        "1000": 0.2730956860533822
+      },
+      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
     }
   },
   "classifier": {
@@ -83,5 +176,5 @@
     "_live_now": "the HAND layer landed and this mechanism was plugged in without being rebuilt, which is the whole reason it was wired before the data existed. `floor_fraction` of full amplitude at the drainage, full strength above `full_strength_above_m`, smoothstep between -- saturating rather than cut, per convention 1.",
     "_absent_hand_is_full_strength": "NAN HAND means outside the basin, or ground whose filled descent reaches no channel at all -- 6,301,722 px of endorheic and edge-draining ground. Undrained upland is not a floodplain, so the honest default is no suppression. Defaulting the other way would have flattened all of it on the strength of a missing value."
   },
-  "_target_is_sub_metre": "0.25 m, not 1 m. The gate measured real ground: the p50 gap between one reported height and the next equals the cell size at every resolution, so 1 m ground passes the underfoot criterion at the stub's 5.0 m/s and FAILS at the 0.7 m/s a real load-bearing envelope reports. A synthesis target of 1 m would have inherited that failure."
+  "elapsed_s": 0.8
 }

@@ -55,6 +55,20 @@ static func of3(a: int, b: int, c: int) -> int:
     return mix32(h ^ mix32(c))
 
 
+## The same hash over exactly five parts. Identical output to `over([a, b, c,
+## d, e])` -- the gate checks that rather than trusting it -- and it exists for
+## the same reason `of3` does, one loop further in: decision 985's gradient key
+## is five parts wide and is evaluated four times per octave per sample, so the
+## array allocation is several million of them in one calibration pass.
+static func of5(a: int, b: int, c: int, d: int, e: int) -> int:
+    var h: int = 0x9e3779b9
+    h = mix32(h ^ mix32(a))
+    h = mix32(h ^ mix32(b))
+    h = mix32(h ^ mix32(c))
+    h = mix32(h ^ mix32(d))
+    return mix32(h ^ mix32(e))
+
+
 ## The hash read as a fraction of 1, which is the form a rank, a jitter and a
 ## noise lattice all want.
 static func unit(h: int) -> float:
