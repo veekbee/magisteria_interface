@@ -1329,6 +1329,27 @@ func _season_range(window: String, row: String, group: int) -> Dictionary:
 ## today, and the ratio's limit there is 1: the day's value IS the cell's
 ## maximum. That is the honest degenerate answer rather than a chosen midpoint,
 ## and the count of such cells travels in the report.
+##
+## THIS IS A STAND-IN FOR `band.phenology_index`, AND THE ROW IT WAITS FOR IS
+## NOT EXACT. When the row lands the obvious move is to read it here instead of
+## sampling biomass -- so the number to design against is recorded at the site
+## that would do the swapping. The upstream row comes back at about 2% residual
+## uncertainty and DOES NOT IMPROVE WITH A DEEPER REPLAY: the green envelope's
+## release limb relaxes on a ten-year constant (§18.2) so the seeded pair needs
+## roughly thirty years of spin-up, and the basin is not stationary over thirty
+## years, so by the time the envelope has settled the trajectory is no longer
+## the run's. A row that needs better than a couple of percent needs a re-trace,
+## not a longer replay.
+##
+## What that forbids downstream is anything that treats the value as exact: a
+## normalisation by it, a threshold with a hard edge, a cached level set. This
+## function's own output is a LERP PARAMETER -- `VegetationPalette.colour_for`
+## clamps it and mixes two colours -- so a couple of percent is a couple of
+## percent of a colour, and the swap is safe on that path. The path that is not
+## safe is `_fs.check(life_form, "phenology", ...)`, which compares against a
+## declared envelope: an envelope edge and a 2% row meet as a coin toss on the
+## cells that sit near it, and the check would report the ground rather than the
+## uncertainty. That is a decision for whoever wires the row, not for here.
 func phenology_for(season: Dictionary, cell: int, today: float) -> float:
     var lo: PackedFloat64Array = season["lo"]
     var hi: PackedFloat64Array = season["hi"]

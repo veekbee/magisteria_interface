@@ -21,12 +21,24 @@ extends Control
 ##                         nodata for is not a height on this axis.
 ##
 ## PLOTTED FROM float64, AND THAT IS LOAD-BEARING. `FixtureLoader.day_values`
-## returns PackedFloat64Array because streamflow reaches 4.9e-324; float32
-## flushes everything under 1.18e-38 to zero and would move thousands of
-## samples out of "below the scale" and into "no flow" (§23.812). Godot's
-## Vector2 is float32, so every sample is CLASSIFIED on the double before any
-## of it becomes geometry -- the conversion happens after the meaning is
-## fixed, which is the only order in which the container cannot change it.
+## returns PackedFloat64Array for any row the fixture stores wide; float32
+## flushes everything under 1.18e-38 to zero and would move those samples out
+## of "below the scale" and into "no flow" (§23.812). Godot's Vector2 is
+## float32, so every sample is CLASSIFIED on the double before any of it
+## becomes geometry -- the conversion happens after the meaning is fixed, which
+## is the only order in which the container cannot change it.
+##
+## THE RULE IS THE CONTAINER'S, NOT THIS ROW'S, AND THE DIFFERENCE IS ABOUT TO
+## MATTER. This paragraph used to read "because streamflow reaches 4.9e-324",
+## which was true of the fixture in hand and is a property of a run rather than
+## of a row: the emitting side measures each row's width per build and narrows
+## one whose values no longer need it. `node.streamflow` is the only wide row
+## the client fixture carries, and it is announced as narrowing once the melt
+## gate lands -- at which point the sentence above would have been the correct
+## rule resting on a dead reason, which is how a correct rule gets deleted by
+## whoever notices the reason is dead. The rule stands on the classification:
+## "below the scale" and "no flow" are different statements about the river,
+## and only the wide container can tell them apart at all.
 ##
 ## A SEGMENT JOINS TWO SAMPLES ONLY IF BOTH ARE ON THE SCALE. A line from an
 ## in-scale day down to a zero day would draw a descent through values the

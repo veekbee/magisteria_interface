@@ -55,6 +55,7 @@ func _initialize() -> void:
     test_nodata_decodes_to_nan_and_never_to_zero()
     test_the_ramp_is_ordered_and_bounds_come_from_the_contract()
     test_node_rows_arrive_at_full_precision()
+    test_the_wide_branch_has_a_witness_that_is_not_the_fixture()
     test_every_reach_carries_a_node_so_flow_can_be_drawn()
     test_the_flow_mapping_distinguishes_zero_from_below_scale()
     test_quantisation_uses_the_realised_range_not_the_contracts()
@@ -1172,27 +1173,138 @@ func test_the_ramp_is_ordered_and_bounds_come_from_the_contract() -> void:
 # --------------------------------------------------------------------------
 
 func test_node_rows_arrive_at_full_precision() -> void:
-    """Streamflow reaches 4.9e-324 and 40.9% of its non-zero values are below
-    1e-6. It is shipped as float64 and must be HELD as float64: a
-    PackedFloat32Array flushes everything under 1.18e-38 to zero, which moves
-    thousands of samples from "below the display scale" to "no flow" -- a
-    different statement about the river."""
+    """A row the fixture stores wide is HELD wide: a PackedFloat32Array flushes
+    everything under 1.18e-38 to zero, which moves samples from "below the
+    display scale" to "no flow" -- a different statement about the river.
+
+    KEYED ON THE DECLARED WIDTH, NOT ON `node.streamflow`. The emitting side
+    measures each row's width per build and ships a row wide only while its
+    values need it, so a row's width is a property of the run. This check named
+    streamflow and asserted that something in it fell below float32's floor,
+    which made a correctly-narrowed fixture arrive here as "the precision was
+    lost in transit" -- a true artefact reported as a defect in the reader, and
+    the accusation pointing at the one component that had done nothing wrong.
+    It now finds its subject by asking the manifest which rows are wide.
+
+    Measured on the fixture in hand: `node.streamflow` is the ONLY unquantised
+    row, at 17.41% of samples below float32's floor in `largest_fire` and 5.38%
+    in `deepest_winter`, smallest 5e-324. So the witness count below is 1, and
+    a narrowing takes it to 0 -- which is why it is printed every run rather
+    than left to be inferred from a test that stopped being about anything."""
     var fl := fixture()
-    var rows := fl.row_names(fl.windows[0], "node")
-    check(rows.has("node.streamflow"), "no node.streamflow row: %s" % str(rows))
-    var vals := fl.day_values(fl.windows[0], "node.streamflow", 45)
-    check(vals.size() > 1000, "only %d nodes" % vals.size())
-    var below_f32 := 0
-    var zeros := 0
-    for v in vals:
-        if v == 0.0:
-            zeros += 1
-        elif v < 1.18e-38:
-            below_f32 += 1
-    check(below_f32 > 0,
-            "no value below float32's floor survived -- the precision was lost in transit")
-    print("streamflow: %d nodes, %d exact zeros, %d below float32's floor"
-            % [vals.size(), zeros, below_f32])
+    var wide := fl.unquantised_rows(fl.windows[0])
+    var carried := 0
+    for row in wide:
+        var vals := fl.day_values(fl.windows[0], row, 45)
+        check(vals.size() > 0, "%s is declared wide and decoded to nothing" % row)
+        check(vals is PackedFloat64Array,
+                "%s came back in a narrower container than it is stored in" % row)
+        var below_f32 := 0
+        var zeros := 0
+        var smallest := INF
+        for v in vals:
+            if v == 0.0:
+                zeros += 1
+            elif not is_nan(v):
+                smallest = minf(smallest, v)
+                if v < 1.18e-38:
+                    below_f32 += 1
+        carried += below_f32
+        # Not "there must be small values" -- that is the run's business. What
+        # is checked is that whatever small values ARE here came through: the
+        # same number put through float32 is zero, so if the reader had
+        # narrowed anywhere the count would be 0 and this comparison shows it.
+        if below_f32 > 0:
+            check(PackedFloat32Array([smallest])[0] == 0.0,
+                    "%s's smallest value %s does not flush through float32, so this "
+                    % [row, String.num_scientific(smallest)]
+                    + "comparison is no longer showing what it says")
+        print("wide row %s: %d cells, %d exact zeros, %d below float32's floor, smallest %s"
+                % [row, vals.size(), zeros, below_f32, String.num_scientific(smallest)])
+    # THE WITNESS COUNT IS REPORTED WHETHER OR NOT IT IS ZERO. A fixture with no
+    # wide row is legitimate and is not failed here, but it leaves `day_values`'
+    # wide branch with no witness in the artefact -- which is what
+    # `test_the_wide_branch_has_a_witness_that_is_not_the_fixture` is for, and
+    # this line is how somebody notices the day it happens.
+    print("wide rows in the fixture: %d, carrying %d sub-float32 samples on day 45"
+            % [wide.size(), carried])
+
+
+func test_the_wide_branch_has_a_witness_that_is_not_the_fixture() -> void:
+    """`day_values` decodes a declared-wide row by a different path from a
+    quantised one, and today exactly one shipped row takes that path. The
+    emitting side narrows a row when its values stop needing the width, so the
+    fixture can stop carrying a wide row at any build -- and then the branch
+    goes untested while every test still passes, until some later row is
+    shipped wide and lands on a path nothing has run in months.
+
+    So the branch gets a witness the fixture cannot take away: a two-cell row
+    written here, declared float64, holding the bottom denormal and a value
+    that only float64 can separate from it. Read back through the real loader,
+    not through a reimplementation of it -- a second decoder would be free to
+    agree with itself while disagreeing with the one that runs."""
+    var dir := "user://wide_witness/"
+    DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir))
+    # BOTH VALUES COME FROM BITS. A subnormal written as a decimal literal is
+    # 0.0 by the time the parser is done with it -- see the note in
+    # `test_the_series_keeps_what_float32_would_flush_to_zero` -- so a witness
+    # built from `5e-324` would be two zeros agreeing with each other, which is
+    # the exact failure it is here to rule out.
+    var tiny := _f64("0x0000000000000001")
+    var near := _f64("0x0000000000100000")
+    check(tiny != 0.0 and near != 0.0 and tiny != near,
+            "the witness values did not survive construction: %s, %s"
+            % [_bits(tiny), _bits(near)])
+    var bin := PackedByteArray()
+    bin.resize(16)
+    bin.encode_double(0, tiny)
+    bin.encode_double(8, near)
+    var bf := FileAccess.open(dir + "wide_witness.bin", FileAccess.WRITE)
+    check(bf != null, "could not write the witness bin")
+    if bf == null:
+        return
+    bf.store_buffer(bin)
+    bf.close()
+    # Shaped exactly as the loader reads a manifest -- `file`, and every row
+    # descriptor carrying its own `window` and `row`. Getting this wrong is how
+    # the first cut failed: `row_names` found nothing, so `unquantised_rows`
+    # returned empty and the failure read as the width lookup being broken.
+    var manifest := {
+        "client_form": {
+            "file": "wide_witness.bin",
+            "rows": {"w/probe.row": {
+                "window": "w", "row": "probe.row",
+                "shape": [1, 2], "dtype": "float64 little-endian",
+                "byte_offset": 0, "lattice": "node", "lo": 0.0, "hi": 1.0}},
+        },
+        "windows": ["w"],
+        "cell_keys": {"pairs": [["w", 0], ["w", 1]]},
+    }
+    var mf := FileAccess.open(dir + "fixture_client.json", FileAccess.WRITE)
+    mf.store_string(JSON.stringify(manifest))
+    mf.close()
+
+    var fl := FixtureLoader.load_from(dir)
+    check(fl.dtype_of("w", "probe.row").begins_with("float64"),
+            "the loader did not read the declared width back: %s"
+            % fl.dtype_of("w", "probe.row"))
+    check(Array(fl.unquantised_rows("w")) == ["probe.row"],
+            "the wide row was not found by width: %s" % str(fl.unquantised_rows("w")))
+    var got := fl.day_values("w", "probe.row", 0)
+    check(got.size() == 2, "the witness row decoded to %d cells" % got.size())
+    if got.size() != 2:
+        return
+    check(got[0] == tiny, "the bottom denormal came back as %s" % _bits(got[0]))
+    check(got[1] == near, "the second denormal came back as %s" % _bits(got[1]))
+    # THE CONTROL. Both values exist and are distinct only in float64; through
+    # the narrow container they are the same number, and that number is zero.
+    # Without this the check above would pass on a decoder that had lost them.
+    var narrowed := PackedFloat32Array([got[0], got[1]])
+    check(narrowed[0] == 0.0 and narrowed[1] == 0.0,
+            "float32 no longer flushes these, so the witness is not witnessing")
+    check(got[0] != got[1], "the two witness values are not distinct in float64")
+    print("wide branch: witnessed off-fixture, %s and %s distinct in float64 and "
+            % [_bits(got[0]), _bits(got[1])] + "both zero in float32")
 
 
 func test_every_reach_carries_a_node_so_flow_can_be_drawn() -> void:
@@ -1691,14 +1803,52 @@ func test_the_ray_march_lands_on_the_surface_it_marched() -> void:
 func test_the_series_keeps_what_float32_would_flush_to_zero() -> void:
     """The series is read through `day_values`, which returns
     PackedFloat64Array, and it stays float64 all the way to the classification.
-    Streamflow reaches 4.9e-324; float32 flushes everything under 1.18e-38 to
-    zero, which moves samples out of "below the display scale" and into "no
-    flow" -- two different statements about the river (§23.812).
+    float32 flushes everything under 1.18e-38 to zero, which moves samples out
+    of "below the display scale" and into "no flow" -- two different statements
+    about the river (§23.812).
 
     Proved against the container rather than argued: the same value is put
-    through a PackedFloat32Array here and comes back as zero."""
+    through a PackedFloat32Array here and comes back as zero.
+
+    IN TWO HALVES, BECAUSE ONLY ONE OF THEM IS THE FIXTURE'S BUSINESS. The plot
+    can mis-classify a sub-float32 sample whether or not any shipped row
+    currently holds one, so that half runs off a value chosen here. The other
+    half needs a real row and finds it by declared width; when the fixture has
+    none it says so, because a row narrowed upstream is a fact about the run and
+    not a loss in transit."""
+    # THE CLASSIFICATION HALF DOES NOT DEPEND ON THE FIXTURE. It is a property
+    # of the plot, so it is asserted on a value chosen here: a fixture that
+    # stops carrying sub-float32 values would otherwise take this check with it
+    # while the plot's ability to mis-classify one stayed exactly where it was.
+    # FROM BITS, NOT FROM A DECIMAL LITERAL. `5e-324` written here compiles to
+    # exactly 0.0 -- Godot flushes EVERY subnormal decimal to zero, in the
+    # source lexer and in the JSON parser alike, and not only at the bottom of
+    # the range: `1e-310` goes the same way. Measured, because the first cut of
+    # this check was written as a literal and passed its float32 comparison for
+    # the wrong reason while `band_of` correctly classified the zero it had
+    # actually been handed. The values this plot exists to keep apart cannot be
+    # written down in this language; they reach the client as raw bytes in the
+    # bin or they do not reach it.
+    var floor_probe := _f64("0x0000000000000001")
+    check(floor_probe != 0.0, "the bottom denormal did not survive its own construction")
+    check(PackedFloat32Array([floor_probe])[0] == 0.0,
+            "float32 no longer flushes %s -- this test is not testing what it says"
+            % String.num_scientific(floor_probe))
+    check(SeriesPlot.band_of(floor_probe) == SeriesPlot.BELOW,
+            "a value below the scale is not classified as below it")
+    check(SeriesPlot.band_of(0.0) == SeriesPlot.ZERO,
+            "the flushed value is not classified as no flow, so the loss would be silent")
+
+    # THE ARTEFACT HALF asks the fixture for a witness by width rather than by
+    # name, and says so when it has none instead of reading its absence as the
+    # reader having lost something.
     var fl := fixture()
-    var vals := fl.day_values("deepest_winter", "node.streamflow", 45)
+    var wide := fl.unquantised_rows("deepest_winter")
+    if wide.is_empty():
+        print("series: no wide row in deepest_winter -- the read path is unwitnessed here")
+        return
+    var row := wide[0]
+    var vals := fl.day_values("deepest_winter", row, 45)
     var axis := -1
     var tiny := 0.0
     for i in vals.size():
@@ -1706,23 +1856,15 @@ func test_the_series_keeps_what_float32_would_flush_to_zero() -> void:
             axis = i
             tiny = vals[i]
             break
-    check(axis >= 0, "no value below float32's floor in this window -- nothing to lose")
     if axis < 0:
+        print("series: %s carries nothing below float32's floor on day 45" % row)
         return
-    var as32 := PackedFloat32Array([tiny])
-    check(as32[0] == 0.0,
-            "float32 no longer flushes %s -- this test is not testing what it says"
-            % String.num_scientific(tiny))
-    check(SeriesPlot.band_of(tiny) == SeriesPlot.BELOW,
-            "a value below the scale is not classified as below it")
-    check(SeriesPlot.band_of(float(as32[0])) == SeriesPlot.ZERO,
-            "the flushed value is not classified as no flow, so the loss would be silent")
 
-    var series := SeriesPlot.series_for(fl, "deepest_winter", "node.streamflow", axis)
+    var series := SeriesPlot.series_for(fl, "deepest_winter", row, axis)
     check(series is PackedFloat64Array, "the series is not a PackedFloat64Array")
-    check(series.size() == fl.days("deepest_winter", "node.streamflow"),
+    check(series.size() == fl.days("deepest_winter", row),
             "the series is %d days and the row holds %d"
-            % [series.size(), fl.days("deepest_winter", "node.streamflow")])
+            % [series.size(), fl.days("deepest_winter", row)])
     check(series[45] == tiny,
             "day 45 of the series is %s and the row holds %s"
             % [String.num_scientific(series[45]), String.num_scientific(tiny)])
@@ -1731,8 +1873,8 @@ func test_the_series_keeps_what_float32_would_flush_to_zero() -> void:
         if v != 0.0 and v < 1.18e-38:
             survived += 1
     check(survived > 0, "no sub-float32 value survived the series read")
-    print("series: node axis %d, %d of %d days below float32's floor and not zero"
-            % [axis, survived, series.size()])
+    print("series: %s axis %d, %d of %d days below float32's floor and not zero"
+            % [row, axis, survived, series.size()])
 
 
 func test_the_plot_separates_no_flow_from_below_the_scale() -> void:

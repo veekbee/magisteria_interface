@@ -4,12 +4,17 @@ extends RefCounted
 ## Fixture v1 as the client reads it: quantised band rows plus the cell-key join.
 ##
 ## WHAT THIS IS NOT. `fixture_client.bin` is a DISPLAY encoding, not the
-## fixture. Three rows in the real fixture are float64 because their smallest
+## fixture. Some rows of the real fixture are float64 because their smallest
 ## non-zero magnitudes fall below float32's floor; quantising to 65,534 levels
 ## discards that. It is acceptable here because a colour ramp cannot show 1e-64
 ## either -- the loss is in the encoding's stated purpose rather than hidden in
 ## it -- and anything needing the precision reads the simulation repo's
 ## `fixture_v1.bin`.
+##
+## WHICH rows those are is a measurement of the run, not a constant: the
+## emitting side sizes each row per build and narrows one whose values stop
+## needing the width. This header said "three rows" and the client form carries
+## one; both were true of some build. Ask `dtype_of` rather than counting here.
 ##
 ## THE JOIN. Band arrays are indexed by CELL; residence answers in
 ## `(node, band)`. `cell_keys` is the bijection between them, and without it
@@ -87,6 +92,34 @@ func lattice_of(window: String, row: String) -> String:
     return "" if d == null else str((d as Dictionary).get("lattice", "band"))
 
 
+## The stored width of a row, as the manifest declares it. "" if no such row.
+##
+## READ, NEVER ASSUMED, AND THIS ACCESSOR EXISTS SO THAT STAYS TRUE. The width
+## is a per-row measurement on the emitting side -- a row is shipped wide only
+## while its values need the width -- so it is a property of the run rather
+## than of the row's name, and it moves when the run does. `day_values`
+## branches on it and has since the beginning; what did not read it was the
+## prose around it and the tests, which named `node.streamflow` where they
+## meant "whichever row is stored wide".
+func dtype_of(window: String, row: String) -> String:
+    var d: Variant = _rows.get("%s/%s" % [window, row], null)
+    return "" if d == null else str((d as Dictionary).get("dtype", ""))
+
+
+## Every row in a window the fixture stores unquantised, in `row_names` order.
+##
+## Empty is a legitimate answer and NOT a broken fixture: it says this build
+## needed no row wider than the display encoding. It is worth reporting when it
+## happens, because `day_values`' wide branch then has no witness in the
+## artefact -- see `test_node_rows_arrive_at_full_precision`.
+func unquantised_rows(window: String) -> PackedStringArray:
+    var out := PackedStringArray()
+    for r in row_names(window):
+        if dtype_of(window, r).begins_with("float64"):
+            out.append(r)
+    return out
+
+
 ## The engine's node-axis position for a HUC10 id. Node-lattice rows are
 ## indexed by it.
 ##
@@ -139,12 +172,18 @@ func days(window: String, row: String) -> int:
 ## Values are NAN where the fixture stored nodata, never 0.0 -- zero is a real
 ## value for every one of these rows.
 ## Returns float64, NOT float32, and that is load-bearing rather than tidy.
-## Node rows are shipped at full float64 precisely because streamflow reaches
-## 4.9e-324; storing them in a PackedFloat32Array flushes every value below
-## 1.18e-38 to zero, which would undo the exactness at the last container --
-## the same failure as rounding the fixture's JSON, one layer further along.
-## Measured: it moved thousands of samples from "below the display scale" into
-## "no flow", which are different statements about the river.
+## Storing a wide row in a PackedFloat32Array flushes every value below 1.18e-38
+## to zero, which would undo the exactness at the last container -- the same
+## failure as rounding the fixture's JSON, one layer further along. Measured on
+## the fixture in hand: it moved 17.41% of `largest_fire`'s samples and 5.38% of
+## `deepest_winter`'s from "below the display scale" into "no flow", which are
+## different statements about the river.
+##
+## THE RETURN IS float64 FOR EVERY ROW, INCLUDING THE QUANTISED ONES. Not
+## because they need it -- they are u16 -- but because the caller would
+## otherwise have to know which branch ran to know what it holds, and that is
+## the row's width leaking out of this function into everyone who calls it.
+## The width belongs to the manifest; `dtype_of` is how to ask.
 func day_values(window: String, row: String, day: int, group: int = 0) -> PackedFloat64Array:
     var out := PackedFloat64Array()
     var key := "%s/%s" % [window, row]
@@ -164,10 +203,13 @@ func day_values(window: String, row: String, day: int, group: int = 0) -> Packed
         push_error("fixture: cannot open %s" % _bin_path)
         return out
 
-    # Node rows are stored as raw float64 rather than quantised -- see the
-    # manifest's `not_quantised_because`. Quantising streamflow over the
-    # contract's [0, 100000] would put everything below 1.5 m3/s at zero, and
-    # 40.9% of this window's non-zero values are below 1e-6.
+    # A row is stored raw rather than quantised when the emitting side measured
+    # that it needs the width -- see the manifest's `not_quantised_because`.
+    # Today that is `node.streamflow` alone: quantising it over the contract's
+    # [0, 100000] would put everything below 1.5 m3/s at zero, and 40.9% of this
+    # window's non-zero values are below 1e-6. THE BRANCH IS KEYED ON THE
+    # DECLARED WIDTH AND NEVER ON THE NAME, which is what lets the set of wide
+    # rows change without this function changing.
     if str(d.get("dtype", "")).begins_with("float64"):
         var base64 := int(d["byte_offset"]) + day * cells * groups * 8
         f.seek(base64)
