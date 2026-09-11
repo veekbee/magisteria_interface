@@ -4,7 +4,7 @@
   "generated_from": [
     "/Users/victoriabarnes/project_magisteria/magisteria_interface/assets/detail/detail_rows.json"
   ],
-  "generated_at_utc": "2026-09-11T06:40:54Z",
+  "generated_at_utc": "2026-09-11T07:18:45Z",
   "ruled_by": [
     "decision 985",
     "decision 986",
@@ -37,6 +37,10 @@
     "origin": [
       -1809292.9365744274,
       2356726.304046243
+    ],
+    "origin_hex": [
+      "0xc13b9b8cefc35778",
+      "0x4141fafb26eafcbf"
     ],
     "spacing_m": 100.0,
     "read_from": "data/terrain_layer_tiles_v2_output/terrain_layer_tiles.json",

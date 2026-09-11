@@ -4,7 +4,7 @@
   "generated_from": [
     "data/detail_rows_output/detail_rows.json"
   ],
-  "generated_at_utc": "2026-09-11T06:41:29Z",
+  "generated_at_utc": "2026-09-11T07:19:11Z",
   "ruled_by": [
     "decision 985",
     "decision 986",
@@ -24,13 +24,13 @@
       -1809292.9365744274,
       2356726.304046243
     ],
-    "spacing_m": 100.0,
-    "read_from": "data/terrain_layer_tiles_v2_output/terrain_layer_tiles.json",
-    "_why_100_m": "decision 1004: real 10 m is calibration-only and 100 m is the finest shipped level, so there is no provisional parent here.",
     "origin_hex": [
       "0xc13b9b8cefc35778",
       "0x4141fafb26eafcbf"
-    ]
+    ],
+    "spacing_m": 100.0,
+    "read_from": "data/terrain_layer_tiles_v2_output/terrain_layer_tiles.json",
+    "_why_100_m": "decision 1004: real 10 m is calibration-only and 100 m is the finest shipped level, so there is no provisional parent here."
   },
   "format": {
     "_positions_are_float64_bit_patterns": "Every number carries `dec` for readers and `hex` -- the exact IEEE-754 binary64 bits -- for comparison. A conforming implementation reads `hex`; the decimal is not the contract, because a JSON parser's last bits are not a fact anyone has pinned.",
@@ -7279,5 +7279,5 @@
       ]
     }
   },
-  "elapsed_s": 26.4
+  "elapsed_s": 26.5
 }

@@ -9456,6 +9456,37 @@ func test_the_detail_function_conforms_to_its_published_vectors() -> void:
     # vectors could not previously make: each position round-trips through its
     # own hex perfectly, so an implementation with a bad decimal parser passed
     # all 300 while standing on a shifted lattice.
+    # TWO ARTEFACTS CARRY THIS BLOCK AND THEY ARE COMPARED, NOT MAINTAINED IN
+    # PARALLEL. The rows and the vectors both describe the lattice, and for one
+    # cut only the vectors carried the corner as bits -- which cost nothing
+    # while the gate happened to read that one, and would have cost a reader
+    # taking the lattice from the other exactly the ulp this whole thread is
+    # about. So the whole block is compared rather than the one field that went
+    # missing: a check on the field that broke last time is a check on last
+    # time. A third artefact carrying it joins this comparison rather than
+    # being trusted.
+    var rf := FileAccess.open(DETAIL_ROWS_PATH, FileAccess.READ)
+    var rows_doc: Dictionary = JSON.parse_string(rf.get_as_text()) if rf != null else {}
+    var rows_parent: Dictionary = rows_doc.get("parent", {})
+    check(not rows_parent.is_empty(), "the rows artefact describes no parent lattice")
+    # THE MESSAGE NAMES THE FIELD THAT DIFFERS, not the first 200 characters of
+    # each block. The whole point of this pair is that the divergence which
+    # matters is an ulp inside a hex string: dumping the blocks shows two
+    # decimals that print identically and truncates before reaching the field
+    # that moved. A control that fires with an unreadable reason is a control
+    # somebody turns off.
+    var differing := PackedStringArray()
+    for k in rows_parent:
+        if not parent.has(k) or JSON.stringify(parent[k]) != JSON.stringify(rows_parent[k]):
+            differing.append("%s: rows=%s vectors=%s" % [str(k),
+                    JSON.stringify(rows_parent[k]), JSON.stringify(parent.get(k, null))])
+    for k2 in parent:
+        if not rows_parent.has(k2):
+            differing.append("%s: missing from the rows" % str(k2))
+    check(differing.is_empty(),
+            "the rows and the vectors describe different parent lattices, and two copies of "
+            + "one fact are safe only while something compares them -- %s" % str(differing))
+
     var po_hex: Array = (parent.get("origin_hex", []) as Array)
     check(po_hex.size() == 2,
             "the artefact's parent block carries no `origin_hex`, so the lattice corner "
