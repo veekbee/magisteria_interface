@@ -51,6 +51,45 @@ extends RefCounted
 ## and this file is correctly a toy -- not because it is unfinished, but
 ## because the finished one cannot live in this repo at all.
 ##
+## LIVE B DOES NOT WORK LIKE THIS, AND THE DIFFERENCE IS THE POINT OF SAYING SO.
+##
+## Decision 1021 rules the wire token a KEYED HASH over `(subject, observer,
+## earned rung, the observer's restoration count, envelope-entry tick)`, under a
+## server-side key that is not derivable from the world seed. Read against the
+## counter below, that is a fourth option none of the three considered here:
+##
+##   Every one of its five components is already in the envelope, so the issuer
+##   owns NO DURABLE STATE OF ITS OWN -- no monotone counter, no per-subject
+##   exit count kept forever. The three boundaries fall out of the components
+##   rather than out of bookkeeping: the rung is in the key, the restoration
+##   count is in the key, and a subject that leaves and returns enters at a
+##   different tick.
+##
+##   And because all five are world state, `(world, observer, moment)` determines
+##   the token, so §20.4.5's determinism holds UNCHANGED. The narrowing above is
+##   a property of this toy's client-local counter and of nothing else. A reader
+##   who found the narrowing here and carried it to the wire would be filing a
+##   limitation against a design that does not have it.
+##
+##   THE RESTORATION COUNT IS WHY IT WORKS, and it is the same argument as the
+##   one below: the count lives on the world side of the restoration line, where
+##   the character's memory does not. An issuer whose rotation state were part
+##   of what restoration restores would roll back with it and reissue the
+##   pre-restoration tokens -- the third instance of a rotation that rotates
+##   back, and the one that would have looked most like working.
+##
+##   ONE CASE THE ENTRY TICK CANNOT SEPARATE, recorded because it is the obvious
+##   question: a subject that leaves the envelope and returns WITHIN A SINGLE
+##   TICK enters at the tick it left and keeps its name. At tick rate that is not
+##   an observable absence, so it is a bound rather than a defect -- but it is
+##   the kind of bound that should be written down before somebody discovers it
+##   and reads it as one.
+##
+## WHAT DOES NOT CHANGE. The issuer is still not the transducer. The per-subject
+## ordinal kept in the resident map is still REJECTED and still on record as
+## rejected -- see the counter below -- because the failure it produces looks
+## exactly like the mechanism working.
+##
 ## WHAT IT DOES NOT DO, SAID PLAINLY. Rotation closes the durable case: a
 ## client cannot carry a name across episodes and re-identify a subject from
 ## memory with no further evidence. It does not close linkage WITHIN an

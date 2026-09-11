@@ -179,6 +179,7 @@ func _initialize() -> void:
     test_the_plain_form_reports_the_slope_and_the_detrended_form_cannot_see_it()
     test_the_instrument_repeats_and_recovers_a_known_exponent()
     test_walk_mode_is_shut_for_986s_reasons_and_itemises_which()
+    test_the_strata_are_the_membership_functions_on_real_ground()
     stage_the_main_scene()
 
 
@@ -9749,35 +9750,69 @@ func test_the_plain_form_reports_the_slope_and_the_detrended_form_cannot_see_it(
     var worst_det := 0.0
     for lag in lags:
         worst_det = maxf(worst_det, absf(float(det[lag])))
-    check(worst_det < 1.0e-9,
-            "the second difference of a plane is %s m and not zero, so it is not blind to "
-                    % String.num(worst_det, 12)
-            + "gradient and the whole reason for the second form is gone")
+    # AT THE ROUNDING FLOOR AND NO LONGER EXACTLY ZERO, and the reason is the
+    # corrected directions rather than a weaker claim. `z(x+v) - 2z(x) + z(x-v)`
+    # cancels to zero for any linear `z` in exact arithmetic. While every offset
+    # was axis-aligned the three products rounded alike and the cancellation was
+    # exact in float64 too; a direction off the axes makes `g . (x+v)` and
+    # `g . x + g . v` round differently, and this basin's coordinates are large
+    # enough that the residue is the ulp of a million-metre product rather than
+    # of a height. So the assertion is the floor, stated in what it is a floor
+    # OF: the residue over the surface's own vertical scale across the window.
+    var vertical_scale := grad * minf(span.x, span.y)
+    check(worst_det < 1.0e-12 * vertical_scale,
+            "the second difference of a plane is %s m against a %s m relief across the "
+                    % [String.num(worst_det, 14), String.num(vertical_scale, 0)]
+            + "window. It cancels exactly in exact arithmetic, so anything above the "
+            + "rounding floor means it is not blind to gradient and the whole reason for "
+            + "the second form is gone.")
 
-    # THE PLAIN FORM RETURNS THE GRADIENT -- TIMES A FACTOR NOBODY INTENDED.
-    # The four pooled offsets are (l,0), (0,l), (l,l), (l,-l), and the last two
-    # are at a ground distance of l*sqrt(2). So half of every sample is taken
-    # at a longer lag than it is reported under, and on a plane the pooled
-    # median is |g|*l times a factor that depends on the gradient's AZIMUTH.
-    # Predicted analytically below and measured here: the exponent survives,
-    # the amplitude does not.
+    # THE PLAIN FORM IS AZIMUTH-FREE NOW, AND THE CONTROL SHOWS IT WAS NOT.
+    #
+    # Convention 6 as amended asks that a mechanism asserted to act be shown
+    # acting: the effect where it claims one, beside a control showing its
+    # absence when it is disabled. So the corrected direction family is
+    # asserted to read the isotropic median of |cos| -- 0.7071 -- at every
+    # azimuth, and the retired pooling is run at the same azimuths to show it
+    # reading something else. A fix asserted only by its new number could be
+    # asserting a coincidence.
+    var isotropic := 0.7071067811865476
+    var pooled_spread := 0.0
     for pair in [[0.0, 1.0], [15.0, 0.836516], [26.57, 0.670820], [45.0, 0.707107]]:
         var deg := float((pair as Array)[0])
-        var want := float((pair as Array)[1])
+        var was := float((pair as Array)[1])
         var s := StructureFunction.of_function(_plane(grad, deg), win, span, "a plane")
-        var sf := s.s_of_lag([8.0], 0.5, "plain", 40000, 5)
-        var got := float(sf[8.0]) / (grad * 8.0)
-        check(absf(got - want) < 0.01,
-                "on a plane at %s degrees the plain form reports %s of the gradient and the "
-                        % [String.num(deg, 2), String.num(got, 4)]
-                + "pooled-direction prediction is %s" % String.num(want, 4))
-    # And the exponent is untouched by it, which is why this is a bias in the
-    # amplitude alone and not a broken instrument.
+        var now := float(s.s_of_lag([8.0], 0.5, "plain", 4000, 5)[8.0]) / (grad * 8.0)
+        check(absf(now - isotropic) < 0.02,
+                "on a plane at %s degrees the corrected family reads %s of the gradient and "
+                        % [String.num(deg, 2), String.num(now, 4)]
+                + "the isotropic median of |cos| is %s. A continuous surface samples the "
+                        % String.num(isotropic, 4)
+                + "circle evenly, so the reading must not depend on where the hill points.")
+        # THE CONTROL: the same plane, the same lag, the retired pooling.
+        var old_read := float(s.s_of_lag([8.0], 0.5, "plain", 4000, 5, true)[8.0]) / (grad * 8.0)
+        check(absf(old_read - was) < 0.01,
+                "the retired pooling reads %s at %s degrees and the analytic prediction for "
+                        % [String.num(old_read, 4), String.num(deg, 2)]
+                + "four pooled offsets is %s" % String.num(was, 4))
+        pooled_spread = maxf(pooled_spread, absf(old_read - isotropic))
+    check(pooled_spread > 0.1,
+            "the retired pooling and the corrected family read a plane alike, within %s. The "
+                    % String.num(pooled_spread, 4)
+            + "fix would then be asserting a number it was already returning.")
+    # And the exponent is untouched by either, which is why this was invisible
+    # to every exponent check for as long as it was there.
     var tilt := StructureFunction.of_function(_plane(grad, 26.57), win, span, "a plane")
-    var law := StructureFunction.fit_law(
-            tilt.s_of_lag(lags, 0.5, "plain", 40000, 7), 100.0, "plain", 1.0, 100.0)
-    check(absf(float(law["exponent"]) - 1.0) < 1.0e-6,
-            "a plane does not fit exponent 1: got %s" % String.num(float(law["exponent"]), 8))
+    for legacy in [false, true]:
+        var law := StructureFunction.fit_law(
+                tilt.s_of_lag(lags, 0.5, "plain", 4000, 7, legacy), 100.0, "plain", 1.0, 100.0)
+        check(absf(float(law["exponent"]) - 1.0) < 1.0e-6,
+                "a plane does not fit exponent 1 with pooling %s: got %s"
+                        % ["on" if legacy else "off", String.num(float(law["exponent"]), 8)])
+    print("986: the corrected family reads %s of a gradient at every azimuth; the retired "
+            % String.num(isotropic, 4)
+            + "pooling ranged to %s away from it and both fit exponent 1 exactly"
+                    % String.num(pooled_spread, 3))
 
     # WHICH FORM NOTICES ROUGHNESS. The plane is steep enough that the plain
     # form is dominated by it; the roughness is added at a known amplitude and
@@ -9801,9 +9836,14 @@ func test_the_plain_form_reports_the_slope_and_the_detrended_form_cannot_see_it(
         # asked is how many metres they moved for a known metre of roughness.
         moved_by[str(form)] = b - a
         if str(form) == "detrended":
-            check(a == 0.0,
-                    "the detrended form reads %s m on a bare plane rather than exactly zero"
-                            % String.num(a, 12))
+            # At the rounding floor rather than exactly zero: see the note on
+            # the same assertion above -- an offset off the axes makes the
+            # three-term cancellation inexact in float64 at these coordinates.
+            check(a < 1.0e-12 * grad * minf(span.x, span.y),
+                    "the detrended form reads %s m on a bare plane, which is above the "
+                            % String.num(a, 14)
+                    + "rounding floor for a window with %s m of relief across it"
+                            % String.num(grad * minf(span.x, span.y), 0))
         print("986: %s m of roughness on a %s gradient takes the %s form from %s m to %s m"
                 % [String.num(rough, 2), String.num(grad, 2), str(form),
                         String.num(a, 6), String.num(b, 4)])
@@ -9812,12 +9852,19 @@ func test_the_plain_form_reports_the_slope_and_the_detrended_form_cannot_see_it(
     # was real ground; a pure plane's second difference is exactly zero, so a
     # relative move here is infinite and says nothing. What is comparable is
     # how many metres each form moved for one known metre of roughness.
-    var d_plain := float(moved_by["plain"])
-    var d_det := float(moved_by["detrended"])
+    # MAGNITUDE AND NOT DIRECTION, which is a correction to how this was first
+    # written. Added roughness can LOWER the plain median: the statistic is a
+    # quantile of `|g . v + roughness|`, and on a slope the roughness moves
+    # individual pairs both ways, so the median can fall. That was once filed
+    # on the producing side as documented behaviour of the pooled sampling and
+    # it survives the correction, so the honest claim is about how far the two
+    # forms move and not which way.
+    var d_plain := absf(float(moved_by["plain"]))
+    var d_det := absf(float(moved_by["detrended"]))
     check(d_det > 3.0 * d_plain,
             "one metre of roughness moves the plain form by %s m and the detrended form by "
                     % String.num(d_plain, 4)
-            + "%s m. The second form exists because the first cannot see roughness on a "
+            + "%s m. The second form exists because the first barely sees roughness on a "
                     % String.num(d_det, 4)
             + "slope; if they respond alike, the criterion cannot discriminate whichever "
             + "form it is declared on.")
@@ -9827,7 +9874,9 @@ func test_the_plain_form_reports_the_slope_and_the_detrended_form_cannot_see_it(
             + "blind -- the base plane may be too shallow for this comparison to bite")
     print("986: %s m of roughness moves the plain form %s m and the detrended form %s m, "
             % [String.num(rough, 2), String.num(d_plain, 4), String.num(d_det, 4)]
-            + "which is %sx" % String.num(d_det / d_plain, 1))
+            + "which is %sx -- magnitudes, because the plain form's direction of response "
+                    % String.num(d_det / maxf(d_plain, 1.0e-12), 1)
+            + "is not guaranteed")
 
 
 func test_the_instrument_repeats_and_recovers_a_known_exponent() -> void:
@@ -9856,12 +9905,29 @@ func test_the_instrument_repeats_and_recovers_a_known_exponent() -> void:
                     != JSON.stringify(s.s_of_lag(lags, 0.5, "plain", 4000, 3)),
             "the seed changes nothing, so the sampling is not seeded and the agreement "
             + "above means only that the code is deterministic")
-    # And the plane, shown to be the wrong subject for that question.
+    # And the plane, shown to be the wrong subject for that question -- as a
+    # COMPARISON rather than as an equality, because once the offsets came off
+    # the axes the rounding of `g . (x+v)` depends on `x` and the last bits move
+    # with the seed. The claim was never bit-equality; it is that a plane cannot
+    # DISCRIMINATE a seed, and the way to say that is beside a surface that can.
     var flat := StructureFunction.of_function(_plane(0.05, 10.0), win, span, "a plane")
-    check(JSON.stringify(flat.s_of_lag(lags, 0.5, "plain", 4000, 2))
-                    == JSON.stringify(flat.s_of_lag(lags, 0.5, "plain", 4000, 99)),
-            "two seeds disagree on a plane. They should not: a plane's height difference is "
-            + "a function of the offset alone, which is why a plane cannot test seeding.")
+    var flat_a := flat.s_of_lag(lags, 0.5, "plain", 4000, 2)
+    var flat_b := flat.s_of_lag(lags, 0.5, "plain", 4000, 99)
+    var rough_a := s.s_of_lag(lags, 0.5, "plain", 4000, 2)
+    var rough_b := s.s_of_lag(lags, 0.5, "plain", 4000, 99)
+    var flat_move := 0.0
+    var rough_move := 0.0
+    for lag in lags:
+        flat_move = maxf(flat_move, absf(float(flat_a[lag]) - float(flat_b[lag]))
+                / absf(float(flat_a[lag])))
+        rough_move = maxf(rough_move, absf(float(rough_a[lag]) - float(rough_b[lag]))
+                / absf(float(rough_a[lag])))
+    check(flat_move < 1.0e-12 and rough_move > 1.0e-4,
+            "changing the seed moves a plane by %s and a rough surface by %s. A plane's "
+                    % [String.num(flat_move, 14), String.num(rough_move, 6)]
+            + "height difference is a function of the offset alone, so it cannot "
+            + "discriminate a seed at all -- which is exactly why it was the wrong subject "
+            + "for the check above.")
 
     # THE DETAIL FUNCTION IS THE SUBJECT, and it is the one surface here that
     # can answer at every lag. Its exponent is the row's own `spectral_slope`
@@ -10013,3 +10079,254 @@ func test_walk_mode_is_shut_for_986s_reasons_and_itemises_which() -> void:
             % [int(w2["met"]), int(w2["unmet"]), int(w2["not_gradeable"])]
             + "is a native-spacing probe reporting a %s m lower lag bound"
                     % String.num(float(probe["lower_lag_bound_m"]), 0))
+
+
+## How many strata a measurement covers at any lag at all.
+static func _strata_covered(m: Dictionary, lags: Array) -> int:
+    var n := 0
+    for name in (m.get("strata", {}) as Dictionary):
+        for lag in lags:
+            if (m["strata"][name] as Dictionary).get(float(lag), null) != null:
+                n += 1
+                break
+    return n
+
+
+func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
+    """DECISION 1019'S GRADING FORM, BUILT SO THE VALUES ARE THE ONLY THING
+    STILL MISSING.
+
+    The second difference carries both of convention 6's clauses; the strata are
+    the membership functions themselves evaluated on real HAND and slope, never
+    a table; the support is the window; and a stratum without coverage gets a
+    REFUSED band rather than a tolerance of zero.
+
+    Every check here is two-sided per convention 6 as amended -- the effect
+    where the mechanism claims one, beside a control showing its absence when
+    the mechanism is off. A grader asserted only by the numbers it returns is
+    asserting that it ran."""
+    var df := detail_field()
+    var hf := heightfield()
+    if not df.is_loaded():
+        return
+    var layers := TerrainLayers.load_from()
+    if not layers.is_fetched():
+        print("986/1019: the terrain layers are not fetched, so membership cannot be "
+                + "evaluated on real ground and this test is not running. "
+                + "`python3 tools/fetch_artefacts.py`")
+        return
+    df.bind_layers(layers)
+    check(not df.classifier_source().begins_with("the parent lattice"),
+            "the classifier is still re-deriving slope from the lattice with the layers bound")
+
+    # WINDOWS ACROSS THE BASIN, WHICH IS WHAT CROSS-WINDOW MEANS.
+    #
+    # Measured first over ONE 3 km window and four of the five strata fell
+    # below the sampling floor at every lag: a window of a few kilometres is
+    # almost always one landform. That is the support rule working -- a stratum
+    # is refused where it is not, rather than handed the window's own median
+    # under its name -- and it is exactly why 1019 bands cross-window and asks
+    # that window sourcing cover the joint HAND-by-slope membership space.
+    var centres: Array = []
+    for pair in [[500.0, 700.0], [260.0, 300.0], [700.0, 1100.0],
+            [420.0, 980.0], [640.0, 520.0], [340.0, 760.0]]:
+        var t: Array = pair
+        var c := hf.texel_to_world(float(t[0]), float(t[1]))
+        if is_finite(hf.height_at_world(c.x, c.y)):
+            centres.append(c)
+    check(centres.size() >= 4, "only %d of the sampled window centres are on ground"
+            % centres.size())
+    var centre: Vector2 = centres[0]
+    var lags := [4.0, 8.0, 16.0]
+    var m := StratumGrade.over_windows(df, hf, centres, 3000.0, lags, 0.5, 300, 21)
+    check(bool(m["ok"]), "the grader refused a window with the layers bound: %s" % str(m["why"]))
+    if not bool(m["ok"]):
+        return
+
+    # THE ONE-WINDOW CONTROL, which is what makes the sentence above a
+    # measurement rather than an anecdote: the same grader over a single window
+    # must cover fewer strata than over six.
+    var one := StratumGrade.over_window(df, hf, centre, 3000.0, lags, 0.5, 300, 21)
+    var covered_one := _strata_covered(one, lags)
+    var covered_many := _strata_covered(m, lags)
+    check(covered_many > covered_one,
+            "six windows cover %d strata and one covers %d. If they are equal the support "
+                    % [covered_many, covered_one]
+            + "rule is not biting and the cross-window clause is decorative here.")
+    print("986/1019: one window covers %d strata, %d windows cover %d"
+            % [covered_one, centres.size(), covered_many])
+
+    # THE STRATA ARE WHATEVER THE ROWS DECLARE. `upland_flat` is neither ruled
+    # unwalkable nor merged, and under membership strata the elevation classes
+    # stopped being calibration units at all -- so a grader that had memorised
+    # a set would be wrong in both directions.
+    var strata: Dictionary = m["strata"]
+    check(strata.size() == df.landforms().size(),
+            "the grader reports %d strata and the rows declare %d"
+                    % [strata.size(), df.landforms().size()])
+
+    # REFUSED WHERE THE STRATUM IS NOT IN THE WINDOW, AND NOT ZERO. The two are
+    # opposite readings: a refusal says nobody measured this, a zero says
+    # everything fails. At least one of the two must occur here or the check is
+    # not exercised at all -- which is itself reported rather than passed over.
+    var refused := 0
+    var measured := 0
+    for name in strata:
+        var entry: Dictionary = strata[name]
+        var n_eff := float(entry.get("n_effective", 0.0))
+        for lag in lags:
+            if entry[float(lag)] == null:
+                refused += 1
+                check(n_eff < StratumGrade.MIN_EFFECTIVE_SAMPLES,
+                        "%s was refused at %s m with %s effective samples, which is above "
+                                % [str(name), str(lag), String.num(n_eff, 1)]
+                        + "the floor -- so the refusal is not the coverage rule firing")
+            else:
+                measured += 1
+                check(float(entry[float(lag)]) > 0.0,
+                        "%s measured exactly zero at %s m, which a second difference on real "
+                                % [str(name), str(lag)] + "ground does not do")
+    check(measured > 0, "no stratum was measured at any lag in this window")
+    print("986/1019: %d stratum-lags measured and %d refused for coverage over %d strata"
+            % [measured, refused, strata.size()])
+
+    # THE MEMBERSHIP WEIGHTING ACTS, and the control is the same window graded
+    # with the weights flattened. If the two agree, the stratification is
+    # decorative and every stratum is being handed the window's own median.
+    var flat_w := PackedFloat64Array()
+    var vals := PackedFloat64Array()
+    for i in 64:
+        vals.append(float(i))
+        flat_w.append(1.0)
+    var skew := PackedFloat64Array()
+    for i in 64:
+        skew.append(1.0 if i < 8 else 0.0)
+    check(StratumGrade.weighted_quantile(vals, flat_w, 0.5)
+                    != StratumGrade.weighted_quantile(vals, skew, 0.5),
+            "a flat weighting and a weighting concentrated on the smallest eighth give the "
+            + "same quantile, so the weights are not reaching the statistic")
+    check(StratumGrade.effective_n(skew) == 8.0,
+            "the effective count of eight ones and fifty-six zeros is %s and not 8"
+                    % String.num(StratumGrade.effective_n(skew), 2))
+    check(StratumGrade.effective_n(flat_w) == 64.0,
+            "the effective count of sixty-four equal weights is not 64")
+
+    # AND THE STRATA SPREAD, which is convention 6's second clause and a
+    # separate question: a synthesiser whose playa and talus agree passes every
+    # per-stratum band and fails the criterion.
+    var sp := StratumGrade.spread(m, lags)
+    var seen_spread := false
+    for lag in lags:
+        var e = sp[float(lag)]
+        if e == null:
+            continue
+        seen_spread = true
+        check(str((e as Dictionary)["loudest"]) != str((e as Dictionary)["quietest"]),
+                "the spread at %s m names one stratum as both ends" % str(lag))
+        print("986/1019: at %s m the strata spread %sx, %s over %s"
+                % [str(lag), String.num(float((e as Dictionary)["ratio"]), 2),
+                        str((e as Dictionary)["loudest"]), str((e as Dictionary)["quietest"])])
+    check(seen_spread, "no lag produced a spread between two distinct strata")
+
+    # THE PARENT'S OWN SHARE, MEASURED RATHER THAN ASSUMED. The bands come from
+    # real ground, which carries its terrain, so the grade is taken on the drawn
+    # ground and not on the detail term alone. If the parent ever carried most
+    # of the second difference the grade would be reading the lattice -- which
+    # is the premise §23.999 used to refuse fork (c) -- so it is reported.
+    var share := StratumGrade.parent_share(df, hf, centre, 3000.0, lags, 200, 23)
+    for lag in lags:
+        var v = share[float(lag)]
+        if v == null:
+            continue
+        print("986/1019: at %s m the parent lattice carries %s%% of the second difference"
+                % [str(lag), String.num(float(v) * 100.0, 1)])
+
+    # WITHOUT THE LAYERS IT REFUSES BY NAME. The control for every number
+    # above: strip the real inputs and the grader must stop rather than
+    # stratify on a re-derived lattice gradient wearing the same stratum names.
+    var bare := DetailField.load_from(hf, DetailField.ROWS_PATH)
+    var m2 := StratumGrade.over_window(bare, hf, centre, 3000.0, lags, 0.5, 64, 21)
+    check(not bool(m2["ok"]) and str(m2["why"]) == StratumGrade.NO_LAYERS,
+            "a field with no layers graded anyway, reporting %s. 1019 rules the strata are "
+                    % str(m2["why"])
+            + "the membership functions on REAL HAND and slope; a lattice re-derivation is "
+            + "a different stratification with the same names on it.")
+
+    # AND THE GATE STILL READS NOT_GRADEABLE, because nothing is published to
+    # measure against. Measuring is not grading.
+    var ev := StratumGrade.evidence(m, sp, {})
+    check(ev.is_empty(),
+            "the grader offered evidence with no bands published. A measurement with nothing "
+            + "to measure against is a number and not a verdict.")
+    var fl := fixture()
+    var b := FixturePassthrough.over(fl).bundle_for(fl.windows[0], 0, _dev_observer())
+    var w := DebugPlayer.walk_available(b, 1000.0, 4000.0, ev)
+    check(int(w["not_gradeable"]) == 3 and not bool(w["ok"]),
+            "measuring without bands moved the gate: %d not gradeable" % int(w["not_gradeable"]))
+
+    # AND THE REFUSAL SAYS WHICH THING IS MISSING. Two different absences reach
+    # the gate as the same NOT_GRADEABLE, and only one of them is actionable
+    # here: bands nobody has published are the producing side's, while a
+    # stratum this window set does not cover is window sourcing and is mine.
+    var why_not := StratumGrade.gradeable(m, {})
+    check(not bool(why_not["ok"]), "the grader says it can grade with no bands published")
+    check(str(why_not["why"]).begins_with(StratumGrade.NO_COVERAGE)
+                    or str(why_not["why"]).begins_with(StratumGrade.NO_BANDS),
+            "the refusal does not name what is missing: %s" % str(why_not["why"]))
+    print("986/1019: not gradeable because %s" % str(why_not["why"]))
+
+    # THE CONTROL FOR THE GRADING ITSELF, on a measurement where every stratum
+    # IS covered. The real windows above do not cover two of the five, which is
+    # the finding rather than a shortfall in this test -- but a band check that
+    # has never returned a verdict cannot be said to refuse for the right
+    # reason, so it is shown returning all three.
+    var synth := {"ok": true, "why": "", "strata": {}}
+    var i := 0
+    for name in strata:
+        i += 1
+        synth["strata"][str(name)] = {4.0: 0.01 * float(i), 8.0: 0.02 * float(i),
+                16.0: 0.04 * float(i), "n_effective": 1000.0}
+    var synth_sp := StratumGrade.spread(synth, lags)
+    var bands := {"_min_spread": 1.0}
+    for name in strata:
+        var per := {}
+        for lag in lags:
+            var sv := float((synth["strata"][str(name)] as Dictionary)[float(lag)])
+            per[float(lag)] = [sv * 0.5, sv * 2.0]
+        bands[str(name)] = per
+    check(bool(StratumGrade.gradeable(synth, bands)["ok"]),
+            "a fully covered and fully banded measurement is still not gradeable: %s"
+                    % str(StratumGrade.gradeable(synth, bands)["why"]))
+    var ev2 := StratumGrade.evidence(synth, synth_sp, bands)
+    check(not ev2.is_empty() and bool((ev2["bands"] as Dictionary)["ok"]),
+            "bands containing the measurement did not read as met: %s"
+                    % str((ev2.get("bands", {}) as Dictionary).get("why", "")))
+    var w2 := DebugPlayer.walk_available(b, 1000.0, 4000.0, ev2)
+    check(int(w2["not_gradeable"]) == 1 and int(w2["met"]) == 2,
+            "with bands supplied, %d met and %d not gradeable -- the conformance result was "
+                    % [int(w2["met"]), int(w2["not_gradeable"])] + "not passed in, so one "
+            + "should be ungraded and two should be met")
+    # And bands that exclude it read UNMET rather than NOT_GRADEABLE.
+    var tight := {"_min_spread": 1.0}
+    for name in strata:
+        var per2 := {}
+        for lag in lags:
+            var sv2 := float((synth["strata"][str(name)] as Dictionary)[float(lag)])
+            per2[float(lag)] = [sv2 * 10.0, sv2 * 20.0]
+        tight[str(name)] = per2
+    var w3 := DebugPlayer.walk_available(b, 1000.0, 4000.0,
+            StratumGrade.evidence(synth, synth_sp, tight))
+    check(int(w3["unmet"]) >= 1,
+            "bands the measurement sits outside did not read UNMET, so the band check cannot "
+            + "fail and its pass above means nothing")
+    # And a spread requirement nothing meets reads UNMET too, separately.
+    var nospread := bands.duplicate(true)
+    nospread["_min_spread"] = 1000.0
+    var w4 := DebugPlayer.walk_available(b, 1000.0, 4000.0,
+            StratumGrade.evidence(synth, synth_sp, nospread))
+    check(int(w4["unmet"]) >= 1,
+            "a spread requirement of a thousandfold was met, so the second clause cannot "
+            + "fail independently of the first")
+    print("986/1019: bands absent -> 3 not gradeable; bands containing the measurement -> "
+            + "met; bands excluding it -> unmet. The grading form is built and the values "
+            + "are the only thing missing.")

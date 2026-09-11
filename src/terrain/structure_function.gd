@@ -56,6 +56,18 @@ const FORMS := ["plain", "detrended"]
 const FIT_LO_M := 1.0
 const FIT_HI_M := 100.0
 
+## How far an offset's ground distance may sit from the requested lag and still
+## be reported under it. The reference's number: tight enough that the reported
+## lag is the lag.
+const DIRECTION_TOLERANCE := 0.02
+
+## How many directions a CONTINUOUS surface samples a lag along. A function has
+## no lattice, so it is not restricted to offsets that land on cells and can
+## take the circle evenly -- sixteen over the half-circle, because `|dz|` is
+## symmetric under negating the offset and the other half would be the same
+## sixteen numbers.
+const FUNCTION_DIRECTIONS := 16
+
 ## A flat-constant component at or above this many samples is a flattened water
 ## surface rather than ground. See `water_share`: this client DECLARES that it
 ## does not mask, rather than masking badly.
@@ -85,6 +97,10 @@ var sample: Callable
 ## Below this lag the instrument refuses. Zero for a continuous function, which
 ## is a claim it is entitled to make and a raster is not.
 var native_m: float = 0.0
+## The spacing of the lattice a sampled surface sits on, or 0 for a continuous
+## one. Distinct from `native_m`, which is what the surface is HONEST at: a
+## raster resampled finer has a smaller cell and the same honest spacing.
+var cell_m: float = 0.0
 ## The window sampled, in world metres.
 var origin: Vector2 = Vector2.ZERO
 var span: Vector2 = Vector2.ZERO
@@ -123,14 +139,76 @@ static func of_function(sampler: Callable, window_origin: Vector2, window_span: 
 ## measured in the retired instrument, arriving through the back door.
 static func of_raster(sampler: Callable, declared_native_m: float,
                       window_origin: Vector2, window_span: Vector2,
-                      description: String) -> StructureFunction:
+                      description: String, lattice_cell_m: float = 0.0) -> StructureFunction:
     var s := StructureFunction.new()
     s.sample = sampler
     s.native_m = maxf(0.0, declared_native_m)
+    s.cell_m = lattice_cell_m if lattice_cell_m > 0.0 else maxf(0.0, declared_native_m)
     s.origin = window_origin
     s.span = window_span
     s.what = description
     return s
+
+
+## Integer cell offsets whose ground distance IS the requested lag.
+##
+## THE FIRST CUT OF THIS INSTRUMENT POOLED FOUR OFFSETS INTO ONE BUCKET and two
+## of them were at `step * sqrt(2)`, so half of every sample was reported under
+## a shorter lag than it was taken at. That inflates a power law's quantile by
+## `2^(H/2)` on half its samples -- +10.5% at H=0.55 against +25.8% at H=1.20
+## across these rows -- so it biased strata against each other BY THEIR OWN
+## EXPONENTS, which is the one comparison decision 986's cross-stratum clause
+## is made of. It was invisible to every exponent check, because `S(l) = k*s*l`
+## has log-log slope 1 for any direction-independent `k`.
+##
+## AXIS-ONLY WOULD TRADE ONE DIRECTIONAL ARTEFACT FOR ANOTHER. On a plane the
+## first difference over a fixed distance is `|g . v|`, so two directions read
+## a gradient at between 0.500 and 1.000 of its magnitude depending on azimuth.
+## Over this family the reading is the isotropic median of `|cos|` -- 0.707 at
+## every azimuth from step 5 up.
+##
+## BELOW STEP 5 IT DEGENERATES TO THE AXES, HONESTLY: no integer offset has a
+## ground distance near 3 cells except the two axial ones, so a raster genuinely
+## cannot sample a diagonal there. That is a property of a lattice, and it is
+## why decision 1019 keeps the plain form for coarse lags only.
+static func direction_family(step: int, tol: float = DIRECTION_TOLERANCE) -> Array:
+    var out: Array = []
+    var lim := step + 2
+    for dr in range(0, lim + 1):
+        for dc in range(-lim, lim + 1):
+            if dr == 0 and dc <= 0:
+                continue
+            if absf(sqrt(float(dr * dr + dc * dc)) - float(step)) <= tol * float(step):
+                out.append(Vector2i(dr, dc))
+    return out if not out.is_empty() else [Vector2i(0, step), Vector2i(step, 0)]
+
+
+## The world-metre offsets this surface samples one lag along.
+##
+## A LATTICE AND A FUNCTION ANSWER THIS DIFFERENTLY, and the difference is the
+## honesty rule again one level down. A raster can only be offset by whole
+## cells, so it takes the family above and inherits its coarse-lag degeneracy.
+## A continuous function is under no such restriction: it can be offset by the
+## exact distance in any direction at all, so it takes the circle evenly and
+## reads 0.707 on a plane at EVERY lag rather than only from step 5 up.
+##
+## Which means decision 1019's "plain form at coarse lags only" is a constraint
+## on RASTERS and not on the published function. Worth knowing before the rule
+## is read as a property of the statistic.
+func directions_for(lag: float) -> Array:
+    var out: Array = []
+    if cell_m > 0.0:
+        var step := int(round(lag / cell_m))
+        if step < 1:
+            return out
+        for d in direction_family(step):
+            var v: Vector2i = d
+            out.append(Vector2(float(v.x) * cell_m, float(v.y) * cell_m))
+        return out
+    for i in FUNCTION_DIRECTIONS:
+        var th := PI * float(i) / float(FUNCTION_DIRECTIONS)
+        out.append(Vector2(cos(th) * lag, sin(th) * lag))
+    return out
 
 
 ## Quantile-`q` height swing over ground distance, per lag.
@@ -138,19 +216,15 @@ static func of_raster(sampler: Callable, declared_native_m: float,
 ## Returns `{lag_m: value}`, with `cannot_answer()` at any lag below the
 ## surface's declared native spacing.
 ##
-## THE DIRECTIONS ARE THE REFERENCE'S, INCLUDING THE TWO DIAGONALS. That choice
-## is not neutral and `directions_note` says what it costs; it is mirrored here
-## rather than corrected, because conformance to a published instrument comes
-## before improving it and a client that quietly measured a different statistic
-## would be the harder defect to find.
+## EVERY SAMPLE IS REPORTED UNDER THE DISTANCE IT WAS TAKEN AT. See
+## `directions_for`: the surface decides its own offsets, and neither the plain
+## nor the detrended form pools two ground distances into one bucket.
 func s_of_lag(lags_m: Array, q: float = 0.5, form: String = "plain",
-              max_samples: int = 200000, seed: int = 0) -> Dictionary:
+              max_samples: int = 200000, seed: int = 0,
+              legacy_pooled: bool = false) -> Dictionary:
     var out := {}
     if not FORMS.has(form):
         return out
-    var per_dir: int = maxi(1, max_samples / 4)
-    var dirs: Array = ([[0, 1], [1, 0], [1, 1], [1, -1]] if form == "plain"
-            else [[0, 1], [1, 0]])
     for raw in lags_m:
         var lag := float(raw)
         if lag <= 0.0 or lag < native_m - 1.0e-9:
@@ -158,10 +232,26 @@ func s_of_lag(lags_m: Array, q: float = 0.5, form: String = "plain",
             continue
         # The window has to hold the whole stencil: one lag for the plain form,
         # two for the centred second difference.
-        var reach := (2.0 * lag) if form == "detrended" else lag
+        # The stencil's reach, which for a pooled diagonal is longer than the
+        # lag and for the corrected family is exactly it.
+        var reach := (2.0 * lag * sqrt(2.0)) if form == "detrended" else lag * sqrt(2.0)
         if reach >= minf(span.x, span.y):
             out[lag] = cannot_answer()
             continue
+        # THE RETIRED SAMPLING, KEPT ONLY AS A CONTROL. Convention 6 as amended
+        # asks that a mechanism asserted to act be shown acting -- the effect
+        # beside its absence when the mechanism is off. This is the "off": the
+        # four pooled offsets the first cut used, so the gate can show that
+        # correcting them changed the answer rather than asserting it did.
+        # Nothing in the client calls this with `legacy_pooled` true except
+        # that control.
+        var dirs: Array = ([Vector2(lag, 0.0), Vector2(0.0, lag),
+                Vector2(lag, lag), Vector2(lag, -lag)] if legacy_pooled
+                else directions_for(lag))
+        if dirs.is_empty():
+            out[lag] = cannot_answer()
+            continue
+        var per_dir: int = maxi(1, max_samples / dirs.size())
         var vals := PackedFloat64Array()
         var draw := 0
         # HOISTED. The salt is a property of the form and the lag, and it was
@@ -170,8 +260,9 @@ func s_of_lag(lags_m: Array, q: float = 0.5, form: String = "plain",
         # constant over.
         var salt := StableHash.of_name("%s|%s" % [form, String.num(lag, 6)])
         for d in dirs:
-            var dx := float((d as Array)[0]) * lag
-            var dy := float((d as Array)[1]) * lag
+            var off: Vector2 = d
+            var dx := off.x
+            var dy := off.y
             for i in per_dir:
                 draw += 1
                 var p := _point(seed, salt, draw, reach)
@@ -283,31 +374,30 @@ func measure_both(lags_m: Array, parent_spacing_m: float, q: float = 0.5,
     return out
 
 
-## WHAT THE DIAGONAL DIRECTIONS COST, because this instrument grades a criterion
-## and an instrument's own bias belongs beside it.
+## WHAT THE POOLED DIRECTIONS COST, kept because the defect is instructive and
+## the control that demonstrates it is still in the gate.
 ##
-## The plain form pools four offsets -- `(l, 0)`, `(0, l)`, `(l, l)`, `(l, -l)`
-## -- into one lag bucket. The last two are at a ground distance of `l * sqrt(2)`,
-## so half of every sample is measured at a longer lag than the one it is
-## reported under. On a tilted plane the height difference for an offset `v` is
-## `|g . v|`, so the pooled median is not `|g| * l` but `|g| * l` times a factor
-## that depends on the gradient's AZIMUTH: 1.0 when the slope runs along an
-## axis and 0.707 when it runs at 45 degrees to one.
+## The first cut of this instrument pooled four offsets -- `(l,0)`, `(0,l)`,
+## `(l,l)`, `(l,-l)` -- into one lag bucket, and the last two are at a ground
+## distance of `l*sqrt(2)`. So half of every sample was measured at a longer lag
+## than it was reported under.
 ##
-## The exponent is unaffected -- every direction scales with `l`, so a plane
-## still fits exponent 1 exactly -- and the AMPLITUDE is not the gradient. It is
-## between 0.6708 and 1.0 of it, worst at an azimuth of 26.57 degrees (which is
-## `atan(1/2)`, where the two axis offsets and the two diagonals interleave
-## least helpfully) and exact only where the slope runs along a sampling axis.
-## Which of those a stratum gets depends on how its hills happen to sit
-## relative to the raster's axes, which is a fact about the grid rather than
-## about the ground.
+## THE EXPONENT NEVER SAW IT, which is why it survived a test suite that checks
+## exponents: `S(l) = k*s*l` has log-log slope 1 for any direction-independent
+## `k`, so every exponent check passed. What moved was the AMPLITUDE, by
+## `2^(H/2)` on half the samples -- so the inflation was a function of the
+## exponent, and it biased strata against each other by the very quantity that
+## distinguishes them. Decision 986's cross-stratum clause is that comparison.
+##
+## On a plane it showed as an azimuth dependence: the pooled reading was
+## between 0.6708 and 1.0 of the gradient, worst at `atan(1/2)`. Corrected, a
+## continuous surface reads the isotropic median of `|cos|` -- 0.7071 -- at
+## every azimuth and every lag.
 static func directions_note() -> String:
-    return ("the plain form pools four offsets into one lag bucket and two of them are at "
-            + "l*sqrt(2), so half the pairs are measured at a longer lag than they are "
-            + "reported under. On a plane the exponent is still exactly 1 and the amplitude "
-            + "is between 0.6708 and 1.0 of the gradient depending on the slope's azimuth "
-            + "relative to the sampling axes, worst at atan(1/2) = 26.57 degrees. Mirrored "
-            + "from the reference rather than "
-            + "corrected, because a client quietly measuring a different statistic is the "
-            + "harder defect to find.")
+    return ("every sample is reported under the distance it was taken at. A lattice surface "
+            + "takes `direction_family(step)`, which degenerates to the axes below step 5 "
+            + "because no integer offset sits near 3 cells otherwise; a continuous surface "
+            + "takes the circle evenly and has no such floor. The retired pooling -- four "
+            + "offsets, two of them at l*sqrt(2) -- inflated a power law's quantile by "
+            + "2^(H/2) on half its samples, which is +10.5% at H=0.55 against +25.8% at "
+            + "H=1.20, and biased strata against each other by their own exponents.")
