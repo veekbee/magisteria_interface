@@ -175,6 +175,10 @@ func _initialize() -> void:
     test_the_skin_keys_on_precision_and_dies_with_the_token()
     test_the_detail_function_conforms_to_its_published_vectors()
     test_the_five_part_hash_is_the_general_one()
+    test_the_structure_function_refuses_below_the_spacing_it_declares()
+    test_the_plain_form_reports_the_slope_and_the_detrended_form_cannot_see_it()
+    test_the_instrument_repeats_and_recovers_a_known_exponent()
+    test_walk_mode_is_shut_for_986s_reasons_and_itemises_which()
     stage_the_main_scene()
 
 
@@ -5572,17 +5576,20 @@ func test_the_body_moves_at_the_speed_the_bundle_reports() -> void:
 
 
 func test_walk_mode_is_refused_while_the_ground_is_a_plane() -> void:
-    """WALK MODE IS READY AND GATED, and the gate is A1's, not this repo's.
+    """THE NEAR FIELD IS STILL A PLANE, AND THAT IS NO LONGER THE GATE.
 
     The terrain export triangulates the heightfield every few kilometres, so a
     body standing in the scatter stands in the middle of one flat triangle.
-    Anything tuned against that is tuned against a plane -- which is exactly
-    what a person walking a heading in flight 3 reported seeing.
+    That finding is real, is measured here, and moved when the pyramid landed.
 
-    The criterion is derived rather than picked: the ground has to change at
-    least once per second of walking, so its sample spacing must be no coarser
-    than the distance this body's own sustainable speed covers in a second.
-    Both numbers come from outside the player."""
+    WHAT CHANGED IS WHAT IT DECIDES. This test used to end by refining the
+    sample to a metre and asserting that walk mode OPENED -- "it is a gate and
+    not a wall". Decision 986 retired that instrument: §23.976 measured it
+    returning the sampling step at every resolution, so it reports the grid
+    rather than the ground and any function of any amplitude passes it. The
+    test asserting the gate could open was therefore asserting the defect, and
+    it is inverted below: metre ground must NOT open walk mode, because how
+    finely the ground is sampled is not one of 986's three conditions."""
     var fl := fixture()
     var p := FixturePassthrough.over(fl)
     var b := p.bundle_for(fl.windows[0], 0, _dev_observer())
@@ -5596,49 +5603,45 @@ func test_walk_mode_is_refused_while_the_ground_is_a_plane() -> void:
     var verdict := DebugPlayer.walk_available(b, drawn_sample, near_field)
     check(not bool(verdict["ok"]),
             "walk mode opened on ground sampled every %s m" % String.num(drawn_sample, 0))
-    check(str(verdict["why"]).contains("SECOND product"),
+    check(str(verdict["why"]).contains("not gradeable"),
             "the refusal does not name what it waits on: %s" % str(verdict["why"]))
 
-    # THE TWO FINDINGS MOVED APART, WHICH IS THE POINT OF SPLITTING THEM. At
-    # today's sampling both refuse. At the pyramid's 100 m the near field
-    # becomes relief and the underfoot answer does not change at all -- so a
-    # single verdict would have reported "still refuses" over a fortyfold
-    # improvement in the thing that was actually broken.
+    # THE NEAR FIELD HALF IS UNCHANGED AND STILL MOVES. At today's sampling a
+    # body stands on a plane; at the pyramid's 100 m it does not. Keeping the
+    # two findings apart is what let that improvement be visible at all.
     var today := DebugPlayer.ground_findings(b, drawn_sample, near_field)
     check(not bool((today["near_field_is_relief"] as Dictionary)["ok"]),
             "the near field reads as relief at %s m sampling" % String.num(drawn_sample, 0))
-    check(not bool((today["changes_underfoot"] as Dictionary)["ok"]),
-            "the ground reads as changing underfoot at %s m sampling"
-            % String.num(drawn_sample, 0))
-
     var tiled := DebugPlayer.ground_findings(b, 100.0, near_field)
     check(bool((tiled["near_field_is_relief"] as Dictionary)["ok"]),
             "the pyramid's 100 m does not make the near field relief, and the measurement "
             + "counts sixty-nine ground samples in a 480 m disc where the drawn mesh has none")
-    check(not bool((tiled["changes_underfoot"] as Dictionary)["ok"]),
-            "100 m ground reads as changing underfoot. It does not -- the measurement walks "
-            + "600 m on three headings and finds the height changing every 100 m, which is "
-            + "twenty seconds at the ruled speed. If this passes, the criterion was relaxed.")
 
-    # NOT RELAXED, AND PINNED SO IT CANNOT BE. The underfoot criterion is the
-    # body's own sustainable speed over one second, and the ruled envelope is
-    # SLOWER than the stub's -- so the real number makes this stricter, never
-    # looser. A future 0.7 m/s must not open a gate that 5.0 m/s closed.
-    var slow := b.locomotion.duplicate()
-    slow["sustainable_speed_m_s"] = 0.7
-    var slower := PerceptBundle.new()
-    slower.locomotion = slow
-    check(not bool((DebugPlayer.ground_findings(slower, 100.0, near_field)
-                    ["changes_underfoot"] as Dictionary)["ok"]),
-            "a slower body opened a gate a faster one closed")
+    # THE DEMOTED PROBE REPORTS A SPACING AND DECIDES NOTHING.
+    var probe: Dictionary = tiled["native_spacing_probe"]
+    check(float(probe["effective_native_m"]) == 100.0,
+            "the probe reports %s m where the surface is sampled every 100 m"
+                    % String.num(float(probe["effective_native_m"]), 1))
+    check(not probe.has("ok"), "the probe still returns a verdict")
 
-    # It is a gate and not a wall: ground fine enough opens it.
+    # THE INVERSION. Metre ground was the case that used to open this gate.
+    # Nothing about 986's conditions changes when the sample gets finer, so
+    # nothing about the verdict may either -- and if this ever fails, the old
+    # instrument has been re-keyed into the gate by somebody who read the
+    # outcome and not the reason.
     var fine := DebugPlayer.walk_available(b, 1.0, near_field)
-    check(bool(fine["ok"]), "walk mode stayed shut on metre ground: %s" % str(fine.get("why", "")))
-    print("player: walk refused at %s m sampling (stride %d) -- near field is a plane today "
+    check(not bool(fine["ok"]),
+            "metre ground opened walk mode. Sampling finer is not one of decision 986's "
+            + "three conditions, and a gate that opens on it is keyed to the instrument "
+            + "§23.976 retired for reporting its own step.")
+    check(JSON.stringify(fine["conditions"]) == JSON.stringify(verdict["conditions"]),
+            "refining the ground from %s m to 1 m changed which conditions stand, so the "
+                    % String.num(drawn_sample, 0)
+            + "sample spacing is still deciding the gate through another door")
+    print("player: walk refused at %s m sampling (stride %d) and still refused at 1 m -- the "
             % [String.num(drawn_sample, 0), v.stride]
-            + "and relief at the pyramid's 100 m, and the ground still does not change "
-            + "underfoot at either")
+            + "near field is a plane today and relief at the pyramid's 100 m, and neither "
+            + "is what decides it")
     v.free()
 
 
@@ -9650,3 +9653,363 @@ func test_the_five_part_hash_is_the_general_one() -> void:
             "of5 is order-blind, so a lattice node and an octave index are interchangeable")
     print("hash: of5 agrees with over() on %d cases and separates every argument"
             % cases.size())
+
+
+# ============================================================================
+# Decision 986: the instrument, and the gate re-keyed onto it.
+# ============================================================================
+
+## A tilted plane through the origin, gradient `s` at azimuth `deg`.
+static func _plane(s: float, deg: float) -> Callable:
+    var th := deg_to_rad(deg)
+    var gx := s * cos(th)
+    var gy := s * sin(th)
+    return func(x: float, y: float) -> float: return gx * x + gy * y
+
+
+func test_the_structure_function_refuses_below_the_spacing_it_declares() -> void:
+    """THE HONESTY RULE, WHICH IS WHAT LETS A RASTER AND A FUNCTION BE ASKED
+    THE SAME QUESTION.
+
+    A surface declares the spacing it is honest at and returns CANNOT ANSWER
+    below it. That is the clause the retired instrument had no equivalent of:
+    §23.976 measured it returning the sampling step at every resolution, so it
+    was reporting the grid rather than the ground and any amplitude passed.
+
+    The absence is `null` and the test says so, because the three plausible
+    alternatives -- zero, NAN, a number -- are all things a real surface
+    returns. This repo's rasters give NAN at nodata."""
+    var plane := _plane(0.1, 0.0)
+    var win := Vector2(0.0, 0.0)
+    var span := Vector2(1000.0, 1000.0)
+    var lags := [0.25, 0.5, 1.0, 2.0, 4.0, 16.0, 64.0]
+
+    # A function answers everywhere.
+    var fn := StructureFunction.of_function(plane, win, span, "a plane")
+    var sf_fn := fn.s_of_lag(lags, 0.5, "plain", 4000, 1)
+    for lag in lags:
+        check(sf_fn[lag] != null, "a continuous function refused a %s m lag" % str(lag))
+
+    # A raster declaring a metre cannot.
+    var ras := StructureFunction.of_raster(plane, 1.0, win, span, "a plane, sampled at 1 m")
+    var sf_ras := ras.s_of_lag(lags, 0.5, "plain", 4000, 1)
+    var refused := 0
+    for lag in lags:
+        if float(lag) < 1.0:
+            check(sf_ras[lag] == null,
+                    "a 1 m raster answered at a %s m lag. Below its own spacing it is "
+                            % str(lag)
+                    + "grading its own interpolation, which is exactly what the retired "
+                    + "instrument did.")
+            refused += 1
+        else:
+            check(sf_ras[lag] != null, "a 1 m raster refused a %s m lag" % str(lag))
+    check(refused == 2, "%d lags were refused and 2 are below a metre" % refused)
+
+    # THE SAME SURFACE, TWO DECLARATIONS, TWO ANSWERS -- which is the point:
+    # the refusal is a property of the CLAIM and not of the array, so a raster
+    # resampled finer still answers where it always did.
+    check(sf_fn[0.25] != null and sf_ras[0.25] == null,
+            "the declared spacing did not change what the instrument would answer, so the "
+            + "declaration is decorative")
+
+    # And a lag the window cannot hold is also a refusal rather than a number
+    # from a stencil hanging off the edge.
+    var tight := StructureFunction.of_function(plane, win, Vector2(10.0, 10.0), "a small window")
+    check(tight.s_of_lag([64.0], 0.5, "plain", 400, 1)[64.0] == null,
+            "a 64 m lag was answered inside a 10 m window")
+    print("986: the honesty rule -- a function answers at %d/%d lags, a 1 m raster at %d, "
+            % [lags.size(), lags.size(), lags.size() - refused]
+            + "and the difference is the declaration and not the surface")
+
+
+func test_the_plain_form_reports_the_slope_and_the_detrended_form_cannot_see_it() -> void:
+    """THE TWO FORMS, ON GROUND WHOSE ANSWER IS KNOWN WITHOUT MEASURING IT.
+
+    Agreement on the basin is worth much less than agreement on a plane,
+    because on the basin a shared misreading looks exactly like conformance --
+    which is what the amplitude defect in 985 was, both implementations
+    computing one wrong number and agreeing perfectly.
+
+    So: a plane, where the plain form's answer is analytic; a plane plus known
+    roughness, where the question is which form NOTICES; and the second
+    difference, which annihilates any linear trend exactly and must therefore
+    return zero on a plane rather than something small."""
+    var win := Vector2(0.0, 0.0)
+    var span := Vector2(4000.0, 4000.0)
+    var lags := [2.0, 4.0, 8.0, 16.0, 32.0, 64.0]
+    var grad := 0.1
+
+    # THE DETRENDED FORM ON A PLANE IS EXACTLY ZERO, not nearly. A second
+    # difference of a linear function is zero in exact arithmetic and the
+    # arithmetic here is exact -- the three samples are a linear combination
+    # that cancels -- so a tolerance would be hiding something.
+    var flat := StructureFunction.of_function(_plane(grad, 31.0), win, span, "a plane")
+    var det := flat.s_of_lag(lags, 0.5, "detrended", 4000, 3)
+    var worst_det := 0.0
+    for lag in lags:
+        worst_det = maxf(worst_det, absf(float(det[lag])))
+    check(worst_det < 1.0e-9,
+            "the second difference of a plane is %s m and not zero, so it is not blind to "
+                    % String.num(worst_det, 12)
+            + "gradient and the whole reason for the second form is gone")
+
+    # THE PLAIN FORM RETURNS THE GRADIENT -- TIMES A FACTOR NOBODY INTENDED.
+    # The four pooled offsets are (l,0), (0,l), (l,l), (l,-l), and the last two
+    # are at a ground distance of l*sqrt(2). So half of every sample is taken
+    # at a longer lag than it is reported under, and on a plane the pooled
+    # median is |g|*l times a factor that depends on the gradient's AZIMUTH.
+    # Predicted analytically below and measured here: the exponent survives,
+    # the amplitude does not.
+    for pair in [[0.0, 1.0], [15.0, 0.836516], [26.57, 0.670820], [45.0, 0.707107]]:
+        var deg := float((pair as Array)[0])
+        var want := float((pair as Array)[1])
+        var s := StructureFunction.of_function(_plane(grad, deg), win, span, "a plane")
+        var sf := s.s_of_lag([8.0], 0.5, "plain", 40000, 5)
+        var got := float(sf[8.0]) / (grad * 8.0)
+        check(absf(got - want) < 0.01,
+                "on a plane at %s degrees the plain form reports %s of the gradient and the "
+                        % [String.num(deg, 2), String.num(got, 4)]
+                + "pooled-direction prediction is %s" % String.num(want, 4))
+    # And the exponent is untouched by it, which is why this is a bias in the
+    # amplitude alone and not a broken instrument.
+    var tilt := StructureFunction.of_function(_plane(grad, 26.57), win, span, "a plane")
+    var law := StructureFunction.fit_law(
+            tilt.s_of_lag(lags, 0.5, "plain", 40000, 7), 100.0, "plain", 1.0, 100.0)
+    check(absf(float(law["exponent"]) - 1.0) < 1.0e-6,
+            "a plane does not fit exponent 1: got %s" % String.num(float(law["exponent"]), 8))
+
+    # WHICH FORM NOTICES ROUGHNESS. The plane is steep enough that the plain
+    # form is dominated by it; the roughness is added at a known amplitude and
+    # a wavelength inside the measured lags.
+    var rough := 0.5
+    var moved_by := {}
+    for form in StructureFunction.FORMS:
+        var bare := StructureFunction.of_function(_plane(grad, 26.57), win, span, "plane")
+        var bumpy := StructureFunction.of_function(
+                func(x: float, y: float) -> float:
+                    return (grad * cos(deg_to_rad(26.57)) * x
+                            + grad * sin(deg_to_rad(26.57)) * y
+                            + rough * sin(x * TAU / 6.0) * sin(y * TAU / 6.0)),
+                win, span, "plane plus known roughness")
+        var a := float(bare.s_of_lag([5.0], 0.5, str(form), 40000, 11)[5.0])
+        var b := float(bumpy.s_of_lag([5.0], 0.5, str(form), 40000, 11)[5.0])
+        # ABSOLUTE, BECAUSE ONE OF THE BASELINES IS EXACTLY ZERO. The
+        # reference's table is relative and its base surface was real ground,
+        # which has curvature; a pure plane's second difference is 0, so the
+        # relative move is infinite and says nothing. What both forms can be
+        # asked is how many metres they moved for a known metre of roughness.
+        moved_by[str(form)] = b - a
+        if str(form) == "detrended":
+            check(a == 0.0,
+                    "the detrended form reads %s m on a bare plane rather than exactly zero"
+                            % String.num(a, 12))
+        print("986: %s m of roughness on a %s gradient takes the %s form from %s m to %s m"
+                % [String.num(rough, 2), String.num(grad, 2), str(form),
+                        String.num(a, 6), String.num(b, 4)])
+    # THE TWO FORMS AGAINST EACH OTHER, which is the actual claim and needs no
+    # threshold anybody chose. The reference's table is relative and its base
+    # was real ground; a pure plane's second difference is exactly zero, so a
+    # relative move here is infinite and says nothing. What is comparable is
+    # how many metres each form moved for one known metre of roughness.
+    var d_plain := float(moved_by["plain"])
+    var d_det := float(moved_by["detrended"])
+    check(d_det > 3.0 * d_plain,
+            "one metre of roughness moves the plain form by %s m and the detrended form by "
+                    % String.num(d_plain, 4)
+            + "%s m. The second form exists because the first cannot see roughness on a "
+                    % String.num(d_det, 4)
+            + "slope; if they respond alike, the criterion cannot discriminate whichever "
+            + "form it is declared on.")
+    check(d_plain < 0.2 * rough,
+            "the plain form moved %s m for %s m of roughness, which is more than nearly "
+                    % [String.num(d_plain, 4), String.num(rough, 2)]
+            + "blind -- the base plane may be too shallow for this comparison to bite")
+    print("986: %s m of roughness moves the plain form %s m and the detrended form %s m, "
+            % [String.num(rough, 2), String.num(d_plain, 4), String.num(d_det, 4)]
+            + "which is %sx" % String.num(d_det / d_plain, 1))
+
+
+func test_the_instrument_repeats_and_recovers_a_known_exponent() -> void:
+    """TWO PROPERTIES A GRADER NEEDS BEFORE ANYONE GRADES ANYTHING WITH IT.
+
+    It has to repeat -- a statistic that moves between runs cannot be compared
+    across repos at all -- and it has to recover an exponent it was given, or
+    the fitted law is decorative."""
+    var win := Vector2(0.0, 0.0)
+    var span := Vector2(4000.0, 4000.0)
+    var lags := [2.0, 4.0, 8.0, 16.0, 32.0, 64.0]
+    # NOT ON A PLANE, WHICH IS THE FIRST THING THIS WAS WRITTEN ON. A plane's
+    # height difference depends only on the OFFSET and not on where the pair
+    # sits, so every sample in a direction returns the identical number and the
+    # quantile is the same whatever the seed. The check passed for a reason
+    # that had nothing to do with seeding -- a control that cannot discriminate
+    # on the surface it is given.
+    var bumpy := func(x: float, y: float) -> float:
+        return 0.05 * x + sin(x * 0.37) * cos(y * 0.41)
+    var s := StructureFunction.of_function(bumpy, win, span, "a rough surface")
+    check(JSON.stringify(s.s_of_lag(lags, 0.5, "plain", 4000, 2))
+                    == JSON.stringify(s.s_of_lag(lags, 0.5, "plain", 4000, 2)),
+            "two runs at one seed disagree, so nothing measured here can be compared to "
+            + "anything measured anywhere else")
+    check(JSON.stringify(s.s_of_lag(lags, 0.5, "plain", 4000, 2))
+                    != JSON.stringify(s.s_of_lag(lags, 0.5, "plain", 4000, 3)),
+            "the seed changes nothing, so the sampling is not seeded and the agreement "
+            + "above means only that the code is deterministic")
+    # And the plane, shown to be the wrong subject for that question.
+    var flat := StructureFunction.of_function(_plane(0.05, 10.0), win, span, "a plane")
+    check(JSON.stringify(flat.s_of_lag(lags, 0.5, "plain", 4000, 2))
+                    == JSON.stringify(flat.s_of_lag(lags, 0.5, "plain", 4000, 99)),
+            "two seeds disagree on a plane. They should not: a plane's height difference is "
+            + "a function of the offset alone, which is why a plane cannot test seeding.")
+
+    # THE DETAIL FUNCTION IS THE SUBJECT, and it is the one surface here that
+    # can answer at every lag. Its exponent is the row's own `spectral_slope`
+    # by construction, so the fit has something to be checked against.
+    var df := detail_field()
+    if not df.is_loaded():
+        return
+    var hf := heightfield()
+    var centre := hf.texel_to_world(500.0, 700.0)
+    var strata := df.landforms()
+    check(strata.size() > 0, "the rows declare no strata")
+    # NOT A NUMBER OF STRATA. The set is read from the rows at run time: one of
+    # them may yet be merged or ruled away, and a test that had memorised five
+    # would go quiet about the one that left rather than failing.
+    # EVERY STRATUM THE ROWS DECLARE, AND THE TARGET IS THE ROW'S OWN NUMBER.
+    # For fBm the structure function goes as `l^H` and `spectral_slope` IS that
+    # exponent here, so each stratum has an analytic answer and they span
+    # 0.55 to 1.20 -- which is what makes this a recovery rather than one
+    # number landing near one other number.
+    # FITTED WELL BELOW THE PARENT, AND THAT IS NOT A CONVENIENCE.
+    #
+    # Measured first at a 100 m parent over lags of 1 to 32 m, where every
+    # stratum came out LOW -- playa 1.112 against a declared 1.2, floor 0.905
+    # against 0.95 -- and the size of the miss tracked the declared exponent.
+    # That is the subtraction showing up in the fit: `d` is `f` minus what the
+    # parent can carry, so the energy is removed from exactly the lags nearest
+    # the parent spacing, and a smooth field keeps more of its variance there
+    # to lose. A fit whose top lag is a third of the parent is measuring the
+    # subtraction as much as the spectrum.
+    #
+    # So the same strata are fitted under the 1 km parent this client actually
+    # draws the far field at, over 1 to 64 m -- under a tenth of the parent at
+    # the top -- where the recovery is inside 0.01.
+    var lags_d := [1.0, 2.0, 4.0, 8.0, 16.0, 32.0, 64.0]
+    var worst_err := 0.0
+    var lines := PackedStringArray()
+    for raw_name in strata:
+        var name := str(raw_name)
+        var want := float(df.row(name).get("spectral_slope", NAN))
+        var surf := StructureFunction.of_function(
+                func(x: float, y: float) -> float:
+                    return df.detail_at64(x, y, NAN, NAN, name),
+                centre - Vector2(2000.0, 2000.0), Vector2(4000.0, 4000.0),
+                "the detail function, stratum %s" % name)
+        var sf := surf.s_of_lag(lags_d, 0.5, "detrended", 1600, 13)
+        var fitted := StructureFunction.fit_law(sf, df.parent_spacing_m, "detrended")
+        check(not fitted.is_empty() and not fitted.has("refused"),
+                "no law could be fitted to stratum %s over the measurable range" % name)
+        if fitted.is_empty() or fitted.has("refused"):
+            continue
+        var got := float(fitted["exponent"])
+        worst_err = maxf(worst_err, absf(got - want))
+        check(absf(got - want) < 0.03,
+                "stratum %s declares exponent %s and measures %s. The structure function of "
+                        % [name, String.num(want, 3), String.num(got, 3)]
+                + "an fBm goes as l^H and the row's `spectral_slope` is that H, so these are "
+                + "the same number and a gap means one of the two is not what it says.")
+        check(float(fitted["parent_spacing_m"]) == df.parent_spacing_m,
+                "the fitted law for %s does not carry the parent it was measured against"
+                        % name)
+        lines.append("%s %s/%s" % [name, String.num(got, 3), String.num(want, 2)])
+    # A ROW WITHOUT A PARENT IS REFUSED RATHER THAN WARNED ABOUT.
+    var any := StructureFunction.of_function(
+            func(x: float, y: float) -> float:
+                return df.detail_at64(x, y, NAN, NAN, str(strata[0])),
+            centre - Vector2(2000.0, 2000.0), Vector2(4000.0, 4000.0), "one stratum")
+    var no_parent := StructureFunction.fit_law(
+            any.s_of_lag(lags_d, 0.5, "detrended", 400, 13), 0.0, "detrended")
+    check(no_parent.has("refused"),
+            "a law fitted without a parent spacing was emitted anyway. An amplitude at a lag "
+            + "is a claim about which octaves are synthesised, so one number under two "
+            + "parents describes two different spectral spans.")
+    print("986: measured/declared exponent over %d strata read from the rows -- %s; worst "
+            % [strata.size(), " ".join(lines)] + "gap %s" % String.num(worst_err, 3))
+
+
+func test_walk_mode_is_shut_for_986s_reasons_and_itemises_which() -> void:
+    """THE GATE WAS RIGHT AND ITS MECHANISM WAS NOT.
+
+    `walk_available` returned the retired instrument's `ok` verbatim. Walk mode
+    was therefore shut BECAUSE THE DRAWN GROUND IS SAMPLED COARSELY, not
+    because 986's conditions are unmet -- so refining the sample would have
+    opened it on a criterion the corpus has retired. An outcome that is right
+    for a retired reason is the shape that survives review and fails later.
+
+    Re-keyed on the three conditions, itemised, with a third outcome beside
+    pass and fail. The payoff is that when the grading form is ruled exactly
+    one row flips and a reader can see which -- instead of a boolean that has
+    been hiding the fact that condition 1 has been met since yesterday."""
+    var fl := fixture()
+    var b := FixturePassthrough.over(fl).bundle_for(fl.windows[0], 0, _dev_observer())
+    var w := DebugPlayer.walk_available(b, 1000.0, 4000.0)
+    check(not bool(w["ok"]), "walk mode opened")
+    check((w["conditions"] as Array).size() == DebugPlayer.CONDITIONS.size(),
+            "%d conditions reported against %d named"
+                    % [(w["conditions"] as Array).size(), DebugPlayer.CONDITIONS.size()])
+    check(int(w["not_gradeable"]) == 3 and int(w["met"]) == 0,
+            "with no evidence at all, %d conditions read MET and %d not gradeable. Nothing "
+                    % [int(w["met"]), int(w["not_gradeable"])]
+            + "has been measured, and that is three NOT_GRADEABLE rather than three failures.")
+
+    # THE CONDITION THIS CLIENT CAN ALREADY MEET, supplied as evidence rather
+    # than fetched: this file is inside the transducer subtree and consumes
+    # what it is given. Whether the vectors are green is something the gate
+    # knows and a body does not.
+    var green := {"conformance": {"vectors": 310, "worst_abs_m": 0.0,
+            "tolerance_m": 1.0e-15, "parent_nodes_exact": true}}
+    var w2 := DebugPlayer.walk_available(b, 1000.0, 4000.0, green)
+    check(int(w2["met"]) == 1 and int(w2["not_gradeable"]) == 2,
+            "with the conformance result supplied, %d met and %d not gradeable"
+                    % [int(w2["met"]), int(w2["not_gradeable"])])
+    check(not bool(w2["ok"]),
+            "one condition met out of three opened walk mode. A NOT_GRADEABLE is not a pass; "
+            + "that is the entire reason for the third outcome.")
+
+    # AND A FAILING CONFORMANCE IS `UNMET`, NOT `NOT_GRADEABLE`. The two mean
+    # different things and collapsing them would hide a real defect behind a
+    # word that reads like patience.
+    var red := {"conformance": {"vectors": 310, "worst_abs_m": 1.0e-9,
+            "tolerance_m": 1.0e-15, "parent_nodes_exact": false}}
+    var w3 := DebugPlayer.walk_available(b, 1000.0, 4000.0, red)
+    check(int(w3["unmet"]) == 1, "a failing conformance result did not read UNMET")
+
+    # ALL THREE MET IS THE ONLY THING THAT OPENS IT -- checked, so that "walk
+    # mode stays shut" is a fact about the conditions and not about a gate that
+    # cannot open at all. A guard that cannot fire is the defect this repo
+    # keeps finding.
+    var all_met := green.duplicate(true)
+    all_met["bands"] = {"ok": true, "why": "synthetic", "strata": ["a", "b"]}
+    all_met["spread"] = {"ok": true, "why": "synthetic"}
+    check(bool(DebugPlayer.walk_available(b, 1000.0, 4000.0, all_met)["ok"]),
+            "three MET conditions still did not open walk mode, so the gate cannot open and "
+            + "its shutness says nothing")
+
+    # THE RETIRED INSTRUMENT IS STILL HERE AND IS NO LONGER A GATE.
+    var f := DebugPlayer.ground_findings(b, 1000.0, 4000.0)
+    check(f.has("native_spacing_probe"), "the probe is gone rather than demoted")
+    check(not f.has("changes_underfoot"),
+            "`changes_underfoot` is still a finding under its old name, so the demotion is a "
+            + "comment rather than a change")
+    var probe: Dictionary = f["native_spacing_probe"]
+    check(not probe.has("ok"),
+            "the probe still answers yes or no, which is how it will be read as a gate again")
+    check(float(probe["lower_lag_bound_m"]) == 1000.0,
+            "the probe does not report the lower lag bound it exists to supply")
+    for line in DebugPlayer.walk_lines(w2):
+        print("  " + line)
+    print("986: walk mode SHUT -- %d met, %d unmet, %d not gradeable; the retired instrument "
+            % [int(w2["met"]), int(w2["unmet"]), int(w2["not_gradeable"])]
+            + "is a native-spacing probe reporting a %s m lower lag bound"
+                    % String.num(float(probe["lower_lag_bound_m"]), 0))

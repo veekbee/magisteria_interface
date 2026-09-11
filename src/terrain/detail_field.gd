@@ -57,6 +57,12 @@ const SALT_RESIDUAL := 0x72657364        ## "resd"
 ## regular sub-grid, because a regular sampling coarser than the finest octave
 ## reports its own step rather than the field's, which is the sampling mistake
 ## this repo has now made in three different places.
+## How many parent cells' stencils are remembered per landform. Sized so that
+## a window of a few thousand metres at either parent this client refines fits
+## whole, which is what turns a random-sampling instrument's miss rate from
+## nearly one into nearly zero.
+const STENCIL_CELLS := 512
+
 const RESIDUAL_SAMPLES := 4096
 const RESIDUAL_BLOCK_CELLS := 16
 
@@ -718,11 +724,26 @@ func _coarse_component64(x: float, y: float, p: Dictionary, carrier: int) -> flo
     var tx := tx_c - float(x0)
     var ty := ty_c - float(y0)
     var name := str(p.get("_name", ""))
-    var entry: Array = _stencil.get(name, [])
-    var stencil := PackedFloat64Array()
-    if entry.size() == 3 and int(entry[0]) == x0 and int(entry[1]) == y0:
-        stencil = entry[2]
-    else:
+    # MANY CELLS AND NOT ONE. This was one cell deep per landform, which is the
+    # right shape when consecutive samples walk the ground -- a row of mesh
+    # vertices, a plant and its neighbour -- and the wrong one the moment
+    # anything samples at random. Decision 986's structure function does
+    # exactly that: it draws pairs from all over a window to estimate a
+    # quantile, so a one-deep cache missed on nearly every call and paid all
+    # sixteen noise evaluations each time. Measured on the gate's own sweep
+    # over five strata and seven lags: 37 s at one cell, 2 s at this size --
+    # about eighteenfold, and it moves no value, which the placement digest
+    # and the conformance vectors both confirm.
+    #
+    # CLEARED WHOLE WHEN IT FILLS, rather than evicted least-recently-used.
+    # The bookkeeping an LRU needs costs more per hit than the misses it saves
+    # at this size, and the cache is a memo rather than a budget: dropping all
+    # of it is correct, just occasionally wasteful.
+    var cells: Dictionary = _stencil.get(name, {})
+    var key := Vector2i(x0, y0)
+    var stencil: PackedFloat64Array = cells.get(key, PackedFloat64Array())
+    if stencil.size() != 16:
+        stencil = PackedFloat64Array()
         stencil.resize(16)
         for j in 4:
             for i in 4:
@@ -735,7 +756,10 @@ func _coarse_component64(x: float, y: float, p: Dictionary, carrier: int) -> flo
                 stencil[j * 4 + i] = _noise64(
                         parent_origin_x + (float(x0 - 1 + i) + 0.5) * parent_spacing_m,
                         parent_origin_y - (float(y0 - 1 + j) + 0.5) * parent_spacing_m, p)
-        _stencil[name] = [x0, y0, stencil]
+        if cells.size() >= STENCIL_CELLS:
+            cells.clear()
+        cells[key] = stencil
+        _stencil[name] = cells
     var rows_v := PackedFloat64Array()
     rows_v.resize(4)
     for j in 4:

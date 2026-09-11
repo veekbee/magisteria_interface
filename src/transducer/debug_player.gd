@@ -178,35 +178,144 @@ static func ground_findings(bundle: PerceptBundle, ground_sample_m: float,
     }
     if not bool(speed["ok"]):
         return {"near_field_is_relief": near_field,
-                "changes_underfoot": {"ok": false, "why": str(speed["why"])}}
-    var underfoot_ok := ground_sample_m > 0.0 and ground_sample_m <= reach
-    var underfoot := {
-        "ok": underfoot_ok,
-        "ground_sample_m": ground_sample_m,
+                "native_spacing_probe": {"why": str(speed["why"]), "effective_native_m": NAN}}
+    # THE PROBE, WHICH USED TO BE THE GATE.
+    #
+    # This reported whether the ground changes more often than a body covers
+    # ground, and returned `ok`. Decision 986 retired it as the walk-mode gate
+    # and reclassified it as a native-spacing probe, and §23.976 is why: the
+    # gap it reports between height changes equals the CELL SIZE at every
+    # resolution, so on a function it returns the sampling step and any
+    # function of any amplitude passes. It was measuring the instrument.
+    #
+    # It is honest at the job it has left, which is a real one: the effective
+    # native spacing of a drawn surface is what a data product's resolution
+    # claim has to be checked against, and it is the lower lag bound
+    # `StructureFunction` may be asked at on that surface. So no `ok` -- a
+    # probe that still answered yes or no would be read as a gate by the next
+    # person, whatever the comment said.
+    var probe := {
+        "effective_native_m": ground_sample_m,
         "one_second_m": reach,
         "seconds_between_changes": ground_sample_m / reach if reach > 0.0 else INF,
-        "why": ("" if underfoot_ok else
-                ("the ground is sampled every %s m and this body covers %s m in a second, so "
-                        % [String.num(ground_sample_m, 1), String.num(reach, 1)]
-                        + "it walks for %s seconds between one ground sample and the next. "
-                                % String.num(ground_sample_m / reach, 0)
-                        + "Metre-scale relief is not a terrain product: the DEM under the "
-                        + "pyramid is 92.6 m native, so this waits on a SECOND product and "
-                        + "not on a finer pyramid.")),
+        "lower_lag_bound_m": ground_sample_m,
+        "why_it_is_not_a_gate": ("the gap between reported height changes equals the sample "
+                + "spacing at every resolution, so on a function this returns the sampling "
+                + "step rather than a property of the ground, and any amplitude passes. "
+                + "Decision 986 retired it as the gate and kept it as this."),
     }
-    return {"near_field_is_relief": near_field, "changes_underfoot": underfoot}
+    return {"near_field_is_relief": near_field, "native_spacing_probe": probe}
 
 
-## Whether walk mode is honest yet. Gates on the underfoot finding; reports the
-## other, because the two moved apart and a caller that saw one word would not
-## know that the ground stopped being a plane.
+## Decision 986's three conditions, named so that a caller reports which one
+## stands rather than a boolean that hides the other two.
+const CONDITION_FUNCTION := "the published function is live on both sides"
+const CONDITION_BANDS := "each walkable stratum is inside its measured band"
+const CONDITION_SPREAD := "the strata are told apart from one another"
+const CONDITIONS := [CONDITION_FUNCTION, CONDITION_BANDS, CONDITION_SPREAD]
+
+## THREE OUTCOMES AND NOT TWO. `NOT_GRADEABLE` is not a soft failure and not a
+## pass with a caveat: it is the state where the check cannot discriminate, and
+## convention 6's rule is that such a check says so rather than returning
+## whichever of the other two is cheaper. A condition whose grading form has
+## not been ruled cannot be failed either -- failing it would be a claim that
+## the ground is wrong, which nobody has measured.
+const MET := "MET"
+const UNMET := "UNMET"
+const NOT_GRADEABLE := "NOT_GRADEABLE"
+
+
+## Whether walk mode is honest yet, itemised against decision 986.
+##
+## WHAT THIS USED TO DO, AND WHY THE ANSWER DID NOT CHANGE. It returned the
+## `changes_underfoot` finding's `ok` verbatim. The outcome was right -- walk
+## mode is shut and should be -- and the mechanism was not: it was shut because
+## the drawn ground is sampled coarsely, not because 986's conditions are
+## unmet, so refining the sample would have opened it on a criterion the corpus
+## retired. An outcome that is right for a retired reason is the shape that
+## survives review and fails later.
+##
+## EVIDENCE IS PASSED IN AND NEVER FETCHED. This file is inside the transducer
+## subtree, so it consumes what it is given; whether the conformance vectors
+## are green is something the gate knows and a body does not. An absent piece
+## of evidence is `NOT_GRADEABLE`, which is the honest reading of "nobody has
+## measured this" and is not the same as "this failed".
+##
+## AND NOTHING HERE ASSUMES A NUMBER OF STRATA. The walkable set is whatever
+## the rows artefact declares at run time; a stratum may yet be merged or ruled
+## away, and a gate that had memorised five would go quiet about the one that
+## left.
 static func walk_available(bundle: PerceptBundle, ground_sample_m: float,
-                           near_field_radius_m: float) -> Dictionary:
+                           near_field_radius_m: float,
+                           evidence: Dictionary = {}) -> Dictionary:
     var f := ground_findings(bundle, ground_sample_m, near_field_radius_m)
-    var under: Dictionary = f["changes_underfoot"]
+    var items: Array = []
+
+    # 1. The published function, live on both sides and conformant.
+    var conf: Dictionary = evidence.get("conformance", {})
+    if conf.is_empty():
+        items.append({"condition": CONDITION_FUNCTION, "state": NOT_GRADEABLE,
+                "why": "no conformance result was supplied, so nobody has asked"})
+    else:
+        var vectors := int(conf.get("vectors", 0))
+        var worst := float(conf.get("worst_abs_m", INF))
+        var tol := float(conf.get("tolerance_m", 0.0))
+        var exact := bool(conf.get("parent_nodes_exact", false))
+        var pass_ := vectors > 0 and exact and worst <= tol
+        items.append({"condition": CONDITION_FUNCTION, "state": MET if pass_ else UNMET,
+                "why": ("%d vectors, worst %s m against %s m, parent nodes %s"
+                        % [vectors, String.num(worst, 17), String.num(tol, 17),
+                                "exactly zero" if exact else "NOT exactly zero"])})
+
+    # 2 and 3. Both wait on the same ruling, and both say so separately,
+    # because they will not land together and a caller has to see which moved.
+    for pair in [[CONDITION_BANDS, "bands"], [CONDITION_SPREAD, "spread"]]:
+        var name := str((pair as Array)[0])
+        var key := str((pair as Array)[1])
+        var got: Dictionary = evidence.get(key, {})
+        if got.is_empty():
+            items.append({"condition": name, "state": NOT_GRADEABLE,
+                    "why": ("the bands exist and the grading form does not: which form "
+                            + "`S_q(l)` is declared on is unruled, so a measurement here "
+                            + "would be graded against a rule nobody has written")})
+        else:
+            items.append({"condition": name,
+                    "state": MET if bool(got.get("ok", false)) else UNMET,
+                    "why": str(got.get("why", "")),
+                    "strata": got.get("strata", [])})
+
+    var met := 0
+    var unmet := 0
+    var ungradeable := 0
+    for it in items:
+        var st := str((it as Dictionary)["state"])
+        met += 1 if st == MET else 0
+        unmet += 1 if st == UNMET else 0
+        ungradeable += 1 if st == NOT_GRADEABLE else 0
+
     var out := f.duplicate()
-    out["ok"] = bool(under["ok"])
+    out["conditions"] = items
+    out["met"] = met
+    out["unmet"] = unmet
+    out["not_gradeable"] = ungradeable
+    # OPEN ONLY ON THREE `MET`. A `NOT_GRADEABLE` never opens it: the whole
+    # point of the third outcome is that it is not a pass.
+    out["ok"] = met == CONDITIONS.size()
     out["ground_sample_m"] = ground_sample_m
-    out["one_second_m"] = under.get("one_second_m", NAN)
-    out["why"] = str(under.get("why", ""))
+    out["why"] = ("" if bool(out["ok"]) else
+            ("walk mode stays shut: %d of %d conditions met, %d unmet, %d not gradeable yet"
+                    % [met, CONDITIONS.size(), unmet, ungradeable]))
+    return out
+
+
+## The itemisation as lines, so an interactive reader and a headless assertion
+## meet the same text.
+static func walk_lines(w: Dictionary) -> PackedStringArray:
+    var out := PackedStringArray()
+    out.append("walk mode: %s" % ("OPEN" if bool(w.get("ok", false)) else "SHUT"))
+    for it in (w.get("conditions", []) as Array):
+        var d: Dictionary = it
+        out.append("  %-14s %s" % [str(d["state"]), str(d["condition"])])
+        if str(d.get("why", "")) != "":
+            out.append("                 %s" % str(d["why"]))
     return out
