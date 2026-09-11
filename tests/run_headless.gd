@@ -168,6 +168,8 @@ func _initialize() -> void:
     test_the_amplitude_field_has_no_step_on_a_class_boundary()
     test_the_blend_cannot_break_the_exactness_at_a_parent_node()
     test_hand_conditions_the_amplitude_and_absence_is_full_strength()
+    test_the_detail_is_band_limited_below_the_parent_spacing()
+    test_the_field_is_c1_and_says_which_term_binds()
     stage_the_main_scene()
 
 
@@ -8737,3 +8739,148 @@ func test_hand_conditions_the_amplitude_and_absence_is_full_strength() -> void:
     print("985: taper live on HAND -- %d samples, %d at the drainage (worst %s), %d above %s m, "
             % [seen, at_drainage, String.num(worst_low, 2), high_up, String.num(full_above, 0)]
             + "%d with no drainage at all and all of those at full strength" % absent)
+
+
+func test_the_detail_is_band_limited_below_the_parent_spacing() -> void:
+    """985 REQUIRES IT AND IT WAS TRUE BY CONSTRUCTION AND UNMEASURED.
+
+    The term is `f(x)` minus `f` sampled on the parent lattice and interpolated
+    back, so the parent-representable component is removed by subtraction --
+    that is the same arithmetic the exactness rests on. What that argument does
+    not cover is the AMPLITUDE, which decision 985 conditions continuously on
+    HAND and slope: those are fields that vary over hundreds of metres and
+    more, and a product of a band-limited field with a slowly-varying one has
+    energy at the slow field's scale. Whether conditioning reintroduces
+    parent-scale energy is a question about the basin and not about the
+    construction, so it is measured.
+
+    THE ANSWER IS NO, and the blended field is flatter than a single stratum's
+    rather than less flat -- the taper is bounded and the conditioning fields
+    vary smoothly, so the modulation lands well below the sill.
+
+    The lattice is the control. Without it, 'the variogram stops growing' is a
+    statement about the instrument."""
+    var hf := heightfield()
+    var df := detail_field()
+    if not df.is_loaded():
+        return
+    var parent := df.parent_spacing_m
+    var centre := hf.texel_to_world(500.0, 700.0)
+    var at_sixteenth := _variogram_of(hf, df, centre, parent / 16.0, "talus")
+    var at_parent := _variogram_of(hf, df, centre, parent, "talus")
+    var at_four := _variogram_of(hf, df, centre, parent * 4.0, "talus")
+    var blend_parent := _variogram_of(hf, df, centre, parent, "")
+    var blend_four := _variogram_of(hf, df, centre, parent * 4.0, "")
+    var lat_parent := _variogram_of(hf, df, centre, parent, "lattice")
+    var lat_four := _variogram_of(hf, df, centre, parent * 4.0, "lattice")
+    check(at_parent > 0.0 and lat_parent > 0.0, "a variogram came out zero")
+    if at_parent <= 0.0 or lat_parent <= 0.0:
+        return
+
+    # ENERGY IS BELOW THE PARENT: the variogram climbs across the band the
+    # function synthesises. A field with nothing in it would satisfy the
+    # saturation check below by being flat everywhere.
+    check(at_parent > 3.0 * at_sixteenth,
+            "the detail's variogram only grows %sx from a sixteenth of the parent spacing to "
+            % String.num(at_parent / maxf(at_sixteenth, 1e-30), 2)
+            + "the parent, so there is little in the band it is supposed to fill")
+
+    # AND NOT ABOVE IT: it has saturated by the parent spacing.
+    var detail_ratio: float = at_four / at_parent
+    var blend_ratio: float = blend_four / maxf(blend_parent, 1e-30)
+    var lattice_ratio: float = lat_four / lat_parent
+    check(detail_ratio < 1.5, "the detail's variogram grows %sx between the parent spacing and "
+            % String.num(detail_ratio, 2) + "four times it, so it carries energy the parent "
+            + "lattice should already hold")
+    check(blend_ratio < 1.5, "the conditioned field grows %sx over the same span, so blending "
+            % String.num(blend_ratio, 2) + "amplitude on HAND and slope has put parent-scale "
+            + "energy back into a term that is supposed to refine below it")
+    check(lattice_ratio > 3.0, "the lattice itself only grows %sx over that span, so this "
+            % String.num(lattice_ratio, 2) + "instrument cannot see growth and the saturation "
+            + "above means nothing")
+    print("985: over parent -> 4x parent the detail grows %sx, the conditioned field %sx, and "
+            % [String.num(detail_ratio, 2), String.num(blend_ratio, 2)]
+            + "the lattice it refines %sx" % String.num(lattice_ratio, 1))
+
+
+## Half the mean squared difference over one lag. `which` picks the stratum,
+## "" for the conditioned field, "lattice" for the surface being refined.
+func _variogram_of(hf: Heightfield, df: DetailField, centre: Vector2, lag: float,
+                   which: String) -> float:
+    var total := 0.0
+    var n := 0
+    for k in 240:
+        var p := centre + Vector2(float(k % 16) * 731.0, float(k / 16) * 617.0)
+        var q := p + Vector2(lag, 0.0)
+        var a: float
+        var b: float
+        if which == "lattice":
+            a = hf.height_at_world(p.x, p.y)
+            b = hf.height_at_world(q.x, q.y)
+        else:
+            a = df.detail_at(p, which)
+            b = df.detail_at(q, which)
+        if is_nan(a) or is_nan(b):
+            continue
+        total += (a - b) * (a - b)
+        n += 1
+    return 0.0 if n == 0 else 0.5 * total / float(n)
+
+
+func test_the_field_is_c1_and_says_which_term_binds() -> void:
+    """985 ASKS FOR AT LEAST C1. It is met exactly at the floor, and which term
+    holds it there is worth knowing.
+
+    Three things compose: the gradient noise's fade, the Catmull-Rom that puts
+    the coarse component back, and the smoothstep weights that condition the
+    amplitude. The fade is the quintic, C2 at the cell boundaries; the weights
+    are smoothstep, also C2 at their knots. CATMULL-ROM IS C1 AND NO MORE, so
+    the composed field is C1 and no more -- and that term is not free to
+    change, because the exactness at the parent rests on putting the coarse
+    component back through the SAME interpolant the heightfield uses. Asking
+    for C2 would mean a different interpolant, which would leave a residue at
+    every node.
+
+    WHAT CANNOT BE MEASURED HERE, AND IT IS NOT SHYNESS. The field's own
+    derivative is not numerically checkable in world space: a position arrives
+    in a `Vector2`, which at this basin's eastings steps 0.125 m, and the
+    finest synthesised wavelength is 0.244 m. A difference quotient would be
+    sampling a two-texel-wide feature at one and a half texels. So the
+    smoothness of the COMPONENTS is asserted where they live -- in unit space,
+    where no world coordinate is involved -- and the composition is an
+    argument rather than a measurement, stated as one."""
+    # THE FADE: value and first two derivatives at both knots.
+    check(DetailField._fade(0.0) == 0.0 and DetailField._fade(1.0) == 1.0,
+            "the fade does not pin its endpoints")
+    var h := 1.0e-4
+    for knot in [0.0, 1.0]:
+        var t := float(knot)
+        var d1: float = (DetailField._fade(t + h) - DetailField._fade(t - h)) / (2.0 * h)
+        var d2: float = (DetailField._fade(t + h) - 2.0 * DetailField._fade(t)
+                + DetailField._fade(t - h)) / (h * h)
+        check(absf(d1) < 1.0e-6, "the fade's slope at t=%s is %s, so the noise creases at every "
+                % [String.num(t, 0), String.num(d1, 9)] + "cell boundary")
+        check(absf(d2) < 1.0e-3, "the fade's curvature at t=%s is %s, so the noise is C1 and "
+                % [String.num(t, 0), String.num(d2, 6)] + "not the C2 a quintic fade buys")
+
+    # THE WEIGHTS: smoothstep, flat at both ends, so conditioning adds no
+    # crease of its own.
+    for pair in [[0.0, 0.0], [1.0, 1.0]]:
+        var x := float(pair[0])
+        var want := float(pair[1])
+        check(DetailField._ramp(x, 0.5, 0.5) == want,
+                "the weight ramp does not pin its endpoints")
+        var slope: float = (DetailField._ramp(x + h, 0.5, 0.5)
+                - DetailField._ramp(x - h, 0.5, 0.5)) / (2.0 * h)
+        check(absf(slope) < 1.0e-3, "the weight ramp's slope at its %s end is %s, so the "
+                % [("lower" if x == 0.0 else "upper"), String.num(slope, 9)]
+                + "amplitude field creases where a stratum's band begins")
+
+    # AND THE BINDING TERM IS NAMED IN THE FILE THAT OWNS IT, so the next
+    # person asking "can this be C2" finds the reason it cannot before
+    # changing the interpolant.
+    var src := FileAccess.open("res://src/terrain/heightfield.gd", FileAccess.READ).get_as_text()
+    check(src.contains("PUBLIC BECAUSE THE DETAIL FUNCTION NEEDS THIS EXACT INTERPOLANT"),
+            "heightfield.gd no longer records why the detail function needs its interpolant")
+    print("985: fade C2 at both knots, weights C2 at theirs, Catmull-Rom C1 -- so the field is "
+            + "C1, at 985's floor, and the binding term is the one the exactness requires")
