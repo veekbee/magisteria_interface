@@ -6741,15 +6741,25 @@ func test_the_detail_rows_say_that_they_are_invented() -> void:
     # emitted now rather than hand-kept, so the warning is asked for by
     # SUBSTANCE and not by key: pinning a key turns a rename into a failure and
     # a deletion into a pass, and this file has now seen both.
+    # BY SUBSTANCE, AND NOT BY A WORD EITHER. The first version of this asked
+    # for the key; the second asked for the literal string "INVENTED", and the
+    # headline came back saying "EVERY VALUE IN THIS FILE IS A PLACEHOLDER".
+    # That is the same mistake one level down -- a check pinned to the wording
+    # of the thing it is checking fails on a rewrite and passes on a deletion.
+    # What is asked for is that some top-level field says these values are not
+    # measured, in whichever of the two words the emitter chose.
     var headline := ""
     for k in doc:
         var v = doc[k]
-        if typeof(v) == TYPE_STRING and str(v).contains("INVENTED"):
+        if typeof(v) != TYPE_STRING:
+            continue
+        var up := str(v).to_upper()
+        if up.contains("INVENTED") or up.contains("PLACEHOLDER"):
             headline = str(k)
             break
-    check(headline != "" or str((doc.get("classifier", {}) as Dictionary)
-                    .get("_FAKE", "")).contains("invented"),
-            "nothing in the rows says the values in them are invented")
+    check(headline != "",
+            "no top-level field in the rows says its values are placeholders. A number that "
+            + "does not say it is invented becomes a number somebody cites.")
     check(str(doc.get("_replaced_by", doc.get("_values_land_when", ""))).length() > 20,
             "the rows do not say what replaces them")
     check(str((doc.get("classifier", {}) as Dictionary).get("_FAKE", "")).length() > 20,
@@ -9380,22 +9390,20 @@ static func _vec_num(v) -> float:
     return _f64(str((v as Dictionary)["hex"]))
 
 
-## The conformance artefact, parsed.
+## The conformance artefact, parsed -- and parsed STRICTLY, which it once was
+## not able to be.
 ##
-## ONE SUBSTITUTION, AND IT IS THE ARTEFACT'S OWN RULE APPLIED WHERE THE
-## EMITTER DID NOT. The file carries 88 bare `NaN` tokens, which is not JSON --
-## RFC 8259 has no such literal, and a strict parser refuses the whole
-## document rather than the token. Every one of them is in a `dec` field, which
-## the artefact itself says is for readers and is not the contract, and the
-## artefact already declares `null` as how an absent number is written. So the
-## bytes checked for the digest are the bytes on disk, and the text handed to
-## the parser has `"dec": NaN` rewritten to `"dec": null` -- no position, no
-## expected value and no rule is touched, because all of those are in `hex`.
+## It carried 88 bare `NaN` tokens, which RFC 8259 has no literal for, so this
+## parser refused the whole document rather than the token; the gate read it
+## through a substitution of the artefact's own `null`-means-absent rule. The
+## emitter applies that rule itself now and dumps with NaN refused at the
+## source, so the shim is gone rather than left in place working. A workaround
+## that outlives its defect is indistinguishable from a requirement.
 func conformance() -> Dictionary:
     var f := FileAccess.open(CONFORMANCE_PATH, FileAccess.READ)
     if f == null:
         return {}
-    var parsed = JSON.parse_string(f.get_as_text().replace("\"dec\": NaN", "\"dec\": null"))
+    var parsed = JSON.parse_string(f.get_as_text())
     return parsed if typeof(parsed) == TYPE_DICTIONARY else {}
 
 
@@ -9431,19 +9439,32 @@ func test_the_detail_function_conforms_to_its_published_vectors() -> void:
             "`%s` hashes to %d and the rows declare seed %d, so the name is decoration"
                     % [df.world_name, StableHash.of_name(df.world_name), df.world_seed])
 
-    # THE LATTICE CORNER, RECOVERED FROM THE VECTORS' OWN BITS.
+    # THE LATTICE CORNER, READ FROM THE ARTEFACT AND CHECKED AGAINST THE
+    # VECTORS STANDING ON IT.
     #
-    # The artefact carries hex for every position inside a vector and a decimal
-    # for the lattice origin -- and the origin is a position. This engine reads
-    # that decimal to the FARTHER of its two neighbouring doubles, 2.22e-10 m
-    # out where the correct rounding is 1.10e-11 m, so every parent node lands
-    # an ulp off the reference's and the exact node test misses. A node is
-    # `origin + (i + 0.5) * spacing`, so a node's bits and its index give the
-    # corner back -- and all 64 of them must give back the SAME corner, which
-    # is what makes this a recovery rather than a guess.
+    # This engine's string-to-double reads the corner's decimal to the FARTHER
+    # of its two neighbouring doubles -- 2.22e-10 m out where the correct
+    # rounding is 1.10e-11 m -- in its JSON parser and its own source lexer
+    # alike. That moves every parent node, so the exact node test misses and
+    # property 2 fails in float64 against a reference that read the decimal
+    # correctly. The artefact carries `origin_hex` now, so the corner arrives
+    # as bits and the engine's parse stops mattering for this constant.
+    #
+    # AND THE PUBLISHED CORNER IS CHECKED, NOT TRUSTED. A node is
+    # `origin + (i + 0.5) * spacing`, so every node vector implies a corner;
+    # all 64 must imply the one the artefact publishes. That is the pairing the
+    # vectors could not previously make: each position round-trips through its
+    # own hex perfectly, so an implementation with a bad decimal parser passed
+    # all 300 while standing on a shifted lattice.
+    var po_hex: Array = (parent.get("origin_hex", []) as Array)
+    check(po_hex.size() == 2,
+            "the artefact's parent block carries no `origin_hex`, so the lattice corner "
+            + "arrives as a decimal and this engine cannot read it to the right double")
+    if po_hex.size() != 2:
+        return
+    var ox := _f64(str(po_hex[0]))
+    var oy := _f64(str(po_hex[1]))
     var nodes: Array = ((c["classes"] as Dictionary)["parent_node"] as Dictionary)["vectors"]
-    var ox := NAN
-    var oy := NAN
     var agree := 0
     for v in nodes:
         var vv: Dictionary = v
@@ -9453,20 +9474,21 @@ func test_the_detail_function_conforms_to_its_published_vectors() -> void:
         var iy := int(round((hf.origin_y - nyf) / spacing - 0.5))
         var gx := nxf - (float(ix) + 0.5) * spacing
         var gy := nyf + (float(iy) + 0.5) * spacing
-        if is_nan(ox):
-            ox = gx
-            oy = gy
         if gx == ox and gy == oy:
             agree += 1
     check(agree == nodes.size(),
-            "%d of %d node vectors recover the lattice corner and the rest disagree, so the "
+            "%d of %d node vectors stand on the corner the artefact publishes and the rest "
                     % [agree, nodes.size()]
-            + "corner is not recoverable from them and this test is reading a guess")
+            + "do not, so the vectors and the lattice they are measured from have drifted "
+            + "apart")
+    # THE ENGINE DEFECT IS STILL THERE AND NO LONGER REACHES THIS CONSTANT.
+    # Asserted rather than assumed, in the direction that matters: the day the
+    # parse is fixed this fails, and the right response is to stop carrying the
+    # hex rather than to leave a workaround nobody remembers the reason for.
     check(ox != hf.origin_x,
-            "the engine now reads the lattice corner to the same double the reference does. "
-            + "If this fails the string-to-double defect is fixed and the recovery below is "
-            + "no longer buying anything -- which is good news and wants the workaround "
-            + "removed rather than left.")
+            "the engine now reads the lattice corner to the same double the artefact "
+            + "publishes. The string-to-double defect is fixed, `origin_hex` is no longer "
+            + "buying anything here, and that is worth acting on rather than leaving.")
     df.parent_origin_x = ox
     df.parent_origin_y = oy
 
@@ -9572,8 +9594,9 @@ func test_the_detail_function_conforms_to_its_published_vectors() -> void:
 
     print("985: %d vectors, worst %s m against a %s m tolerance; parent nodes exactly zero; "
             % [total, String.num(worst_all, 17), String.num(tol, 17)]
-            + "corner recovered from %d/%d node vectors (%s here, %s in the export)"
-                    % [agree, nodes.size(), _bits(ox), _bits(hf.origin_x)])
+            + "corner read from `origin_hex` and confirmed by %d/%d node vectors (%s "
+                    % [agree, nodes.size(), _bits(ox)]
+            + "published, %s from this engine's parse of the same decimal)" % _bits(hf.origin_x))
     print("985: the carrier probe -- %d/%d pairs distinct in float64, %d/%d collapse through "
             % [distinct, pairs, collapsed, pairs] + "a Vector2, which is the limit reported "
             + "rather than rounded away")

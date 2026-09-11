@@ -4,7 +4,7 @@
   "generated_from": [
     "data/detail_rows_output/detail_rows.json"
   ],
-  "generated_at_utc": "2026-09-11T05:34:58Z",
+  "generated_at_utc": "2026-09-11T06:41:29Z",
   "ruled_by": [
     "decision 985",
     "decision 986",
@@ -26,7 +26,11 @@
     ],
     "spacing_m": 100.0,
     "read_from": "data/terrain_layer_tiles_v2_output/terrain_layer_tiles.json",
-    "_why_100_m": "decision 1004: real 10 m is calibration-only and 100 m is the finest shipped level, so there is no provisional parent here."
+    "_why_100_m": "decision 1004: real 10 m is calibration-only and 100 m is the finest shipped level, so there is no provisional parent here.",
+    "origin_hex": [
+      "0xc13b9b8cefc35778",
+      "0x4141fafb26eafcbf"
+    ]
   },
   "format": {
     "_positions_are_float64_bit_patterns": "Every number carries `dec` for readers and `hex` -- the exact IEEE-754 binary64 bits -- for comparison. A conforming implementation reads `hex`; the decimal is not the contract, because a JSON parser's last bits are not a fact anyone has pinned.",
@@ -1656,10 +1660,7 @@
             "dec": 2355555.865647462,
             "hex": "0x4141f8b1eecd893a"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.005768959443859752,
@@ -1676,10 +1677,7 @@
             "dec": 2355911.3578150687,
             "hex": "0x4141f963adcce259"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.02316409580525729,
@@ -1696,10 +1694,7 @@
             "dec": 2354164.2093800777,
             "hex": "0x4141f5fa1accf765"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.00859770564693572,
@@ -1716,10 +1711,7 @@
             "dec": 2354176.944051599,
             "hex": "0x4141f60078d6aecc"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.0011757901618671058,
@@ -1736,10 +1728,7 @@
             "dec": 2354998.765392626,
             "hex": "0x4141f79b61f862b5"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.04051507201262521,
@@ -1756,10 +1745,7 @@
             "dec": 2356372.2161303703,
             "hex": "0x4141fa4a1baa28f4"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.009243608289935227,
@@ -1776,10 +1762,7 @@
             "dec": 2355548.3606185173,
             "hex": "0x4141f8ae2e28bf61"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 11.207323420016087,
             "hex": "0x40266a264b9953f3"
@@ -1799,10 +1782,7 @@
             "dec": 2356284.132869313,
             "hex": "0x4141fa1e1101dc95"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 44.93266989731478,
             "hex": "0x40467761ba297720"
@@ -1822,10 +1802,7 @@
             "dec": 2356289.138529832,
             "hex": "0x4141fa2091bb5875"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 37.27299801826808,
             "hex": "0x4042a2f1995c2ac8"
@@ -1845,10 +1822,7 @@
             "dec": 2355649.7636417593,
             "hex": "0x4141f8e0e1bf035f"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 13.242021771099983,
             "hex": "0x402a7bea470f96bf"
@@ -1868,10 +1842,7 @@
             "dec": 2356721.4003415843,
             "hex": "0x4141faf8b33e649e"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 5.284968637993006,
             "hex": "0x401523ced1924333"
@@ -1891,10 +1862,7 @@
             "dec": 2355565.049151922,
             "hex": "0x4141f8b6864a9c35"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 46.37600976641813,
             "hex": "0x404730211688df09"
@@ -1914,10 +1882,7 @@
             "dec": 2355208.9614839735,
             "hex": "0x4141f8047b11e827"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.0024164636524672896,
@@ -1934,10 +1899,7 @@
             "dec": 2356022.758456803,
             "hex": "0x4141f99b61151cce"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.002234405736704304,
@@ -1954,10 +1916,7 @@
             "dec": 2356031.7332174308,
             "hex": "0x4141f99fddda119b"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.0018599626627763296,
@@ -1974,10 +1933,7 @@
             "dec": 2356339.542726166,
             "hex": "0x4141fa39c5780d0f"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.0005695721883455164,
@@ -1994,10 +1950,7 @@
             "dec": 2354487.6635415023,
             "hex": "0x4141f69bd4eeed8e"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.0005758183877047061,
@@ -2014,10 +1967,7 @@
             "dec": 2355252.3559099627,
             "hex": "0x4141f81a2d8e7529"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.0014400677505753074,
@@ -2034,10 +1984,7 @@
             "dec": 2355340.771133406,
             "hex": "0x4141f84662b47fdc"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 11.925163639233823,
             "hex": "0x4027d9af0c6bea4c"
@@ -2057,10 +2004,7 @@
             "dec": 2356274.2458193484,
             "hex": "0x4141fa191f770227"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 27.96992063241632,
             "hex": "0x403bf84cb7f3f198"
@@ -2080,10 +2024,7 @@
             "dec": 2355003.1294545503,
             "hex": "0x4141f79d9091f77a"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 34.589093333504444,
             "hex": "0x40414b67690cd8bb"
@@ -2103,10 +2044,7 @@
             "dec": 2356124.8699615775,
             "hex": "0x4141f9ce6f5ae6a6"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 16.918796694345183,
             "hex": "0x4030eb364299e2ae"
@@ -2126,10 +2064,7 @@
             "dec": 2356173.3095601345,
             "hex": "0x4141f9e6a79faa9f"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 14.771777527681557,
             "hex": "0x402d8b266c925c2c"
@@ -2149,10 +2084,7 @@
             "dec": 2356419.484967682,
             "hex": "0x4141fa61be136bc7"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 40.73628297275836,
             "hex": "0x40445e3e853c4ca6"
@@ -2172,10 +2104,7 @@
             "dec": 2354896.169506,
             "hex": "0x4141f76815b25f63"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.008312463887687648,
@@ -2192,10 +2121,7 @@
             "dec": 2354666.11396158,
             "hex": "0x4141f6f50e964b06"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.005043316347933623,
@@ -2212,10 +2138,7 @@
             "dec": 2354549.796933858,
             "hex": "0x4141f6bae601edbd"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.004827582164082359,
@@ -2232,10 +2155,7 @@
             "dec": 2355955.2383034644,
             "hex": "0x4141f9799e80ba59"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.0060243446239813,
@@ -2252,10 +2172,7 @@
             "dec": 2355840.4360358724,
             "hex": "0x4141f94037d00602"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.0011831222380986797,
@@ -2272,10 +2189,7 @@
             "dec": 2354220.130157931,
             "hex": "0x4141f61610a903dc"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.008272851601562676,
@@ -2292,10 +2206,7 @@
             "dec": 2354485.5659552985,
             "hex": "0x4141f69ac8713925"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 44.30648442243083,
             "hex": "0x4046273ae1ad8974"
@@ -2315,10 +2226,7 @@
             "dec": 2354578.0740122623,
             "hex": "0x4141f6c909793bdb"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 29.641582915414276,
             "hex": "0x403da43ec727606c"
@@ -2338,10 +2246,7 @@
             "dec": 2353993.6554438677,
             "hex": "0x4141f5a4d3e595ac"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 9.376199622764652,
             "hex": "0x4022c09d3ca9155c"
@@ -2361,10 +2266,7 @@
             "dec": 2354286.7175872526,
             "hex": "0x4141f6375bd9e62b"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 55.42652401768973,
             "hex": "0x404bb69856c977cc"
@@ -2384,10 +2286,7 @@
             "dec": 2354963.701357372,
             "hex": "0x4141f789d9c61410"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 10.786401930152898,
             "hex": "0x402592a346170934"
@@ -2407,10 +2306,7 @@
             "dec": 2356055.95442445,
             "hex": "0x4141f9abfa2a9494"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 29.171338160529643,
             "hex": "0x403d2bdcd1540818"
@@ -2430,10 +2326,7 @@
             "dec": 2355296.6850696187,
             "hex": "0x4141f83057b05c7c"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.03063365848973837,
@@ -2450,10 +2343,7 @@
             "dec": 2356511.292581748,
             "hex": "0x4141fa8fa5735198"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.03895865826218187,
@@ -2470,10 +2360,7 @@
             "dec": 2355058.708631529,
             "hex": "0x4141f7b95ab4701d"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.0633946809838047,
@@ -2490,10 +2377,7 @@
             "dec": 2353978.1685636956,
             "hex": "0x4141f59d15937ec4"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.0019461208163230766,
@@ -2510,10 +2394,7 @@
             "dec": 2355751.819269538,
             "hex": "0x4141f913e8ddd300"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.028290312008128232,
@@ -2530,10 +2411,7 @@
             "dec": 2354654.201882995,
             "hex": "0x4141f6ef19d74d4f"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.0752982066286364,
@@ -2550,10 +2428,7 @@
             "dec": 2356456.6795480344,
             "hex": "0x4141fa7456fb6e14"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 47.06380344615358,
             "hex": "0x4047882ab6194d05"
@@ -2573,10 +2448,7 @@
             "dec": 2354829.347699766,
             "hex": "0x4141f746ac816d0a"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 0.054330592860054594,
             "hex": "0x3fabd1382f033000"
@@ -2596,10 +2468,7 @@
             "dec": 2355444.652523787,
             "hex": "0x4141f87a5385e643"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 48.95735530980608,
             "hex": "0x40487a8a9e692271"
@@ -2619,10 +2488,7 @@
             "dec": 2353962.9805793986,
             "hex": "0x4141f5957d83a030"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 44.75709538637556,
             "hex": "0x404660e8806a37bf"
@@ -2642,10 +2508,7 @@
             "dec": 2354454.377932107,
             "hex": "0x4141f68b3060144c"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 8.730593997211969,
             "hex": "0x402176106a995bd0"
@@ -2665,10 +2528,7 @@
             "dec": 2353914.436522433,
             "hex": "0x4141f57d37dff793"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 30.361600252820647,
             "hex": "0x403e5c91d58c170b"
@@ -2688,10 +2548,7 @@
             "dec": 2354742.917696978,
             "hex": "0x4141f71b75771836"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.06800360497099897,
@@ -2708,10 +2565,7 @@
             "dec": 2356681.292267819,
             "hex": "0x4141fae4a569082a"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.23934364308459774,
@@ -2728,10 +2582,7 @@
             "dec": 2354138.8534430354,
             "hex": "0x4141f5ed6d3d9f13"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.33537189586871613,
@@ -2748,10 +2599,7 @@
             "dec": 2354319.528312467,
             "hex": "0x4141f647c39fbe30"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.7039700231621445,
@@ -2768,10 +2616,7 @@
             "dec": 2356314.730371037,
             "hex": "0x4141fa2d5d7ccc53"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.7487090692399373,
@@ -2788,10 +2633,7 @@
             "dec": 2355887.8883647765,
             "hex": "0x4141f957f1b5efdf"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.17937869175511434,
@@ -2808,10 +2650,7 @@
             "dec": 2354450.9968205965,
             "hex": "0x4141f6897f97d13b"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 42.608674533317696,
             "hex": "0x40454de90c0f40f8"
@@ -2831,10 +2670,7 @@
             "dec": 2355058.4049236425,
             "hex": "0x4141f7b933d489b5"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 17.078978108735342,
             "hex": "0x40311437e8ca1e44"
@@ -2854,10 +2690,7 @@
             "dec": 2354717.381801726,
             "hex": "0x4141f70eb0dee103"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 35.983262963131025,
             "hex": "0x4041fddb8f8f0206"
@@ -2877,10 +2710,7 @@
             "dec": 2356343.7240630877,
             "hex": "0x4141fa3bdcae1969"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 39.384812594551,
             "hex": "0x4043b1418a0257bd"
@@ -2900,10 +2730,7 @@
             "dec": 2355917.3479341273,
             "hex": "0x4141f966ac891b01"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 25.95583439211746,
             "hex": "0x4039f4b1900e895a"
@@ -2923,10 +2750,7 @@
             "dec": 2354596.9601993677,
             "hex": "0x4141f6d27ae7d019"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": {
             "dec": 3.450755669099055,
             "hex": "0x400b9b25c9ca22e5"
@@ -4876,10 +4700,7 @@
             "dec": 2351347.7115451023,
             "hex": "0x4141f079db13e8f0"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.01973641102093216,
@@ -4895,10 +4716,7 @@
             "dec": 2353055.346600346,
             "hex": "0x4141f3cfac5d666f"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.0096886040896449,
@@ -4914,10 +4732,7 @@
             "dec": 2352802.6380979717,
             "hex": "0x4141f35151ad31c0"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.0034178317402926593,
@@ -4933,10 +4748,7 @@
             "dec": 2355899.957319087,
             "hex": "0x4141f95dfa896e8d"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.005978702467266915,
@@ -4952,10 +4764,7 @@
             "dec": 2350766.007801517,
             "hex": "0x4141ef5700ffa3de"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.010058087028616363,
@@ -4971,10 +4780,7 @@
             "dec": 2355263.512960773,
             "hex": "0x4141f81fc1a8b2d8"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.010888978244847799,
@@ -4990,10 +4796,7 @@
             "dec": 2352494.3721747487,
             "hex": "0x4141f2b72fa36c13"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": 0.002839832407230985,
@@ -5009,10 +4812,7 @@
             "dec": 2354904.6953849895,
             "hex": "0x4141f76c59026016"
           },
-          "slope_deg": {
-            "dec": NaN,
-            "hex": "0x7ff8000000000000"
-          },
+          "slope_deg": null,
           "hand_m": null,
           "d_m": {
             "dec": -0.036808103944548934,
@@ -7008,10 +6808,7 @@
               "dec": 2355739.0,
               "hex": "0x4141f90d80000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7031,10 +6828,7 @@
               "dec": 2355739.03125,
               "hex": "0x4141f90d84000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7062,10 +6856,7 @@
               "dec": 2355739.0,
               "hex": "0x4141f90d80000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7085,10 +6876,7 @@
               "dec": 2355739.0625,
               "hex": "0x4141f90d88000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7116,10 +6904,7 @@
               "dec": 2355739.0,
               "hex": "0x4141f90d80000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7139,10 +6924,7 @@
               "dec": 2355739.03125,
               "hex": "0x4141f90d84000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7170,10 +6952,7 @@
               "dec": 2355739.0,
               "hex": "0x4141f90d80000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7193,10 +6972,7 @@
               "dec": 2355739.0625,
               "hex": "0x4141f90d88000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7224,10 +7000,7 @@
               "dec": 2355739.0,
               "hex": "0x4141f90d80000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7247,10 +7020,7 @@
               "dec": 2355739.03125,
               "hex": "0x4141f90d84000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7278,10 +7048,7 @@
               "dec": 2355739.0,
               "hex": "0x4141f90d80000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7301,10 +7068,7 @@
               "dec": 2355739.0625,
               "hex": "0x4141f90d88000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7332,10 +7096,7 @@
               "dec": 2355739.0,
               "hex": "0x4141f90d80000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7355,10 +7116,7 @@
               "dec": 2355739.03125,
               "hex": "0x4141f90d84000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7386,10 +7144,7 @@
               "dec": 2355739.0,
               "hex": "0x4141f90d80000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7409,10 +7164,7 @@
               "dec": 2355739.0625,
               "hex": "0x4141f90d88000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7440,10 +7192,7 @@
               "dec": 2355739.0,
               "hex": "0x4141f90d80000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7463,10 +7212,7 @@
               "dec": 2355739.03125,
               "hex": "0x4141f90d84000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7494,10 +7240,7 @@
               "dec": 2355739.0,
               "hex": "0x4141f90d80000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7517,10 +7260,7 @@
               "dec": 2355739.0625,
               "hex": "0x4141f90d88000000"
             },
-            "slope_deg": {
-              "dec": NaN,
-              "hex": "0x7ff8000000000000"
-            },
+            "slope_deg": null,
             "hand_m": {
               "dec": 60.0,
               "hex": "0x404e000000000000"
@@ -7539,5 +7279,5 @@
       ]
     }
   },
-  "elapsed_s": 26.2
+  "elapsed_s": 26.4
 }

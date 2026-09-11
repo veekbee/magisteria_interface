@@ -4,7 +4,7 @@
   "generated_from": [
     "/Users/victoriabarnes/project_magisteria/magisteria_interface/assets/detail/detail_rows.json"
   ],
-  "generated_at_utc": "2026-09-11T05:32:40Z",
+  "generated_at_utc": "2026-09-11T06:40:54Z",
   "ruled_by": [
     "decision 985",
     "decision 986",
@@ -14,7 +14,7 @@
     "\u00a716.10 mitigations 1-3"
   ],
   "reference_implementation": "sim/detail.py -- authoritative; the transducer conforms",
-  "_values_are_placeholders": null,
+  "_values_are_placeholders": "EVERY VALUE IN THIS FILE IS A PLACEHOLDER. Not measured, not fitted, not derived -- carried forward so the function has something to run on and so the row SHAPES are settled before the data arrives. They are replaced wholesale by calibration rows measured from real metre ground, not adjusted. A reader quoting a figure from here is quoting a placeholder.",
   "_values_land_when": "decision 986 rules the grading form (plain or detrended) and the mapping from backlog 229's measured strata to these landform rows. The SCHEMA, the seed and the normalisation are settled here; the numbers are not, and \u00a723.425 forbids choosing them from what the synthesizer currently produces.",
   "world_name": "magisteria/colorado-basin/0",
   "world_seed": 2714988810,
