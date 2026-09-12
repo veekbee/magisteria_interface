@@ -28,6 +28,21 @@ much they actually move the number:
                care, so it has to be looked at rather than tallied.
   * MINOR   -- at or below 1e-6. Reported per file and not failed.
 
+AND EVERY DISAGREEMENT IS EITHER PROTECTED OR NAKED, which is the distinction
+that decides whether any of it matters. A value published with its bit pattern
+beside it -- nested `{"dec": ..., "hex": ...}` or flat `<name>_bits` -- has a
+correct route into this client, and the decimal that disagrees is decoration
+this repo does not read. A value published as a bare decimal has no such route.
+
+The first cut of this file could not tell those apart, and reported the detail
+lattice's corner (protected by `origin_hex` since decision 985's amendment,
+read from the pattern, exact) in the same breath as three
+`amplitude_m_at_parent` values that are PARAMETERS OF THE PUBLISHED FUNCTION
+with nothing behind them. Four disagreements in one file, one of them
+meaningless and three of them the client and the emitter evaluating `d(x, y)`
+with different numbers -- inside the conformance tolerance, so nothing failed.
+A count that mixes those is a count nobody can act on.
+
 MINOR IS REPORTED RATHER THAN TOLERATED, AND THE DIFFERENCE MATTERS. Decision
 985 turned on a ONE-ULP error in a lattice corner: the smallest disagreement
 this file can measure was, in that instance, the whole problem. So a small
@@ -56,6 +71,17 @@ DIRS = ["assets/contours", "assets/detail", "assets/families", "assets/fixture",
 #: Relative error above which a disagreement must be understood rather than counted.
 GROSS = 1e-6
 
+#: Artefacts whose scalars ARE the published function's parameters, so that a
+#: naked one is named however small the disagreement. Not a list of files that
+#: matter more -- a list of files where every number is load-bearing by
+#: construction, and where "small" is therefore no evidence of anything.
+PARAMETER_ARTEFACTS = ("assets/detail/detail_rows.json",)
+
+#: How many of the remaining naked disagreements to name rather than count. A
+#: report that prints fifty-five lines every green run is one people stop
+#: reading, and then it does not matter what the fifty-sixth said.
+NAMED_AT_MOST = 6
+
 #: Known disagreements, by path substring, each with the reason it is not acted on.
 #: A reason is required: an exception with no reason is a value nobody checked.
 ALLOWED = {
@@ -82,6 +108,28 @@ def _double(b: int) -> float:
     return struct.unpack("<d", struct.pack("<Q", b))[0]
 
 
+def _protection_of(container, key) -> str:
+    """Is the leaf at `key` inside `container` published with its bits?
+
+    Returns "nested", "flat", or "" for naked. A list element inherits its
+    list's protection, because `origin` and `origin_hex` are published as
+    parallel arrays and an element of one is answered by the element of the
+    other."""
+    if isinstance(container, dict):
+        if isinstance(container.get(key), dict) and "hex" in container[key]:
+            return "nested"
+        if isinstance(key, str):
+            if ("%s_bits" % key) in container:
+                return "flat"
+            if ("%s_hex" % key) in container:
+                return "flat_hex"
+            # The leaf may BE the `dec` of a nested block, in which case the
+            # block itself carries the hex and this element is protected.
+            if key == "dec" and "hex" in container:
+                return "nested"
+    return ""
+
+
 def _allowed_for(path: str):
     for key, why in ALLOWED.items():
         if key in path:
@@ -105,14 +153,17 @@ def main() -> int:
     lost, gross, minor = [], [], []
     leaves = 0
 
-    def walk(v, path):
+    def walk(v, path, protection=""):
         nonlocal leaves
         if isinstance(v, dict):
             for k in v:
-                walk(v[k], "%s/%s" % (path, k))
+                walk(v[k], "%s/%s" % (path, k), _protection_of(v, k))
         elif isinstance(v, list):
+            # An element inherits the list's protection: `origin` and
+            # `origin_hex` are parallel arrays, so element i of one is answered
+            # by element i of the other.
             for i, x in enumerate(v):
-                walk(x, "%s/%d" % (path, i))
+                walk(x, "%s/%d" % (path, i), protection)
         elif isinstance(v, bool):
             return
         elif isinstance(v, (int, float)):
@@ -123,30 +174,71 @@ def main() -> int:
             got = _double(g)
             want = float(v)
             if got == 0.0 and want != 0.0:
-                lost.append((path, want, got, 1.0))
+                lost.append((path, want, got, 1.0, protection))
                 return
             rel = abs(got - want) / abs(want) if want != 0.0 else float("inf")
-            (gross if rel > GROSS else minor).append((path, want, got, rel))
+            (gross if rel > GROSS else minor).append((path, want, got, rel, protection))
 
     files = sorted(str(q.relative_to(ROOT))
                    for d in DIRS for q in (ROOT / d).glob("*.json"))
     for rel_path in files:
         walk(json.loads((ROOT / rel_path).read_text()), rel_path)
+    everything = lost + gross + minor
+    naked = [r for r in everything if not r[4]]
 
     print("decimals: %d numeric leaves across %d documents" % (leaves, len(files)))
     if leaves == 0 or not godot:
         print("decimals: nothing was compared, so this check proved nothing")
         return 1
 
-    by_file = Counter(p.split(".json")[0] + ".json" for p, _, _, _ in minor)
     print("decimals: %d minor (<= %g relative), %d gross, %d lost"
           % (len(minor), GROSS, len(gross), len(lost)))
+    print("decimals: %d of those %d are protected by a published pattern, %d are naked"
+          % (len(everything) - len(naked), len(everything), len(naked)))
+    by_file = Counter(p.split(".json")[0] + ".json" for p, _, _, _, _ in everything)
+    naked_by_file = Counter(p.split(".json")[0] + ".json" for p, _, _, _, _ in naked)
     for f, c in by_file.most_common():
-        print("decimals:   %6d  %s" % (c, f))
+        print("decimals:   %6d  %-58s naked %d" % (c, f, naked_by_file.get(f, 0)))
+    # NAMED IN A VENDORED ARTEFACT, COUNTED IN MY OWN MEASUREMENTS, and the
+    # split is the whole point. A naked disagreement under `assets/` or
+    # `contract/` is a value the emitter and this client hold DIFFERENTLY with
+    # no route to the right one -- two sides evaluating the same function from
+    # different numbers. The same thing under `measurements/` is this repo
+    # disagreeing with its own output, which is worth knowing and is nobody
+    # else's problem.
+    #
+    # Sorting by relative error alone hid exactly the ones that matter: the
+    # three `amplitude_m_at_parent` values in `detail_rows.json` are parameters
+    # of the published `d(x, y)` and disagree at the ulp, so they sorted below
+    # six quaternion components of my own flight noise and never printed.
+    vendored = [r for r in naked if not r[0].startswith("measurements/")]
+    mine = [r for r in naked if r[0].startswith("measurements/")]
+    params = [r for r in vendored if any(a in r[0] for a in PARAMETER_ARTEFACTS)]
+    rest = sorted((r for r in vendored if r not in params), key=lambda r: -r[3])
+
+    def say(rows, head):
+        if not rows:
+            return
+        print("decimals: %s" % head)
+        for path, want, got, rel, _ in rows:
+            print("decimals:   %s\n              wants %r, reads %r (relative %.3g)"
+                  % (path, want, got, rel))
+
+    # EVERY ONE OF THESE, HOWEVER SMALL. `detail_rows.json` IS the published
+    # function's parameter block, so a naked scalar in it is not a diagnostic
+    # that disagrees -- it is a number the emitter evaluates `d(x, y)` from and
+    # this client evaluates it from differently. Ranking by relative error hid
+    # all three behind six quaternion components of my own flight noise.
+    say(params, "naked in a published parameter block -- these are inputs to d(x, y):")
+    say(rest[:NAMED_AT_MOST],
+        "%d other naked disagreement(s) in vendored artefacts, worst %d named:"
+        % (len(rest), min(len(rest), NAMED_AT_MOST)))
+    print("decimals: %d naked in this repo's own measurements (worst %.3g relative)"
+          % (len(mine), max((r[3] for r in mine), default=0.0)))
 
     failed = 0
     for label, rows in (("LOST", lost), ("GROSS", gross)):
-        for path, want, got, rel in rows:
+        for path, want, got, rel, _prot in rows:
             key, why = _allowed_for(path)
             if key is None:
                 print("decimals: %s %s\n  wants %r, Godot reads %r (relative %.3g)"
@@ -154,7 +246,7 @@ def main() -> int:
                 failed += 1
     for key, why in ALLOWED.items():
         hit = sum(1 for rows in (lost, gross)
-                  for p, _, _, _ in rows if key in p)
+                  for p, _, _, _, _ in rows if key in p)
         # AN EXCEPTION THAT COVERS NOTHING IS DELETED, NOT KEPT IN CASE. It
         # would otherwise sit here reading as a known problem long after the
         # re-vendor that fixed it, and the next person would work around a

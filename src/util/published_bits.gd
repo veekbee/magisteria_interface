@@ -23,11 +23,49 @@ extends RefCounted
 ## published `min_nonzero_magnitude` is `5e-324` and reads back as 0.0 -- a
 ## field whose name is a minimum NON-ZERO magnitude, arriving as zero.
 
-## Where the bits live, given the name of the decimal beside them. A convention
-## rather than a guess: the emitting side names the pair this way, and a reader
-## that took the sibling's name from somewhere else would silently stop finding
-## it the day either name moved.
+## TWO PUBLISHED FORMS, AND THIS READS BOTH.
+##
+##   nested     "d_m": {"dec": -0.0620788664732796, "hex": "0xbfafc8cd1a8d0ca1"}
+##   flat _bits  "min_nonzero_magnitude": 9.02759206434e-312,
+##              "min_nonzero_bits": "0x000001a96de74c92"
+##   flat _hex   "origin": [-1809292.9365744274, 2356726.304046243],
+##              "origin_hex": ["0xc13b9b8cefc35778", "0x4141fafb26eafcbf"]
+##
+## LOOK AT THE SECOND ONE AGAIN: the value is `min_nonzero_magnitude` and the
+## pattern is `min_nonzero_bits`. The sibling's name is NOT derivable from the
+## field's name -- it is `min_nonzero` plus a suffix, and the field is
+## `min_nonzero` plus a different one. So the flat form is not a convention a
+## reader can follow; it is a pairing a reader has to be told, out of band, per
+## field. The first cut of this file assumed `<name>_bits`, found nothing, and
+## returned NAN -- conservative, and still wrong, and it would have stayed
+## invisible until the re-vendor because the fixture in hand publishes no
+## pattern at all for the lookup to miss.
+##
+## THREE, not two. Decision 985's amendment published the nested form in the
+## conformance vectors and the `_hex` form in the rows' parent block -- the same
+## amendment, two shapes -- and the fixture manifest's subnormal fix published
+## `_bits`. Reading all three costs two branches and means the emitting side can
+## settle the convention at whichever re-emission is already happening, rather
+## than at one this reader forced.
+##
+## THE PARALLEL-ARRAY CASE IS WHY `_hex` CANNOT SIMPLY BE RENAMED AWAY: `origin`
+## is two numbers and `origin_hex` is two patterns, position for position. A
+## nested form would put the pairing inside each element instead, which is the
+## better shape and is a change to how the block is read, not a rename.
+##
+## NESTED IS THE BETTER OF THE TWO AND THE REASON IS THE FAILURE MODE, not
+## taste. Under the flat form the decimal remains a well-formed, plausible
+## float sitting at the name a reader will reach for: a consumer that has never
+## heard of the convention gets a slightly wrong number, silently, which is the
+## exact defect the bits exist to end. Under the nested form that consumer gets
+## a Dictionary where it wanted a float and fails at the first read. The
+## convention that cannot be missed is the one where missing it is loud.
 const BITS_SUFFIX := "_bits"
+const HEX_SUFFIX := "_hex"
+
+## The keys of the nested form.
+const NESTED_HEX := "hex"
+const NESTED_DEC := "dec"
 
 
 ## The float64 a 16-hex-digit pattern denotes. NAN for anything that is not one.
@@ -73,19 +111,85 @@ static func to_hex(v: float) -> String:
 ## The decimal is not consulted even to cross-check, because a cross-check that
 ## passes on every ordinary value and fails only on the values the bits exist
 ## for is a check that fires only when it is wrong to fire.
-static func of(block: Dictionary, name: String) -> float:
-    var key := name + BITS_SUFFIX
-    if not block.has(key):
+## A published scalar whose pattern sits under a key the value's name does not
+## predict. The pairing is the CALLER'S to state, because nothing in the
+## document says it.
+##
+## This is the flat form's real cost and the reason it is worth a sentence: a
+## reader that guesses the sibling's name gets NAN on a value that is published,
+## and every guess is silently plausible. `of` guesses the two spellings that
+## have appeared so far; anything else comes through here.
+static func of_named(block: Dictionary, bits_key: String) -> float:
+    if not block.has(bits_key):
         return NAN
-    return of_hex(str(block[key]))
+    var v: Variant = block[bits_key]
+    return NAN if typeof(v) == TYPE_ARRAY else of_hex(str(v))
+
+
+static func of(block: Dictionary, name: String) -> float:
+    # Nested first. A value published both ways is published nested, because
+    # that is the form whose pairing is structural rather than by convention.
+    var nested: Variant = block.get(name, null)
+    if typeof(nested) == TYPE_DICTIONARY and (nested as Dictionary).has(NESTED_HEX):
+        return of_hex(str((nested as Dictionary)[NESTED_HEX]))
+    if block.has(name + BITS_SUFFIX):
+        return of_hex(str(block[name + BITS_SUFFIX]))
+    if block.has(name + HEX_SUFFIX):
+        var h: Variant = block[name + HEX_SUFFIX]
+        # Scalar only here. The parallel-array form is a different question --
+        # which element -- and `of_element` is where that is asked.
+        if typeof(h) != TYPE_ARRAY:
+            return of_hex(str(h))
+    return NAN
+
+
+## One element of a parallel-array publication: `origin` beside `origin_hex`,
+## position for position. NAN when there is no pattern at that position.
+##
+## SEPARATE FROM `of` BECAUSE THE QUESTION IS DIFFERENT. `of` asks "what is this
+## value"; this asks "what is the i-th value", and a caller that forgot the
+## index would otherwise get element zero of a two-element corner and be off by
+## a whole axis rather than by an ulp.
+static func of_element(block: Dictionary, name: String, index: int) -> float:
+    var h: Variant = block.get(name + HEX_SUFFIX, null)
+    if typeof(h) != TYPE_ARRAY:
+        return NAN
+    var a: Array = h
+    if index < 0 or index >= a.size():
+        return NAN
+    return of_hex(str(a[index]))
+
+
+## Is this name published in a form that survives the reader? A value with no
+## pattern beside it is NAKED -- readable only through a decimal this engine
+## may not return exactly, whether or not it happens to today.
+##
+## Short round decimals come back exactly and a naked one is not yet WRONG. It
+## is unprotected, which is a different and more durable statement: `0.18` is
+## exact and the calibrated value that replaces it will not be.
+static func is_protected(block: Dictionary, name: String) -> bool:
+    var nested: Variant = block.get(name, null)
+    if typeof(nested) == TYPE_DICTIONARY and (nested as Dictionary).has(NESTED_HEX):
+        return true
+    return block.has(name + BITS_SUFFIX) or block.has(name + HEX_SUFFIX)
 
 
 ## Why a `NAN` from `of` happened, for a caller that has to report it.
 static func why_absent(block: Dictionary, name: String) -> String:
+    var nested: Variant = block.get(name, null)
+    if typeof(nested) == TYPE_DICTIONARY:
+        if (nested as Dictionary).has(NESTED_HEX):
+            return ("%s publishes a pattern and it is not 16 digits: %s"
+                    % [name, str((nested as Dictionary)[NESTED_HEX])])
+        return "%s is a block and carries no `%s`" % [name, NESTED_HEX]
     var key := name + BITS_SUFFIX
-    if not block.has(key):
-        if block.has(name):
-            return ("%s is published as a decimal and not as %s; this engine cannot read a "
-                    + "decimal back exactly and will not guess") % [name, key]
-        return "neither %s nor %s is published here" % [name, key]
-    return "%s is present and is not a 16-digit pattern: %s" % [key, str(block[key])]
+    if block.has(key):
+        return "%s is present and is not a 16-digit pattern: %s" % [key, str(block[key])]
+    if block.has(name + HEX_SUFFIX):
+        return ("%s%s is an array; read it with `of_element` and an index"
+                % [name, HEX_SUFFIX])
+    if block.has(name):
+        return ("%s is published as a bare decimal, with no `%s`, no `%s` and no `%s` block "
+                + "beside it; this engine cannot read a decimal back exactly and will not guess"
+                ) % [name, name + BITS_SUFFIX, name + HEX_SUFFIX, NESTED_HEX]
+    return "neither %s nor %s is published here" % [name, key]

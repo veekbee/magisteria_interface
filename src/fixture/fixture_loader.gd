@@ -117,9 +117,18 @@ func dtype_of(window: String, row: String) -> String:
 ## this reads; until that re-vendor lands this returns NAN for every row, which
 ## is the honest answer and not a broken one. `PublishedBits.why_absent` says
 ## which of the two absences it was.
+## THE PAIRING IS STATED HERE BECAUSE THE DOCUMENT DOES NOT STATE IT. The value
+## is `min_nonzero_magnitude` and the pattern is `min_nonzero_bits` -- not
+## `min_nonzero_magnitude_bits`, which is what a reader following the obvious
+## rule looks for and does not find. A derived name would return NAN on a row
+## that publishes the value perfectly well, so the key is written down once,
+## here, where it can be wrong in a way a test can catch.
+const MIN_NONZERO_BITS_KEY := "min_nonzero_bits"
+
+
 func min_nonzero_of(window: String, row: String) -> float:
     var d: Variant = _rows.get("%s/%s" % [window, row], null)
-    return NAN if d == null else PublishedBits.of(d as Dictionary, "min_nonzero_magnitude")
+    return NAN if d == null else PublishedBits.of_named(d as Dictionary, MIN_NONZERO_BITS_KEY)
 
 
 ## Every row in a window the fixture stores unquantised, in `row_names` order.

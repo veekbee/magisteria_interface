@@ -1328,6 +1328,95 @@ func test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal() 
         check(is_nan(PublishedBits.of_hex(bad)),
                 "'%s' was read as a number rather than refused" % bad)
 
+    # ALL THREE PUBLISHED FORMS, because there are three and the dispatch that
+    # asked which to settle on counted two. The nested pair and the `_bits`
+    # suffix are the two it named; `origin_hex` in the rows' parent block is a
+    # third, from the same amendment as the first.
+    var nested := {"d_m": {"dec": -0.062078866473279655, "hex": "0xbfafc8cd1a8d0ca1"}}
+    var flat_bits := {"min_nonzero_magnitude": 9.02759206434e-312,
+            "min_nonzero_bits": "0x000001a96de74c92"}
+    var flat_hex := {"origin": [-1809292.9365744274, 2356726.304046243],
+            "origin_hex": ["0xc13b9b8cefc35778", "0x4141fafb26eafcbf"]}
+    check(PublishedBits.to_hex(PublishedBits.of(nested, "d_m")) == "0xbfafc8cd1a8d0ca1",
+            "the nested form did not read back")
+    # AND THIS IS THE ONE THAT FAILED WHEN IT WAS WRITTEN AS `of(...)`. The
+    # value is `min_nonzero_magnitude`; the pattern is `min_nonzero_bits`. A
+    # reader following the obvious rule looks for `min_nonzero_magnitude_bits`,
+    # finds nothing and returns NAN -- on a value that is published. The flat
+    # form's sibling name is not derivable, so it is named rather than derived.
+    check(is_nan(PublishedBits.of(flat_bits, "min_nonzero_magnitude")),
+            "the derived sibling name found something, so the pairing is predictable after "
+            + "all and this whole paragraph is wrong")
+    check(PublishedBits.to_hex(PublishedBits.of_named(flat_bits, "min_nonzero_bits"))
+                    == "0x000001a96de74c92",
+            "the flat form did not read back from its stated key")
+    check(PublishedBits.to_hex(
+                    PublishedBits.of_named(flat_bits, FixtureLoader.MIN_NONZERO_BITS_KEY))
+                    == "0x000001a96de74c92",
+            "the key the loader will use is not the key the fixture publishes")
+    check(PublishedBits.to_hex(PublishedBits.of_element(flat_hex, "origin", 1))
+                    == "0x4141fafb26eafcbf",
+            "the parallel-array form did not read back at index 1")
+    for pair in [[nested, "d_m"], [flat_hex, "origin"]]:
+        check(PublishedBits.is_protected(pair[0] as Dictionary, str(pair[1])),
+                "%s read as naked" % str(pair[1]))
+    # A PARALLEL ARRAY IS NOT A SCALAR, and asking for it as one must refuse
+    # rather than hand back element zero: a caller that forgot the index would
+    # be off by a whole axis instead of by an ulp, and a corner's two axes are
+    # both plausible numbers.
+    check(is_nan(PublishedBits.of(flat_hex, "origin")),
+            "a parallel-array publication answered a scalar read")
+    check(PublishedBits.why_absent(flat_hex, "origin").contains("of_element"),
+            "the refusal does not say how to read it: %s"
+            % PublishedBits.why_absent(flat_hex, "origin"))
+    check(is_nan(PublishedBits.of_element(flat_hex, "origin", 7)),
+            "an index past the end answered")
+
+    # AND A BARE DECIMAL IS NAKED IN ALL THREE VOCABULARIES.
+    var naked := {"amplitude_m_at_parent": 0.020196332177435345}
+    check(not PublishedBits.is_protected(naked, "amplitude_m_at_parent"),
+            "a bare decimal read as protected")
+    check(is_nan(PublishedBits.of(naked, "amplitude_m_at_parent")),
+            "a bare decimal was read as a number")
+    check(PublishedBits.why_absent(naked, "amplitude_m_at_parent").contains("bare decimal"),
+            "the refusal does not name the case")
+
+    # THE LIVE PARENT BLOCK, which is the one this client actually refines from.
+    var rows_f := FileAccess.open("res://assets/detail/detail_rows.json", FileAccess.READ)
+    if rows_f != null:
+        var rows: Dictionary = JSON.parse_string(rows_f.get_as_text())
+        var parent: Dictionary = rows["parent"]
+        check(PublishedBits.is_protected(parent, "origin"),
+                "the detail lattice corner is published without a pattern, which decision 985 "
+                + "spent three re-vendors establishing that it must not be")
+        # THE CONTROL: the corner's DECIMAL does not read back to the corner, so
+        # the protection is load-bearing rather than decorative.
+        var from_bits := PublishedBits.of_element(parent, "origin", 0)
+        var from_decimal := float((parent["origin"] as Array)[0])
+        check(from_bits != from_decimal,
+                "the corner's decimal and its pattern now agree, so `origin_hex` is no longer "
+                + "doing anything here and this check has stopped demonstrating why it exists")
+        print("985 corner: pattern %s, decimal %s"
+                % [PublishedBits.to_hex(from_bits), PublishedBits.to_hex(from_decimal)])
+        # AND THE PARAMETER BLOCK BESIDE IT IS NOT PROTECTED AT ALL. Named
+        # rather than counted: these are inputs to `d(x, y)`, so the two sides
+        # evaluate the same function from different numbers and the conformance
+        # tolerance absorbs it.
+        var unprotected := PackedStringArray()
+        for lf in (rows["landforms"] as Dictionary):
+            var block: Dictionary = rows["landforms"][lf]
+            for k in block:
+                if str(k).begins_with("_") or typeof(block[k]) == TYPE_STRING:
+                    continue
+                if typeof(block[k]) == TYPE_DICTIONARY:
+                    continue
+                if not PublishedBits.is_protected(block, str(k)):
+                    unprotected.append("%s.%s" % [lf, str(k)])
+        print("985 rows: %d landform scalars published without a pattern" % unprotected.size())
+        check(unprotected.size() > 0,
+                "every landform scalar now carries a pattern -- the values-only re-cut has "
+                + "landed and this check should become the assertion that it stays that way")
+
     # THE CONTROL, AND IT IS THE WHOLE ARGUMENT. The same value by both routes:
     # through its pattern it arrives, through its decimal it is gone.
     var subnormal := PublishedBits.of_hex("0x0000000000000001")
