@@ -965,8 +965,9 @@ func _write() -> void:
             "in_situ_luminance": lum_err,
         },
         "ranking": {
-            "by_colour": SeamScore.rank(colour_err),
-            "by_coverage": SeamScore.rank(cover_err),
+            "by_colour": SeamScore.rank(colour_err, SeamScore.COLOUR_NOISE_FLOOR),
+            "by_coverage": SeamScore.rank(cover_err,
+                    SeamScore.coverage_noise_floor(int(ground_px[i]))),
         },
         # AT THE RUN LEVEL, because it invalidates every row and not only the
         # oracle's. A thinned oracle is a sample, and a candidate graded against

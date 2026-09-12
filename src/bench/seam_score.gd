@@ -159,7 +159,23 @@ static func luminance_distance(a: Array, b: Array) -> float:
 ## the harness always grades a deliberately-wrong baseline alongside and this
 ## reports the margin between the winner and the rest. A margin near zero is
 ## the finding, not the ranking.
-static func rank(scores: Dictionary) -> Dictionary:
+## One 8-bit channel step, which is the finest colour difference a frame out of
+## this renderer can carry. `colour_error` is Euclidean RGB on [0, 1] values
+## read back from an 8-bit target, so two candidates closer than this produced
+## THE SAME IMAGE as far as the pixels can express it.
+const COLOUR_NOISE_FLOOR := 1.0 / 255.0
+
+
+## The smallest coverage difference a band of `ground_pixels` can express: one
+## pixel. Below it the two candidates lit the same pixels.
+static func coverage_noise_floor(ground_pixels: int) -> float:
+    return 1.0 / float(maxi(ground_pixels, 1))
+
+
+## `noise_floor` is the smallest difference the measurement can actually carry.
+## Below it, two candidates are the same measurement and no ratio between them
+## means anything.
+static func rank(scores: Dictionary, noise_floor: float = 0.0) -> Dictionary:
     var order: Array = []
     for name in scores:
         order.append({"candidate": name, "error": float(scores[name])})
@@ -168,12 +184,42 @@ static func rank(scores: Dictionary) -> Dictionary:
     if order.size() >= 2:
         var best := float(order[0]["error"])
         var next := float(order[1]["error"])
-        out["margin"] = next - best
+        var margin := next - best
+        out["margin"] = margin
         out["margin_ratio"] = (next / best) if best > 0.0 else INF
-        out["separates"] = next > best * 1.2
+        out["noise_floor"] = noise_floor
+        # BOTH TESTS, AND THE ABSOLUTE ONE EXISTS BECAUSE THE RELATIVE ONE HAS A
+        # HOLE AT ZERO. `next > best * 1.2` asks whether the runner-up is 20%
+        # worse, which is a question about a ratio -- and when `best` is exactly
+        # 0.0 the ratio is infinite for ANY non-zero runner-up, so the rule
+        # declares separation on a difference of any size at all.
+        #
+        # Measured, at 2e60b17 on the seam artefact's first run: the colour
+        # ranking came back `separates` with a margin of 7.07e-06 because
+        # k_0.75 scored exactly 0.0 and k_0.5 scored 7.07e-06. That is seven
+        # parts in a million of a colour distance, against a renderer whose
+        # finest expressible step is 1/255 -- the two candidates produced the
+        # same image. The run before the re-vendor said DOES NOT SEPARATE for
+        # the same pair, and it was right for the wrong reason: both scored
+        # exactly 0.0, so `0.0 > 0.0` was false. The verdict was resting on
+        # whether a number happened to land on zero.
+        var above_noise := margin > noise_floor
+        var above_ratio := next > best * 1.2
+        out["separates"] = above_noise and above_ratio
         if not out["separates"]:
-            out["why_not"] = ("%s and %s are within 20%% of each other (%.4f against %.4f), "
+            var why := ("%s and %s are within 20%% of each other (%.6f against %.6f), "
                     + "so this metric does not tell them apart and cannot be trusted to rank "
                     + "anything subtler") % [str(order[0]["candidate"]),
                             str(order[1]["candidate"]), best, next]
+            if above_ratio and not above_noise:
+                # `String.num_scientific`, not `%g` -- GDScript's `%` has no `g`
+                # and raises "unsupported format character" at runtime, which
+                # the gate catches as an engine error and no test asserts.
+                why = ("%s and %s differ by %s, which is under this measurement's own floor "
+                        + "of %s -- they are the same measurement, and the ratio between them "
+                        + "is an artefact of one of them landing on zero"
+                        ) % [str(order[0]["candidate"]), str(order[1]["candidate"]),
+                             String.num_scientific(margin),
+                             String.num_scientific(noise_floor)]
+            out["why_not"] = why
     return out

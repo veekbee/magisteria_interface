@@ -5541,6 +5541,32 @@ func test_the_seam_metric_fails_the_bad_frame() -> void:
     var clear := SeamScore.rank({"range_matched": 0.01, "constant": 0.05, "null": 0.4})
     check(str(clear["order"][0]["candidate"]) == "range_matched", "the ranking is not by error")
     check(bool(clear["separates"]), "a 5x gap was called inseparable")
+    # THE HOLE AT ZERO, WHICH THE SEAM RE-TAKE WALKED INTO. `next > best * 1.2`
+    # is a question about a RATIO, and when the winner scores exactly 0.0 the
+    # ratio is infinite for any non-zero runner-up -- so the rule declared a
+    # separation on a margin of 7.07e-06 of a colour distance, against a
+    # renderer whose finest expressible step is 1/255. Measured at 2e60b17 on
+    # the real artefact, not constructed here.
+    var at_zero := SeamScore.rank({"win": 0.0, "next": 7.066670605127e-06},
+            SeamScore.COLOUR_NOISE_FLOOR)
+    check(not bool(at_zero["separates"]),
+            "a winner at exactly 0.0 beside a runner-up 7e-06 away reads as separation, which "
+            + "is the ratio rule's hole at zero: any non-zero second place divides an "
+            + "infinite ratio out of a zero best")
+    check(str(at_zero.get("why_not", "")).contains("same measurement"),
+            "the refusal does not say it is a floor problem: %s" % str(at_zero.get("why_not")))
+    # AND THE CONTROL: the same shape, above the floor, still separates. Without
+    # this the floor could be any number at all, including one that refuses
+    # everything.
+    var above := SeamScore.rank({"win": 0.0, "next": 0.05}, SeamScore.COLOUR_NOISE_FLOOR)
+    check(bool(above["separates"]),
+            "a real separation from a zero best was refused by the floor")
+    # The coverage floor is one pixel of the band it was measured over, so it
+    # follows the measurement rather than being a constant somebody chose.
+    check(SeamScore.coverage_noise_floor(9027) > SeamScore.coverage_noise_floor(23154),
+            "a smaller band does not get a coarser coverage floor, so the floor is not a "
+            + "property of the measurement")
+
     var muddy := SeamScore.rank({"a": 0.100, "b": 0.105})
     check(not bool(muddy["separates"]), "a 5% gap was called a result")
     check(str(muddy["why_not"]).contains("cannot be trusted"),
