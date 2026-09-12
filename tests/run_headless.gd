@@ -57,6 +57,7 @@ func _initialize() -> void:
     test_node_rows_arrive_at_full_precision()
     test_the_wide_branch_has_a_witness_that_is_not_the_fixture()
     test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal()
+    test_both_new_readers_run_on_the_shape_the_fixture_actually_ships()
     test_an_envelope_does_not_refuse_a_value_for_being_uncertain()
     test_every_reach_carries_a_node_so_flow_can_be_drawn()
     test_the_flow_mapping_distinguishes_zero_from_below_scale()
@@ -1232,6 +1233,130 @@ func test_node_rows_arrive_at_full_precision() -> void:
     # this line is how somebody notices the day it happens.
     print("wide rows in the fixture: %d, carrying %d sub-float32 samples on day 45"
             % [wide.size(), carried])
+
+
+func test_both_new_readers_run_on_the_shape_the_fixture_actually_ships() -> void:
+    """`DECLARED_STALE` and `PublishedBits` were built against a fixture that
+    carried neither field: green, and never once exercised against the shape
+    they exist for. That is the state my own §2 warned about -- a branch whose
+    only witness is absent, passing while proving nothing -- and it applied to
+    the two things written to answer it.
+
+    The values below are the shipped ones, quoted from `fixture_v1.json` at
+    magisteria@9169af5a61cd because this repo cannot clone the private one.
+    They are a witness the re-vendor does not have to arrive for."""
+    # ---- PublishedBits, on every wide row the fixture declares -------------
+    var shipped := [
+        ["largest_fire/band.pft.biomass", "9.02759206434e-312", "0x000001a96de74c92"],
+        ["largest_fire/band.snowpack_swe", "6.970155342103717e-41", "0x3798499619cc2340"],
+        ["deepest_winter/band.pft.biomass", "6.278069149686167e-168", "0x1d37b1755cff1e35"],
+        ["deepest_winter/band.snowpack_swe", "7.363574367240632e-58", "0x34127d1f84982978"],
+    ]
+    var lost_through_the_decimal := 0
+    for row in shipped:
+        var name: String = row[0]
+        var block := {"min_nonzero_magnitude": JSON.parse_string(str(row[1])),
+                "min_nonzero_bits": str(row[2])}
+        var from_bits := PublishedBits.of_named(block, FixtureLoader.MIN_NONZERO_BITS_KEY)
+        check(PublishedBits.to_hex(from_bits) == str(row[2]),
+                "%s did not read back from its pattern: %s"
+                % [name, PublishedBits.to_hex(from_bits)])
+        check(from_bits > 0.0, "%s read back as %s, and a minimum NON-ZERO magnitude cannot be "
+                % [name, PublishedBits.to_hex(from_bits)] + "zero or negative")
+        var from_decimal := float(block["min_nonzero_magnitude"])
+        if from_decimal != from_bits:
+            lost_through_the_decimal += 1
+            print("min_nonzero %s: pattern %s, decimal %s"
+                    % [name, PublishedBits.to_hex(from_bits),
+                       PublishedBits.to_hex(from_decimal)])
+    # THE MECHANISM SHOWN ACTING. If every decimal happened to parse exactly,
+    # reading the pattern would be a precaution rather than a fix, and this
+    # test would be passing for a reason that is not the reason it exists.
+    check(lost_through_the_decimal > 0,
+            "all four shipped decimals parse exactly in this engine, so nothing here "
+            + "demonstrates why the patterns are published")
+
+    # ---- AND THE READER DOES NOT CONSULT THE DECIMAL, AT ALL --------------
+    # Stated as a property rather than trusted: the same pattern beside a
+    # decimal that is flatly wrong must return the pattern's value. A reader
+    # that cross-checked would fire here, and it would fire on a correct file.
+    var lying := {"min_nonzero_magnitude": 1.0, "min_nonzero_bits": "0x000001a96de74c92"}
+    check(PublishedBits.to_hex(PublishedBits.of_named(lying, "min_nonzero_bits"))
+                    == "0x000001a96de74c92",
+            "the reader let a decimal beside the pattern change its answer")
+
+    # ---- THE float32 ROW, which the brief warned would fire ---------------
+    # It does not, and the reason is worth writing down. `dec` and `bits` here
+    # are TWO SPELLINGS OF ONE DOUBLE -- checked below -- so no comparison
+    # between them can disagree. What genuinely differs by design is the
+    # declared minimum against the smallest value actually PRESENT in the
+    # narrowed row, because the declaration is measured before the narrowing
+    # and the file holds the value after it. That is a different comparison
+    # and nothing here makes it.
+    var f32_row := {"min_nonzero_magnitude": 0.03540878028907135,
+            "min_nonzero_bits": "0x3fa2211982aa6630", "dtype": "float32 little-endian"}
+    var declared := PublishedBits.of_named(f32_row, "min_nonzero_bits")
+    check(declared == float(f32_row["min_nonzero_magnitude"]),
+            "the float32 row's decimal and pattern are not the same double: %s against %s"
+            % [PublishedBits.to_hex(declared),
+               PublishedBits.to_hex(float(f32_row["min_nonzero_magnitude"]))])
+    # AND THE DECLARED VALUE IS THE PRE-NARROWING ONE, which is the evidence
+    # for the paragraph above: a float32 value re-widened has 29 zero mantissa
+    # bits, and this has none.
+    check(PackedFloat32Array([declared])[0] != declared,
+            "the declared minimum survives a float32 round trip, so it is the narrowed value "
+            + "rather than the measurement taken before narrowing, and the reason the two "
+            + "differ is not what this says it is")
+    print("min_nonzero float32 row: declared %s, nearest float32 %s"
+            % [PublishedBits.to_hex(declared),
+               PublishedBits.to_hex(float(PackedFloat32Array([declared])[0]))])
+
+    # ---- DECLARED_STALE, on the shipped declaration -----------------------
+    var shipped_manifest := {"run": {
+            "base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
+            "acceptance": {
+                "scored_at_commit": "5317027b6543de846a4c53745996f0ed70d61119",
+                "scored_run_dir": "runs/m0-instrumented-001",
+                "passed": 7, "failed": 5, "not_evaluable": 0,
+                "failed_criteria": [{"id": 1, "name": "seasonal snowpack",
+                        "renders_as": "a near-bare snowpack overlay"}],
+                "equivalence": {"to_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
+                        "fields_compared": 18, "fields_matching": 18},
+                "stale_against_replay": {
+                    "replayed_at_commit": "66fa05134deff7f9b7ca9fe371298c8d6aceac58",
+                    "declared_by_the_operator": ("Owner-authorised 2026-09-11. This is the last "
+                            + "scored verdict and it is stale against this payload's code: the "
+                            + "melt gate (1ca6a0c) and swe_50's per-band build (245aec4) landed "
+                            + "after the scoring."),
+                    "what_the_equivalence_proof_below_does_not_cover": ("the proof compares this "
+                            + "verdict's RUN with this fixture's run. Both are state. The "
+                            + "verdict's CODE and the replay's code are different here and "
+                            + "nothing below compares them.")}}}}
+    var v := AncestorVerdict.read_from(shipped_manifest)
+    check(v.state == AncestorVerdict.DECLARED_STALE,
+            "the shipped declaration read as %s" % v.state)
+    check(v.underlying_state == AncestorVerdict.EQUIVALENT,
+            "the shipped 18/18 proof was not kept: underlying is %s" % v.underlying_state)
+    # THE COMMITS ARE FULL-LENGTH HERE AND WERE SHORT IN THE SYNTHETIC CASE.
+    # The prefix comparison is what lets a short-hashed verdict through, and a
+    # reader that only ever saw one length would not have exercised it.
+    check(v.headline().contains("66fa0513"),
+            "the headline does not carry the replay commit: %s" % v.headline())
+    check(v.staleness_lines().size() == 2
+                    and str(v.staleness_lines()[0]).contains("Owner-authorised"),
+            "the shipped operator declaration did not reach the reader: %s"
+            % str(v.staleness_lines()))
+    check(str(v.staleness_lines()[1]).contains("Both are state"),
+            "the shipped statement of what the proof does not cover was dropped: %s"
+            % str(v.staleness_lines()[1]))
+    var banner := VerdictBanner.new()
+    banner.setup()
+    banner.show_verdict(v)
+    check(banner._fails.visible and banner._fails.text.contains("Owner-authorised"),
+            "the shipped declaration does not reach the picture: %s" % banner._fails.text)
+    banner.free()
+    print("verdict: shipped declaration reads %s (underlying %s)"
+            % [v.state, v.underlying_state])
 
 
 func test_an_envelope_does_not_refuse_a_value_for_being_uncertain() -> void:
