@@ -72,6 +72,27 @@ const POSITION_QUANTUM := 0.001
 ## The quaternion's. A millionth is about a ten-thousandth of a degree.
 const ORIENTATION_QUANTUM := 0.000001
 
+## THESE ARE A GUARANTEE OF THE WRITER AND NOT OF EVERY COMMITTED TRACE, and
+## the difference is not academic: the one trace the gate actually replays does
+## not satisfy them. Measured over the four traces in `measurements/flights/`,
+## against the nearest representable multiple rather than against decimal
+## divisibility -- `0.001` is not a binary fraction, so an exact-multiple test
+## on a 240 km easting measures its own tolerance and not the artefact:
+##
+##   flight-01/02/03   0 of 48,552 / 68,118 / 74,112 positions off-quantum,
+##                     0 of 64,736 / 90,824 / 98,816 orientations
+##   scripted          2,998 of 5,400 positions, 7,192 of 7,200 orientations,
+##                     worst orientation residue 5e-07 -- half a quantum, which
+##                     is what unsnapped values look like
+##
+## `scripted.trace.json` was recorded at af3d023, before `add` snapped anything.
+## So the paragraph below -- "rounding to a millimetre ... loses nothing" --
+## describes what this writer does today and NOT what the pinned artefact
+## contains, and a reader who took it as a property of the traces would be
+## reading a guarantee off the wrong side of a rule that changed.
+##
+## `quantum_violations_in` is how that is checked rather than remembered.
+
 
 ## One frame. `pose` is the camera's transform; the rest is what was measured.
 ##
@@ -128,6 +149,48 @@ func save(path: String) -> Dictionary:
     f.store_string(JSON.stringify(to_dict(), "  ", false) + "\n")
     f.close()
     return {"ok": true, "frames": frames.size(), "path": path}
+
+
+## How far each of a trace's frames sits from the quanta this writer declares.
+##
+## AGAINST THE NEAREST REPRESENTABLE MULTIPLE, not against decimal divisibility.
+## `snappedf(x, 0.001)` returns `round(x / 0.001) * 0.001`, and neither `0.001`
+## nor that product is a binary fraction -- so `x / 0.001` for an easting in the
+## hundreds of thousands carries about 2e-8 of its own rounding, and a test
+## asking whether the quotient is an integer to 1e-9 reports every trace as
+## violating, including the three that do not. That was the first cut of this,
+## and it would have had me telling the other side that their writer was broken.
+##
+## Returns `{"positions": n, "orientations": n, "worst_orientation_m": f, ...}`.
+static func quantum_violations_in(frames: Array) -> Dictionary:
+    var off_p := 0
+    var off_o := 0
+    var n_p := 0
+    var n_o := 0
+    var worst := 0.0
+    for row in frames:
+        var f: Dictionary = row
+        for v in (f.get("position", []) as Array):
+            n_p += 1
+            if _off_quantum(float(v), POSITION_QUANTUM):
+                off_p += 1
+        for v2 in (f.get("orientation", []) as Array):
+            n_o += 1
+            var d := absf(float(v2) - roundf(float(v2) / ORIENTATION_QUANTUM)
+                    * ORIENTATION_QUANTUM)
+            if _off_quantum(float(v2), ORIENTATION_QUANTUM):
+                off_o += 1
+                worst = maxf(worst, d)
+    return {"positions": off_p, "positions_checked": n_p,
+            "orientations": off_o, "orientations_checked": n_o,
+            "worst_orientation_residue": worst}
+
+
+## The tolerance is the value's OWN representation error plus a sliver of the
+## quantum, because both are real and neither is the thing being measured.
+static func _off_quantum(v: float, q: float) -> bool:
+    var nearest := roundf(v / q) * q
+    return absf(v - nearest) > maxf(absf(v), 1.0) * 4e-16 + q * 1e-9
 
 
 static func load_from(path: String) -> Dictionary:

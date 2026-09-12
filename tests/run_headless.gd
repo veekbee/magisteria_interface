@@ -101,6 +101,7 @@ func _initialize() -> void:
     test_a_census_is_the_stand_a_headless_replay_can_score()
     test_a_flight_trace_round_trips_and_a_pan_cannot_churn()
     test_no_committed_trace_is_over_the_size_this_repo_commits()
+    test_every_committed_trace_holds_the_quanta_its_writer_declares()
     test_the_pinned_flight_replays_to_what_the_artefact_says()
     test_a_density_schedule_is_finer_than_the_texel_it_thins()
     test_pft_fractions_are_a_composition_of_the_cover()
@@ -4369,6 +4370,85 @@ func test_no_committed_trace_is_over_the_size_this_repo_commits() -> void:
             + "is public and a commit is forever.")
     print("flights: %d traces committed, %.1f MB total, largest under the %.0f MB threshold"
             % [traces, float(total) / 1e6, float(FlightTrace.COMMITTABLE_BYTES) / 1e6])
+
+
+## The one trace that predates `FlightTrace.add`'s snapping, and why it is not
+## simply re-snapped. Re-snapping would move the poses by up to half a quantum,
+## and `flight_replay.json` is a scored replay OF THIS TRACE committed beside
+## it -- so the trace and its replay would have to move together, which is a
+## re-run rather than an edit. Named here with its reason rather than fixed
+## quietly or left unsaid.
+const TRACE_PREDATING_THE_QUANTA := "scripted.trace.json"
+
+
+func test_every_committed_trace_holds_the_quanta_its_writer_declares() -> void:
+    """`FlightTrace` rounds position to a millimetre and orientation to a
+    millionth, and its header says the rounding "loses nothing". That is a
+    guarantee about what the WRITER does, and nothing checked it against what
+    the committed traces CONTAIN -- so the guarantee has been read as a
+    property of the artefacts since it was written, and for the one trace the
+    gate actually replays it is not true.
+
+    MEASURED AGAINST THE NEAREST REPRESENTABLE MULTIPLE. The first cut asked
+    whether `v / 0.001` was an integer, which it cannot be: neither 0.001 nor
+    the snapped product is a binary fraction, and at a 240 km easting the
+    quotient carries 2e-8 of its own rounding. That version reported all four
+    traces as violating, including the three that are exact -- a test measuring
+    its own tolerance and calling it a finding."""
+    var dir := DirAccess.open("res://measurements/flights")
+    check(dir != null, "no flights directory")
+    if dir == null:
+        return
+    var names := PackedStringArray()
+    for f in dir.get_files():
+        if f.ends_with(".trace.json"):
+            names.append(f)
+    names.sort()
+    check(names.size() >= 2, "only %d trace(s) committed, so the rule cannot be shown both "
+            % names.size() + "holding and failing")
+
+    var holding := 0
+    var failing := PackedStringArray()
+    for name in names:
+        var loaded: Dictionary = FlightTrace.load_from("res://measurements/flights/" + name)
+        check(bool(loaded["ok"]), "%s did not load: %s" % [name, str(loaded.get("why", ""))])
+        if not bool(loaded["ok"]):
+            continue
+        var t: FlightTrace = loaded["trace"]
+        var v := FlightTrace.quantum_violations_in(t.frames)
+        var bad := int(v["positions"]) + int(v["orientations"])
+        print("trace %s: %d/%d positions and %d/%d orientations off-quantum%s"
+                % [name, int(v["positions"]), int(v["positions_checked"]),
+                   int(v["orientations"]), int(v["orientations_checked"]),
+                   "" if bad == 0 else ", worst orientation residue %s"
+                           % String.num_scientific(float(v["worst_orientation_residue"]))])
+        if bad == 0:
+            holding += 1
+        else:
+            failing.append(name)
+            # HALF A QUANTUM IS WHAT UNSNAPPED LOOKS LIKE. If the residue were
+            # tiny this would be float noise and the tolerance would be wrong;
+            # at half the quantum the values simply never went through `add`.
+            check(float(v["worst_orientation_residue"]) > FlightTrace.ORIENTATION_QUANTUM * 0.1,
+                    "%s is off-quantum by only %s, which is nearer to a tolerance problem in "
+                            % [name, String.num_scientific(
+                                    float(v["worst_orientation_residue"]))]
+                    + "this check than to a trace that never went through the writer")
+
+    # TWO-SIDED, AND BOTH SIDES ARE REAL ARTEFACTS. The rule holds on every
+    # trace recorded since the writer snapped, and fails on the one recorded
+    # before -- which is what shows the check can tell the difference at all.
+    check(holding > 0, "no committed trace satisfies the declared quanta, so either the writer "
+            + "stopped snapping or this check cannot see that it does")
+    check(Array(failing) == [TRACE_PREDATING_THE_QUANTA],
+            "the traces that miss the declared quanta are %s; the one known to predate the "
+                    % str(failing)
+            + "snapping is %s. A new one here is a trace written by something that is not "
+                    % TRACE_PREDATING_THE_QUANTA
+            + "`FlightTrace.add`, and an empty list means the known one was re-recorded and "
+            + "this exception should go.")
+    print("traces: %d of %d hold the declared quanta; %s predates the rule"
+            % [holding, names.size(), TRACE_PREDATING_THE_QUANTA])
 
 
 func test_the_pinned_flight_replays_to_what_the_artefact_says() -> void:
