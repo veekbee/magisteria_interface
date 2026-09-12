@@ -19,6 +19,9 @@
 #   --oracle-check    also build an oracle at 5x the seam, to measure whether
 #                     the 2.5x one is deep enough for the annulus score
 #   --size WxH        window size                     (default: 1280x800)
+#   --role TEXT       what question this run answers -- recorded PER RUN, so a
+#                     control and a grade can share one artefact without either
+#                     being mistaken for the other
 #   --append          add this run to the artefact instead of replacing it;
 #                     sufficiency is a claim about places and days, and one row
 #                     of it is not evidence for the claim

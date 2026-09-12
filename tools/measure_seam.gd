@@ -104,6 +104,22 @@ var _ref_seen: Dictionary = {}
 ## days, and one row of it is not evidence for the claim.
 var append_to_existing := false
 
+## WHAT QUESTION THIS RUN ANSWERS, declared at capture and recorded PER RUN.
+##
+## PER RUN AND NOT PER FILE, because `--append` puts runs of different kinds in
+## one artefact: a pre-repair control and the grading session that follows it
+## live side by side, and a file-level label would be wrong for half of them the
+## moment the second session appends. A fresh run rewrites the whole document,
+## so a top-level field would not survive that either.
+##
+## THE DEFAULT SAYS IT IS UNDECLARED RATHER THAN SAYING NOTHING. An unlabelled
+## baseline and a grade look identical -- four runs with errors, rankings and
+## DOES NOT SEPARATE verdicts, sitting in an artefact with no statement of which
+## question they answer, get read as the answer to whatever question is asked
+## next. The field is always present so a reader can see it was not filled in,
+## rather than not knowing there was a field to fill.
+var role := "not declared at capture"
+
 var bands: Array = []
 var ground_px: Array = []          ## per band, terrain-only pixels in it
 var masks: Array = []              ## per band, the mask image
@@ -132,6 +148,7 @@ func _initialize() -> void:
     shots_dir = _arg("--shots", shots_dir)
     oracle_check = _has("--oracle-check")
     append_to_existing = _has("--append")
+    role = _arg("--role", role)
     sweep_k = _has("--sweep-k")
     # `String.to_float("nan")` is 0.0, not NAN -- which silently gave the oracle
     # a cut of zero, no schedule, the default ceiling, and a reference that was
@@ -936,6 +953,7 @@ func _write() -> void:
     # whose frames were not drawn.
     var measured: bool = int(ground_px[i]) > 0
     var run := {
+        "role": role,
         "measured": measured,
         "why_not": ("" if measured else
                 ("no ground at all in the %.0f-%.0f m annulus at this place: the camera is on "

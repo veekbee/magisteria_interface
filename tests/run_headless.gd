@@ -116,6 +116,7 @@ func _initialize() -> void:
     test_the_shading_is_exaggerated_and_the_geometry_is_not()
     test_the_harness_guards_refuse_what_they_were_written_for()
     test_the_motion_metrics_and_which_of_them_detects_popping()
+    test_every_recorded_seam_run_says_which_question_it_answers()
     test_a_per_family_reference_holds_only_that_family()
     test_a_family_is_scored_in_its_own_annulus_or_not_at_all()
     test_the_seam_measurement_separates_the_tint_from_the_null()
@@ -5839,6 +5840,60 @@ func test_the_motion_metrics_and_which_of_them_detects_popping() -> void:
                     + "instances exist at every camera step, so a low reading means the "
                     + "instrument stopped seeing the one thing it was built to see.")
     print("motion: the dolly metric does not separate the control; the instance churn does")
+
+
+func test_every_recorded_seam_run_says_which_question_it_answers() -> void:
+    """An unlabelled baseline and a grade look identical. Four runs with errors,
+    rankings and DOES NOT SEPARATE verdicts, sitting in an artefact with no
+    statement of which question they answer, get read as the answer to whatever
+    question is asked next -- and the four in hand are a PRE-REPAIR CONTROL,
+    ruled so by the owner because a sufficiency verdict taken against a basin
+    the §8.2 repair will substantially redraw is not a verdict anyone could
+    cite afterwards.
+
+    PER RUN, WHICH IS THE PART THAT NEEDED THINKING ABOUT. `--append` puts runs
+    of different kinds in one artefact -- the control and the grading session
+    that follows it -- so a file-level label would be wrong for half of them the
+    moment the second session lands. And a run without `--append` rewrites the
+    whole document, so a top-level field would not survive that either. A label
+    the next run silently deletes is worse than no label, because it reads as
+    present right up until it is not."""
+    var f := FileAccess.open("res://measurements/scatter_seam.json", FileAccess.READ)
+    check(f != null, "no measurements/scatter_seam.json")
+    if f == null:
+        return
+    var doc: Dictionary = JSON.parse_string(f.get_as_text())
+    var runs: Array = doc.get("runs", [])
+    check(runs.size() > 0, "the seam artefact records no runs")
+    var undeclared := 0
+    var roles := {}
+    for r in runs:
+        var role := str((r as Dictionary).get("role", ""))
+        check(role != "", "a recorded run carries no `role` at all, so nothing in the artefact "
+                + "says which question its numbers answer")
+        if role.contains("not declared at capture"):
+            undeclared += 1
+        roles[role] = true
+    check(undeclared == 0,
+            "%d of %d recorded runs were captured without `--role`, so the artefact cannot say "
+                    % [undeclared, runs.size()]
+            + "whether they are a baseline or a grade -- which is the one distinction a later "
+            + "reader cannot recover from the numbers")
+    # THE CONTROL IS NAMED AS A CONTROL, and says what it is a control FOR: a
+    # baseline with no stated subject is a baseline for whatever a reader has in
+    # mind.
+    for role in roles:
+        check(str(role).contains("control") or str(role).contains("grade"),
+                "a run's role says neither control nor grade: %s" % str(role))
+    check(str(roles.keys()[0]).contains("magisteria@"),
+            "the role does not name the sim commit it is a control for, so it cannot be "
+            + "compared against anything later")
+    # AND THE DEFAULT REALLY IS THE UNDECLARED ONE, so the check above has a
+    # subject rather than being a rule about a string nobody writes.
+    check(str(roles.keys()[0]) != "not declared at capture",
+            "the recorded role IS the tool's default, so nobody declared anything")
+    print("seam roles: %d run(s), %d distinct role(s), 0 undeclared"
+            % [runs.size(), roles.size()])
 
 
 func test_a_per_family_reference_holds_only_that_family() -> void:
