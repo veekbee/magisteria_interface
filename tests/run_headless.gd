@@ -58,6 +58,7 @@ func _initialize() -> void:
     test_the_wide_branch_has_a_witness_that_is_not_the_fixture()
     test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal()
     test_both_new_readers_run_on_the_shape_the_fixture_actually_ships()
+    test_the_client_declares_exactly_the_rows_its_fixture_carries()
     test_the_tint_takes_phenology_from_the_wire_when_the_row_is_carried()
     test_an_envelope_does_not_refuse_a_value_for_being_uncertain()
     test_every_reach_carries_a_node_so_flow_can_be_drawn()
@@ -1388,6 +1389,78 @@ func _fixture_with_a_phenology_row(values: PackedFloat64Array) -> FixtureLoader:
     mf.store_string(JSON.stringify(manifest))
     mf.close()
     return FixtureLoader.load_from(dir)
+
+
+func test_the_client_declares_exactly_the_rows_its_fixture_carries() -> void:
+    """THE THREE-WAY TIE THAT NOTHING HELD. `CLIENT_MINOR` says which rows this
+    client declares, `assets/fixture/PIN` records which the vendored fixture
+    carries, and the fixture itself holds the bytes. All three have to agree and
+    none of them checked the others.
+
+    MEASURED, BY MOVING THE CONSTANT AND RUNNING THE GATE. With `CLIENT_MINOR`
+    at 1 against the fixture in hand -- eight carried rows, nine declared -- the
+    suite passed at 4,054 checks and printed `9 rows carried, 0 masked`. Green.
+    The contract test whose comment promises it will "fail and tell whoever
+    moved it what to expect" does not fail: at equal minors the version reports
+    stop being emitted and the loop that inspects them has nothing to iterate,
+    so it loses three checks and says ALL GREEN. Absence and pass, identical.
+
+    WHY IT MATTERS NOW rather than in the abstract: the re-vendor is one atomic
+    operation -- fetch, PIN, `carried_rows`, `contract_version`, `CLIENT_MINOR`
+    -- and until this check existed, a HALF-DONE one was undetectable in either
+    direction. Bump without fetch and the client declares it reads a row its own
+    fixture has not got; fetch without bump and the row sits masked while the
+    bytes for it are on disk."""
+    var doc := SchemaLoader.load_from_file("res://contract/schema.json")
+    check(doc.rows.size() > 0, "the contract declared no rows at all")
+    var declared := PackedStringArray()
+    for r in doc.rows:
+        declared.append(r.name)
+    declared.sort()
+
+    # WHAT THE FIXTURE ACTUALLY HOLDS, from the bytes rather than from the PIN,
+    # because the PIN is a claim about the bytes and this is the one place that
+    # can tell the two apart.
+    var fl := fixture()
+    var carried := PackedStringArray()
+    for w in fl.windows:
+        for r in fl.row_names(w):
+            if not carried.has(r):
+                carried.append(r)
+    carried.sort()
+
+    check(Array(declared) == Array(carried),
+            "this client declares %s at CLIENT_MINOR %d and its fixture carries %s. "
+                    % [str(Array(declared)), SchemaLoader.CLIENT_MINOR, str(Array(carried))]
+            + "A row declared and not carried is a client claiming to read something it has "
+            + "not got; a row carried and not declared is bytes on disk nothing may read. "
+            + "If the re-vendor is in progress, it is half done.")
+
+    # AND THE PIN AGREES WITH BOTH, since it is what `fetch_artefacts.py` acts
+    # on and a stale one sends the next clone to the wrong bytes.
+    var pin_f := FileAccess.open("res://assets/fixture/PIN", FileAccess.READ)
+    check(pin_f != null, "no fixture PIN")
+    if pin_f == null:
+        return
+    var pin: Dictionary = JSON.parse_string(pin_f.get_as_text())
+    var pinned := PackedStringArray()
+    for r in (pin.get("carried_rows", []) as Array):
+        pinned.append(str(r))
+    pinned.sort()
+    check(Array(pinned) == Array(carried),
+            "the PIN records carried_rows %s and the fixture holds %s"
+            % [str(Array(pinned)), str(Array(carried))])
+
+    # The PIN's contract version is a string like "2.0"; the client's major and
+    # minor are the two halves of what it is allowed to read.
+    var pin_version := str(pin.get("contract_version", ""))
+    var want_version := "%d.%d" % [SchemaLoader.CLIENT_MAJOR, SchemaLoader.CLIENT_MINOR]
+    check(pin_version == want_version,
+            "the PIN was vendored against contract %s and this client reads at %s. These move "
+                    % [pin_version, want_version]
+            + "together or the fixture and the constant are describing different contracts.")
+    print("contract tie: %d rows declared at minor %d, %d carried, PIN at %s"
+            % [declared.size(), SchemaLoader.CLIENT_MINOR, carried.size(), pin_version])
 
 
 func test_the_tint_takes_phenology_from_the_wire_when_the_row_is_carried() -> void:
