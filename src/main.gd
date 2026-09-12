@@ -84,9 +84,17 @@ func _ready() -> void:
         _controls.move_child(verdict_banner, 1)
         verdict_banner.show_verdict(verdict)
         print("verdict: %s" % verdict.headline())
+        for l in verdict.staleness_lines():
+            print("verdict:   %s" % l)
         for f in verdict.named_fails():
             print("verdict:   %s" % f)
-        if verdict.state != AncestorVerdict.SCORED:
+        # WARNED ON THE REASON, NOT ON THE STATE. This fired for every state but
+        # SCORED, and EQUIVALENT carries no `why` because nothing is wrong with
+        # it -- so every run printed a bare `WARNING: verdict:` with nothing
+        # after the colon. A warning with an unreadable reason is a warning
+        # somebody learns to scroll past, and the one this file will need to be
+        # read is DECLARED_STALE, arriving with a whole sentence behind it.
+        if not verdict.why.is_empty():
             push_warning("verdict: %s" % verdict.why)
 
         probe_panel = ProbePanel.new()

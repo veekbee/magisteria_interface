@@ -75,6 +75,18 @@ echo "== every script compiles =="
 "$GODOT" --headless --script res://tools/compile_check.gd 2>&1 | tee /tmp/compile.log
 grep -q "^compile: all " /tmp/compile.log || { echo "-- not every script compiles"; fail=1; }
 
+echo "== decimals survive the reader =="
+# Godot's decimal-to-double conversion is not correctly rounded, and its own
+# JSON writer emits the plain-decimal form its reader is worst at. Decision 985
+# turned on a single ulp in a lattice corner, so "the artefact is correct" and
+# "the client reads the artefact correctly" are different claims and only one of
+# them was ever checked. This checks the other one.
+"$GODOT" --headless --script res://tools/decimal_leaves.gd -- /tmp/decimal_leaves.tsv \
+  2>&1 | grep -v "Exponent too high" | tee /tmp/decimals_dump.log >/dev/null
+grep -q "^decimal_leaves: " /tmp/decimals_dump.log \
+  || { echo "-- the leaf dump did not run"; fail=1; }
+python3 tools/check_decimals.py /tmp/decimal_leaves.tsv || fail=1
+
 echo "== headless tests =="
 "$GODOT" --headless --script res://tests/run_headless.gd 2>&1 | tee /tmp/test.log
 rc=${PIPESTATUS[0]}

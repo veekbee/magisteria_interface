@@ -54,6 +54,11 @@ func show_verdict(v: AncestorVerdict) -> void:
     _headline.text = v.headline()
     _headline.add_theme_color_override("font_color", colour_for(v.state))
     var lines := v.named_fails()
+    # ABOVE THE FAILS, because the staleness is a statement about whether those
+    # fails describe the picture at all, and a caveat printed after the thing it
+    # qualifies is read by somebody who has already stopped reading.
+    for l in v.staleness_lines():
+        lines.insert(0, l)
     var excluded := v.excluded_fields()
     if not excluded.is_empty():
         lines.append("equivalence excluded " + "; ".join(excluded))
@@ -72,6 +77,12 @@ static func colour_for(state: String) -> Color:
     match state:
         AncestorVerdict.SCORED, AncestorVerdict.EQUIVALENT:
             return Color(0.95, 0.78, 0.30)
+        AncestorVerdict.DECLARED_STALE:
+            # BETWEEN THE OTHER TWO AND ITS OWN COLOUR, not a reuse of either.
+            # Sharing amber with EQUIVALENT would say the verdict describes the
+            # picture, which is the one thing the declaration denies; sharing
+            # red with STALE would say the proof failed, and it did not.
+            return Color(0.98, 0.62, 0.26)
         AncestorVerdict.STALE:
             return Color(0.97, 0.45, 0.35)
         _:

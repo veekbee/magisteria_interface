@@ -56,6 +56,8 @@ func _initialize() -> void:
     test_the_ramp_is_ordered_and_bounds_come_from_the_contract()
     test_node_rows_arrive_at_full_precision()
     test_the_wide_branch_has_a_witness_that_is_not_the_fixture()
+    test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal()
+    test_an_envelope_does_not_refuse_a_value_for_being_uncertain()
     test_every_reach_carries_a_node_so_flow_can_be_drawn()
     test_the_flow_mapping_distinguishes_zero_from_below_scale()
     test_quantisation_uses_the_realised_range_not_the_contracts()
@@ -65,6 +67,7 @@ func _initialize() -> void:
     test_the_contour_line_stays_broken()
     test_no_contour_set_is_invented_for_a_window_that_has_none()
     test_the_probe_tells_the_three_absences_apart()
+    test_a_verdict_stale_against_its_replay_is_not_absorbed_into_equivalent()
     test_the_probe_reads_the_row_that_is_drawn()
     test_the_ray_march_lands_on_the_surface_it_marched()
     test_the_series_keeps_what_float32_would_flush_to_zero()
@@ -1230,6 +1233,141 @@ func test_node_rows_arrive_at_full_precision() -> void:
             % [wide.size(), carried])
 
 
+func test_an_envelope_does_not_refuse_a_value_for_being_uncertain() -> void:
+    """`band.phenology_index` arrives at about 2% residual, permanently -- a
+    deeper replay does not improve it. Its declared range here is [0, 1], which
+    is the row's OWN bounds, so the two values a seasonal index spends most of
+    its time at, dormant and peak, sit exactly on the edges. A 2%-uncertain 1.0
+    arrives as 1.02 about as often as 0.98.
+
+    And the caller does not merely flag a refused parameter, it drops the plant.
+    So the strict check would have thinned dormant and peak stands seasonally,
+    every individual refusal correct, reporting the ground when what it had was
+    uncertainty."""
+    var fs := family_set()
+    if not fs.is_loaded() or fs.life_forms().is_empty():
+        check(false, "no families loaded, so the envelope cannot be exercised")
+        return
+    var life: String = fs.life_forms()[0]
+    var r := fs.range_of(life, "phenology")
+    check(not r.is_empty(), "%s declares no phenology range" % life)
+    var hi := float(r["max"])
+    var u := VegetationScatter.ROW_PHENOLOGY_UNCERTAINTY
+
+    # THE THREE OUTCOMES, each on a value chosen to land in exactly one of them.
+    check(str(fs.verdict_on(life, "phenology", hi, u)["state"]) == FamilySet.INSIDE,
+            "a value on the edge is not inside")
+    var just_over := hi + u * 0.5
+    check(str(fs.verdict_on(life, "phenology", just_over, u)["state"])
+                    == FamilySet.WITHIN_UNCERTAINTY,
+            "%s is outside by half the uncertainty and did not read as uncertain" % str(just_over))
+    var well_over := hi + u * 4.0
+    check(str(fs.verdict_on(life, "phenology", well_over, u)["state"]) == FamilySet.OUTSIDE,
+            "%s is outside by four times the uncertainty and did not read as outside"
+            % str(well_over))
+
+    # THE CONTROL, which is what shows the uncertainty is what moved it rather
+    # than the edge. The same value with nothing declared is refused, as it was.
+    check(str(fs.verdict_on(life, "phenology", just_over, 0.0)["state"]) == FamilySet.OUTSIDE,
+            "with no uncertainty declared, a value outside the range was not refused")
+    check(fs.check(life, "phenology", just_over) != "",
+            "the strict check stopped refusing, so the two paths no longer differ and this "
+            + "test is comparing a thing against itself")
+
+    # AN UNCERTAINTY NOBODY STATED IS NOT LICENCE, and neither is a nonsense one.
+    for bad in [-1.0, NAN]:
+        check(str(fs.verdict_on(life, "phenology", just_over, bad)["state"]) == FamilySet.OUTSIDE,
+                "an uncertainty of %s widened the envelope" % str(bad))
+
+    # AND THE THIRD OUTCOME IS NOT A WIDER RANGE. A value inside must not be
+    # reported as merely-not-provably-outside, or the caller loses the
+    # distinction the third state exists to make.
+    check(str(fs.verdict_on(life, "phenology", hi * 0.5, u)["state"]) == FamilySet.INSIDE,
+            "a value in the middle of the range read as uncertain")
+    # A missing range is not an uncertainty question: there is no edge to be
+    # near, so the strict refusal survives verbatim rather than being softened.
+    var no_such := fs.verdict_on(life, "no_such_parameter", 0.5, 1000.0)
+    check(str(no_such["state"]) == FamilySet.OUTSIDE
+                    and str(no_such["why"]).contains("no legal range"),
+            "an undeclared parameter was absorbed into the uncertainty case: %s" % str(no_such))
+
+    # TODAY'S SOURCE DECLARES NOTHING, and that is stated rather than assumed:
+    # `phenology_for` clamps, so it cannot leave the envelope and has no
+    # uncertainty against it. The line moves when the row is wired.
+    var sc := VegetationScatter.new()
+    check(sc.phenology_uncertainty() == 0.0,
+            "phenology is still computed here and an uncertainty is being declared for it")
+    print("phenology: envelope [%s, %s], row uncertainty %s, this build declares %s"
+            % [String.num(float(r["min"]), 3), String.num(hi, 3), String.num(u, 3),
+               String.num(sc.phenology_uncertainty(), 3)])
+
+
+func test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal() -> void:
+    """Godot cannot read a small decimal back. Measured here rather than cited:
+    every subnormal decimal parses to exactly 0.0, and a plain decimal is exact
+    through seventeen digits after the point and degrades from the eighteenth,
+    reaching 35% by 1e-17. So an artefact publishes the pattern, and a reader
+    that falls back to the decimal has undone the publishing -- in exactly the
+    case the publishing exists for, because small is when the decimal is wrong.
+
+    THE SUBJECT IS LIVE IN THE FIXTURE IN HAND. `node.streamflow` publishes
+    `min_nonzero_magnitude: 5e-324`, and that is what this engine does with it."""
+    # THE READER, on patterns whose values are known exactly.
+    check(PublishedBits.of_hex("0x0000000000000001") != 0.0,
+            "the bottom denormal did not survive its pattern")
+    check(PublishedBits.of_hex("3ff0000000000000") == 1.0,
+            "1.0 did not come back from its pattern")
+    check(PublishedBits.of_hex("0000000000000000") == 0.0, "zero did not come back")
+    check(PublishedBits.to_hex(PublishedBits.of_hex("0x000001a96de74c92"))
+                    == "0x000001a96de74c92",
+            "a pattern did not survive a round trip through the reader")
+    # A SHORT PATTERN IS REFUSED RATHER THAN PADDED. "0x1" padded is the bottom
+    # denormal and "0x1" truncated is whatever survived the truncation, and
+    # nothing downstream can tell those apart.
+    for bad in ["0x1", "", "not hex at all", "0x000000000000000g", "0x00000000000000001"]:
+        check(is_nan(PublishedBits.of_hex(bad)),
+                "'%s' was read as a number rather than refused" % bad)
+
+    # THE CONTROL, AND IT IS THE WHOLE ARGUMENT. The same value by both routes:
+    # through its pattern it arrives, through its decimal it is gone.
+    var subnormal := PublishedBits.of_hex("0x0000000000000001")
+    check(subnormal != 0.0 and float(JSON.parse_string("5e-324")) == 0.0,
+            "this engine now reads 5e-324 as a non-zero, so the reason this class exists "
+            + "has changed and its header needs re-taking")
+
+    # AND ON THE SHIPPED FIXTURE. The row publishes a decimal today and the bits
+    # arrive with the re-vendor; NAN is the honest answer to a field that cannot
+    # be read, and it is reported rather than substituted.
+    var fl := fixture()
+    var w := fl.windows[0]
+    var wide := fl.unquantised_rows(w)
+    if not wide.is_empty():
+        var row: String = wide[0]
+        var d: Dictionary = fl.manifest["client_form"]["rows"]["%s/%s" % [w, row]]
+        var m := fl.min_nonzero_of(w, row)
+        if d.has("min_nonzero_magnitude_bits"):
+            check(not is_nan(m), "the fixture publishes the pattern and the reader refused it")
+            check(m != 0.0, "the published minimum non-zero magnitude read back as zero")
+            print("min_nonzero: %s reads %s from its pattern" % [row, PublishedBits.to_hex(m)])
+        else:
+            check(is_nan(m),
+                    "%s publishes no pattern and the reader answered %s anyway -- it fell back "
+                    % [row, str(m)] + "to the decimal, which is the one thing it must not do")
+            check(PublishedBits.why_absent(d, "min_nonzero_magnitude").contains("decimal"),
+                    "the absence is not reported as the decimal-only case: %s"
+                    % PublishedBits.why_absent(d, "min_nonzero_magnitude"))
+            # THE DECIMAL IS ACTUALLY UNREADABLE, not merely distrusted. Without
+            # this the refusal above would be a rule with no demonstrated
+            # subject, and would keep passing if the field became ordinary.
+            var as_decimal := float(d.get("min_nonzero_magnitude", NAN))
+            print("min_nonzero: %s publishes a decimal only, and it reads back as %s"
+                    % [row, PublishedBits.to_hex(as_decimal)])
+            check(as_decimal == 0.0,
+                    "%s's published decimal is readable after all (%s), so the re-vendor this "
+                    % [row, PublishedBits.to_hex(as_decimal)]
+                    + "check is waiting for may already have landed")
+
+
 func test_the_wide_branch_has_a_witness_that_is_not_the_fixture() -> void:
     """`day_values` decodes a declared-wide row by a different path from a
     quantised one, and today exactly one shipped row takes that path. The
@@ -1709,6 +1847,142 @@ func test_the_probe_tells_the_three_absences_apart() -> void:
             check(whys[i] != whys[j], "two absences give the same reason")
     print("probe: no-ground, no-key at texel %s, resolved at texel %s, no-cell"
             % [str(no_key["texel"]), str(resolved["texel"])])
+
+
+## The shape the dispatch published, with a clean 18-of-18 proof beside a
+## declared staleness -- both true at once, which is the case the fifth state
+## exists for.
+func _declared_stale_manifest() -> Dictionary:
+    return {"run": {"base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
+            "acceptance": {"scored_at_commit": "5317027", "scored_run_dir": "m0-instrumented-001",
+                    "passed": 7, "failed": 5, "not_evaluable": 0,
+                    "failed_criteria": [{"id": 1, "name": "snowpack",
+                            "renders_as": "a near-bare snowpack overlay"}],
+                    "equivalence": {"to_commit": "6421064", "fields_compared": 18,
+                            "fields_matching": 18},
+                    "stale_against_replay": {
+                            "replayed_at_commit": "b9287f1",
+                            "declared_by_the_operator": "the melt gate and swe_50's per-band "
+                                    + "build landed after scoring; the criteria this verdict "
+                                    + "fails are still the criteria it fails",
+                            "what_the_equivalence_proof_below_does_not_cover":
+                                    "the code the payload was stepped forward at"}}}}
+
+
+func _declared_stale_verdict() -> AncestorVerdict:
+    return AncestorVerdict.read_from(_declared_stale_manifest())
+
+
+func test_a_verdict_stale_against_its_replay_is_not_absorbed_into_equivalent() -> void:
+    """`equivalence` proves the verdict's RUN is this fixture's run. That is a
+    statement about state, and a replayed payload is stepped forward at today's
+    code, so a verdict can hold a clean 18-of-18 and still describe a snowpack
+    the drawn data no longer has. Nothing compared the code, so the reader saw
+    18/18, reported EQUIVALENT, and the staleness sat one key away unread.
+
+    TWO AXES, NOT ONE ENUM. The proof still holds and is not thrown away:
+    `underlying_state` keeps it while `state` carries the staleness. The point
+    of the exercise is that both readings survive, because "the run really is
+    this run AND the verdict does not describe what is drawn" is the whole
+    content of the case."""
+    var m := _declared_stale_manifest()
+    var v := AncestorVerdict.read_from(m)
+    check(v.state == AncestorVerdict.DECLARED_STALE,
+            "a declared-stale verdict read as %s" % v.state)
+    check(v.underlying_state == AncestorVerdict.EQUIVALENT,
+            "the equivalence proof was thrown away by the staleness: underlying is %s"
+            % v.underlying_state)
+
+    # THE CONTROL, which is the half that shows the mechanism acting. The same
+    # manifest without the declaration is the old reading exactly -- so the new
+    # state is keyed on the block and not on anything that moved beside it.
+    var without := _declared_stale_manifest()
+    without["run"]["acceptance"].erase("stale_against_replay")
+    var w := AncestorVerdict.read_from(without)
+    check(w.state == AncestorVerdict.EQUIVALENT,
+            "the same verdict without the declaration read as %s, so the new state is not "
+            % w.state + "keyed on the declaration")
+    check(w.staleness_lines().is_empty(),
+            "a verdict with no declaration offered staleness lines")
+
+    # LOUDER THAN EQUIVALENT AND QUIETER THAN A FAILED PROOF, in the words a
+    # person actually sees rather than in the constant's spelling.
+    check(v.headline().contains("DECLARED STALE"),
+            "the headline does not say the verdict is stale: %s" % v.headline())
+    check(not v.headline().contains("does not check out"),
+            "a declared staleness reads as a failed proof, which is louder than it should be: %s"
+            % v.headline())
+    check(v.headline().contains("7 pass / 5 fail"),
+            "the score stopped being stated, and it is still a real score: %s" % v.headline())
+    check(v.headline().contains("b9287f1"),
+            "the headline does not say what the payload was replayed at: %s" % v.headline())
+
+    # THE REASON TRAVELS WITH THE NUMBER. That is the entire justification for
+    # shipping a stale verdict rather than dropping it, so a reader who cannot
+    # see the reason has been given the disclaimer without the grounds for it.
+    var lines := v.staleness_lines()
+    check(lines.size() == 2, "expected the declaration and the proof's limit, got %s"
+            % str(lines))
+    check(lines[0].contains("the melt gate"),
+            "the operator's own reason did not survive the read: %s" % lines[0])
+    check(lines[1].contains("stepped forward"),
+            "what the proof does not cover was dropped: %s" % lines[1])
+    check(v.why.contains("the melt gate"),
+            "the reason does not reach `why`, which is what main.gd warns with: %s" % v.why)
+
+    # A DECLARATION IS CHECKED, NOT BELIEVED -- the same discipline the proof
+    # gets, because it is the same kind of claim. Each of these is a block that
+    # looks like a declaration and cannot be read as one, and all fall back to
+    # STALE: the fixture is asserting something about itself that does not hold
+    # together, which is worse than declaring nothing.
+    var unreadable := {
+        "carries no operator reason": {"replayed_at_commit": "b9287f1"},
+        "names no replay commit": {"declared_by_the_operator": "because"},
+        "declares staleness against the commit it was scored at": {
+                "replayed_at_commit": "5317027", "declared_by_the_operator": "because"},
+        "offers an empty reason": {"replayed_at_commit": "b9287f1",
+                "declared_by_the_operator": ""},
+    }
+    for label in unreadable:
+        var bad_m := _declared_stale_manifest()
+        bad_m["run"]["acceptance"]["stale_against_replay"] = unreadable[label]
+        var bad := AncestorVerdict.read_from(bad_m)
+        check(bad.state == AncestorVerdict.STALE,
+                "a declaration that %s read as %s rather than stale" % [label, bad.state])
+        check(bad.why.contains("cannot be read"),
+                "an unreadable declaration does not say so: %s" % bad.why)
+
+    # A FAILED PROOF STAYS THE LOUDER FINDING. A fixture whose equivalence does
+    # not check out and which also declares a staleness must report the broken
+    # proof: the declaration is the thing somebody remembered to write down,
+    # and burying a failure under it is how the failure stops being read.
+    var both := _declared_stale_manifest()
+    both["run"]["acceptance"]["equivalence"]["fields_matching"] = 17
+    var b := AncestorVerdict.read_from(both)
+    check(b.state == AncestorVerdict.STALE,
+            "a broken proof beside a declared staleness read as %s" % b.state)
+    check(b.headline().contains("does not check out"),
+            "the broken proof was buried under the declaration: %s" % b.headline())
+
+    # AND IT APPLIES OVER A SCORED VERDICT TOO, not only over an equivalence.
+    # The replay axis is independent of the state axis: a verdict scored on
+    # this very run is just as stale if the payload was stepped forward.
+    var same_run := _declared_stale_manifest()
+    same_run["run"]["acceptance"]["scored_at_commit"] = "6421064"
+    same_run["run"]["acceptance"].erase("equivalence")
+    var sr := AncestorVerdict.read_from(same_run)
+    check(sr.state == AncestorVerdict.DECLARED_STALE,
+            "a scored-on-this-run verdict declared stale read as %s" % sr.state)
+    check(sr.underlying_state == AncestorVerdict.SCORED,
+            "the underlying state was lost: %s" % sr.underlying_state)
+
+    # THE FIXTURE IN HAND CARRIES NO DECLARATION, and the check says so rather
+    # than assuming it. When the re-vendor lands this line moves, and it moving
+    # is the notice that the new state has a real subject.
+    var live := AncestorVerdict.read_from(fixture().manifest)
+    print("verdict: shipped fixture reads %s (underlying %s), declaration %s"
+            % [live.state, live.underlying_state,
+               "absent" if live.stale_against_replay.is_empty() else "present"])
 
 
 func test_the_probe_reads_the_row_that_is_drawn() -> void:
@@ -2941,7 +3215,7 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     # half that has four branches now rather than three.
     var banner := VerdictBanner.new()
     banner.setup()
-    for v in [none, scored, eq, stale]:
+    for v in [none, scored, eq, stale, _declared_stale_verdict()]:
         banner.show_verdict(v)
         check(banner._headline.text == v.headline(),
                 "the banner did not render the %s headline" % v.state)
@@ -2950,6 +3224,16 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     banner.show_verdict(eq)
     check(banner._fails.visible and banner._fails.text.contains("excluded"),
             "the banner drops the equivalence proof's exclusions: %s" % banner._fails.text)
+    # THE OPERATOR'S REASON REACHES THE PICTURE, which is the whole content of
+    # the declaration. A banner that says DECLARED STALE and not why has moved
+    # the problem from the manifest to the screenshot rather than solving it.
+    var ds := _declared_stale_verdict()
+    banner.show_verdict(ds)
+    check(banner._fails.visible and banner._fails.text.contains("the melt gate"),
+            "the operator's declared reason did not reach the banner: %s" % banner._fails.text)
+    check(banner._fails.text.find("declared by the operator")
+                    < banner._fails.text.find("criterion 1"),
+            "the staleness is printed below the fails it qualifies: %s" % banner._fails.text)
     banner.show_verdict(none)
     check(not banner._fails.visible, "an absent verdict shows an empty second line")
     banner.free()
@@ -2966,7 +3250,8 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     var worst := FieldOverlay.RAMP_STOPS[FieldOverlay.RAMP_STOPS.size() - 1]
     var plated := VerdictBanner.plate_over(worst)
     for st in [AncestorVerdict.ABSENT, AncestorVerdict.SCORED,
-            AncestorVerdict.EQUIVALENT, AncestorVerdict.STALE]:
+            AncestorVerdict.EQUIVALENT, AncestorVerdict.DECLARED_STALE,
+            AncestorVerdict.STALE]:
         var fg := VerdictBanner.colour_for(st)
         var with_plate := VerdictBanner.contrast(fg, plated)
         check(with_plate >= 4.5, "the %s headline sits at %s:1 against the plate over the "

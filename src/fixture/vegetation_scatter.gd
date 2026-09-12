@@ -342,6 +342,19 @@ static func candidate_position(key: int, candidate: int, origin: Vector2,
 ## an empty schedule the texel is not subdivided at all.
 const BAND_SUBDIVISION := 32
 
+## What `band.phenology_index` is known to when it arrives, absolute, in the
+## row's own unit of fraction.
+##
+## PERMANENT, NOT PROVISIONAL, AND THAT IS THE EMITTING SIDE'S OWN FINDING. The
+## row comes back at about 2% residual and does not improve with a deeper
+## replay: the green envelope's release limb relaxes on a ten-year constant, so
+## the seeded pair needs roughly thirty years of spin-up, and the basin is not
+## stationary over thirty years -- by the time the envelope has settled the
+## trajectory is no longer the run's. Only a re-trace at a registry that already
+## had the row moves it, and that is not scheduled. So this is designed against
+## rather than waited out.
+const ROW_PHENOLOGY_UNCERTAINTY := 0.02
+
 ## Days sampled to find a cell's own yearly trough and peak for phenology.
 ##
 ## Ten of the window's ninety, because the alternative is reading every day of
@@ -490,6 +503,7 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
     var implied_by_node: Dictionary = {}
     var texels := 0
     var flat_cells := 0
+    var uncertain_phenology := 0
     var phen_lo := 1.0
     var phen_hi := 0.0
     ## [life_form, horizon_m] per cell the rule was evaluated at, so the report
@@ -587,11 +601,28 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 if not _fs.can_draw(node):
                     node = life_form
                 var phen := phenology_for(seasons[gi], cell, bio)
-                var why_phen := _fs.check(life_form, "phenology", phen)
-                if why_phen != "":
+                var phen_verdict := _fs.verdict_on(life_form, "phenology", phen,
+                        phenology_uncertainty())
+                if str(phen_verdict["state"]) == FamilySet.OUTSIDE:
                     # The tint is a declared parameter with a declared range,
                     # so it is refused on the same terms as height and crown.
                     continue
+                if str(phen_verdict["state"]) == FamilySet.WITHIN_UNCERTAINTY:
+                    # NOT REFUSED, AND NOT SILENTLY ACCEPTED EITHER. The value
+                    # is outside by less than it is known to, so refusing would
+                    # report the ground on the strength of the uncertainty --
+                    # and this refusal does not merely flag, it drops the plant.
+                    #
+                    # Clamping is safe HERE and is not a general licence. Height
+                    # and crown are measurements, and a clamped measurement is a
+                    # plant size this client invented. Phenology's only use is
+                    # the mix parameter of `VegetationPalette.colour_for`, which
+                    # clamps to [0, 1] itself -- so the clamp changes nothing
+                    # about what is drawn and only decides whether it is drawn
+                    # at all. The count travels in the report rather than the
+                    # reason being discarded.
+                    phen = clampf(phen, 0.0, 1.0)
+                    uncertain_phenology += 1
                 if float(seasons[gi]["hi"][cell]) - float(seasons[gi]["lo"][cell]) <= 0.0:
                     flat_cells += 1
                 var half := 0.5 * _hf.pixel_size_m
@@ -1041,6 +1072,10 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             "days_sampled": int(seasons[0]["days_sampled"]) if seasons.size() > 0 else 0,
             "range_drawn": [phen_lo, phen_hi] if phen_hi >= phen_lo else [],
             "cells_with_no_seasonal_signal": flat_cells,
+            # Zero while phenology is computed here rather than read from the
+            # wire -- see `phenology_uncertainty`. It is reported anyway so the
+            # number the row brings with it is visible from the first build.
+            "instances_with_phenology_inside_its_uncertainty": uncertain_phenology,
         },
         "triangles_in_frame": triangles,
         "build_ms": float(Time.get_ticks_usec() - t_build) / 1000.0,
@@ -1350,6 +1385,21 @@ func _season_range(window: String, row: String, group: int) -> Dictionary:
 ## declared envelope: an envelope edge and a 2% row meet as a coin toss on the
 ## cells that sit near it, and the check would report the ground rather than the
 ## uncertainty. That is a decision for whoever wires the row, not for here.
+## The absolute uncertainty of the phenology value this build is using, in the
+## parameter's own unit.
+##
+## ZERO TODAY, AND WHAT FLIPS IT IS ONE LINE. `phenology_for` computes a ratio
+## between a cell's own sampled trough and peak and clamps it to [0, 1], so it
+## cannot leave the envelope at all and has no uncertainty to declare against
+## it. When the value comes from `band.phenology_index` instead, this returns
+## `ROW_PHENOLOGY_UNCERTAINTY` and the three-outcome check starts doing work.
+##
+## The change is a change of SOURCE, not of confidence, which is why this is a
+## function of where the number came from and not a constant.
+func phenology_uncertainty() -> float:
+    return 0.0
+
+
 func phenology_for(season: Dictionary, cell: int, today: float) -> float:
     var lo: PackedFloat64Array = season["lo"]
     var hi: PackedFloat64Array = season["hi"]

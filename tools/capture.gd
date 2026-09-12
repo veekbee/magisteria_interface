@@ -169,6 +169,13 @@ func _say_verdict() -> void:
         print("verdict: the scene reported none, which is itself undisclaimed")
         return
     print("verdict: %s" % v.headline())
+    # THE DECLARED REASON GOES IN THE CAPTURE TOO. This function exists because
+    # a screenshot outlives the session that took it; a capture that said
+    # DECLARED STALE and not why would hand a reader the disclaimer without the
+    # grounds for judging it, which is the failure the declaration was written
+    # to avoid one layer up.
+    for l in v.staleness_lines():
+        print("verdict:   %s" % l)
     for f in v.named_fails():
         print("verdict:   %s" % f)
 

@@ -106,6 +106,22 @@ func dtype_of(window: String, row: String) -> String:
     return "" if d == null else str((d as Dictionary).get("dtype", ""))
 
 
+## The smallest non-zero magnitude the emitter measured in a row, read from the
+## pattern and never from the decimal. NAN when the row does not publish one.
+##
+## THE DECIMAL BESIDE IT IS UNREADABLE HERE AND THAT IS NOT HYPOTHETICAL. The
+## fixture in hand publishes `node.streamflow`'s as `5e-324`, which this engine
+## parses to exactly 0.0 -- a field whose name is a minimum NON-ZERO magnitude,
+## arriving as zero, in the one place a reader would take it at face value.
+## `min_nonzero_bits` is published beside it from magisteria@b9287f1 and is what
+## this reads; until that re-vendor lands this returns NAN for every row, which
+## is the honest answer and not a broken one. `PublishedBits.why_absent` says
+## which of the two absences it was.
+func min_nonzero_of(window: String, row: String) -> float:
+    var d: Variant = _rows.get("%s/%s" % [window, row], null)
+    return NAN if d == null else PublishedBits.of(d as Dictionary, "min_nonzero_magnitude")
+
+
 ## Every row in a window the fixture stores unquantised, in `row_names` order.
 ##
 ## Empty is a legitimate answer and NOT a broken fixture: it says this build

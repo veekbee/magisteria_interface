@@ -70,6 +70,37 @@ extends RefCounted
 ## with a denominator cannot be. If the block is present and does not check
 ## out, the state is STALE and the banner says the proof failed -- which is
 ## louder than a plain STALE, because a broken proof is worse than none.
+##
+## AND THERE IS A FIFTH, ON A DIFFERENT AXIS. `equivalence` proves that the
+## verdict's run is this fixture's run, which is a statement about STATE. It
+## says nothing about CODE, and the payload of a replayed fixture is stepped
+## forward at whatever the engine is on the day of the replay. So a verdict can
+## hold a clean 18-of-18 proof and still describe a snowpack the drawn data no
+## longer has -- 17.4 mm against a payload whose mean is thirty-five times that
+## -- with the proof entirely honest and the mismatch one key away, unread.
+##
+##     "stale_against_replay": {
+##       "replayed_at_commit": "...",
+##       "declared_by_the_operator": "why it is still the right verdict to ship",
+##       "what_the_equivalence_proof_below_does_not_cover": "..."
+##     }
+##
+## THE TWO AXES ARE NOT COLLAPSED. `state` becomes DECLARED_STALE, and
+## `underlying_state` keeps whatever the state proof said, because "the state
+## proof holds AND the code moved" is the whole content of this case and a
+## single enum value cannot carry it. DECLARED_STALE reads louder than
+## EQUIVALENT and quieter than a failed proof, which is the ordering the
+## declaration deserves: the run really is this run, and the verdict really
+## does not describe what is drawn.
+##
+## CHECKED, NOT BELIEVED, FOR THE SAME REASON THE PROOF IS. A declaration whose
+## operator reason is missing is a declaration that says nothing, and a
+## declaration whose replay commit is the commit it was scored at declares a
+## drift that did not happen. Either way the block cannot be read, and an
+## unreadable declaration of staleness is reported as plain STALE -- louder,
+## because the fixture is asserting something about itself that does not hold
+## together. The reason travelling with the number IS the declaration; without
+## it there is nothing to show a person but a word.
 
 ## What the manifest turned out to carry. The middle two are the whole reason
 ## this class exists: a verdict scored against a different run is not
@@ -79,9 +110,16 @@ const ABSENT := "absent"
 const STALE := "stale"
 const EQUIVALENT := "equivalent"
 const SCORED := "scored"
+## The verdict's run is this fixture's run and its CODE is not: declared by the
+## operator rather than detected here, and carrying the operator's reason.
+const DECLARED_STALE := "declared_stale"
 
 var state: String = ABSENT
 var why: String = ""
+## What the state axis said before the replay axis was applied. Equal to
+## `state` except under DECLARED_STALE, where it is SCORED or EQUIVALENT --
+## the proof that still holds and is not thrown away by the staleness.
+var underlying_state: String = ABSENT
 
 var passed: int = -1
 var failed: int = -1
@@ -91,6 +129,13 @@ var scored_on_run: String = ""
 var base_commit: String = ""
 var failed_criteria: Array = []
 var equivalence: Dictionary = {}
+var stale_against_replay: Dictionary = {}
+var replayed_at_commit: String = ""
+## The operator's reason, verbatim. Carried to the banner because a declared
+## staleness whose reason stays in the manifest has declared nothing to anyone
+## looking at the picture.
+var declared_by_the_operator: String = ""
+var not_covered_by_the_proof: String = ""
 
 
 static func read_from(manifest: Dictionary) -> AncestorVerdict:
@@ -112,6 +157,13 @@ static func read_from(manifest: Dictionary) -> AncestorVerdict:
     v.failed_criteria = acc.get("failed_criteria", [])
     if typeof(acc.get("equivalence", null)) == TYPE_DICTIONARY:
         v.equivalence = acc["equivalence"]
+    if typeof(acc.get("stale_against_replay", null)) == TYPE_DICTIONARY:
+        v.stale_against_replay = acc["stale_against_replay"]
+        v.replayed_at_commit = str(v.stale_against_replay.get("replayed_at_commit", ""))
+        v.declared_by_the_operator = str(
+                v.stale_against_replay.get("declared_by_the_operator", ""))
+        v.not_covered_by_the_proof = str(v.stale_against_replay.get(
+                "what_the_equivalence_proof_below_does_not_cover", ""))
     if v.passed < 0 or v.failed < 0:
         v.state = ABSENT
         v.why = "an acceptance block is present and carries no pass/fail count"
@@ -120,23 +172,68 @@ static func read_from(manifest: Dictionary) -> AncestorVerdict:
     # Equal-length-only would report every short-hashed verdict as stale, which
     # trains a reader to ignore the word.
     if _same_commit(v.scored_at_commit, v.base_commit):
-        v.state = SCORED
-        return v
-    if v.equivalence.is_empty():
+        v.underlying_state = SCORED
+    elif v.equivalence.is_empty():
         v.state = STALE
+        v.underlying_state = STALE
         v.why = ("scored at %s, and this fixture was cut at %s with nothing offered to connect "
                 + "them: the verdict is of a different run and does not describe what is drawn"
                 ) % [_short(v.scored_at_commit), _short(v.base_commit)]
         return v
-    var checked := v._check_equivalence()
-    if checked != "":
-        v.state = STALE
-        v.why = ("scored at %s against a fixture cut at %s, with an equivalence claim that does "
-                + "not check out: %s") % [_short(v.scored_at_commit), _short(v.base_commit),
-                                          checked]
+    else:
+        var checked := v._check_equivalence()
+        if checked != "":
+            v.state = STALE
+            v.underlying_state = STALE
+            v.why = ("scored at %s against a fixture cut at %s, with an equivalence claim that "
+                    + "does not check out: %s") % [_short(v.scored_at_commit),
+                                                   _short(v.base_commit), checked]
+            return v
+        v.underlying_state = EQUIVALENT
+
+    # THE REPLAY AXIS, APPLIED SECOND AND ONLY OVER A STATE PROOF THAT HELD. A
+    # failed proof has already returned: it is the louder finding, and layering
+    # a declared staleness on top of it would bury the thing that is actually
+    # broken under the thing somebody remembered to declare.
+    if v.stale_against_replay.is_empty():
+        v.state = v.underlying_state
         return v
-    v.state = EQUIVALENT
+    var unreadable := v._check_staleness()
+    if unreadable != "":
+        v.state = STALE
+        v.why = ("this fixture declares its verdict stale against the replay and the "
+                + "declaration cannot be read: %s") % unreadable
+        return v
+    v.state = DECLARED_STALE
+    v.why = ("scored at %s and replayed at %s: the run is this fixture's run and the code is "
+            + "not, so the verdict describes a trajectory this payload no longer has. The "
+            + "operator shipped it anyway, declaring: %s") % [
+            _short(v.scored_at_commit), _short(v.replayed_at_commit),
+            v.declared_by_the_operator]
     return v
+
+
+## Does the staleness declaration hold together? "" when it does.
+##
+## THE REASON IS WHAT IS BEING CHECKED. A `stale_against_replay` with no
+## `declared_by_the_operator` is a fixture marking itself stale and offering
+## nobody a way to judge whether that was the right call -- which is strictly
+## worse than not declaring, because the word arrives on screen with nothing
+## behind it. And a declaration whose replay commit is the commit the verdict
+## was scored at declares a drift that did not happen: a flag that cannot be
+## wrong is the shape this repo keeps finding, and it would put a permanent
+## warning on every future fixture that copied the block forward.
+func _check_staleness() -> String:
+    if declared_by_the_operator.is_empty():
+        return ("it carries no `declared_by_the_operator`, so the staleness would reach a "
+                + "reader as a word with no reason attached to it")
+    if replayed_at_commit.is_empty():
+        return "it names no `replayed_at_commit`, so there is nothing to say the code moved from"
+    if _same_commit(replayed_at_commit, scored_at_commit):
+        return ("it declares staleness against %s, which is the commit the verdict was scored "
+                + "at: no code moved, so the declaration describes nothing"
+                ) % _short(replayed_at_commit)
+    return ""
 
 
 ## Does the offered proof prove what it claims? Returns "" when it does, and
@@ -199,6 +296,16 @@ func headline() -> String:
                     + "proven identical to this one (%s)") % [
                     _score(), _short(scored_at_commit),
                     "another run" if scored_on_run.is_empty() else scored_on_run, _proof()]
+        DECLARED_STALE:
+            # The score is still stated, because it is still a real score of a
+            # real run; what the sentence takes away is the claim that it
+            # describes what is on screen. The operator's reason rides in
+            # `why`, which the banner puts on its own line rather than here --
+            # a headline that ran to two hundred characters would be truncated
+            # in exactly the screenshot this panel exists to survive.
+            return ("ancestor trace — acceptance %s, DECLARED STALE AGAINST THIS REPLAY: "
+                    + "scored at %s, payload replayed at %s") % [
+                    _score(), _short(scored_at_commit), _short(replayed_at_commit)]
         STALE:
             return "ancestor trace — VERDICT DOES NOT MATCH THIS FIXTURE: " + why
         _:
@@ -238,6 +345,29 @@ func named_fails() -> PackedStringArray:
         else:
             out.append("criterion %s — unnamed in the manifest, so how it renders is not said"
                     % str(c))
+    return out
+
+
+## The lines a DECLARED_STALE verdict adds under the headline. Empty for every
+## other state.
+##
+## THE DECLARATION IS THE POINT AND IT GOES FIRST. `what_the_..._does_not_cover`
+## is the emitter's own statement of the proof's limit, and it is carried
+## verbatim rather than paraphrased: it is the sentence that tells a reader
+## which parts of the picture the 18-of-18 still covers, and a summary of it
+## written here would be this client's opinion of somebody else's caveat.
+func staleness_lines() -> PackedStringArray:
+    var out := PackedStringArray()
+    if state != DECLARED_STALE:
+        return out
+    out.append("declared by the operator: " + declared_by_the_operator)
+    if not not_covered_by_the_proof.is_empty():
+        out.append("the equivalence proof does not cover: " + not_covered_by_the_proof)
+    else:
+        # Said rather than omitted. A proof offered beside a staleness with no
+        # statement of its limit is a proof whose scope the reader has to guess.
+        out.append("the equivalence proof states no limit of its own, so what it still "
+                + "covers is not said")
     return out
 
 

@@ -275,6 +275,59 @@ func range_of(life_form: String, parameter: String) -> Dictionary:
     return {"min": float(p["min"]), "max": float(p["max"]), "from": str(p.get("from", ""))}
 
 
+## The three things an envelope can say about a value that carries a declared
+## uncertainty, rather than the two it can say about an exact one.
+const INSIDE := "inside"
+const OUTSIDE := "outside"
+const WITHIN_UNCERTAINTY := "within_uncertainty"
+
+
+## Is `value` inside its declared range, given that it is only known to within
+## `uncertainty`? Returns `{"state": ..., "why": ...}`.
+##
+## WHY A THIRD ANSWER. An envelope check on an exact value has two honest
+## outcomes. On a value known to a couple of percent it has three, and
+## collapsing the third into OUTSIDE reports the GROUND when what is in hand is
+## UNCERTAINTY -- the same defect §23.1006(d) named, arriving through a number
+## instead of through a return value. The case is not marginal here: the
+## declared range for `phenology` is [0, 1], which is `band.phenology_index`'s
+## own bounds, so the two values a seasonal index spends most of its time at --
+## dormant and peak -- sit exactly ON the edges. A 2%-uncertain 1.0 arrives as
+## 1.02 about as often as 0.98, and the caller in `vegetation_scatter` does not
+## draw a plant whose parameter is refused. Dormant and peak stands would have
+## thinned out, seasonally, with every individual refusal correct.
+##
+## WITHIN_UNCERTAINTY IS NOT A WIDER RANGE. A tolerance would move the edge and
+## keep two outcomes, and the next reader could not tell a value that is inside
+## from one that is merely not provably outside. This says which, and leaves
+## what to do about it to the caller -- who is the only one who knows whether
+## the value's use can absorb it.
+##
+## `uncertainty` is ABSOLUTE, in the parameter's own unit, and a negative or
+## NAN one is treated as zero: an uncertainty nobody stated is not licence.
+func verdict_on(life_form: String, parameter: String, value: float,
+                uncertainty: float = 0.0) -> Dictionary:
+    var strict := check(life_form, parameter, value)
+    if strict == "":
+        return {"state": INSIDE, "why": ""}
+    var r := range_of(life_form, parameter)
+    # A missing family, a missing range or a NAN value is not an uncertainty
+    # question at all -- there is no edge to be near. Those keep the strict
+    # refusal verbatim rather than being softened by a number.
+    if r.is_empty() or is_nan(value):
+        return {"state": OUTSIDE, "why": strict}
+    var u := 0.0 if (is_nan(uncertainty) or uncertainty <= 0.0) else uncertainty
+    var over := maxf(float(r["min"]) - value, value - float(r["max"]))
+    if over <= u:
+        return {"state": WITHIN_UNCERTAINTY,
+                "why": ("%s.%s = %s is outside [%s, %s] by %s, which is inside its declared "
+                        + "uncertainty of %s: the value is not known well enough to say it is "
+                        + "wrong") % [life_form, parameter, String.num(value, 4),
+                        String.num(float(r["min"]), 4), String.num(float(r["max"]), 4),
+                        String.num(over, 4), String.num(u, 4)]}
+    return {"state": OUTSIDE, "why": strict}
+
+
 ## "" if the value is legal, otherwise why it is not. NEVER a clamped value.
 func check(life_form: String, parameter: String, value: float) -> String:
     if not has(life_form):
