@@ -58,6 +58,7 @@ func _initialize() -> void:
     test_the_wide_branch_has_a_witness_that_is_not_the_fixture()
     test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal()
     test_both_new_readers_run_on_the_shape_the_fixture_actually_ships()
+    test_the_tint_takes_phenology_from_the_wire_when_the_row_is_carried()
     test_an_envelope_does_not_refuse_a_value_for_being_uncertain()
     test_every_reach_carries_a_node_so_flow_can_be_drawn()
     test_the_flow_mapping_distinguishes_zero_from_below_scale()
@@ -1359,6 +1360,112 @@ func test_both_new_readers_run_on_the_shape_the_fixture_actually_ships() -> void
             % [v.state, v.underlying_state])
 
 
+## A fixture carrying `band.phenology_index`, written here because no vendored
+## one carries it and the wire branch would otherwise never run.
+func _fixture_with_a_phenology_row(values: PackedFloat64Array) -> FixtureLoader:
+    var dir := "user://phenology_witness/"
+    DirAccess.make_dir_recursive_absolute(ProjectSettings.globalize_path(dir))
+    var bin := PackedByteArray()
+    bin.resize(values.size() * 8)
+    for i in values.size():
+        bin.encode_double(i * 8, values[i])
+    var bf := FileAccess.open(dir + "witness.bin", FileAccess.WRITE)
+    bf.store_buffer(bin)
+    bf.close()
+    var pairs := []
+    for i in values.size():
+        pairs.append(["w", i])
+    var manifest := {
+        "client_form": {"file": "witness.bin", "rows": {
+            "w/band.phenology_index": {
+                "window": "w", "row": "band.phenology_index",
+                "shape": [1, values.size()], "dtype": "float64 little-endian",
+                "byte_offset": 0, "lattice": "band", "lo": 0.0, "hi": 1.0}}},
+        "windows": ["w"],
+        "cell_keys": {"pairs": pairs},
+    }
+    var mf := FileAccess.open(dir + "fixture_client.json", FileAccess.WRITE)
+    mf.store_string(JSON.stringify(manifest))
+    mf.close()
+    return FixtureLoader.load_from(dir)
+
+
+func test_the_tint_takes_phenology_from_the_wire_when_the_row_is_carried() -> void:
+    """Decision 977 rules seasonal position crosses as a carried row derived
+    server-side, and names CLIENT-SIDE RE-DERIVATION among the things it turns
+    down. `phenology_for` is that re-derivation: it samples the trough and peak
+    of whatever days this window holds, which are not the relaxation-maintained
+    annual normals the server keeps and does not ship. So the stand-in is not an
+    approximation of the row, it is a different quantity over the same range.
+
+    THIS BRANCH HAS NO WITNESS IN ANY VENDORED ARTEFACT. No fixture here carries
+    the row -- `carried_rows` in `assets/fixture/PIN` is eight rows and this is
+    not one of them -- so the wire path would sit green and unexercised until a
+    re-vendor, which is the state the width sweep was written about. The witness
+    below is written by the test."""
+    var sc := VegetationScatter.new()
+    var want := PackedFloat64Array([0.0, 0.25, 1.0, NAN])
+    var fl := _fixture_with_a_phenology_row(want)
+    check(fl.days("w", VegetationScatter.PHENOLOGY_ROW) == 1,
+            "the witness fixture does not carry the row")
+    sc.bind(null, null, fl, null, null, null)
+
+    # ---- THE WIRE SIDE ----------------------------------------------------
+    check(sc.phenology_source("w") == VegetationScatter.PHENOLOGY_FROM_WIRE,
+            "a fixture carrying the row still reports %s" % sc.phenology_source("w"))
+    check(sc.phenology_uncertainty("w") == VegetationScatter.ROW_PHENOLOGY_UNCERTAINTY,
+            "the wire's declared uncertainty did not follow the source: %s"
+            % str(sc.phenology_uncertainty("w")))
+    var row := sc.phenology_row_for("w", 0)
+    check(row.size() == want.size(), "the row read back %d of %d cells"
+            % [row.size(), want.size()])
+
+    # A season whose stand-in answer is FAR from every wire value, so that a
+    # blend, an average or a fallback would be visible rather than plausible.
+    var season := {"lo": PackedFloat64Array([0.0, 0.0, 0.0, 0.0]),
+            "hi": PackedFloat64Array([1.0, 1.0, 1.0, 1.0])}
+    for cell in 3:
+        var got := sc.phenology_at(row, season, cell, 0.5)
+        check(got == want[cell],
+                "cell %d read %s from the wire and the row holds %s -- the stand-in reached it"
+                % [cell, String.num(got, 6), String.num(want[cell], 6)])
+    # The stand-in would answer 0.5 for every one of those, so the three values
+    # above being 0.0, 0.25 and 1.0 is what shows the wire is doing the work.
+    check(sc.phenology_for(season, 0, 0.5) == 0.5,
+            "the stand-in no longer answers 0.5 here, so the contrast this check rests on "
+            + "is gone and the comparison proves nothing")
+
+    # A CELL THE SERVER DID NOT ANSWER FOR STAYS UNANSWERED. Backfilling it
+    # from the stand-in would put a number this client invented under the row's
+    # name, which is the rejected mechanism wearing the carried row's label.
+    check(is_nan(sc.phenology_at(row, season, 3, 0.5)),
+            "a NAN in the carried row was backfilled from the stand-in")
+    # And past the end of the row is also unanswered, not wrapped or clamped.
+    check(is_nan(sc.phenology_at(row, season, 99, 0.5)),
+            "a cell past the end of the carried row was answered")
+
+    # ---- THE CONTROL, WHICH IS THE FIXTURE THIS REPO ACTUALLY SHIPS -------
+    var live := fixture()
+    var sc2 := VegetationScatter.new()
+    sc2.bind(null, null, live, null, null, null)
+    var w: String = live.windows[0]
+    check(sc2.phenology_source(w) == VegetationScatter.PHENOLOGY_FROM_STAND_IN,
+            "the shipped fixture reports %s, so it carries the row and T1 is no longer "
+                    % sc2.phenology_source(w)
+            + "blocked on a re-vendor -- this control and the brief both need re-reading")
+    check(sc2.phenology_uncertainty(w) == 0.0,
+            "the stand-in declared the row's uncertainty")
+    check(sc2.phenology_row_for(w, 0).is_empty(),
+            "the shipped fixture returned phenology values for a row it does not carry")
+    # AND THE STAND-IN STILL ANSWERS, because the tint has to draw something
+    # today. What must not happen is that answering quietly becomes the design.
+    check(not is_nan(sc2.phenology_at(PackedFloat64Array(), season, 0, 0.5)),
+            "the stand-in stopped answering, so nothing draws until the re-vendor")
+    print("phenology: shipped fixture uses %s; a carried row would use %s at uncertainty %s"
+            % [sc2.phenology_source(w), VegetationScatter.PHENOLOGY_FROM_WIRE,
+               String.num(VegetationScatter.ROW_PHENOLOGY_UNCERTAINTY, 3)])
+
+
 func test_an_envelope_does_not_refuse_a_value_for_being_uncertain() -> void:
     """`band.phenology_index` arrives at about 2% residual, permanently -- a
     deeper replay does not improve it. Its declared range here is [0, 1], which
@@ -1420,12 +1527,20 @@ func test_an_envelope_does_not_refuse_a_value_for_being_uncertain() -> void:
     # TODAY'S SOURCE DECLARES NOTHING, and that is stated rather than assumed:
     # `phenology_for` clamps, so it cannot leave the envelope and has no
     # uncertainty against it. The line moves when the row is wired.
+    # BOUND TO THE SHIPPED FIXTURE, not left on the default. An unbound scatter
+    # reports the stand-in whatever any fixture carries, so this check could not
+    # have failed -- it would have read 0.0 the day the row landed and gone on
+    # saying the envelope was unexercised.
     var sc := VegetationScatter.new()
-    check(sc.phenology_uncertainty() == 0.0,
-            "phenology is still computed here and an uncertainty is being declared for it")
+    sc.bind(null, null, fixture(), null, null, null)
+    var live_window: String = fixture().windows[0]
+    check(sc.phenology_uncertainty(live_window) == 0.0,
+            "the shipped fixture now declares an uncertainty of %s, so the envelope's third "
+                    % String.num(sc.phenology_uncertainty(live_window), 3)
+            + "outcome is live on real data and this test should be asserting that instead")
     print("phenology: envelope [%s, %s], row uncertainty %s, this build declares %s"
             % [String.num(float(r["min"]), 3), String.num(hi, 3), String.num(u, 3),
-               String.num(sc.phenology_uncertainty(), 3)])
+               String.num(sc.phenology_uncertainty(live_window), 3)])
 
 
 func test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal() -> void:

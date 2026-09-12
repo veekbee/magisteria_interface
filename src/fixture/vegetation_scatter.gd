@@ -342,6 +342,16 @@ static func candidate_position(key: int, candidate: int, origin: Vector2,
 ## an empty schedule the texel is not subdivided at all.
 const BAND_SUBDIVISION := 32
 
+## The carried row decision 977 rules seasonal position crosses on.
+const PHENOLOGY_ROW := "band.phenology_index"
+
+## Where a build's phenology came from. Reported on every build, because the
+## two are not interchangeable and one of them is a mechanism the corpus
+## rejected.
+const PHENOLOGY_FROM_WIRE := "band.phenology_index"
+const PHENOLOGY_FROM_STAND_IN := "client-side envelope of band.pft.biomass"
+
+
 ## What `band.phenology_index` is known to when it arrives, absolute, in the
 ## row's own unit of fraction.
 ##
@@ -489,6 +499,10 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
     var seasons: Array = []
     for g in groups.size():
         seasons.append(_season_range(window, "band.pft.biomass", g))
+    # ONE READ FOR THE WHOLE BUILD. Empty when the row is not carried, which is
+    # what puts every cell below on the stand-in without a second condition.
+    var phen_row := phenology_row_for(window, day)
+    var phen_uncertainty := phenology_uncertainty(window)
 
     # PASS ONE: what the wire implies, before any question of what fits.
     var texel_area := _hf.pixel_size_m * _hf.pixel_size_m
@@ -600,9 +614,9 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                         PerceptBundle.refinement_key(cell_key_s, life_form), life_form))
                 if not _fs.can_draw(node):
                     node = life_form
-                var phen := phenology_for(seasons[gi], cell, bio)
+                var phen := phenology_at(phen_row, seasons[gi], cell, bio)
                 var phen_verdict := _fs.verdict_on(life_form, "phenology", phen,
-                        phenology_uncertainty())
+                        phen_uncertainty)
                 if str(phen_verdict["state"]) == FamilySet.OUTSIDE:
                     # The tint is a declared parameter with a declared range,
                     # so it is refused on the same terms as height and crown.
@@ -1076,6 +1090,12 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
             # wire -- see `phenology_uncertainty`. It is reported anyway so the
             # number the row brings with it is visible from the first build.
             "instances_with_phenology_inside_its_uncertainty": uncertain_phenology,
+            # WHICH SOURCE ANSWERED, ON EVERY BUILD. One of these two is a
+            # mechanism decision 977 rejected, standing in until the row is
+            # carried; a report that did not say which would let the stand-in
+            # become permanent by nobody noticing it was still there.
+            "phenology_source": phenology_source(window),
+            "phenology_uncertainty": phen_uncertainty,
         },
         "triangles_in_frame": triangles,
         "build_ms": float(Time.get_ticks_usec() - t_build) / 1000.0,
@@ -1365,10 +1385,27 @@ func _season_range(window: String, row: String, group: int) -> Dictionary:
 ## maximum. That is the honest degenerate answer rather than a chosen midpoint,
 ## and the count of such cells travels in the report.
 ##
-## THIS IS A STAND-IN FOR `band.phenology_index`, AND THE ROW IT WAITS FOR IS
-## NOT EXACT. When the row lands the obvious move is to read it here instead of
-## sampling biomass -- so the number to design against is recorded at the site
-## that would do the swapping. The upstream row comes back at about 2% residual
+## THIS IS A STAND-IN FOR `band.phenology_index`, AND IT IS A MECHANISM THE
+## CORPUS REJECTED RATHER THAN ONE IT HAS NOT GOT TO. Decision 977 rules
+## seasonal position crosses the wire as a carried row derived server-side, and
+## names client-side re-derivation among the things it turns down: the normals
+## an honest derivation needs are a year-scale statistic the server maintains by
+## relaxation and does not ship, and what is sampled below is not those normals
+## but the trough and peak of whatever days THIS WINDOW happens to contain. So
+## this is not an approximation of the row; it is a different quantity that
+## takes the same range. It stands in because the fixture in hand carries no
+## phenology row at all, and `phenology_source` says so on every build so that
+## standing in does not quietly become being the design.
+##
+## AND IT MUST NOT BE CLOSED BY DIFFERENCING. §24 gap 160 records that the index
+## is an amplitude and not a phase -- 0.6 rising through May and 0.6 falling
+## through October are the same number, and green-up flush and senescence gold
+## are not the same colour. The tempting fix is to difference successive days
+## and recover the sign. That is re-deriving state the server holds, it is the
+## same rejection as above one step further on, and the gap says what the answer
+## looks like instead: a carried component, or nothing.
+##
+## THE ROW IT WAITS FOR IS NOT EXACT. The upstream row comes back at about 2% residual
 ## uncertainty and DOES NOT IMPROVE WITH A DEEPER REPLAY: the green envelope's
 ## release limb relaxes on a ten-year constant (§18.2) so the seeded pair needs
 ## roughly thirty years of spin-up, and the basin is not stationary over thirty
@@ -1385,19 +1422,63 @@ func _season_range(window: String, row: String, group: int) -> Dictionary:
 ## declared envelope: an envelope edge and a 2% row meet as a coin toss on the
 ## cells that sit near it, and the check would report the ground rather than the
 ## uncertainty. That is a decision for whoever wires the row, not for here.
+## Which of the two this build's phenology comes from, decided by what the
+## fixture carries rather than by a flag.
+##
+## NOT A SETTING. A switch somebody has to remember to throw is a switch that
+## gets thrown late or never, and the wrong side of this one is a mechanism
+## decision 977 explicitly rejected. The fixture either carries the row or it
+## does not, and that is the whole question, so it is the whole condition.
+func phenology_source(window: String) -> String:
+    if _fl == null:
+        return PHENOLOGY_FROM_STAND_IN
+    return PHENOLOGY_FROM_WIRE if _fl.days(window, PHENOLOGY_ROW) > 0 \
+            else PHENOLOGY_FROM_STAND_IN
+
+
 ## The absolute uncertainty of the phenology value this build is using, in the
 ## parameter's own unit.
 ##
-## ZERO TODAY, AND WHAT FLIPS IT IS ONE LINE. `phenology_for` computes a ratio
-## between a cell's own sampled trough and peak and clamps it to [0, 1], so it
-## cannot leave the envelope at all and has no uncertainty to declare against
-## it. When the value comes from `band.phenology_index` instead, this returns
-## `ROW_PHENOLOGY_UNCERTAINTY` and the three-outcome check starts doing work.
+## ZERO FROM THE STAND-IN, `ROW_PHENOLOGY_UNCERTAINTY` FROM THE WIRE, and it
+## follows the source rather than being set beside it. `phenology_for` computes
+## a ratio between a cell's own sampled trough and peak and clamps it to [0, 1],
+## so it cannot leave the envelope and has no uncertainty against it; the row
+## arrives at about 2% and does not improve with a deeper replay.
 ##
-## The change is a change of SOURCE, not of confidence, which is why this is a
-## function of where the number came from and not a constant.
-func phenology_uncertainty() -> float:
-    return 0.0
+## The change is a change of SOURCE, not of confidence, which is why this reads
+## the source instead of carrying a second copy of the same fact.
+func phenology_uncertainty(window: String = "") -> float:
+    return ROW_PHENOLOGY_UNCERTAINTY \
+            if phenology_source(window) == PHENOLOGY_FROM_WIRE else 0.0
+
+
+## The wire's phenology for one day, or an empty array when the row is not
+## carried. Read ONCE per build and indexed by cell; `day_values` opens the bin.
+func phenology_row_for(window: String, day: int) -> PackedFloat64Array:
+    if phenology_source(window) != PHENOLOGY_FROM_WIRE:
+        return PackedFloat64Array()
+    return _fl.day_values(window, PHENOLOGY_ROW, day)
+
+
+## Seasonal position for one cell: the wire's number when it is carried, the
+## stand-in when it is not.
+##
+## THE WIRE IS NEVER AVERAGED WITH THE STAND-IN AND NEVER CORRECTED BY IT. They
+## are not two estimates of one quantity -- the row is the cell's position in an
+## envelope the server maintains by relaxation across years, and the stand-in is
+## its position between the trough and peak of whatever days this window happens
+## to sample. Blending them would produce a number that is neither, and the
+## blend would be exactly the client-side re-derivation decision 977 rejects,
+## wearing the row's name.
+##
+## A carried row with no value for a cell is NAN, and NAN is returned. It is not
+## backfilled from the stand-in: a cell the server did not answer for is not a
+## cell this client may answer for.
+func phenology_at(row_vals: PackedFloat64Array, season: Dictionary, cell: int,
+                  today: float) -> float:
+    if not row_vals.is_empty():
+        return NAN if cell >= row_vals.size() else row_vals[cell]
+    return phenology_for(season, cell, today)
 
 
 func phenology_for(season: Dictionary, cell: int, today: float) -> float:

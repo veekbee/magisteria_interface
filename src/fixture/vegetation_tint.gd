@@ -74,6 +74,10 @@ func cell_colours(window: String, day: int) -> PackedColorArray:
         return out
     var fractions: Array = []
     var biomass: Array = []
+    # ONE READ FOR THE WHOLE TEXTURE, and empty when the row is not carried --
+    # which is what puts the tint on the stand-in with no second condition and
+    # no second opinion about which source is in use.
+    var phen_row := _scatter.phenology_row_for(window, day)
     var seasons: Array = []
     var foliage := PackedFloat32Array()
     var known := PackedInt32Array()
@@ -109,8 +113,14 @@ func cell_colours(window: String, day: int) -> PackedColorArray:
                     NAN if cell >= bare.size() else bare[cell])
             if is_nan(f) or f <= 0.0:
                 continue
-            var phen := _scatter.phenology_for(seasons[gi], cell,
+            var phen := _scatter.phenology_at(phen_row, seasons[gi], cell,
                     0.0 if cell >= vb.size() or is_nan(vb[cell]) else vb[cell])
+            # A CELL THE SERVER DID NOT ANSWER FOR IS NOT TINTED. The stand-in
+            # has a value everywhere by construction; the row does not, and
+            # filling its gaps from the stand-in would put a number this client
+            # invented under the row's name.
+            if is_nan(phen):
+                continue
             var c := VegetationPalette.colour_for(foliage[gi], phen)
             # WEIGHTED BY COVER, because that is what a viewer sees: the mean
             # colour of the ground that is plant, not the mean of the families
@@ -139,6 +149,12 @@ func cell_colours(window: String, day: int) -> PackedColorArray:
         "mean_cover_where_covered": total_cover / float(maxi(covered_cells, 1)),
         "mean_cover_per_family": shares,
         "foliage_fraction": _foliage_report(groups, foliage),
+        # THE SAME SOURCE THE SCATTER REPORTS, read from the same place rather
+        # than restated. The tint has to meet the instances at the seam, so a
+        # tint coloured from one source beside instances coloured from another
+        # is a seam that steps in colour for a reason no measurement of the
+        # seam would name.
+        "phenology_source": _scatter.phenology_source(window),
         "what": ("mean vegetation colour weighted by cover, and coverage as the sum of the "
                 + "families' cover fractions -- the two conserved quantities any seam has to "
                 + "hold"),
