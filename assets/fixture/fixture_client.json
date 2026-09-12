@@ -7,7 +7,26 @@
   "\u00a723.802"
  ],
  "generated_by": "tools/build_fixture.py",
- "generated_at_utc": "2026-09-04T23:12:25Z",
+ "generated_at_utc": "2026-09-11T22:55:46Z",
+ "replayed_at": {
+  "generated_by": "tools/emit_schema.py",
+  "generated_from": "sim/registry.py",
+  "generated_at_utc": "2026-09-11T22:40:52Z",
+  "commit": "repo@66fa05134deff7f9b7ca9fe371298c8d6aceac58",
+  "dirty": false
+ },
+ "restore_delta": {
+  "declared": {
+   "band.drainage": "ADDED",
+   "band.green_peak": "ADDED",
+   "band.green_trough": "ADDED",
+   "band.phenology_index": "ADDED",
+   "node.baseflow_to_channel": "ADDED",
+   "node.gw_storage": "ADDED"
+  },
+  "file": "tools/restore_deltas/millennium-001.json",
+  "why_it_is_not_a_flag": "decision 932's vocabulary. Every name here is an array the checkpoint does not carry and this build does, left at the fresh build's seed -- so the restored state is a HYBRID and the windows' `seeded_not_restored` says which arrays. Settle time was measured before this was declared rather than assumed: `node.gw_storage` seeds at 1.2e8 m3 against a working 1-3e10 and fills within one season, and at fixed day-of-year over nine following years it shows interannual spread and no trend. Both windows sit 3.7 and 5.2 years past the restore."
+ },
  "run": {
   "dir": "millennium-001",
   "base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
@@ -16,6 +35,11 @@
   "years": 1000,
   "acceptance": {
    "scored_at_commit": "5317027b6543de846a4c53745996f0ed70d61119",
+   "stale_against_replay": {
+    "replayed_at_commit": "66fa05134deff7f9b7ca9fe371298c8d6aceac58",
+    "declared_by_the_operator": "Owner-authorised 2026-09-11. This is the last scored verdict and it is stale against this payload's code: the melt gate (1ca6a0c) and swe_50's per-band build (245aec4) landed after the scoring, so criterion 1's 'near-bare snowpack overlay, area-weighted peak SWE 17.4 mm' describes code this payload does not contain -- band.snowpack_swe here reads about 35x that, and criterion 3's melt timing is downstream of the same repairs. Criteria 6, 7 and 8 (stationarity, surface-fire survival contrast, no quantity at a bound) are not obviously touched by the snow work and are the part of this verdict still worth reading. Shipped rather than dropped because a picture of this fixture needs SOME disclaimer that the run behind it does not pass acceptance, and absence would say less than a labelled staleness. Re-scoring at the replay commit is M2, already scheduled in the rev-34 review order; this block is superseded the moment it lands.",
+    "what_the_equivalence_proof_below_does_not_cover": "the proof compares this verdict's RUN with this fixture's run. Both are state. The verdict's CODE and the replay's code are different here and nothing below compares them."
+   },
    "scored_run_dir": "runs/m0-instrumented-001",
    "passed": 7,
    "failed": 5,
@@ -73,12 +97,13 @@
   }
  },
  "carried_set": {
-  "n": 8,
+  "n": 9,
   "names": [
    "band.bare_fraction",
    "band.burned_fraction",
    "band.pft.biomass",
    "band.pft_fractions",
+   "band.phenology_index",
    "band.snowpack_swe",
    "band.surface_albedo",
    "band.wetness",
@@ -24009,11 +24034,21 @@
    "start_doy": 152,
    "note": "starts 1 June: the fire season, not the water year",
    "replay": {
-    "ckpt": "ckpt_y0750.npz",
-    "ckpt_year": 750,
-    "ticks_replayed": 1336,
-    "replay_seconds": 37.4,
-    "first_tick": 274997
+    "ckpt": "ckpt_y0700.npz",
+    "ckpt_year": 700,
+    "ticks_replayed": 19586,
+    "replay_seconds": 567.4,
+    "first_tick": 274997,
+    "seeded_not_restored": [
+     "band.drainage",
+     "band.green_peak",
+     "band.green_trough",
+     "band.phenology_index",
+     "node.baseflow_to_channel",
+     "node.gw_storage"
+    ],
+    "spinup_years": 53.41,
+    "min_spinup_years_required": 30
    },
    "days": 90,
    "carried_here": [
@@ -24021,6 +24056,7 @@
     "band.burned_fraction",
     "band.pft.biomass",
     "band.pft_fractions",
+    "band.phenology_index",
     "band.snowpack_swe",
     "band.surface_albedo",
     "band.wetness",
@@ -24038,7 +24074,8 @@
      "byte_offset": 0,
      "byte_length": 2046240,
      "order": "C, little-endian",
-     "min_nonzero_magnitude": 0.03589052531775572,
+     "min_nonzero_magnitude": 0.03540878028907135,
+     "min_nonzero_bits": "0x3fa2211982aa6630",
      "all_zero": false
     },
     "band.burned_fraction": {
@@ -24052,6 +24089,7 @@
      "byte_length": 2046240,
      "order": "C, little-endian",
      "min_nonzero_magnitude": 1.1102230246251565e-16,
+     "min_nonzero_bits": "0x3ca0000000000000",
      "all_zero": false
     },
     "band.pft.biomass": {
@@ -24071,6 +24109,7 @@
      "byte_length": 16369920,
      "order": "C, little-endian",
      "min_nonzero_magnitude": 9.02759206434e-312,
+     "min_nonzero_bits": "0x000001a96de74c92",
      "all_zero": false,
      "float64_because": "smallest non-zero magnitude is below float32's smallest normal; narrowing it is \u00a723.812's underflow"
     },
@@ -24090,7 +24129,22 @@
      "byte_offset": 20462400,
      "byte_length": 8184960,
      "order": "C, little-endian",
-     "min_nonzero_magnitude": 9.840853968779063e-16,
+     "min_nonzero_magnitude": 1.7895473482805248e-15,
+     "min_nonzero_bits": "0x3ce01e6a4d584b87",
+     "all_zero": false
+    },
+    "band.phenology_index": {
+     "shape": [
+      90,
+      5684
+     ],
+     "taxon_groups": null,
+     "dtype": "float32",
+     "byte_offset": 28647360,
+     "byte_length": 2046240,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 8.538945554502094e-07,
+     "min_nonzero_bits": "0x3eaca6e5fc37a801",
      "all_zero": false
     },
     "band.snowpack_swe": {
@@ -24100,10 +24154,11 @@
      ],
      "taxon_groups": null,
      "dtype": "float64",
-     "byte_offset": 28647360,
+     "byte_offset": 30693600,
      "byte_length": 4092480,
      "order": "C, little-endian",
-     "min_nonzero_magnitude": 2.333663959242274e-64,
+     "min_nonzero_magnitude": 6.970155342103717e-41,
+     "min_nonzero_bits": "0x3798499619cc2340",
      "all_zero": false,
      "float64_because": "smallest non-zero magnitude is below float32's smallest normal; narrowing it is \u00a723.812's underflow"
     },
@@ -24114,10 +24169,11 @@
      ],
      "taxon_groups": null,
      "dtype": "float32",
-     "byte_offset": 32739840,
+     "byte_offset": 34786080,
      "byte_length": 2046240,
      "order": "C, little-endian",
-     "min_nonzero_magnitude": 0.19752505522795716,
+     "min_nonzero_magnitude": 0.19752291851657652,
+     "min_nonzero_bits": "0x3fc9486e559e9d17",
      "all_zero": false
     },
     "band.wetness": {
@@ -24127,10 +24183,11 @@
      ],
      "taxon_groups": null,
      "dtype": "float32",
-     "byte_offset": 34786080,
+     "byte_offset": 36832320,
      "byte_length": 2046240,
      "order": "C, little-endian",
      "min_nonzero_magnitude": 1.013697572242851e-06,
+     "min_nonzero_bits": "0x3eb101cc4489e892",
      "all_zero": false
     },
     "node.streamflow": {
@@ -24139,13 +24196,13 @@
       1154
      ],
      "taxon_groups": null,
-     "dtype": "float64",
-     "byte_offset": 36832320,
-     "byte_length": 830880,
+     "dtype": "float32",
+     "byte_offset": 38878560,
+     "byte_length": 415440,
      "order": "C, little-endian",
-     "min_nonzero_magnitude": 5e-324,
-     "all_zero": false,
-     "float64_because": "smallest non-zero magnitude is below float32's smallest normal; narrowing it is \u00a723.812's underflow"
+     "min_nonzero_magnitude": 4.416663345104293e-36,
+     "min_nonzero_bits": "0x38977ba68f8c253a",
+     "all_zero": false
     }
    }
   },
@@ -24159,11 +24216,21 @@
    "start_doy": 1,
    "note": "starts 1 October: the water year's own start",
    "replay": {
-    "ckpt": "ckpt_y0400.npz",
-    "ckpt_year": 400,
-    "ticks_replayed": 1915,
-    "replay_seconds": 56.2,
-    "first_tick": 147826
+    "ckpt": "ckpt_y0375.npz",
+    "ckpt_year": 375,
+    "ticks_replayed": 11040,
+    "replay_seconds": 320.2,
+    "first_tick": 147826,
+    "seeded_not_restored": [
+     "band.drainage",
+     "band.green_peak",
+     "band.green_trough",
+     "band.phenology_index",
+     "node.baseflow_to_channel",
+     "node.gw_storage"
+    ],
+    "spinup_years": 30.0,
+    "min_spinup_years_required": 30
    },
    "days": 90,
    "carried_here": [
@@ -24171,6 +24238,7 @@
     "band.burned_fraction",
     "band.pft.biomass",
     "band.pft_fractions",
+    "band.phenology_index",
     "band.snowpack_swe",
     "band.surface_albedo",
     "band.wetness",
@@ -24185,10 +24253,11 @@
      ],
      "taxon_groups": null,
      "dtype": "float32",
-     "byte_offset": 37663200,
+     "byte_offset": 39294000,
      "byte_length": 2046240,
      "order": "C, little-endian",
-     "min_nonzero_magnitude": 0.03527954237437869,
+     "min_nonzero_magnitude": 0.034799221837177874,
+     "min_nonzero_bits": "0x3fa1d1341f6f1130",
      "all_zero": false
     },
     "band.burned_fraction": {
@@ -24198,10 +24267,11 @@
      ],
      "taxon_groups": null,
      "dtype": "float32",
-     "byte_offset": 39709440,
+     "byte_offset": 41340240,
      "byte_length": 2046240,
      "order": "C, little-endian",
      "min_nonzero_magnitude": 1.1102230246251565e-16,
+     "min_nonzero_bits": "0x3ca0000000000000",
      "all_zero": false
     },
     "band.pft.biomass": {
@@ -24217,10 +24287,11 @@
       "tree"
      ],
      "dtype": "float64",
-     "byte_offset": 41755680,
+     "byte_offset": 43386480,
      "byte_length": 16369920,
      "order": "C, little-endian",
      "min_nonzero_magnitude": 6.278069149686167e-168,
+     "min_nonzero_bits": "0x1d37b1755cff1e35",
      "all_zero": false,
      "float64_because": "smallest non-zero magnitude is below float32's smallest normal; narrowing it is \u00a723.812's underflow"
     },
@@ -24237,10 +24308,25 @@
       "tree"
      ],
      "dtype": "float32",
-     "byte_offset": 58125600,
+     "byte_offset": 59756400,
      "byte_length": 8184960,
      "order": "C, little-endian",
-     "min_nonzero_magnitude": 1.1625375181084243e-12,
+     "min_nonzero_magnitude": 5.991815924022913e-14,
+     "min_nonzero_bits": "0x3d30dd8ef2e94b3b",
+     "all_zero": false
+    },
+    "band.phenology_index": {
+     "shape": [
+      90,
+      5684
+     ],
+     "taxon_groups": null,
+     "dtype": "float32",
+     "byte_offset": 67941360,
+     "byte_length": 2046240,
+     "order": "C, little-endian",
+     "min_nonzero_magnitude": 1.6386110265915698e-08,
+     "min_nonzero_bits": "0x3e51982e0059bba0",
      "all_zero": false
     },
     "band.snowpack_swe": {
@@ -24250,10 +24336,11 @@
      ],
      "taxon_groups": null,
      "dtype": "float64",
-     "byte_offset": 66310560,
+     "byte_offset": 69987600,
      "byte_length": 4092480,
      "order": "C, little-endian",
-     "min_nonzero_magnitude": 1.2157977329565549e-54,
+     "min_nonzero_magnitude": 7.363574367240632e-58,
+     "min_nonzero_bits": "0x34127d1f84982978",
      "all_zero": false,
      "float64_because": "smallest non-zero magnitude is below float32's smallest normal; narrowing it is \u00a723.812's underflow"
     },
@@ -24264,10 +24351,11 @@
      ],
      "taxon_groups": null,
      "dtype": "float32",
-     "byte_offset": 70403040,
+     "byte_offset": 74080080,
      "byte_length": 2046240,
      "order": "C, little-endian",
-     "min_nonzero_magnitude": 0.19753107554303245,
+     "min_nonzero_magnitude": 0.19753505218884215,
+     "min_nonzero_bits": "0x3fc948d41e7b7c48",
      "all_zero": false
     },
     "band.wetness": {
@@ -24277,10 +24365,11 @@
      ],
      "taxon_groups": null,
      "dtype": "float32",
-     "byte_offset": 72449280,
+     "byte_offset": 76126320,
      "byte_length": 2046240,
      "order": "C, little-endian",
      "min_nonzero_magnitude": 8.545951356747768e-06,
+     "min_nonzero_bits": "0x3ee1ec129c638d20",
      "all_zero": false
     },
     "node.streamflow": {
@@ -24289,20 +24378,20 @@
       1154
      ],
      "taxon_groups": null,
-     "dtype": "float64",
-     "byte_offset": 74495520,
-     "byte_length": 830880,
+     "dtype": "float32",
+     "byte_offset": 78172560,
+     "byte_length": 415440,
      "order": "C, little-endian",
-     "min_nonzero_magnitude": 5e-324,
-     "all_zero": false,
-     "float64_because": "smallest non-zero magnitude is below float32's smallest normal; narrowing it is \u00a723.812's underflow"
+     "min_nonzero_magnitude": 7.903116197355648e-35,
+     "min_nonzero_bits": "0x38da433a4b7aa126",
+     "all_zero": false
     }
    }
   }
  },
  "client_form": {
   "file": "fixture_client.bin",
-  "bytes": 28262880,
+  "bytes": 30309120,
   "is_a_display_encoding": "NOT the fixture. Band rows are quantised to 65,534 levels over each row's REALISED range in its own window -- not over the contract's declared bounds, which are a validity range and gave two rows 3 and 12 usable codes when they were used as a dynamic one (\u00a723.837). Every row carries its own `lo`/`hi` beside `contract_lo`/`contract_hi` so both are readable. 2 row-window(s) here are float64 because they reach below float32's floor; the full precision is in fixture_v1.bin.",
   "band_rows_quantised_node_rows_not": "Band rows are quantised because a colour ramp needs no more. Node rows are carried at full float64 because they are 1,154 wide rather than 5,684, so exactness costs little, and because quantising streamflow over its contract bounds would zero everything below 1.5 m3/s. HOW to render a quantity spanning that range is an open display question; this artefact does not answer it.",
   "rows": {
@@ -24317,14 +24406,14 @@
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
-    "lo": 0.035890527069568634,
+    "lo": 0.035408779978752136,
     "hi": 1.0,
     "contract_lo": 0.0,
     "contract_hi": 1.0,
-    "realised_fraction_of_contract_range": 0.9641094729304314,
-    "codes_if_quantised_over_contract": 63182,
+    "realised_fraction_of_contract_range": 0.9645912200212479,
+    "codes_if_quantised_over_contract": 63214,
     "source_dtype": "float32",
-    "quantisation_step": 1.4711592042763014e-05
+    "quantisation_step": 1.4718943144341074e-05
    },
    "largest_fire/band.burned_fraction": {
     "window": "largest_fire",
@@ -24338,13 +24427,13 @@
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
     "lo": 0.0,
-    "hi": 4.5645891077583656e-05,
+    "hi": 4.565028575598262e-05,
     "contract_lo": 0.0,
     "contract_hi": 1.0,
-    "realised_fraction_of_contract_range": 4.5645891077583656e-05,
+    "realised_fraction_of_contract_range": 4.565028575598262e-05,
     "codes_if_quantised_over_contract": 3,
     "source_dtype": "float32",
-    "quantisation_step": 6.965222796957862e-10
+    "quantisation_step": 6.965893392129677e-10
    },
    "largest_fire/band.pft.biomass": {
     "window": "largest_fire",
@@ -24359,13 +24448,13 @@
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
     "lo": 0.0,
-    "hi": 24.587961646993893,
+    "hi": 24.944695593156915,
     "contract_lo": 0.0,
     "contract_hi": 100.0,
-    "realised_fraction_of_contract_range": 0.24587961646993894,
-    "codes_if_quantised_over_contract": 16113,
+    "realised_fraction_of_contract_range": 0.24944695593156915,
+    "codes_if_quantised_over_contract": 16347,
     "source_dtype": "float64",
-    "quantisation_step": 0.00037519397025961935
+    "quantisation_step": 0.00038063746441781233
    },
    "largest_fire/band.pft_fractions": {
     "window": "largest_fire",
@@ -24388,9 +24477,9 @@
     "source_dtype": "float32",
     "quantisation_step": 1.5259254737998596e-05
    },
-   "largest_fire/band.snowpack_swe": {
+   "largest_fire/band.phenology_index": {
     "window": "largest_fire",
-    "row": "band.snowpack_swe",
+    "row": "band.phenology_index",
     "shape": [
      90,
      5684
@@ -24400,17 +24489,17 @@
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
     "lo": 0.0,
-    "hi": 0.005524628504987535,
+    "hi": 1.0,
     "contract_lo": 0.0,
-    "contract_hi": 30.0,
-    "realised_fraction_of_contract_range": 0.0001841542834995845,
-    "codes_if_quantised_over_contract": 12,
-    "source_dtype": "float64",
-    "quantisation_step": 8.430171369041314e-08
+    "contract_hi": 1.0,
+    "realised_fraction_of_contract_range": 1.0,
+    "codes_if_quantised_over_contract": 65534,
+    "source_dtype": "float32",
+    "quantisation_step": 1.5259254737998596e-05
    },
-   "largest_fire/band.surface_albedo": {
+   "largest_fire/band.snowpack_swe": {
     "window": "largest_fire",
-    "row": "band.surface_albedo",
+    "row": "band.snowpack_swe",
     "shape": [
      90,
      5684
@@ -24419,14 +24508,34 @@
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
-    "lo": 0.1975250542163849,
-    "hi": 0.2546493113040924,
+    "lo": 0.0,
+    "hi": 0.45371779259906486,
+    "contract_lo": 0.0,
+    "contract_hi": 30.0,
+    "realised_fraction_of_contract_range": 0.015123926419968828,
+    "codes_if_quantised_over_contract": 991,
+    "source_dtype": "float64",
+    "quantisation_step": 6.9233953764315445e-06
+   },
+   "largest_fire/band.surface_albedo": {
+    "window": "largest_fire",
+    "row": "band.surface_albedo",
+    "shape": [
+     90,
+     5684
+    ],
+    "byte_offset": 12277440,
+    "byte_length": 1023120,
+    "dtype": "uint16 little-endian",
+    "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
+    "lo": 0.19752292335033417,
+    "hi": 0.4097311198711395,
     "contract_lo": 0.0,
     "contract_hi": 1.0,
-    "realised_fraction_of_contract_range": 0.05712425708770752,
-    "codes_if_quantised_over_contract": 3744,
+    "realised_fraction_of_contract_range": 0.21220819652080536,
+    "codes_if_quantised_over_contract": 13907,
     "source_dtype": "float32",
-    "quantisation_step": 8.716735906202509e-07
+    "quantisation_step": 3.2381389282022365e-06
    },
    "largest_fire/band.wetness": {
     "window": "largest_fire",
@@ -24435,7 +24544,7 @@
      90,
      5684
     ],
-    "byte_offset": 12277440,
+    "byte_offset": 13300560,
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
@@ -24455,17 +24564,17 @@
      90,
      1154
     ],
-    "byte_offset": 13300560,
+    "byte_offset": 14323680,
     "byte_length": 830880,
     "dtype": "float64 little-endian",
     "decode": "raw float64; no quantisation",
     "lattice": "node",
     "lo": 0.0,
-    "hi": 982.7996004483446,
+    "hi": 2046.63671875,
     "contract_lo": 0.0,
     "contract_hi": 100000.0,
-    "min_nonzero_magnitude": 5e-324,
-    "not_quantised_because": "the contract's bounds are [0, 100000]; 65,534 levels over that puts everything below 1.52593 at zero, and this row's smallest non-zero value is 4.941e-324"
+    "min_nonzero_magnitude": 4.4166631708114284e-36,
+    "not_quantised_because": "the contract's bounds are [0, 100000]; 65,534 levels over that puts everything below 1.52593 at zero, and this row's smallest non-zero value is 4.417e-36"
    },
    "deepest_winter/band.bare_fraction": {
     "window": "deepest_winter",
@@ -24474,18 +24583,18 @@
      90,
      5684
     ],
-    "byte_offset": 14131440,
+    "byte_offset": 15154560,
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
-    "lo": 0.035279542207717896,
+    "lo": 0.03479922190308571,
     "hi": 1.0,
     "contract_lo": 0.0,
     "contract_hi": 1.0,
-    "realised_fraction_of_contract_range": 0.9647204577922821,
-    "codes_if_quantised_over_contract": 63222,
+    "realised_fraction_of_contract_range": 0.9652007780969143,
+    "codes_if_quantised_over_contract": 63253,
     "source_dtype": "float32",
-    "quantisation_step": 1.4720915216411056e-05
+    "quantisation_step": 1.4728244546295271e-05
    },
    "deepest_winter/band.burned_fraction": {
     "window": "deepest_winter",
@@ -24494,18 +24603,18 @@
      90,
      5684
     ],
-    "byte_offset": 15154560,
+    "byte_offset": 16177680,
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
     "lo": 0.0,
-    "hi": 3.9675003790762275e-05,
+    "hi": 3.9753460441716015e-05,
     "contract_lo": 0.0,
     "contract_hi": 1.0,
-    "realised_fraction_of_contract_range": 3.9675003790762275e-05,
+    "realised_fraction_of_contract_range": 3.9753460441716015e-05,
     "codes_if_quantised_over_contract": 3,
     "source_dtype": "float32",
-    "quantisation_step": 6.054109895743015e-10
+    "quantisation_step": 6.066081795970949e-10
    },
    "deepest_winter/band.pft.biomass": {
     "window": "deepest_winter",
@@ -24515,18 +24624,18 @@
      5684,
      4
     ],
-    "byte_offset": 16177680,
+    "byte_offset": 17200800,
     "byte_length": 4092480,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
     "lo": 0.0,
-    "hi": 24.304542637888638,
+    "hi": 25.056965814470168,
     "contract_lo": 0.0,
     "contract_hi": 100.0,
-    "realised_fraction_of_contract_range": 0.24304542637888638,
-    "codes_if_quantised_over_contract": 15928,
+    "realised_fraction_of_contract_range": 0.25056965814470167,
+    "codes_if_quantised_over_contract": 16421,
     "source_dtype": "float64",
-    "quantisation_step": 0.00037086920740209107
+    "quantisation_step": 0.00038235062432432276
    },
    "deepest_winter/band.pft_fractions": {
     "window": "deepest_winter",
@@ -24536,8 +24645,28 @@
      5684,
      4
     ],
-    "byte_offset": 20270160,
+    "byte_offset": 21293280,
     "byte_length": 4092480,
+    "dtype": "uint16 little-endian",
+    "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
+    "lo": 0.0,
+    "hi": 1.0,
+    "contract_lo": 0.0,
+    "contract_hi": 1.0,
+    "realised_fraction_of_contract_range": 1.0,
+    "codes_if_quantised_over_contract": 65534,
+    "source_dtype": "float32",
+    "quantisation_step": 1.5259254737998596e-05
+   },
+   "deepest_winter/band.phenology_index": {
+    "window": "deepest_winter",
+    "row": "band.phenology_index",
+    "shape": [
+     90,
+     5684
+    ],
+    "byte_offset": 25385760,
+    "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
     "lo": 0.0,
@@ -24556,18 +24685,18 @@
      90,
      5684
     ],
-    "byte_offset": 24362640,
+    "byte_offset": 26408880,
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
     "lo": 0.0,
-    "hi": 0.33152093128899907,
+    "hi": 0.7438019772175969,
     "contract_lo": 0.0,
     "contract_hi": 30.0,
-    "realised_fraction_of_contract_range": 0.011050697709633302,
-    "codes_if_quantised_over_contract": 724,
+    "realised_fraction_of_contract_range": 0.024793399240586562,
+    "codes_if_quantised_over_contract": 1625,
     "source_dtype": "float64",
-    "quantisation_step": 5.058762341517366e-06
+    "quantisation_step": 1.134986384499034e-05
    },
    "deepest_winter/band.surface_albedo": {
     "window": "deepest_winter",
@@ -24576,18 +24705,18 @@
      90,
      5684
     ],
-    "byte_offset": 25385760,
+    "byte_offset": 27432000,
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
-    "lo": 0.1975310742855072,
-    "hi": 0.6773356795310974,
+    "lo": 0.19753505289554596,
+    "hi": 0.6722459197044373,
     "contract_lo": 0.0,
     "contract_hi": 1.0,
-    "realised_fraction_of_contract_range": 0.4798046052455902,
-    "codes_if_quantised_over_contract": 31444,
+    "realised_fraction_of_contract_range": 0.4747108668088913,
+    "codes_if_quantised_over_contract": 31110,
     "source_dtype": "float32",
-    "quantisation_step": 7.321460695907318e-06
+    "quantisation_step": 7.243734043532995e-06
    },
    "deepest_winter/band.wetness": {
     "window": "deepest_winter",
@@ -24596,7 +24725,7 @@
      90,
      5684
     ],
-    "byte_offset": 26408880,
+    "byte_offset": 28455120,
     "byte_length": 1023120,
     "dtype": "uint16 little-endian",
     "decode": "lo + value / 65534 * (hi - lo), 65535 = nodata",
@@ -24616,17 +24745,17 @@
      90,
      1154
     ],
-    "byte_offset": 27432000,
+    "byte_offset": 29478240,
     "byte_length": 830880,
     "dtype": "float64 little-endian",
     "decode": "raw float64; no quantisation",
     "lattice": "node",
-    "lo": 0.0,
-    "hi": 7257.217222108677,
+    "lo": 7.903115991460799e-35,
+    "hi": 1989.2156982421875,
     "contract_lo": 0.0,
     "contract_hi": 100000.0,
-    "min_nonzero_magnitude": 5e-324,
-    "not_quantised_because": "the contract's bounds are [0, 100000]; 65,534 levels over that puts everything below 1.52593 at zero, and this row's smallest non-zero value is 4.941e-324"
+    "min_nonzero_magnitude": 7.903115991460799e-35,
+    "not_quantised_because": "the contract's bounds are [0, 100000]; 65,534 levels over that puts everything below 1.52593 at zero, and this row's smallest non-zero value is 7.903e-35"
    }
   }
  },

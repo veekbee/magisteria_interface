@@ -51,6 +51,50 @@ const MAX_OCTAVES := 12
 const SALT_GRADIENT := 0x67726164        ## "grad"
 const SALT_RESIDUAL := 0x72657364        ## "resd"
 
+## One published scalar out of a row block, READ FROM ITS PATTERN.
+##
+## Decision 985's artefacts publish every value-bearing scalar as
+## `{"dec": ..., "hex": "0x..."}`, and the `dec` is display. This engine's
+## string-to-double is not correctly rounded -- it read the lattice corner to
+## the farther of its two neighbouring doubles, which is what the nested form
+## exists to route around -- so reading `dec` here would put the artefact's
+## patterns beside a client that ignores them.
+##
+## A BARE NUMBER IS STILL READ, AND THAT IS NOT A FALLBACK TO THE DECIMAL. A
+## value the emitter did not wrap has no pattern to prefer: `octaves_at_parent`
+## is an integer and exact in any parser. What is never done is reading `dec`
+## out of a block that carries `hex` beside it, which is the case the wrapping
+## was introduced for.
+##
+## A block carrying a malformed pattern returns NAN rather than `default`. An
+## unreadable published value is not the same as an absent one, and silently
+## substituting the default would make a corrupt artefact look like an old one.
+static func scalar_of(block: Dictionary, name: String, default: float) -> float:
+    var v: Variant = block.get(name, null)
+    if v == null:
+        return default
+    if typeof(v) == TYPE_DICTIONARY:
+        return PublishedBits.of(block, name)
+    return float(v)
+
+
+## The same, for one element of a published pair -- the parent's corner, which
+## is two scalars and not one. Nested per element since `31efcab` retired the
+## parallel-array form; `PublishedBits.of_element` still reads the old shape, so
+## this answers for both without asking which artefact it is looking at.
+static func scalar_element_of(block: Dictionary, name: String, index: int) -> float:
+    var v: Variant = block.get(name, null)
+    if typeof(v) == TYPE_ARRAY:
+        var a: Array = v
+        if index < 0 or index >= a.size():
+            return NAN
+        if typeof(a[index]) == TYPE_DICTIONARY:
+            return PublishedBits.of_hex(str((a[index] as Dictionary).get("hex", "")))
+        # The retired parallel form: values here, patterns in `<name>_hex`.
+        return PublishedBits.of_element(block, name, index)
+    return NAN
+
+
 ## The sample set `residual_rms` is measured over -- a PURE FUNCTION OF THE
 ## SEED AND THE LATTICE, so it is reproducible in any language rather than a
 ## number someone measured once. The offsets come from the mixer and not from a
@@ -246,7 +290,7 @@ static func load_from(hf: Heightfield, path: String = ROWS_PATH,
 ## Capped, because the cost is linear in octaves and a row asking for a
 ## millimetre under a kilometre parent would ask for twenty of them.
 func octaves_for(landform: String) -> int:
-    var finest := float(row(landform).get("finest_wavelength_m", 1.0))
+    var finest := scalar_of(row(landform), "finest_wavelength_m", 1.0)
     if finest <= 0.0 or parent_spacing_m <= 0.0:
         return 1
     return clampi(int(ceil(log(parent_spacing_m / finest) / log(2.0))), 1, MAX_OCTAVES)
@@ -325,11 +369,11 @@ func same_function_as(other: DetailField) -> bool:
 ## row's own exponent otherwise. See `calibrated_at_parent_m`.
 func amplitude_for(landform: String) -> float:
     var p := row(landform)
-    var a := float(p.get("amplitude_m", 0.0))
+    var a := scalar_of(p, "amplitude_m", 0.0)
     var ref := float(p.get("calibrated_at_parent_m", calibrated_at_parent_m))
     if ref <= 0.0 or parent_spacing_m <= 0.0 or is_equal_approx(ref, parent_spacing_m):
         return a
-    return a * pow(parent_spacing_m / ref, float(p.get("spectral_slope", 1.0)))
+    return a * pow(parent_spacing_m / ref, scalar_of(p, "spectral_slope", 1.0))
 
 
 ## Take the derived layers, and pick the level to read them at.
@@ -643,13 +687,15 @@ func residual_rms_for(landform: String) -> float:
     # as strings so that "100" and "100.0" are the same lattice.
     for key in (p.get("residual_rms_by_parent_m", {}) as Dictionary):
         if is_equal_approx(float(str(key)), parent_spacing_m):
-            v = float((p["residual_rms_by_parent_m"] as Dictionary)[key])
+            # Each entry is itself a published scalar, so it is read the same
+            # way as every other one rather than by a second rule.
+            v = scalar_of(p["residual_rms_by_parent_m"] as Dictionary, str(key), NAN)
             break
     if is_nan(v):
         # The scalar is the SHIPPED parent's value, so it is only read when it
         # is that parent -- never as a default for an unlisted one.
-        var at := float((rows.get("parent", {}) as Dictionary).get("spacing_m", 0.0))
-        var scalar := float(p.get("residual_rms", 0.0))
+        var at := scalar_of(rows.get("parent", {}) as Dictionary, "spacing_m", 0.0)
+        var scalar := scalar_of(p, "residual_rms", 0.0)
         if scalar > 0.0 and at > 0.0 and is_equal_approx(at, parent_spacing_m):
             v = scalar
     if is_nan(v) or v <= 0.0:
@@ -665,8 +711,8 @@ func residual_source(landform: String) -> String:
     for key in (p.get("residual_rms_by_parent_m", {}) as Dictionary):
         if is_equal_approx(float(str(key)), parent_spacing_m):
             return "published at %s m" % String.num(parent_spacing_m, 0)
-    var at := float((rows.get("parent", {}) as Dictionary).get("spacing_m", 0.0))
-    if float(p.get("residual_rms", 0.0)) > 0.0 and is_equal_approx(at, parent_spacing_m):
+    var at := scalar_of(rows.get("parent", {}) as Dictionary, "spacing_m", 0.0)
+    if scalar_of(p, "residual_rms", 0.0) > 0.0 and is_equal_approx(at, parent_spacing_m):
         return "published, the artefact's own parent"
     return ("recomputed by the published recipe: the rows carry no residual for a %s m parent"
             % String.num(parent_spacing_m, 0))
@@ -804,9 +850,9 @@ func parent_node_y(iy: int) -> float:
 ## hillside. The ratio is a fake row; the mechanism is not.
 func _noise64(x: float, y: float, p: Dictionary) -> float:
     var octaves := octaves_for(str(p.get("_name", "")))
-    var slope := float(p.get("spectral_slope", 1.0))
-    var ratio := maxf(0.05, float(p.get("anisotropy", 1.0)))
-    var theta := deg_to_rad(float(p.get("orientation_deg", 0.0)))
+    var slope := scalar_of(p, "spectral_slope", 1.0)
+    var ratio := maxf(0.05, scalar_of(p, "anisotropy", 1.0))
+    var theta := deg_to_rad(scalar_of(p, "orientation_deg", 0.0))
     var c := cos(theta)
     var s := sin(theta)
     var along := (x * c + y * s) / ratio

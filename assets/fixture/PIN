@@ -13,6 +13,11 @@
     "years": 1000,
     "acceptance": {
       "scored_at_commit": "5317027b6543de846a4c53745996f0ed70d61119",
+      "stale_against_replay": {
+        "replayed_at_commit": "66fa05134deff7f9b7ca9fe371298c8d6aceac58",
+        "declared_by_the_operator": "Owner-authorised 2026-09-11. This is the last scored verdict and it is stale against this payload's code: the melt gate (1ca6a0c) and swe_50's per-band build (245aec4) landed after the scoring, so criterion 1's 'near-bare snowpack overlay, area-weighted peak SWE 17.4 mm' describes code this payload does not contain -- band.snowpack_swe here reads about 35x that, and criterion 3's melt timing is downstream of the same repairs. Criteria 6, 7 and 8 (stationarity, surface-fire survival contrast, no quantity at a bound) are not obviously touched by the snow work and are the part of this verdict still worth reading. Shipped rather than dropped because a picture of this fixture needs SOME disclaimer that the run behind it does not pass acceptance, and absence would say less than a labelled staleness. Re-scoring at the replay commit is M2, already scheduled in the rev-34 review order; this block is superseded the moment it lands.",
+        "what_the_equivalence_proof_below_does_not_cover": "the proof compares this verdict's RUN with this fixture's run. Both are state. The verdict's CODE and the replay's code are different here and nothing below compares them."
+      },
       "scored_run_dir": "runs/m0-instrumented-001",
       "passed": 7,
       "failed": 5,
@@ -71,21 +76,22 @@
   },
   "is_a_display_encoding": "NOT the fixture. Band rows are quantised to 65,534 levels over each row's REALISED range in its own window -- not over the contract's declared bounds, which are a validity range and gave two rows 3 and 12 usable codes when they were used as a dynamic one (\u00a723.837). Every row carries its own `lo`/`hi` beside `contract_lo`/`contract_hi` so both are readable. 2 row-window(s) here are float64 because they reach below float32's floor; the full precision is in fixture_v1.bin.",
   "files": {
-    "fixture_client.bin": "36697e92a8e08af4a2d9cd4cd1a1899f501b074ab8f66a6476e8c93a5839cfbc",
-    "fixture_client.json": "2a96bf10f8fc90f0d36160badeefc0e49b3aea02717ffff4df920f83df5d0c01"
+    "fixture_client.bin": "e645a2305087e20389013ef9e451a8265cab329f474609d942126bb219bbc6f1",
+    "fixture_client.json": "507e1685ef41846afb86d997128b9fd9fb7599bcbeda8e071e2e2f6552e11d50"
   },
-  "source_commit": "d00a7471f57bef9729857787ce80c7925b077f42",
+  "source_commit": "cef767d842df44597103c938b3ceda57ba64d6e9",
   "carried_rows": [
     "band.bare_fraction",
     "band.burned_fraction",
     "band.pft.biomass",
     "band.pft_fractions",
+    "band.phenology_index",
     "band.snowpack_swe",
     "band.surface_albedo",
     "band.wetness",
     "node.streamflow"
   ],
-  "contract_version": "2.0",
+  "contract_version": "2.1",
   "cross_repo": {
     "_what": "how each file above is checkable against `source_commit` in a simulation checkout. Per file, because the answer differs per file.",
     "files": {
@@ -107,11 +113,11 @@
     "threshold_bytes": 10485760,
     "files": {
       "fixture_client.bin": {
-        "bytes": 28262880,
+        "bytes": 30309120,
         "host": "https://github.com/veekbee/magisteria_interface/releases/download/fixture-v1/fixture_client.bin"
       }
     }
   },
-  "vendored_against_commit": "dd3ec22a2aec0d1b31382efd1f2c4932695984c2",
+  "vendored_against_commit": "31efcab72c05904f512bf408f453b73f58468406",
   "_two_commits_note": "`source_commit` is where the artefact's bytes came to rest -- the last commit touching the source directory, and what `cross_repo` checks against. `vendored_against_commit` is the sim tree this vendoring read. They differ whenever the sim moved without the artefact moving, which is most of the time."
 }

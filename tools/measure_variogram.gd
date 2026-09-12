@@ -105,8 +105,8 @@ func _init() -> void:
 func _score(df: DetailField, centre: Vector2, landform: String, pairs: int,
             flat: bool) -> Dictionary:
     var row := df.row(landform)
-    var amp := float(row.get("amplitude_m", 0.0))
-    var declared_hurst := float(row.get("spectral_slope", 1.0))
+    var amp := DetailField.scalar_of(row, "amplitude_m", 0.0)
+    var declared_hurst := DetailField.scalar_of(row, "spectral_slope", 1.0)
     # THE DETAIL TERM'S OWN VARIOGRAM, and the total surface's beside it.
     #
     # A first run scored the TOTAL and reported every class within 2% of every
@@ -193,7 +193,7 @@ func _score(df: DetailField, centre: Vector2, landform: String, pairs: int,
         "gamma_at_max_lag": at_max,
         "gamma_implied_by_row": implied,
         "matches_rows": (not is_nan(hurst)) and absf(hurst - declared_hurst) < 0.35,
-        "anisotropy": row.get("anisotropy", 1.0),
+        "anisotropy": DetailField.scalar_of(row, "anisotropy", 1.0),
     }
 
 

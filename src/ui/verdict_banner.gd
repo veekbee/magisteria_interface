@@ -28,6 +28,12 @@ extends PanelContainer
 
 ## Dark enough that every state's colour clears 4.5:1 against it, and opaque
 ## enough that the brightest ramp value underneath cannot lift it.
+## Characters of one staleness line the banner will render. Not a style choice:
+## this panel has to fit an 800 px window, the size every shot in `shots/` is
+## taken at, and the shipped declaration beside five named fails wants 1,089 px
+## of it. The console and `tools/capture.gd` print the whole text untrimmed.
+const BANNER_LINE_BUDGET := 150
+
 const PLATE := Color(0.07, 0.07, 0.09, 0.92)
 
 var _headline: Label
@@ -57,7 +63,7 @@ func show_verdict(v: AncestorVerdict) -> void:
     # ABOVE THE FAILS, because the staleness is a statement about whether those
     # fails describe the picture at all, and a caveat printed after the thing it
     # qualifies is read by somebody who has already stopped reading.
-    for l in v.staleness_lines():
+    for l in v.staleness_lines(BANNER_LINE_BUDGET):
         lines.insert(0, l)
     var excluded := v.excluded_fields()
     if not excluded.is_empty():

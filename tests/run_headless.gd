@@ -1517,26 +1517,52 @@ func test_the_tint_takes_phenology_from_the_wire_when_the_row_is_carried() -> vo
     check(is_nan(sc.phenology_at(row, season, 99, 0.5)),
             "a cell past the end of the carried row was answered")
 
-    # ---- THE CONTROL, WHICH IS THE FIXTURE THIS REPO ACTUALLY SHIPS -------
+    # ---- AND ON THE SHIPPED FIXTURE, WHICH NOW CARRIES THE ROW ------------
+    # These four asserted the stand-in until 31efcab, with a failure message
+    # saying that a wire reading meant T1 was unblocked and the handback needed
+    # re-reading. It did, they fired, and this is that inversion: the same four
+    # facts asserted the other way, on real bytes rather than on a witness the
+    # test wrote for itself.
     var live := fixture()
     var sc2 := VegetationScatter.new()
     sc2.bind(null, null, live, null, null, null)
     var w: String = live.windows[0]
-    check(sc2.phenology_source(w) == VegetationScatter.PHENOLOGY_FROM_STAND_IN,
-            "the shipped fixture reports %s, so it carries the row and T1 is no longer "
-                    % sc2.phenology_source(w)
-            + "blocked on a re-vendor -- this control and the brief both need re-reading")
-    check(sc2.phenology_uncertainty(w) == 0.0,
-            "the stand-in declared the row's uncertainty")
-    check(sc2.phenology_row_for(w, 0).is_empty(),
-            "the shipped fixture returned phenology values for a row it does not carry")
-    # AND THE STAND-IN STILL ANSWERS, because the tint has to draw something
-    # today. What must not happen is that answering quietly becomes the design.
-    check(not is_nan(sc2.phenology_at(PackedFloat64Array(), season, 0, 0.5)),
-            "the stand-in stopped answering, so nothing draws until the re-vendor")
-    print("phenology: shipped fixture uses %s; a carried row would use %s at uncertainty %s"
-            % [sc2.phenology_source(w), VegetationScatter.PHENOLOGY_FROM_WIRE,
-               String.num(VegetationScatter.ROW_PHENOLOGY_UNCERTAINTY, 3)])
+    check(sc2.phenology_source(w) == VegetationScatter.PHENOLOGY_FROM_WIRE,
+            "the shipped fixture reports %s; it carries the row, so the wire is the source"
+            % sc2.phenology_source(w))
+    check(sc2.phenology_uncertainty(w) == VegetationScatter.ROW_PHENOLOGY_UNCERTAINTY,
+            "the wire is the source and the declared uncertainty is %s rather than the row's"
+            % String.num(sc2.phenology_uncertainty(w), 4))
+    var live_row := sc2.phenology_row_for(w, 0)
+    check(not live_row.is_empty(),
+            "the shipped fixture carries the row and returned no values for it")
+
+    # THE ROW IS A FRACTION AND THE CONTRACT SAYS SO. Checked against real
+    # values rather than trusted: a row arriving outside its declared bounds is
+    # how a unit change reaches a colour ramp unnoticed.
+    var lo := INF
+    var hi := -INF
+    var nan_cells := 0
+    for i in live_row.size():
+        if is_nan(live_row[i]):
+            nan_cells += 1
+        else:
+            lo = minf(lo, live_row[i])
+            hi = maxf(hi, live_row[i])
+    check(nan_cells < live_row.size(), "every cell of the carried row is NAN")
+    check(lo >= 0.0 and hi <= 1.0,
+            "the carried row spans [%s, %s], outside the fraction its contract declares"
+            % [String.num(lo, 6), String.num(hi, 6)])
+    # AND IT DISCRIMINATES. Convention 6's second clause on this row: a
+    # basin-wide constant at a fixed day would place every cell at the same
+    # point of its own year, which is the insufficiency calendar day already has.
+    check(hi - lo > 0.01,
+            "the carried row spans only %s across the basin on one day, so it discriminates "
+                    % String.num(hi - lo, 6)
+            + "no better than the calendar day decision 977 turned down")
+    print("phenology: shipped fixture uses %s, %d cells, span [%s, %s], %d NAN"
+            % [sc2.phenology_source(w), live_row.size(), String.num(lo, 4),
+               String.num(hi, 4), nan_cells])
 
 
 func test_an_envelope_does_not_refuse_a_value_for_being_uncertain() -> void:
@@ -1607,10 +1633,12 @@ func test_an_envelope_does_not_refuse_a_value_for_being_uncertain() -> void:
     var sc := VegetationScatter.new()
     sc.bind(null, null, fixture(), null, null, null)
     var live_window: String = fixture().windows[0]
-    check(sc.phenology_uncertainty(live_window) == 0.0,
-            "the shipped fixture now declares an uncertainty of %s, so the envelope's third "
-                    % String.num(sc.phenology_uncertainty(live_window), 3)
-            + "outcome is live on real data and this test should be asserting that instead")
+    # LIVE ON REAL DATA SINCE 31efcab, which is what the old message asked for.
+    check(sc.phenology_uncertainty(live_window) == u,
+            "the shipped fixture carries the row and declares an uncertainty of %s rather "
+                    % String.num(sc.phenology_uncertainty(live_window), 4)
+            + "than the row's %s, so the envelope's third outcome is not armed on real data"
+                    % String.num(u, 4))
     print("phenology: envelope [%s, %s], row uncertainty %s, this build declares %s"
             % [String.num(float(r["min"]), 3), String.num(hi, 3), String.num(u, 3),
                String.num(sc.phenology_uncertainty(live_window), 3)])
@@ -1705,8 +1733,10 @@ func test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal() 
                 + "spent three re-vendors establishing that it must not be")
         # THE CONTROL: the corner's DECIMAL does not read back to the corner, so
         # the protection is load-bearing rather than decorative.
-        var from_bits := PublishedBits.of_element(parent, "origin", 0)
-        var from_decimal := float((parent["origin"] as Array)[0])
+        var from_bits := DetailField.scalar_element_of(parent, "origin", 0)
+        var e0: Variant = (parent["origin"] as Array)[0]
+        var from_decimal := float((e0 as Dictionary)["dec"]) if typeof(e0) == TYPE_DICTIONARY \
+                else float(e0)
         check(from_bits != from_decimal,
                 "the corner's decimal and its pattern now agree, so `origin_hex` is no longer "
                 + "doing anything here and this check has stopped demonstrating why it exists")
@@ -1724,12 +1754,26 @@ func test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal() 
                     continue
                 if typeof(block[k]) == TYPE_DICTIONARY:
                     continue
+                # AN INTEGER NEEDS NO PATTERN AND IS NOT COUNTED. This is the
+                # one field outside the 45 this client reported and the 50 the
+                # artefact asserts from its own structure: five landforms x ten
+                # fields is 50, and `octaves_at_parent` is the tenth. It is a
+                # count of octaves, exact in any parser, and wrapping it would
+                # publish a pattern for a number that cannot be misread.
+                var bare := float(block[k])
+                if bare == floor(bare):
+                    continue
                 if not PublishedBits.is_protected(block, str(k)):
                     unprotected.append("%s.%s" % [lf, str(k)])
         print("985 rows: %d landform scalars published without a pattern" % unprotected.size())
-        check(unprotected.size() > 0,
-                "every landform scalar now carries a pattern -- the values-only re-cut has "
-                + "landed and this check should become the assertion that it stays that way")
+        # INVERTED AT 31efcab, WHICH IS WHAT THE OLD MESSAGE ASKED FOR. Every
+        # landform scalar now carries a pattern, so the assertion is that it
+        # stays that way rather than that it has not happened yet.
+        check(unprotected.is_empty(),
+                "%d landform scalar(s) are published without a pattern: %s. They are inputs to "
+                        % [unprotected.size(), str(Array(unprotected))]
+                + "d(x, y), so the two sides would evaluate the same function from different "
+                + "numbers with the conformance tolerance absorbing the difference.")
 
     # THE CONTROL, AND IT IS THE WHOLE ARGUMENT. The same value by both routes:
     # through its pattern it arrives, through its decimal it is gone.
@@ -1748,27 +1792,61 @@ func test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal() 
         var row: String = wide[0]
         var d: Dictionary = fl.manifest["client_form"]["rows"]["%s/%s" % [w, row]]
         var m := fl.min_nonzero_of(w, row)
-        if d.has("min_nonzero_magnitude_bits"):
+        if d.has(FixtureLoader.MIN_NONZERO_BITS_KEY):
             check(not is_nan(m), "the fixture publishes the pattern and the reader refused it")
             check(m != 0.0, "the published minimum non-zero magnitude read back as zero")
             print("min_nonzero: %s reads %s from its pattern" % [row, PublishedBits.to_hex(m)])
         else:
             check(is_nan(m),
-                    "%s publishes no pattern and the reader answered %s anyway -- it fell back "
-                    % [row, str(m)] + "to the decimal, which is the one thing it must not do")
-            check(PublishedBits.why_absent(d, "min_nonzero_magnitude").contains("decimal"),
-                    "the absence is not reported as the decimal-only case: %s"
-                    % PublishedBits.why_absent(d, "min_nonzero_magnitude"))
-            # THE DECIMAL IS ACTUALLY UNREADABLE, not merely distrusted. Without
-            # this the refusal above would be a rule with no demonstrated
-            # subject, and would keep passing if the field became ordinary.
-            var as_decimal := float(d.get("min_nonzero_magnitude", NAN))
-            print("min_nonzero: %s publishes a decimal only, and it reads back as %s"
-                    % [row, PublishedBits.to_hex(as_decimal)])
-            check(as_decimal == 0.0,
-                    "%s's published decimal is readable after all (%s), so the re-vendor this "
-                    % [row, PublishedBits.to_hex(as_decimal)]
-                    + "check is waiting for may already have landed")
+                    "%s publishes no pattern in `client_form` and the reader answered %s "
+                    % [row, str(m)] + "anyway -- it fell back to the decimal, which is the one "
+                    + "thing it must not do")
+
+            # AND THE PATTERN EXISTS, IN A DIFFERENT BLOCK, FOR A DIFFERENT
+            # NUMBER. 31efcab put `min_nonzero_bits` under `windows/<w>/series/`
+            # and not under `client_form/rows/`, and the two blocks do not hold
+            # the same value: `series` is measured on the float64 array the
+            # replay produced, `client_form` on the row as it is actually
+            # stored. Measured here, exactly:
+            #
+            #     client_form  4.4166631708114284e-36
+            #     series       4.416663345104293e-36
+            #     client_form == float32(series)   -- exactly, bit for bit
+            #
+            # So this is not a missing pattern on one number. It is a pattern
+            # published for the PRE-narrowing measurement while the block that
+            # describes the shipped bytes carries a bare decimal. A reader that
+            # took the series bits as this row's minimum would be off by the
+            # narrowing and would think it had read them carefully.
+            var series: Dictionary = (fl.manifest.get("windows", {}) as Dictionary) \
+                    .get(w, {}).get("series", {}).get(row, {})
+            if series.has(FixtureLoader.MIN_NONZERO_BITS_KEY):
+                var pre := PublishedBits.of_named(series, FixtureLoader.MIN_NONZERO_BITS_KEY)
+                var post := float(d.get("min_nonzero_magnitude", NAN))
+                check(pre != post,
+                        "the two blocks now agree at %s, so the narrowing this check describes "
+                                % PublishedBits.to_hex(pre)
+                        + "has stopped happening and the paragraph above needs re-taking")
+                check(PackedFloat32Array([pre])[0] == PackedFloat32Array([post])[0],
+                        "client_form's %s and series's %s do not agree even at float32, so the "
+                                % [PublishedBits.to_hex(post), PublishedBits.to_hex(pre)]
+                        + "two blocks differ for some reason other than the narrowing")
+                # AND THE COST OF THAT BLOCK CARRYING NO PATTERN, MEASURED. The
+                # correct narrowed value is 0x38977ba680000000. This engine
+                # reads the decimal beside it as 0x38977ba680000001 -- one ulp
+                # out, and not a float32-representable number at all, so the
+                # value cannot even be recognised as the narrowed one. It
+                # survives only because nothing here needs it to better than
+                # float32.
+                check(post != float(PackedFloat32Array([pre])[0]),
+                        "this engine now reads client_form's decimal to exactly the narrowed "
+                        + "value, so the argument for putting a pattern in that block has "
+                        + "changed and this paragraph needs re-taking")
+                print("min_nonzero: %s -- series %s (pre-narrowing, with bits), client_form %s "
+                        % [row, PublishedBits.to_hex(pre), PublishedBits.to_hex(post)]
+                        + "(the stored bytes, decimal only)")
+            else:
+                print("min_nonzero: %s publishes a decimal only, in both blocks" % row)
 
 
 func test_the_wide_branch_has_a_witness_that_is_not_the_fixture() -> void:
@@ -7694,8 +7772,9 @@ func test_the_detail_rows_say_that_they_are_invented() -> void:
     var landforms: Dictionary = doc.get("landforms", {})
     check(landforms.has("playa") and landforms.has("talus"),
             "the acceptance criterion names a playa and rocky slopes and they are not rows")
-    check(float((landforms["talus"] as Dictionary)["amplitude_m"])
-                    > 10.0 * float((landforms["playa"] as Dictionary)["amplitude_m"]),
+    check(DetailField.scalar_of(landforms["talus"] as Dictionary, "amplitude_m", 0.0)
+                    > 10.0 * DetailField.scalar_of(
+                            landforms["playa"] as Dictionary, "amplitude_m", 0.0),
             "the rough class is not much rougher than the smooth one, so the rows do not "
             + "express the criterion they were written for")
 
@@ -7703,7 +7782,7 @@ func test_the_detail_rows_say_that_they_are_invented() -> void:
     # 1 m ground passes the underfoot criterion at the stub's speed and fails
     # at the 0.7 m/s a real envelope reports.
     for name in landforms:
-        var finest := float((landforms[name] as Dictionary).get("finest_wavelength_m", 99.0))
+        var finest := DetailField.scalar_of(landforms[name] as Dictionary, "finest_wavelength_m", 99.0)
         check(finest < 1.0, "%s synthesises down to %s m, and 1 m ground fails the underfoot "
                 % [str(name), String.num(finest, 3)]
                 + "criterion at a load-bearing envelope's speed")
@@ -8214,13 +8293,14 @@ func test_one_row_serves_two_parents() -> void:
     # THE DECLARED NUMBER IS UNCHANGED AT THE PARENT IT WAS CALIBRATED AT, to
     # the bit. A single-level client must not move.
     for name in coarse.landforms():
-        check(coarse.amplitude_for(str(name)) == float(coarse.row(str(name))["amplitude_m"]),
+        check(coarse.amplitude_for(str(name))
+                        == DetailField.scalar_of(coarse.row(str(name)), "amplitude_m", NAN),
                 "%s's amplitude moved at the parent it was calibrated at" % str(name))
 
     # AND THE ROW STATES A WAVELENGTH, so the octave count follows the parent
     # rather than the answer following the count.
     for name in coarse.landforms():
-        var want := float(coarse.row(str(name))["finest_wavelength_m"])
+        var want := DetailField.scalar_of(coarse.row(str(name)), "finest_wavelength_m", NAN)
         for df in [coarse, fine]:
             var got: float = df.parent_spacing_m / pow(2.0, float(df.octaves_for(str(name))))
             check(got <= want and got > want * 0.5,
@@ -8243,7 +8323,7 @@ func test_one_row_serves_two_parents() -> void:
     # octave at 0.24 m and 0.20 m, which is a 25% difference in the last band
     # before anything else is counted.
     var talus := fine.row("talus")
-    var raw := float(talus["amplitude_m"])
+    var raw := DetailField.scalar_of(talus, "amplitude_m", NAN)
     var scaled := fine.amplitude_for("talus")
     check(raw / scaled > 2.0, "the rescale is worth %sx, which is small enough that this "
             % String.num(raw / scaled, 2) + "check would pass without it")
@@ -9312,8 +9392,36 @@ func test_the_flow_drape_paints_from_a_bundle_and_never_from_the_fixture() -> vo
         return
     var counts: Dictionary = r["counts"]
     check(int(r["known"]) > 20000, "only %d reaches were painted from a value" % int(r["known"]))
-    check(int(counts["in_scale"]) > 0 and int(counts["zero"]) > 0,
+    # AT LEAST TWO CLASSES OCCUPIED, NAMED BY PROPERTY RATHER THAN BY WHICH TWO.
+    # This required `in_scale` and `zero` together, which was true of the trace
+    # it was written against and stopped being true at 31efcab: the melt gate
+    # landed, flow no longer decays to exactly nothing, and `deepest_winter` now
+    # holds ZERO exact zeros across all 90 days where it used to hold 9,628.
+    # That is a fact about the run, and a check that reported it as "the basin
+    # came out all one state" would be accusing the drape of a discrimination
+    # failure it does not have -- 860 below-scale against 28,624 in-scale.
+    var occupied := PackedStringArray()
+    for k in ["zero", "below_scale", "in_scale"]:
+        if int(counts.get(k, 0)) > 0:
+            occupied.append(str(k))
+    check(occupied.size() >= 2,
             "the basin came out all one state: %s" % str(counts))
+    # THE ZERO CLASS STILL HAS A WITNESS SOMEWHERE, and where it does not, the
+    # loss is printed rather than inferred from a check that quietly stopped
+    # being about it. `largest_fire` carries 90 exact zeros; `deepest_winter`
+    # carries none.
+    var zeros_anywhere := 0
+    for win in v.fixture.windows:
+        for d in v.fixture.days(win, "node.streamflow"):
+            for val in v.fixture.day_values(win, "node.streamflow", d):
+                if val == 0.0:
+                    zeros_anywhere += 1
+    print("flow: classes occupied %s in deepest_winter day 45; %d exact zeros across the "
+            % [str(Array(occupied)), zeros_anywhere] + "whole fixture")
+    check(zeros_anywhere > 0,
+            "no exact zero anywhere in the fixture, so `FlowDisplay`'s separation of no-flow "
+            + "from below-the-scale has no subject in this artefact at all. That is worth "
+            + "knowing before the distinction is read as exercised.")
 
     # THE JOIN, SPOT-CHECKED AGAINST THE BUNDLE. Not against the fixture: what
     # is being checked is that the drape reads the wire, so the wire is the
@@ -10336,7 +10444,7 @@ func test_the_detail_function_conforms_to_its_published_vectors() -> void:
     if c.is_empty():
         return
     var parent: Dictionary = c["parent"]
-    var spacing := float(parent["spacing_m"])
+    var spacing := DetailField.scalar_of(parent, "spacing_m", 0.0)
     var hf := heightfield()
     var df := DetailField.load_from(hf, DETAIL_ROWS_PATH, spacing)
     check(df.is_loaded(), "the detail field did not load: %s" % df.why_absent)
@@ -10400,14 +10508,20 @@ func test_the_detail_function_conforms_to_its_published_vectors() -> void:
             "the rows and the vectors describe different parent lattices, and two copies of "
             + "one fact are safe only while something compares them -- %s" % str(differing))
 
-    var po_hex: Array = (parent.get("origin_hex", []) as Array)
-    check(po_hex.size() == 2,
-            "the artefact's parent block carries no `origin_hex`, so the lattice corner "
+    # READ THROUGH THE ACCESSOR, WHICH KNOWS BOTH SHAPES. Until 31efcab this
+    # was `origin_hex`, a parallel array of patterns beside a list of decimals;
+    # it is now nested per element, the form this client asked for. The check is
+    # that the corner arrives as BITS, not that it arrives under a particular
+    # key -- a test pinned to the spelling would have failed on the artefact
+    # that adopted the convention it argued for.
+    check(PublishedBits.is_protected(parent, "origin"),
+            "the artefact's parent block publishes the lattice corner without a pattern, so it "
             + "arrives as a decimal and this engine cannot read it to the right double")
-    if po_hex.size() != 2:
+    var ox := DetailField.scalar_element_of(parent, "origin", 0)
+    var oy := DetailField.scalar_element_of(parent, "origin", 1)
+    if is_nan(ox) or is_nan(oy):
+        check(false, "the published corner did not read back from its pattern")
         return
-    var ox := _f64(str(po_hex[0]))
-    var oy := _f64(str(po_hex[1]))
     var nodes: Array = ((c["classes"] as Dictionary)["parent_node"] as Dictionary)["vectors"]
     var agree := 0
     for v in nodes:
@@ -10875,7 +10989,7 @@ func test_the_instrument_repeats_and_recovers_a_known_exponent() -> void:
     var lines := PackedStringArray()
     for raw_name in strata:
         var name := str(raw_name)
-        var want := float(df.row(name).get("spectral_slope", NAN))
+        var want := DetailField.scalar_of(df.row(name), "spectral_slope", NAN)
         var surf := StructureFunction.of_function(
                 func(x: float, y: float) -> float:
                     return df.detail_at64(x, y, NAN, NAN, name),

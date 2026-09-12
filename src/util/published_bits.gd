@@ -171,6 +171,23 @@ static func is_protected(block: Dictionary, name: String) -> bool:
     var nested: Variant = block.get(name, null)
     if typeof(nested) == TYPE_DICTIONARY and (nested as Dictionary).has(NESTED_HEX):
         return true
+    # A PAIR PUBLISHED NESTED PER ELEMENT, which is what `parent.origin` became
+    # when 31efcab retired the parallel-array form. Every element must carry a
+    # pattern: a corner with one axis protected and one bare is not protected,
+    # and reading it as though it were would take the bare axis from its decimal.
+    if typeof(nested) == TYPE_ARRAY and not (nested as Array).is_empty():
+        var every := true
+        for e in (nested as Array):
+            if typeof(e) != TYPE_DICTIONARY or not (e as Dictionary).has(NESTED_HEX):
+                every = false
+                break
+        if every:
+            return true
+        # FALLS THROUGH RATHER THAN REFUSING. An array of bare numbers is the
+        # retired parallel form, and it is protected iff `<name>_hex` sits
+        # beside it. Returning false here read the old convention as naked and
+        # would have had this client report a correctly-published corner as
+        # unprotected -- on the one artefact the convention was invented for.
     return block.has(name + BITS_SUFFIX) or block.has(name + HEX_SUFFIX)
 
 

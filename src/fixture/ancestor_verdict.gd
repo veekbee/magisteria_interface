@@ -356,19 +356,47 @@ func named_fails() -> PackedStringArray:
 ## verbatim rather than paraphrased: it is the sentence that tells a reader
 ## which parts of the picture the 18-of-18 still covers, and a summary of it
 ## written here would be this client's opinion of somebody else's caveat.
-func staleness_lines() -> PackedStringArray:
+## `budget` trims each line to about that many characters, at a sentence end
+## where there is one and at a word boundary otherwise, marking the cut. Zero
+## means no trim, which is what the console and `tools/capture.gd` pass.
+##
+## A DELIBERATE TRIM IS NOT THE DEFECT THE BANNER TEST CATCHES. That defect is a
+## panel that overflows its window, cuts mid-sentence and silently hides
+## everything below it -- a disclaimer that LOOKS complete. A line ending in an
+## ellipsis says it is not complete, and the whole text is one `print` away in
+## the same run. The shipped declaration is 250 characters of provenance and
+## reason together; the first sentence carries the reason, which is the half a
+## reader of the picture needs.
+func staleness_lines(budget: int = 0) -> PackedStringArray:
     var out := PackedStringArray()
     if state != DECLARED_STALE:
         return out
-    out.append("declared by the operator: " + declared_by_the_operator)
+    out.append("declared by the operator: " + _fit(declared_by_the_operator, budget))
     if not not_covered_by_the_proof.is_empty():
-        out.append("the equivalence proof does not cover: " + not_covered_by_the_proof)
+        out.append("the equivalence proof does not cover: "
+                + _fit(not_covered_by_the_proof, budget))
     else:
         # Said rather than omitted. A proof offered beside a staleness with no
         # statement of its limit is a proof whose scope the reader has to guess.
         out.append("the equivalence proof states no limit of its own, so what it still "
                 + "covers is not said")
     return out
+
+
+## One line cut to a budget, at a sentence end if one fits and at a word
+## otherwise. The cut is always marked: a trimmed line that does not say it is
+## trimmed is the same lie as an overflowing one, in less space.
+static func _fit(text: String, budget: int) -> String:
+    if budget <= 0 or text.length() <= budget:
+        return text
+    var head := text.substr(0, budget)
+    var stop := head.rfind(". ")
+    if stop > budget / 3:
+        # Keeps the full stop: the sentence ended, and only what came after it
+        # was dropped.
+        return head.substr(0, stop + 1) + " …"
+    var space := head.rfind(" ")
+    return (head if space <= 0 else head.substr(0, space)) + " …"
 
 
 ## What the equivalence proof left out, for a reader who wants the caveat

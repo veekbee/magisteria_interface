@@ -53,7 +53,7 @@ extends RefCounted
 ## because a client claiming to understand a minor nobody has emitted would
 ## stop masking rows it should still be masking.
 const CLIENT_MAJOR: int = 2
-const CLIENT_MINOR: int = 0
+const CLIENT_MINOR: int = 1
 
 ## Reasons a row did not make it into `Document.rows`. Reported, never silent.
 const SKIP_UNKNOWN_VALUE_KIND := "unknown-value-kind"

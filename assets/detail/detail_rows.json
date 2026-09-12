@@ -4,7 +4,7 @@
   "generated_from": [
     "/Users/victoriabarnes/project_magisteria/magisteria_interface/assets/detail/detail_rows.json"
   ],
-  "generated_at_utc": "2026-09-11T07:18:45Z",
+  "generated_at_utc": "2026-09-12T19:02:59Z",
   "ruled_by": [
     "decision 985",
     "decision 986",
@@ -35,18 +35,26 @@
   "parent": {
     "crs": "EPSG:5070",
     "origin": [
-      -1809292.9365744274,
-      2356726.304046243
+      {
+        "dec": -1809292.9365744274,
+        "hex": "0xc13b9b8cefc35778"
+      },
+      {
+        "dec": 2356726.304046243,
+        "hex": "0x4141fafb26eafcbf"
+      }
     ],
-    "origin_hex": [
-      "0xc13b9b8cefc35778",
-      "0x4141fafb26eafcbf"
-    ],
-    "spacing_m": 100.0,
+    "_origin_was_a_parallel_array": "`origin` beside `origin_hex`, two lists read positionally. The client found it as a THIRD published convention in one project -- flat `name`/`name_hex`, this parallel pair, and decision 985's nested form -- and a reader has to know which artefact uses which. Retired here in favour of the nested form, so this file carries ONE convention (convention 4: the second copy is what drifts). Their `PublishedBits` already reads all three, so nothing breaks on the retirement.",
+    "spacing_m": {
+      "dec": 100.0,
+      "hex": "0x4059000000000000"
+    },
     "read_from": "data/terrain_layer_tiles_v2_output/terrain_layer_tiles.json",
     "_why_100_m": "decision 1004: real 10 m is calibration-only and 100 m is the finest shipped level, so there is no provisional parent here."
   },
   "calibrated_at_parent_m": 1000.0,
+  "_scalars_are_published_as": "decision 985's nested form -- every value-bearing scalar is `{\"dec\": <rendering>, \"hex\": \"0x<8 bytes, big-endian>\"}`, and the HEX IS THE VALUE. `dec` is a rendering for a human and for a diff; a consumer reads `hex`. There is no cross-check between them by design: the same pattern beside a wrong decimal must still return the pattern's value, so a check would fire on a correct file. `sim.detail.published_float` is the reference reader and accepts the bare-float form too, because other artefacts still publish it.",
+  "_scalars_not_published_as_pairs": "`octaves_at_parent` is an integer and its exactness is not in question; the `_`-prefixed fields are prose. Everything else under `landforms`, plus the parent's origin and spacing, carries bits.",
   "units": {
     "amplitude_m": "standard deviation of the detail term at the parent spacing it was calibrated at, metres. See `_calibrated_at_is`: this number is NOT scale free and a calibration that does not say which parent it measured is unusable at a second level",
     "spectral_slope": "fBm Hurst-like exponent; higher is smoother between octaves",
@@ -57,101 +65,251 @@
   },
   "landforms": {
     "floor": {
-      "amplitude_m": 0.18,
-      "spectral_slope": 0.95,
-      "anisotropy": 1.4,
-      "finest_wavelength_m": 0.25,
-      "orientation_deg": 30.0,
+      "amplitude_m": {
+        "dec": 0.18,
+        "hex": "0x3fc70a3d70a3d70a"
+      },
+      "spectral_slope": {
+        "dec": 0.95,
+        "hex": "0x3fee666666666666"
+      },
+      "anisotropy": {
+        "dec": 1.4,
+        "hex": "0x3ff6666666666666"
+      },
+      "finest_wavelength_m": {
+        "dec": 0.25,
+        "hex": "0x3fd0000000000000"
+      },
+      "orientation_deg": {
+        "dec": 30.0,
+        "hex": "0x403e000000000000"
+      },
       "_orientation_source_wanted": "aspect",
-      "parent_spacing_m": 1000.0,
+      "parent_spacing_m": {
+        "dec": 1000.0,
+        "hex": "0x408f400000000000"
+      },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
-      "residual_rms": 0.2664668760424955,
+      "residual_rms": {
+        "dec": 0.2664668760424955,
+        "hex": "0x3fd10dcb158477ac"
+      },
       "octaves_at_parent": 9,
-      "amplitude_m_at_parent": 0.020196332177435345,
+      "amplitude_m_at_parent": {
+        "dec": 0.020196332177435345,
+        "hex": "0x3f94ae58e8ce1125"
+      },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
-        "100": 0.2664668760424955,
-        "1000": 0.27701601834167405
+        "100": {
+          "dec": 0.2664668760424955,
+          "hex": "0x3fd10dcb158477ac"
+        },
+        "1000": {
+          "dec": 0.27701601834167405,
+          "hex": "0x3fd1baa164cfb857"
+        }
       },
       "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
     },
     "playa": {
-      "amplitude_m": 0.04,
-      "spectral_slope": 1.2,
-      "anisotropy": 1.0,
+      "amplitude_m": {
+        "dec": 0.04,
+        "hex": "0x3fa47ae147ae147b"
+      },
+      "spectral_slope": {
+        "dec": 1.2,
+        "hex": "0x3ff3333333333333"
+      },
+      "anisotropy": {
+        "dec": 1.0,
+        "hex": "0x3ff0000000000000"
+      },
       "_why_this_class": "the owner's acceptance criterion names it: a playa is smooth. It is a literal parameter row for that reason.",
-      "finest_wavelength_m": 0.25,
-      "orientation_deg": 0.0,
+      "finest_wavelength_m": {
+        "dec": 0.25,
+        "hex": "0x3fd0000000000000"
+      },
+      "orientation_deg": {
+        "dec": 0.0,
+        "hex": "0x0000000000000000"
+      },
       "_orientation_source_wanted": "none",
-      "parent_spacing_m": 1000.0,
+      "parent_spacing_m": {
+        "dec": 1000.0,
+        "hex": "0x408f400000000000"
+      },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
-      "residual_rms": 0.28898968536725633,
+      "residual_rms": {
+        "dec": 0.28898968536725633,
+        "hex": "0x3fd27ece97e22812"
+      },
       "octaves_at_parent": 9,
-      "amplitude_m_at_parent": 0.0025238293779207732,
+      "amplitude_m_at_parent": {
+        "dec": 0.0025238293779207732,
+        "hex": "0x3f64acda94717d69"
+      },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
-        "100": 0.28898968536725633,
-        "1000": 0.27105945260775044
+        "100": {
+          "dec": 0.28898968536725633,
+          "hex": "0x3fd27ece97e22812"
+        },
+        "1000": {
+          "dec": 0.27105945260775044,
+          "hex": "0x3fd15909bf0e346e"
+        }
       },
       "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
     },
     "riparian_margin": {
-      "amplitude_m": 0.09,
-      "spectral_slope": 1.1,
-      "anisotropy": 3.0,
+      "amplitude_m": {
+        "dec": 0.09,
+        "hex": "0x3fb70a3d70a3d70a"
+      },
+      "spectral_slope": {
+        "dec": 1.1,
+        "hex": "0x3ff199999999999a"
+      },
+      "anisotropy": {
+        "dec": 3.0,
+        "hex": "0x4008000000000000"
+      },
       "_why_its_own_class": "margins are their own calibration classes and are never interpolated between neighbours. A shoreline is where vertical error converts to horizontal error at 1/slope, so this row is the one whose amplitude matters most and is least free.",
-      "finest_wavelength_m": 0.25,
-      "orientation_deg": 15.0,
+      "finest_wavelength_m": {
+        "dec": 0.25,
+        "hex": "0x3fd0000000000000"
+      },
+      "orientation_deg": {
+        "dec": 15.0,
+        "hex": "0x402e000000000000"
+      },
       "_orientation_source_wanted": "channel",
-      "parent_spacing_m": 1000.0,
+      "parent_spacing_m": {
+        "dec": 1000.0,
+        "hex": "0x408f400000000000"
+      },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
-      "residual_rms": 0.2283654474288456,
+      "residual_rms": {
+        "dec": 0.2283654474288456,
+        "hex": "0x3fcd3b14381f246d"
+      },
       "octaves_at_parent": 9,
-      "amplitude_m_at_parent": 0.007148954112518532,
+      "amplitude_m_at_parent": {
+        "dec": 0.007148954112518532,
+        "hex": "0x3f7d4838c1d26b3c"
+      },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
-        "100": 0.2283654474288456,
-        "1000": 0.2335523438849696
+        "100": {
+          "dec": 0.2283654474288456,
+          "hex": "0x3fcd3b14381f246d"
+        },
+        "1000": {
+          "dec": 0.2335523438849696,
+          "hex": "0x3fcde50b0f71ee78"
+        }
       },
       "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
     },
     "slope": {
-      "amplitude_m": 0.55,
-      "spectral_slope": 0.8,
-      "anisotropy": 2.0,
+      "amplitude_m": {
+        "dec": 0.55,
+        "hex": "0x3fe199999999999a"
+      },
+      "spectral_slope": {
+        "dec": 0.8,
+        "hex": "0x3fe999999999999a"
+      },
+      "anisotropy": {
+        "dec": 2.0,
+        "hex": "0x4000000000000000"
+      },
       "_why_anisotropic": "downslope lineation is what a hillside has and an isotropic field does not; the ratio is invented, the mechanism is not",
-      "finest_wavelength_m": 0.25,
-      "orientation_deg": 75.0,
+      "finest_wavelength_m": {
+        "dec": 0.25,
+        "hex": "0x3fd0000000000000"
+      },
+      "orientation_deg": {
+        "dec": 75.0,
+        "hex": "0x4052c00000000000"
+      },
       "_orientation_source_wanted": "aspect",
-      "parent_spacing_m": 1000.0,
+      "parent_spacing_m": {
+        "dec": 1000.0,
+        "hex": "0x408f400000000000"
+      },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
-      "residual_rms": 0.2548107102385988,
+      "residual_rms": {
+        "dec": 0.2548107102385988,
+        "hex": "0x3fd04ed194c94cd4"
+      },
       "octaves_at_parent": 9,
-      "amplitude_m_at_parent": 0.08716912558536125,
+      "amplitude_m_at_parent": {
+        "dec": 0.08716912558536125,
+        "hex": "0x3fb650b73f9c2bce"
+      },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
-        "100": 0.2548107102385988,
-        "1000": 0.26841954238816335
+        "100": {
+          "dec": 0.2548107102385988,
+          "hex": "0x3fd04ed194c94cd4"
+        },
+        "1000": {
+          "dec": 0.26841954238816335,
+          "hex": "0x3fd12dc9290a864e"
+        }
       },
       "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
     },
     "talus": {
-      "amplitude_m": 1.6,
-      "spectral_slope": 0.55,
-      "anisotropy": 1.2,
+      "amplitude_m": {
+        "dec": 1.6,
+        "hex": "0x3ff999999999999a"
+      },
+      "spectral_slope": {
+        "dec": 0.55,
+        "hex": "0x3fe199999999999a"
+      },
+      "anisotropy": {
+        "dec": 1.2,
+        "hex": "0x3ff3333333333333"
+      },
       "_why_this_class": "the other half of the owner's criterion: rocky slopes are rough. Its amplitude is fortyfold the playa's, which is the discrimination the variogram test has to be able to see.",
-      "finest_wavelength_m": 0.25,
-      "orientation_deg": 75.0,
+      "finest_wavelength_m": {
+        "dec": 0.25,
+        "hex": "0x3fd0000000000000"
+      },
+      "orientation_deg": {
+        "dec": 75.0,
+        "hex": "0x4052c00000000000"
+      },
       "_orientation_source_wanted": "aspect",
-      "parent_spacing_m": 1000.0,
+      "parent_spacing_m": {
+        "dec": 1000.0,
+        "hex": "0x408f400000000000"
+      },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
-      "residual_rms": 0.2661343450101737,
+      "residual_rms": {
+        "dec": 0.2661343450101737,
+        "hex": "0x3fd10858590a4f15"
+      },
       "octaves_at_parent": 9,
-      "amplitude_m_at_parent": 0.45094126900231263,
+      "amplitude_m_at_parent": {
+        "dec": 0.45094126900231263,
+        "hex": "0x3fdcdc38c4b206e7"
+      },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
-        "100": 0.2661343450101737,
-        "1000": 0.2730956860533822
+        "100": {
+          "dec": 0.2661343450101737,
+          "hex": "0x3fd10858590a4f15"
+        },
+        "1000": {
+          "dec": 0.2730956860533822,
+          "hex": "0x3fd17a665411ca18"
+        }
       },
       "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
     }
@@ -180,5 +338,6 @@
     "_live_now": "the HAND layer landed and this mechanism was plugged in without being rebuilt, which is the whole reason it was wired before the data existed. `floor_fraction` of full amplitude at the drainage, full strength above `full_strength_above_m`, smoothstep between -- saturating rather than cut, per convention 1.",
     "_absent_hand_is_full_strength": "NAN HAND means outside the basin, or ground whose filled descent reaches no channel at all -- 6,301,722 px of endorheic and edge-draining ground. Undrained upland is not a floodplain, so the honest default is no suppression. Defaulting the other way would have flattened all of it on the strength of a missing value."
   },
-  "elapsed_s": 0.8
+  "elapsed_s": 0.8,
+  "content_digest": "sha256:4fe0874f04e7abdfe23126d70a4ff4587b1b95ed480c1747c37b8dea4d8f1f28"
 }

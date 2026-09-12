@@ -14,12 +14,12 @@
     "_reference_implementation": "sim/detail.py is authoritative and this client conforms to it. The vectors are how that conformance is checked rather than asserted: 300 positions the producing side chose, each carrying the float64 BIT PATTERN of its position and its expected value."
   },
   "produced_by": "tools/build_detail_rows.py, tools/emit_detail_conformance.py",
-  "source_commit": "3fdb079",
+  "source_commit": "31efcab",
   "vendored_by": "copied verbatim; no transform, so no vendor tool of its own",
-  "_amended": "vendored three times in two days and each re-cut closed a defect this boundary found. 060cddd published `residual_rms` for one parent lattice where this client refines two; 4af865c added `residual_rms_by_parent_m` and, in the same cut, regressed the top-level placeholder warning to null and still shipped 88 bare `NaN` tokens; 85626b3 carries the lattice corner as `origin_hex`, emits with NaN refused at the source, and declares the placeholder state rather than inferring it from a key. No vector value moved across any of the three.",
+  "_amended": "vendored three times in two days and each re-cut closed a defect this boundary found. 060cddd published `residual_rms` for one parent lattice where this client refines two; 4af865c added `residual_rms_by_parent_m` and, in the same cut, regressed the top-level placeholder warning to null and still shipped 88 bare `NaN` tokens; 85626b3 carries the lattice corner as `origin_hex`, emits with NaN refused at the source, and declares the placeholder state rather than inferring it from a key. No vector value moved across any of the three. 31efcab is the fourth and the first to move values rather than close a defect: every value-bearing scalar now carries its bit pattern in decision 985's nested `{dec, hex}` form, the parallel `origin`/`origin_hex` convention is retired, and `content_digest` arrives in both artefacts. The amplitudes are still placeholders -- decision 1019's calibrated values ride the second re-vendor.",
   "files": {
-    "detail_rows.json": "27853b87b5ffabc5d09bd020a837c37407b9bc4a7d87c4f92b81feb17d18ab9a",
-    "detail_conformance.json": "8c5239ae04b6273db51955c63974893b434802442d35bebde13cdd12e6ec480b"
+    "detail_rows.json": "6de96e952c1f458002ff92264574e7449b1048936e3e489a1224b02484b2142e",
+    "detail_conformance.json": "d40f18838da610ec0557d92878d1df6cba6ea35c5bc1e21ea785aa097caaff4d"
   },
   "cross_repo": {
     "_what": "how each file above is checkable against `source_commit` in a simulation checkout. Both are byte copies: nothing is transformed on the way in, which is the point of vendoring a reference's own output.",
@@ -34,5 +34,14 @@
       }
     }
   },
-  "_the_corner_is_carried_as_bits": "`parent.origin_hex`, in BOTH artefacts' parent blocks, which the gate compares against each other rather than reading whichever one it happens to want. It is there because this engine's string-to-double reads the corner's decimal to the farther of its two neighbouring doubles -- 2.22e-10 m out against a correct 1.10e-11 m -- which moves every parent node and fails property 2 in float64. Nine orders below the float32 render quantum, so nothing drawn is affected. The DRAWN lattice still takes its corner from `terrain_export.json`'s decimal, deliberately: the heightfield's, the tile grid's and the detail field's corners are all wrong by the same ulp and therefore consistent, and consistency across the three is what the renderer depends on. Both move together at the export's next re-emission, or neither."
+  "_the_corner_is_carried_as_bits": "`parent.origin_hex`, in BOTH artefacts' parent blocks, which the gate compares against each other rather than reading whichever one it happens to want. It is there because this engine's string-to-double reads the corner's decimal to the farther of its two neighbouring doubles -- 2.22e-10 m out against a correct 1.10e-11 m -- which moves every parent node and fails property 2 in float64. Nine orders below the float32 render quantum, so nothing drawn is affected. The DRAWN lattice still takes its corner from `terrain_export.json`'s decimal, deliberately: the heightfield's, the tile grid's and the detail field's corners are all wrong by the same ulp and therefore consistent, and consistency across the three is what the renderer depends on. Both move together at the export's next re-emission, or neither.",
+  "vendored_against_commit": "31efcab72c05904f512bf408f453b73f58468406",
+  "content_digest": {
+    "_what": "each artefact's own digest over itself with its emission stamp removed, so a re-emission that moved no value says so. Recorded here as well as in the file because the question a consumer asks -- did anything I depend on change -- is asked BEFORE reading the file, and answering it by diffing two copies is the work this field exists to avoid.",
+    "_not_the_same_as_files": "`files` is the sha256 of the BYTES and covers the emission stamp; these cover the content and do not. Both are here because they answer different questions, and a PIN carrying only one of them makes the other a diff.",
+    "files": {
+      "detail_rows.json": "sha256:4fe0874f04e7abdfe23126d70a4ff4587b1b95ed480c1747c37b8dea4d8f1f28",
+      "detail_conformance.json": "sha256:f54559f5e124db9128176fa2c189c373e8cb9cc8a2c3e2f9b324240f5819fdfe"
+    }
+  }
 }
