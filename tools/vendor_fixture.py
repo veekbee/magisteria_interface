@@ -66,6 +66,22 @@ REQUIRED = {
 FETCH_THRESHOLD_BYTES = 10 * 1024 * 1024
 
 
+def _tag_of(host: str) -> str:
+    """The release tag a GitHub download URL names, for the reminder below.
+
+    Best-effort and deliberately so: it is building a line for a person to
+    read, not deriving a path. `fetch_artefacts.py` never derives a destination
+    from a URL and this does not either -- if the host is not a GitHub release
+    the tag comes out as a placeholder and the human fills it in.
+    """
+    parts = host.rstrip("/").split("/")
+    if "download" in parts:
+        i = parts.index("download")
+        if i + 1 < len(parts):
+            return parts[i + 1]
+    return "<release-tag>"
+
+
 def sha256(p: Path) -> str:
     h = hashlib.sha256()
     with p.open("rb") as f:
@@ -133,6 +149,9 @@ def main(argv=None) -> int:
     shutil.copy2(src_bin, DEST / "fixture_client.bin")
 
     pin = json.loads((DEST / "PIN").read_text())
+    # WHAT THE PIN CLAIMED BEFORE THIS RUN, so the end of this tool can say
+    # which hosted files it has just invalidated. See the note by `stale_hosts`.
+    was = dict(pin.get("files") or {})
     pin["run"] = full["run"]
     pin["is_a_display_encoding"] = full["client_form"]["is_a_display_encoding"]
     vendored = ["fixture_client.bin", "fixture_client.json"]
@@ -214,6 +233,35 @@ def main(argv=None) -> int:
     print(f"vendored: {len(carried)} row(s) against contract "
           f"v{version['major']}.{version['minor']}, "
           f"{(DEST / 'fixture_client.bin').stat().st_size / 1e6:.1f} MB")
+
+    # THE HOST NOW SERVES SUPERSEDED BYTES, AND THIS IS WHERE THAT IS SAID.
+    #
+    # `host` survives a re-vendor on purpose -- re-deriving the block without it
+    # would silently un-publish the artefact -- but a host carried forward beside
+    # a digest that just moved is a host that is now WRONG. Nothing failed here
+    # and nothing should: the digest is authoritative, so `fetch_artefacts.py`
+    # refuses the stale bytes loudly and names both sides. What it cannot do is
+    # tell you BEFORE you push, and the first thing to notice was CI going red
+    # on a re-vendor that was otherwise correct in every part.
+    #
+    # So the tool that moved the digest is the thing that says so. It cannot
+    # upload -- that is outward-facing and needs a person -- but it can make the
+    # step impossible to forget, which is the difference between a procedure
+    # with five steps and one with six.
+    stale_hosts = []
+    for name, meta in ((pin.get("fetched") or {}).get("files") or {}).items():
+        if meta.get("host") and was.get(name) and was[name] != pin["files"].get(name):
+            stale_hosts.append((name, was[name], pin["files"][name], meta["host"]))
+    for name, before, after, host in stale_hosts:
+        print(f"\nHOST NOW STALE: {name}", file=sys.stderr)
+        print(f"  the PIN claimed  {before}", file=sys.stderr)
+        print(f"  it now claims    {after}", file=sys.stderr)
+        print(f"  the host serves the first, at {host}", file=sys.stderr)
+        print("  Until it is replaced, no fresh clone can fetch this artefact and CI "
+              "fails the\n  digest check -- correctly, and for a reason that has nothing "
+              "to do with the code.", file=sys.stderr)
+        print(f"  gh release upload {_tag_of(host)} {DEST / name} --clobber",
+              file=sys.stderr)
     return 0
 
 
