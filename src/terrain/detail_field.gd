@@ -370,10 +370,38 @@ func same_function_as(other: DetailField) -> bool:
 func amplitude_for(landform: String) -> float:
     var p := row(landform)
     var a := scalar_of(p, "amplitude_m", 0.0)
-    var ref := float(p.get("calibrated_at_parent_m", calibrated_at_parent_m))
+    var ref := calibration_parent_of(landform)
     if ref <= 0.0 or parent_spacing_m <= 0.0 or is_equal_approx(ref, parent_spacing_m):
         return a
     return a * pow(parent_spacing_m / ref, scalar_of(p, "spectral_slope", 1.0))
+
+
+## THE PARENT ONE ROW'S AMPLITUDE WAS MEASURED AGAINST, under the name the
+## artefact actually publishes it at.
+##
+## THIS USED TO LOOK FOR A KEY THAT IS NEVER THERE. The per-row override read
+## `calibrated_at_parent_m`, and the rows publish the same fact as
+## `parent_spacing_m` -- whose own note calls it REQUIRED, *"a row without it is
+## refused rather than defaulted"*, on the strength of §23.977 measuring 3.55x
+## cross-parent disagreement with it undeclared. So the override path could not
+## fire: every row fell through to the file-level default.
+##
+## AND IT LOOKED EXACTLY LIKE WORKING CODE, because the file-level number and
+## every row's number are both 1000.0 today. The absence and the pass are the
+## same output. It bites the moment one class is calibrated somewhere else --
+## which is the case the per-row override exists for and the case §25 backlog
+## 229's bands, measured at 100 m, are about to be.
+##
+## THE FILE-LEVEL VALUE REMAINS THE FALLBACK and the old key is still accepted,
+## because a reader that stopped understanding a shape it used to read is a
+## second defect rather than a fix.
+func calibration_parent_of(landform: String) -> float:
+    var p := row(landform)
+    var per_row := scalar_of(p, "parent_spacing_m", 0.0)
+    if per_row > 0.0:
+        return per_row
+    var legacy := scalar_of(p, "calibrated_at_parent_m", 0.0)
+    return legacy if legacy > 0.0 else calibrated_at_parent_m
 
 
 ## Take the derived layers, and pick the level to read them at.

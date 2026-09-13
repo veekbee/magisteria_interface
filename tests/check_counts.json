@@ -138,6 +138,7 @@
     "test_the_pyramid_makes_the_near_field_relief_and_does_not_open_walk_mode": 5,
     "test_the_ramp_is_ordered_and_bounds_come_from_the_contract": 4,
     "test_the_ray_march_lands_on_the_surface_it_marched": 7,
+    "test_the_rescale_reproduces_the_amplitude_the_artefact_publishes": 12,
     "test_the_residence_layer_aligns_with_the_heightfield": 3,
     "test_the_same_moment_produces_the_same_bundle": 4,
     "test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one": 17,

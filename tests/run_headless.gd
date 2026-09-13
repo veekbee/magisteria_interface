@@ -149,6 +149,7 @@ func _initialize() -> void:
     _run(test_the_mock_earns_a_rung_and_its_boundary_is_cell_shaped, "test_the_mock_earns_a_rung_and_its_boundary_is_cell_shaped")
     _run(test_no_subject_is_drawn_at_two_rungs_and_the_guard_can_fire, "test_no_subject_is_drawn_at_two_rungs_and_the_guard_can_fire")
     _run(test_walking_the_boundary_switches_the_rung_once_and_never_both, "test_walking_the_boundary_switches_the_rung_once_and_never_both")
+    _run(test_the_rescale_reproduces_the_amplitude_the_artefact_publishes, "test_the_rescale_reproduces_the_amplitude_the_artefact_publishes")
     _run(test_the_detail_is_exactly_zero_at_every_parent_sample, "test_the_detail_is_exactly_zero_at_every_parent_sample")
     _run(test_the_detail_tells_a_playa_from_a_talus_slope, "test_the_detail_tells_a_playa_from_a_talus_slope")
     _run(test_one_ground_for_every_consumer_or_none_at_all, "test_one_ground_for_every_consumer_or_none_at_all")
@@ -8146,6 +8147,72 @@ func test_walking_the_boundary_switches_the_rung_once_and_never_both() -> void:
 func detail_field() -> DetailField:
     return DetailField.load_from(heightfield(), DetailField.ROWS_PATH, 0.0,
             TerrainLayers.load_from())
+
+
+func test_the_rescale_reproduces_the_amplitude_the_artefact_publishes() -> void:
+    """THE PRODUCER ALREADY PUBLISHED THE ANSWER AND NOBODY COMPARED.
+
+    `amplitude_m` is measured against the row's own `parent_spacing_m` (1000 m).
+    `amplitude_m_at_parent` is the same amplitude at the artefact's shipped
+    parent, `parent.spacing_m` (100 m). `amplitude_for()` computes that rescale
+    independently, from `spectral_slope`, and never reads the published number.
+
+    So a conversion that both sides implement separately has a published
+    fixed point sitting between them, unused. That is the cheapest possible
+    guard on the one boundary where a disagreement is a power law: get the
+    exponent or the direction wrong and the drawn ground is out by 8.9x to
+    15.8x on these rows, with both implementations internally consistent and
+    neither able to see it.
+
+    NOT A DEC/HEX CROSS-CHECK, which this repo refuses for good reason. This
+    compares two DIFFERENT published quantities that a rule relates, which is
+    the case decision 1031 clause (v) keeps the guard for."""
+    var df := DetailField.load_from(heightfield(), DetailField.ROWS_PATH, 0.0, null)
+    if not df.is_loaded():
+        return
+    # The parent the artefact ships against, read rather than assumed: the rows
+    # deal in two lattices and picking the wrong one is the defect this checks.
+    var shipped := DetailField.scalar_of(df.rows.get("parent", {}) as Dictionary,
+            "spacing_m", 0.0)
+    check(shipped > 0.0, "the rows declare no parent spacing to compare at")
+    if shipped <= 0.0:
+        return
+    var at_shipped := DetailField.load_from(heightfield(), DetailField.ROWS_PATH, shipped, null)
+    var compared := 0
+    for name in df.landforms():
+        var p := at_shipped.row(str(name))
+        var published := PublishedBits.of(p, "amplitude_m_at_parent")
+        if is_nan(published):
+            continue
+        compared += 1
+        var mine := at_shipped.amplitude_for(str(name))
+        check(is_equal_approx(mine, published),
+                ("%s: rescaling %s m -> %s m gives %s and the artefact publishes %s. "
+                        % [str(name), String.num(at_shipped.calibration_parent_of(str(name)), 0),
+                           String.num(shipped, 0), String.num(mine, 17),
+                           String.num(published, 17)])
+                + "One of the two sides has the exponent or the direction wrong, and both are "
+                + "internally consistent.")
+    check(compared == df.landforms().size(),
+            "only %d of %d rows publish an amplitude at the shipped parent, so the fixed point "
+                    % [compared, df.landforms().size()]
+            + "does not cover the set and a row could change unchecked")
+    # AND THE CHECK CAN FAIL, which is the half that makes the pass mean
+    # something: at the parent the amplitudes were CALIBRATED at, the rescale
+    # is the identity and every comparison above would be against a different
+    # number. If these agree, the test is comparing a value to itself.
+    for name in df.landforms():
+        var published := PublishedBits.of(df.row(str(name)), "amplitude_m_at_parent")
+        if is_nan(published):
+            continue
+        check(not is_equal_approx(df.amplitude_for(str(name)), published),
+                "%s: the amplitude at the calibration parent already equals the published "
+                        % str(name)
+                + "value at the shipped parent, so the rescale above compared a number with "
+                + "itself and asserts nothing")
+    print("detail: the rescale to the shipped %s m parent reproduces all %d published "
+            % [String.num(shipped, 0), compared]
+            + "`amplitude_m_at_parent` values exactly")
 
 
 func test_the_detail_is_exactly_zero_at_every_parent_sample() -> void:
