@@ -19,7 +19,7 @@
     "_why": "§19.8.7's `detail_scale` with the controller at rest. It does not enter k(place), so item (ii) is independent of it; it does enter d_f, and a controller that has cut detail pushes MORE pairs under the floor -- so item (iii)'s count is a LOWER BOUND on the population, not an estimate.",
     "s": 1.0
   },
-  "measured_at_commit": "6c8f8d3",
+  "measured_at_commit": "453d97c",
   "not_covered": "item (i), the frame p50 against the vegetation line item at §23.909's five cells, which needs a window. And the solve is evaluated, not applied: decision 1030 says the client changes nothing now.",
   "placement_floor_m": 31.25,
   "ruled_by": {

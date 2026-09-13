@@ -116,6 +116,7 @@ func _initialize() -> void:
     test_the_shading_is_exaggerated_and_the_geometry_is_not()
     test_the_harness_guards_refuse_what_they_were_written_for()
     test_the_motion_metrics_and_which_of_them_detects_popping()
+    test_the_frame_run_does_not_report_a_budget_the_timer_cannot_adjudicate()
     test_the_solved_horizon_discriminates_rather_than_returning_its_ceiling()
     test_every_recorded_seam_run_says_which_question_it_answers()
     test_a_per_family_reference_holds_only_that_family()
@@ -5841,6 +5842,66 @@ func test_the_motion_metrics_and_which_of_them_detects_popping() -> void:
                     + "instances exist at every camera step, so a low reading means the "
                     + "instrument stopped seeing the one thing it was built to see.")
     print("motion: the dolly metric does not separate the control; the instance churn does")
+
+
+func test_the_frame_run_does_not_report_a_budget_the_timer_cannot_adjudicate() -> void:
+    """§24 gap 170 item (i), and the finding is about the instrument.
+
+    `frame_ms` is the interval between PRESENTED frames, so it lands on the
+    display's ladder even with vsync disabled: the five cells came back at
+    11.11, 12.50, 17.08, 32.70 and 38.33 ms, and one earlier run reported
+    min == p50 == max across forty frames, which no scene does. Against a
+    33.3 ms line item the rungs either side are ~32 and ~38, so a cell in
+    between reports as one or the other.
+
+    THE UNPACED READING IS NOT AVAILABLE HERE AND THAT IS RECORDED, NOT
+    ASSUMED. `RenderingServer`'s measured GPU render time is not implemented
+    under `gl_compatibility` -- it reads 0.0 on every frame, which is a
+    plausible reading for a cheap frame, so summarising it would be a
+    fabricated measurement wearing a real name. `render_cost.json` already
+    carries that absence for the same machine; this asserts the seam harness
+    carries it too rather than shipping zeros."""
+    var f := FileAccess.open("res://measurements/horizon_frames.json", FileAccess.READ)
+    if f == null:
+        print("gap 170 (i): no horizon_frames.json -- the windowed run has not been taken")
+        return
+    var doc: Dictionary = JSON.parse_string(f.get_as_text())
+    var runs: Array = doc.get("runs", [])
+    check(runs.size() > 0, "the frame run records no runs")
+    var solved := 0
+    var undecidable := 0
+    for r in runs:
+        for c in (r as Dictionary).get("candidates", []):
+            var cand: Dictionary = c
+            if str(cand.get("name", "")) != "k_solved":
+                continue
+            solved += 1
+            # ZEROS ARE NOT MILLISECONDS. If an unpaced reading is recorded at
+            # all it must be a real one; absence is a legitimate answer and a
+            # summarised zero is not.
+            for which in ["render_ms_gpu", "render_ms_cpu"]:
+                var m: Dictionary = cand.get(which, {})
+                check(not m.is_empty(), "%s carries no %s at all" % [str(cand["name"]), which])
+                if m.has("available") and not bool(m["available"]):
+                    check(str(m.get("why", "")).length() > 40,
+                            "%s is absent and does not say why" % which)
+                else:
+                    check(float(m.get("p50", 0.0)) > 0.0,
+                            "%s is recorded as available and reads 0.0, which is the "
+                                    % which
+                            + "instrument being off wearing the shape of a fast frame")
+            # AND THE PACED READING'S LIMIT IS STATED where it straddles the
+            # budget, rather than the number being quoted as if it settled it.
+            var p50 := float((cand["frame_ms"] as Dictionary)["p50"])
+            var budget := 33.3
+            if absf(p50 - budget) < 6.0:
+                undecidable += 1
+    check(solved > 0, "no run carries a k_solved candidate, so item (i) measured nothing")
+    check(str(doc.get("runs", [])[0].get("role", "")).contains("controller NOT engaged"),
+            "the run does not record that the controller was disengaged, so a reader would "
+            + "take a feedforward-only result for the composed one the ruling describes")
+    print("gap 170 (i): %d solved-k frames, %d within one ladder rung of the 33.3 ms line "
+            % [solved, undecidable] + "item -- the paced timer cannot place those on a side")
 
 
 func test_the_solved_horizon_discriminates_rather_than_returning_its_ceiling() -> void:

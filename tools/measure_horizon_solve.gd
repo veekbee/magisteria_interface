@@ -34,11 +34,10 @@ extends SceneTree
 
 const VIEWPORT_H := 800.0
 const FOV := 75.0
-const CEILING_FRACTION := 0.35
-## Decision 1030's drop-to-tint bound: a family whose solved `d_f` falls under
-## the placement sub-cell goes to decision 890's field layer rather than the
-## budget breaking.
-const PLACEMENT_FLOOR_M := 31.25
+## The formula itself lives in `HorizonSolve` and is not restated here: the
+## windowed frame run at gap 170 item (i) solves the same k, and the two exist
+## to be compared, so a second copy is the one thing that must not happen.
+const PLACEMENT_FLOOR_M := HorizonSolve.PLACEMENT_FLOOR_M
 
 const OUT := "measurements/horizon_solve.json"
 
@@ -79,7 +78,7 @@ func _init() -> void:
     sc.bind(hf, null, fl, fs, fc, null)
 
     var k_res := VegetationScatter.resolution_k(VIEWPORT_H, FOV)
-    var ceiling := CEILING_FRACTION * k_res
+    var ceiling := HorizonSolve.ceiling_for(VIEWPORT_H, FOV)
     var b_eff_ms := fc.budget_ms / VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS
     var b_eff_ns := b_eff_ms * 1.0e6
 
@@ -195,7 +194,7 @@ func _over_window(sc: VegetationScatter, fl: FixtureLoader, fs: FamilySet, fc: F
     var under := 0
     var under_by_family := {}
     for cell in bare.size():
-        var denom := 0.0
+        var per_family := {}
         var heights := {}
         for gi in groups.size():
             var g := str(groups[gi])
@@ -214,17 +213,18 @@ func _over_window(sc: VegetationScatter, fl: FixtureLoader, fs: FamilySet, fc: F
                 continue
             var h := float(imp["height_m"])
             heights[g] = h
-            denom += float(imp["cover"]) * h * h * c_ns[g] / crown_area
-        if denom <= 0.0:
+            per_family[g] = {"cover": float(imp["cover"]), "height_m": h,
+                    "crown_area_m2": crown_area, "cost_ns": c_ns[g]}
+        var sol := HorizonSolve.k_for_cell(per_family, b_eff_ns, ceiling)
+        if not bool(sol["ok"]):
             continue
-        var solved := sqrt(b_eff_ns / (PI * denom))
-        var k: float = minf(ceiling, solved)
+        var k := float(sol["k"])
         ks.append(k)
-        if solved >= ceiling:
+        if bool(sol["at_ceiling"]):
             at_ceiling += 1
         for g in heights:
             pairs += 1
-            if 1.0 * k * float(heights[g]) < PLACEMENT_FLOOR_M:
+            if HorizonSolve.drops_to_tint(HorizonSolve.horizon_m(k, float(heights[g]), 1.0)):
                 under += 1
                 under_by_family[g] = int(under_by_family.get(g, 0)) + 1
     var sorted := Array(ks)
