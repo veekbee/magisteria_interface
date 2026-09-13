@@ -11775,6 +11775,26 @@ static func _strata_covered(m: Dictionary, lags: Array) -> int:
     return n
 
 
+## The centres `tools/find_windows.gd` sourced, or empty if it has not been run.
+##
+## ABSENT IS NOT EMPTY-AND-CARRY-ON: the caller prints that the half is not
+## running. A sourced-window check that quietly evaluates zero windows would
+## report the same green as one that evaluated ten.
+func _sourced_windows() -> Array:
+    var f := FileAccess.open("res://measurements/window_sourcing.json", FileAccess.READ)
+    if f == null:
+        return []
+    var doc = JSON.parse_string(f.get_as_text())
+    if typeof(doc) != TYPE_DICTIONARY:
+        return []
+    var out: Array = []
+    for c in (doc as Dictionary).get("centres", []):
+        var w: Array = (c as Dictionary).get("world_m", [])
+        if w.size() == 2:
+            out.append(Vector2(float(w[0]), float(w[1])))
+    return out
+
+
 func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
     """DECISION 1019'S GRADING FORM, BUILT SO THE VALUES ARE THE ONLY THING
     STILL MISSING.
@@ -11957,6 +11977,51 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
                     or str(why_not["why"]).begins_with(StratumGrade.NO_BANDS),
             "the refusal does not name what is missing: %s" % str(why_not["why"]))
     print("986/1019: not gradeable because %s" % str(why_not["why"]))
+
+    # AND THE ACTIONABLE HALF IS TAKEN, which is what makes the split above
+    # worth having. `NO_COVERAGE` ranks BEFORE `NO_BANDS` in `gradeable`, so
+    # the six centres above would have gone on refusing for coverage even after
+    # the fixture re-cut published decision 985's measured bands -- the
+    # producing side would have shipped the thing everyone was waiting on and
+    # this gate would not have moved, naming the wrong absence while it did not.
+    #
+    # `tools/find_windows.gd` sources centres covering 1019's joint HAND-by-
+    # slope membership space and records them with the grader's own verdict.
+    # Read here rather than hard-coded: the centres are a measurement of this
+    # basin at these layers, and a list transcribed into a test is a copy free
+    # to disagree with the ground it was measured from.
+    var sourced := _sourced_windows()
+    if sourced.is_empty():
+        print("986/1019: no window_sourcing.json, so the sourced-centre half is NOT RUNNING. "
+                + "`tools/find_windows.sh`")
+    else:
+        var sm := StratumGrade.over_windows(df, hf, sourced, 3000.0, lags, 0.5, 300, 21)
+        check(bool(sm["ok"]), "the grader refused the sourced windows: %s" % str(sm["why"]))
+        var sourced_covered := _strata_covered(sm, lags)
+        check(sourced_covered == df.landforms().size(),
+                "the sourced centres cover %d of %d strata, so window sourcing did not close "
+                        % [sourced_covered, df.landforms().size()]
+                + "the coverage half and the refusal below is still partly mine")
+        # THE REFUSAL HAS MOVED, AND THAT IS THE WHOLE POINT. Not "it passes" --
+        # it still refuses, and must, because nobody has published a band. What
+        # changed is WHICH absence it names, and therefore whose it is.
+        var moved := StratumGrade.gradeable(sm, {})
+        check(not bool(moved["ok"]), "the grader graded with no bands published")
+        check(str(moved["why"]).begins_with(StratumGrade.NO_BANDS),
+                "with every stratum covered the refusal still is not NO_BANDS: %s"
+                        % str(moved["why"]))
+        # AND THE CONTROL IS THE HAND-PICKED SET ABOVE, which must still refuse
+        # for coverage -- otherwise the sourcing changed nothing and the two
+        # verdicts are the same verdict.
+        check(str(why_not["why"]).begins_with(StratumGrade.NO_COVERAGE),
+                "the hand-picked centres no longer refuse for coverage, so the sourced set "
+                + "is not demonstrably doing anything: %s" % str(why_not["why"]))
+        print("986/1019: %d sourced centres cover %d/%d strata and the refusal moves from %s"
+                % [sourced.size(), sourced_covered, df.landforms().size(),
+                   str(why_not["why"]).split(":")[0]]
+                + " to %s -- from window sourcing, which is mine, to the published band values,"
+                        % str(moved["why"]).split(":")[0]
+                + " which ride the fixture re-cut")
 
     # THE CONTROL FOR THE GRADING ITSELF, on a measurement where every stratum
     # IS covered. The real windows above do not cover two of the five, which is

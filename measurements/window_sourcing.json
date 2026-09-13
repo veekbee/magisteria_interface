@@ -1,0 +1,233 @@
+{
+  "_the_verdict_is_the_graders": "The selection is a membership-mass proxy. What is reported below is `StratumGrade.over_windows` run on the selected set at the gate's own span, lags and sample count, and `gradeable` asked. A proxy that chose well and a grader that still refuses is a result, not an error.",
+  "_vertical_exaggeration_is": "the grader samples `Heightfield.height_at_world` and `DetailField` directly. The view's factor is applied at mesh build and does not reach this path, so these are field metres in both axes.",
+  "_what": "Window centres covering decision 1019's joint HAND-by-slope membership space, so that decision 986's walk-mode conditions 2 and 3 refuse for the reason that is actually outstanding -- the published band values -- rather than for coverage the client can fix itself.",
+  "centres": [
+    {
+      "chosen_for": "floor",
+      "membership_mass": {
+        "floor": 220.0,
+        "playa": 0.0,
+        "riparian_margin": 0.0,
+        "slope": 0.0,
+        "talus": 0.0
+      },
+      "texel": [
+        701.71875,
+        100.614585876465
+      ],
+      "world_m": [
+        -1107074.125,
+        2255611.75
+      ]
+    },
+    {
+      "chosen_for": "playa",
+      "membership_mass": {
+        "floor": 0.0,
+        "playa": 220.0,
+        "riparian_margin": 0.0,
+        "slope": 0.0,
+        "talus": 0.0
+      },
+      "texel": [
+        129.94792175293,
+        982.927062988281
+      ],
+      "world_m": [
+        -1678845.0,
+        1373299.25
+      ]
+    },
+    {
+      "chosen_for": "riparian_margin",
+      "membership_mass": {
+        "floor": 0.0,
+        "playa": 0.0,
+        "riparian_margin": 220.0,
+        "slope": 0.0,
+        "talus": 0.0
+      },
+      "texel": [
+        857.65625,
+        193.48957824707
+      ],
+      "world_m": [
+        -951136.6875,
+        2162736.75
+      ]
+    },
+    {
+      "chosen_for": "slope",
+      "membership_mass": {
+        "floor": 0.0,
+        "playa": 0.0,
+        "riparian_margin": 0.0,
+        "slope": 220.0,
+        "talus": 0.0
+      },
+      "texel": [
+        670.53125,
+        23.21875
+      ],
+      "world_m": [
+        -1138261.625,
+        2333007.5
+      ]
+    },
+    {
+      "chosen_for": "talus",
+      "membership_mass": {
+        "floor": 0.0,
+        "playa": 0.0,
+        "riparian_margin": 0.0,
+        "slope": 0.0,
+        "talus": 220.0
+      },
+      "texel": [
+        597.760437011719,
+        441.15625
+      ],
+      "world_m": [
+        -1211032.5,
+        1915070.0
+      ]
+    },
+    {
+      "chosen_for": "floor",
+      "membership_mass": {
+        "floor": 220.0,
+        "playa": 0.0,
+        "riparian_margin": 0.0,
+        "slope": 0.0,
+        "talus": 0.0
+      },
+      "texel": [
+        701.71875,
+        116.09375
+      ],
+      "world_m": [
+        -1107074.125,
+        2240132.5
+      ]
+    },
+    {
+      "chosen_for": "playa",
+      "membership_mass": {
+        "floor": 0.0,
+        "playa": 220.0,
+        "riparian_margin": 0.0,
+        "slope": 0.0,
+        "talus": 0.0
+      },
+      "texel": [
+        171.53125,
+        1013.88543701172
+      ],
+      "world_m": [
+        -1637261.625,
+        1342340.875
+      ]
+    },
+    {
+      "chosen_for": "riparian_margin",
+      "membership_mass": {
+        "floor": 0.0,
+        "playa": 53.8929278216131,
+        "riparian_margin": 219.496146364233,
+        "slope": 0.0,
+        "talus": 0.0
+      },
+      "texel": [
+        150.73957824707,
+        1122.23962402344
+      ],
+      "world_m": [
+        -1658053.375,
+        1233986.75
+      ]
+    },
+    {
+      "chosen_for": "slope",
+      "membership_mass": {
+        "floor": 0.0,
+        "playa": 0.0,
+        "riparian_margin": 0.0,
+        "slope": 220.0,
+        "talus": 0.0
+      },
+      "texel": [
+        639.34375,
+        54.1770820617676
+      ],
+      "world_m": [
+        -1169449.125,
+        2302049.25
+      ]
+    },
+    {
+      "chosen_for": "talus",
+      "membership_mass": {
+        "floor": 0.0,
+        "playa": 0.0,
+        "riparian_margin": 0.0,
+        "slope": 0.0,
+        "talus": 220.0
+      },
+      "texel": [
+        618.552062988281,
+        456.635406494141
+      ],
+      "world_m": [
+        -1190240.875,
+        1899590.875
+      ]
+    }
+  ],
+  "classifier_source": "slope at z=3 (800 m), the level nearest this parent spacing, and HAND at z=0 -- the two inputs decision 985 names. Both from assets/terrain/layers/. A slope averages and is read at the scale it is used at; HAND is a height above a specific feature and is read at the finest level, for the same reason a distance transform is.",
+  "geometry": {
+    "lags": [
+      4.0,
+      8.0,
+      16.0
+    ],
+    "min_effective_samples": 256.0,
+    "samples_per_lag": 300,
+    "seed": 21,
+    "span_m": 3000.0
+  },
+  "grader": {
+    "covered": [
+      "floor",
+      "playa",
+      "riparian_margin",
+      "slope",
+      "talus"
+    ],
+    "n_effective": {
+      "floor": 600.0,
+      "playa": 613.986339164491,
+      "riparian_margin": 599.480727742078,
+      "slope": 601.0,
+      "talus": 600.0
+    },
+    "ok": false,
+    "uncovered": [],
+    "why": "NO_BANDS: [\"floor\", \"playa\", \"riparian_margin\", \"slope\", \"talus\"]",
+    "windows": 10
+  },
+  "measured_at_commit": "c5ba60d",
+  "ruled_by": {
+    "clause": "window sourcing covers the joint HAND-by-slope membership space rather than filling criterion 1b's five elevation classes; the calibration support is the window, membership per point within it, never the catchment median",
+    "decision": "1019",
+    "serves": "decision 986's walk-mode conditions 2 and 3, via §24 gap 164's ruling"
+  },
+  "strata": [
+    "floor",
+    "playa",
+    "riparian_margin",
+    "slope",
+    "talus"
+  ],
+  "vertical_exaggeration": 1.0
+}
