@@ -30,167 +30,167 @@ const WINDOW_MIN_H := 800
 
 func _initialize() -> void:
     say_if_the_fixture_is_absent()
-    test_real_artefact_loads_clean()
-    test_conditional_fields_are_presence_not_empty_string()
-    test_major_mismatch_refuses_and_names_both_versions()
-    test_unknown_value_kind_is_skipped_and_reported()
-    test_wire_rung_outside_its_domain_is_skipped()
-    test_a_row_from_a_future_minor_is_masked_never_zeroed()
-    test_the_inspector_builds_from_a_document()
-    test_the_heightfield_decodes_to_real_elevations()
-    test_bicubic_reproduces_texel_values_exactly()
-    test_bicubic_does_not_terrace()
-    test_a_nodata_neighbourhood_returns_nan_not_a_height()
-    test_the_terrain_mesh_holes_rather_than_walls_at_nodata()
-    test_the_terrain_faces_the_camera_that_looks_at_it()
-    test_a_mesh_position_recovers_the_texel_it_was_sampled_from()
-    test_flowlines_drape_and_keep_their_orders()
-    test_no_lattice_geometry_reaches_the_scene()
-    test_the_camera_rig_offers_both_projections()
-    test_the_residence_layer_aligns_with_the_heightfield()
-    test_residence_keys_never_land_where_there_is_no_ground()
-    test_the_fixture_loads_and_says_what_it_refused()
-    test_every_keyed_pixel_joins_to_a_cell()
-    test_decoded_values_stay_inside_the_contracts_bounds()
-    test_nodata_decodes_to_nan_and_never_to_zero()
-    test_the_ramp_is_ordered_and_bounds_come_from_the_contract()
-    test_node_rows_arrive_at_full_precision()
-    test_the_wide_branch_has_a_witness_that_is_not_the_fixture()
-    test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal()
-    test_both_new_readers_run_on_the_shape_the_fixture_actually_ships()
-    test_the_client_declares_exactly_the_rows_its_fixture_carries()
-    test_the_tint_takes_phenology_from_the_wire_when_the_row_is_carried()
-    test_an_envelope_does_not_refuse_a_value_for_being_uncertain()
-    test_every_reach_carries_a_node_so_flow_can_be_drawn()
-    test_the_flow_mapping_distinguishes_zero_from_below_scale()
-    test_quantisation_uses_the_realised_range_not_the_contracts()
-    test_burn_asks_about_magnitude_before_geometry()
-    test_contours_index_the_day_the_manifest_says()
-    test_contour_arcs_land_on_the_terrain_they_were_extracted_on()
-    test_the_contour_line_stays_broken()
-    test_no_contour_set_is_invented_for_a_window_that_has_none()
-    test_the_probe_tells_the_three_absences_apart()
-    test_a_verdict_stale_against_its_replay_is_not_absorbed_into_equivalent()
-    test_the_probe_reads_the_row_that_is_drawn()
-    test_the_ray_march_lands_on_the_surface_it_marched()
-    test_the_series_keeps_what_float32_would_flush_to_zero()
-    test_the_plot_separates_no_flow_from_below_the_scale()
-    test_the_series_is_indexed_by_the_manifests_node_order()
-    test_the_panel_says_why_the_second_node_row_has_no_plot()
-    test_quantiles_are_nearest_rank_and_never_interpolate()
-    test_the_fit_reports_what_it_costs_to_believe_it()
-    test_the_benchmark_refuses_to_measure_frame_cost_headless()
-    test_the_fit_survives_a_renderer_with_no_gpu_timer()
-    test_the_frame_probe_measures_what_a_look_would_report()
-    test_the_frame_probe_can_tell_a_lit_surface_from_a_flat_one()
-    test_ramp_agreement_survives_a_light_and_not_a_highlight()
-    test_the_hillshade_arrives_from_the_north_west()
-    test_the_verdict_is_read_and_never_supplied()
-    test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one()
-    test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate()
-    test_the_budget_solve_divides_by_the_floors_measured_multiplier()
-    test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it()
-    test_the_scatter_measurement_verifies_in_pixels_not_primitives()
-    test_every_wire_life_form_resolves_to_a_family()
-    test_no_family_is_keyed_below_life_form_off_the_wire()
-    test_a_parameter_outside_its_range_is_refused_not_clamped()
-    test_the_exaggeration_is_applied_after_the_check_not_before()
-    test_the_families_hold_the_unit_convention_the_transform_relies_on()
-    test_the_cost_model_refuses_outside_its_measured_span()
-    test_the_scatter_reports_what_it_could_not_draw()
-    test_the_individuation_horizon_is_one_constant_bounded_by_the_camera()
-    test_placement_is_a_function_of_where_and_thins_by_a_stable_prefix()
-    test_two_builds_over_the_same_ground_place_the_same_plants()
-    test_a_census_is_the_stand_a_headless_replay_can_score()
-    test_a_flight_trace_round_trips_and_a_pan_cannot_churn()
-    test_no_committed_trace_is_over_the_size_this_repo_commits()
-    test_every_committed_trace_holds_the_quanta_its_writer_declares()
-    test_the_pinned_flight_replays_to_what_the_artefact_says()
-    test_a_density_schedule_is_finer_than_the_texel_it_thins()
-    test_pft_fractions_are_a_composition_of_the_cover()
-    test_the_tint_takes_wire_shares_unfloored_and_the_drawn_unit_can_change()
-    test_the_tint_holds_the_quantity_a_seam_has_to_conserve()
-    test_a_recorded_distance_names_what_it_is_conditional_on()
-    test_the_seam_metric_fails_the_bad_frame()
-    test_plants_stand_on_the_surface_that_is_drawn()
-    test_the_shading_is_exaggerated_and_the_geometry_is_not()
-    test_the_harness_guards_refuse_what_they_were_written_for()
-    test_the_motion_metrics_and_which_of_them_detects_popping()
-    test_the_frame_run_does_not_report_a_budget_the_timer_cannot_adjudicate()
-    test_the_solved_horizon_discriminates_rather_than_returning_its_ceiling()
-    test_every_recorded_seam_run_says_which_question_it_answers()
-    test_a_per_family_reference_holds_only_that_family()
-    test_a_family_is_scored_in_its_own_annulus_or_not_at_all()
-    test_the_seam_measurement_separates_the_tint_from_the_null()
-    test_the_project_does_not_import_blend_sources()
-    test_phenology_is_the_cell_measured_against_itself()
-    test_the_tint_moves_with_the_season_it_is_read_from()
-    test_multimesh_custom_data_does_not_read_back_headless()
-    test_the_bundle_admits_only_what_it_declares()
-    test_the_same_moment_produces_the_same_bundle()
-    test_the_passthrough_earns_nothing_and_hides_nothing()
-    test_the_bundle_paints_the_pixels_the_fixture_did()
-    test_an_overlay_refuses_a_bundle_it_did_not_bind_against()
-    test_the_observation_point_is_the_bodys_and_never_the_cameras()
-    test_the_transducer_subtree_consumes_the_bundle_and_never_the_fixture()
-    test_the_body_moves_at_the_speed_the_bundle_reports()
-    test_walk_mode_is_refused_while_the_ground_is_a_plane()
-    test_a_recorded_walk_replays_and_cannot_outrun_its_own_locomotion()
-    test_the_console_partitions_its_verbs_from_birth()
-    test_the_percept_min_names_what_binds_and_never_folds_art_debt()
-    test_the_probe_re_derives_what_the_build_placed()
-    test_a_re_centre_that_moved_a_key_is_a_defect_and_not_churn()
-    test_the_console_answers_headless_from_a_named_point()
-    test_the_tiles_do_not_decode_with_the_overviews_constants()
-    test_an_unwritten_tile_is_empty_ground_and_not_a_missing_fetch()
-    test_the_pyramid_makes_the_near_field_relief_and_does_not_open_walk_mode()
-    test_a_node_with_no_asset_draws_its_parent_and_says_it_is_art_debt()
-    test_the_mock_earns_a_rung_and_its_boundary_is_cell_shaped()
-    test_no_subject_is_drawn_at_two_rungs_and_the_guard_can_fire()
-    test_walking_the_boundary_switches_the_rung_once_and_never_both()
-    test_the_detail_is_exactly_zero_at_every_parent_sample()
-    test_the_detail_tells_a_playa_from_a_talus_slope()
-    test_one_ground_for_every_consumer_or_none_at_all()
-    test_the_detail_rows_say_that_they_are_invented()
-    test_the_finest_level_is_the_one_chosen_and_z_zero_is_it()
-    test_a_tile_in_flight_is_not_empty_ground()
-    test_the_patch_rim_lies_on_the_coarse_plane_exactly()
-    test_a_rebuild_moves_no_shared_vertex()
-    test_the_patch_never_takes_ground_away()
-    test_the_ground_refuses_a_patch_it_is_not_standing_on()
-    test_the_near_field_gains_the_data_s_own_samples()
-    test_the_detail_vanishes_on_the_patch_and_appears_below_it()
-    test_one_row_serves_two_parents()
-    test_a_level_switch_moves_no_plant()
-    test_a_patch_refines_its_own_level_and_not_the_overview()
-    test_the_view_turns_detail_on_for_both_surfaces_or_neither()
-    test_the_patch_keeps_ground_the_native_grid_does_not_have()
-    test_the_layers_ride_the_pyramids_own_grid()
-    test_aspect_is_read_through_its_validity_byte_and_never_around_it()
-    test_a_layer_decodes_into_the_range_its_pin_declares()
-    test_the_classifier_reads_the_layers_and_can_reach_the_margin()
-    test_the_golden_bundle_carries_exactly_what_the_schema_declares()
-    test_the_golden_bundle_loads_checks_and_round_trips()
-    test_the_schema_refuses_an_undeclared_name_at_every_level()
-    test_no_consumer_paints_one_lattices_row_through_the_others_join()
-    test_probe_row_reads_a_node_row_through_the_residence_layers_own_node_id()
-    test_the_flow_drape_paints_from_a_bundle_and_never_from_the_fixture()
-    test_a_withheld_node_draws_as_no_information_and_not_as_no_water()
-    test_the_amplitude_field_has_no_step_on_a_class_boundary()
-    test_the_blend_cannot_break_the_exactness_at_a_parent_node()
-    test_hand_conditions_the_amplitude_and_absence_is_full_strength()
-    test_the_detail_is_band_limited_below_the_parent_spacing()
-    test_the_field_is_c1_and_says_which_term_binds()
-    test_a_token_rotates_at_all_three_boundaries_and_nowhere_else()
-    test_a_rotation_is_not_an_erasure_and_the_map_rides_the_envelope()
-    test_the_skin_keys_on_precision_and_dies_with_the_token()
-    test_the_detail_function_conforms_to_its_published_vectors()
-    test_the_five_part_hash_is_the_general_one()
-    test_the_structure_function_refuses_below_the_spacing_it_declares()
-    test_the_plain_form_reports_the_slope_and_the_detrended_form_cannot_see_it()
-    test_the_instrument_repeats_and_recovers_a_known_exponent()
-    test_walk_mode_is_shut_for_986s_reasons_and_itemises_which()
-    test_the_strata_are_the_membership_functions_on_real_ground()
+    _run(test_real_artefact_loads_clean, "test_real_artefact_loads_clean")
+    _run(test_conditional_fields_are_presence_not_empty_string, "test_conditional_fields_are_presence_not_empty_string")
+    _run(test_major_mismatch_refuses_and_names_both_versions, "test_major_mismatch_refuses_and_names_both_versions")
+    _run(test_unknown_value_kind_is_skipped_and_reported, "test_unknown_value_kind_is_skipped_and_reported")
+    _run(test_wire_rung_outside_its_domain_is_skipped, "test_wire_rung_outside_its_domain_is_skipped")
+    _run(test_a_row_from_a_future_minor_is_masked_never_zeroed, "test_a_row_from_a_future_minor_is_masked_never_zeroed")
+    _run(test_the_inspector_builds_from_a_document, "test_the_inspector_builds_from_a_document")
+    _run(test_the_heightfield_decodes_to_real_elevations, "test_the_heightfield_decodes_to_real_elevations")
+    _run(test_bicubic_reproduces_texel_values_exactly, "test_bicubic_reproduces_texel_values_exactly")
+    _run(test_bicubic_does_not_terrace, "test_bicubic_does_not_terrace")
+    _run(test_a_nodata_neighbourhood_returns_nan_not_a_height, "test_a_nodata_neighbourhood_returns_nan_not_a_height")
+    _run(test_the_terrain_mesh_holes_rather_than_walls_at_nodata, "test_the_terrain_mesh_holes_rather_than_walls_at_nodata")
+    _run(test_the_terrain_faces_the_camera_that_looks_at_it, "test_the_terrain_faces_the_camera_that_looks_at_it")
+    _run(test_a_mesh_position_recovers_the_texel_it_was_sampled_from, "test_a_mesh_position_recovers_the_texel_it_was_sampled_from")
+    _run(test_flowlines_drape_and_keep_their_orders, "test_flowlines_drape_and_keep_their_orders")
+    _run(test_no_lattice_geometry_reaches_the_scene, "test_no_lattice_geometry_reaches_the_scene")
+    _run(test_the_camera_rig_offers_both_projections, "test_the_camera_rig_offers_both_projections")
+    _run(test_the_residence_layer_aligns_with_the_heightfield, "test_the_residence_layer_aligns_with_the_heightfield")
+    _run(test_residence_keys_never_land_where_there_is_no_ground, "test_residence_keys_never_land_where_there_is_no_ground")
+    _run(test_the_fixture_loads_and_says_what_it_refused, "test_the_fixture_loads_and_says_what_it_refused")
+    _run(test_every_keyed_pixel_joins_to_a_cell, "test_every_keyed_pixel_joins_to_a_cell")
+    _run(test_decoded_values_stay_inside_the_contracts_bounds, "test_decoded_values_stay_inside_the_contracts_bounds")
+    _run(test_nodata_decodes_to_nan_and_never_to_zero, "test_nodata_decodes_to_nan_and_never_to_zero")
+    _run(test_the_ramp_is_ordered_and_bounds_come_from_the_contract, "test_the_ramp_is_ordered_and_bounds_come_from_the_contract")
+    _run(test_node_rows_arrive_at_full_precision, "test_node_rows_arrive_at_full_precision")
+    _run(test_the_wide_branch_has_a_witness_that_is_not_the_fixture, "test_the_wide_branch_has_a_witness_that_is_not_the_fixture")
+    _run(test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal, "test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal")
+    _run(test_both_new_readers_run_on_the_shape_the_fixture_actually_ships, "test_both_new_readers_run_on_the_shape_the_fixture_actually_ships")
+    _run(test_the_client_declares_exactly_the_rows_its_fixture_carries, "test_the_client_declares_exactly_the_rows_its_fixture_carries")
+    _run(test_the_tint_takes_phenology_from_the_wire_when_the_row_is_carried, "test_the_tint_takes_phenology_from_the_wire_when_the_row_is_carried")
+    _run(test_an_envelope_does_not_refuse_a_value_for_being_uncertain, "test_an_envelope_does_not_refuse_a_value_for_being_uncertain")
+    _run(test_every_reach_carries_a_node_so_flow_can_be_drawn, "test_every_reach_carries_a_node_so_flow_can_be_drawn")
+    _run(test_the_flow_mapping_distinguishes_zero_from_below_scale, "test_the_flow_mapping_distinguishes_zero_from_below_scale")
+    _run(test_quantisation_uses_the_realised_range_not_the_contracts, "test_quantisation_uses_the_realised_range_not_the_contracts")
+    _run(test_burn_asks_about_magnitude_before_geometry, "test_burn_asks_about_magnitude_before_geometry")
+    _run(test_contours_index_the_day_the_manifest_says, "test_contours_index_the_day_the_manifest_says")
+    _run(test_contour_arcs_land_on_the_terrain_they_were_extracted_on, "test_contour_arcs_land_on_the_terrain_they_were_extracted_on")
+    _run(test_the_contour_line_stays_broken, "test_the_contour_line_stays_broken")
+    _run(test_no_contour_set_is_invented_for_a_window_that_has_none, "test_no_contour_set_is_invented_for_a_window_that_has_none")
+    _run(test_the_probe_tells_the_three_absences_apart, "test_the_probe_tells_the_three_absences_apart")
+    _run(test_a_verdict_stale_against_its_replay_is_not_absorbed_into_equivalent, "test_a_verdict_stale_against_its_replay_is_not_absorbed_into_equivalent")
+    _run(test_the_probe_reads_the_row_that_is_drawn, "test_the_probe_reads_the_row_that_is_drawn")
+    _run(test_the_ray_march_lands_on_the_surface_it_marched, "test_the_ray_march_lands_on_the_surface_it_marched")
+    _run(test_the_series_keeps_what_float32_would_flush_to_zero, "test_the_series_keeps_what_float32_would_flush_to_zero")
+    _run(test_the_plot_separates_no_flow_from_below_the_scale, "test_the_plot_separates_no_flow_from_below_the_scale")
+    _run(test_the_series_is_indexed_by_the_manifests_node_order, "test_the_series_is_indexed_by_the_manifests_node_order")
+    _run(test_the_panel_says_why_the_second_node_row_has_no_plot, "test_the_panel_says_why_the_second_node_row_has_no_plot")
+    _run(test_quantiles_are_nearest_rank_and_never_interpolate, "test_quantiles_are_nearest_rank_and_never_interpolate")
+    _run(test_the_fit_reports_what_it_costs_to_believe_it, "test_the_fit_reports_what_it_costs_to_believe_it")
+    _run(test_the_benchmark_refuses_to_measure_frame_cost_headless, "test_the_benchmark_refuses_to_measure_frame_cost_headless")
+    _run(test_the_fit_survives_a_renderer_with_no_gpu_timer, "test_the_fit_survives_a_renderer_with_no_gpu_timer")
+    _run(test_the_frame_probe_measures_what_a_look_would_report, "test_the_frame_probe_measures_what_a_look_would_report")
+    _run(test_the_frame_probe_can_tell_a_lit_surface_from_a_flat_one, "test_the_frame_probe_can_tell_a_lit_surface_from_a_flat_one")
+    _run(test_ramp_agreement_survives_a_light_and_not_a_highlight, "test_ramp_agreement_survives_a_light_and_not_a_highlight")
+    _run(test_the_hillshade_arrives_from_the_north_west, "test_the_hillshade_arrives_from_the_north_west")
+    _run(test_the_verdict_is_read_and_never_supplied, "test_the_verdict_is_read_and_never_supplied")
+    _run(test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one, "test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one")
+    _run(test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate, "test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate")
+    _run(test_the_budget_solve_divides_by_the_floors_measured_multiplier, "test_the_budget_solve_divides_by_the_floors_measured_multiplier")
+    _run(test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it, "test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it")
+    _run(test_the_scatter_measurement_verifies_in_pixels_not_primitives, "test_the_scatter_measurement_verifies_in_pixels_not_primitives")
+    _run(test_every_wire_life_form_resolves_to_a_family, "test_every_wire_life_form_resolves_to_a_family")
+    _run(test_no_family_is_keyed_below_life_form_off_the_wire, "test_no_family_is_keyed_below_life_form_off_the_wire")
+    _run(test_a_parameter_outside_its_range_is_refused_not_clamped, "test_a_parameter_outside_its_range_is_refused_not_clamped")
+    _run(test_the_exaggeration_is_applied_after_the_check_not_before, "test_the_exaggeration_is_applied_after_the_check_not_before")
+    _run(test_the_families_hold_the_unit_convention_the_transform_relies_on, "test_the_families_hold_the_unit_convention_the_transform_relies_on")
+    _run(test_the_cost_model_refuses_outside_its_measured_span, "test_the_cost_model_refuses_outside_its_measured_span")
+    _run(test_the_scatter_reports_what_it_could_not_draw, "test_the_scatter_reports_what_it_could_not_draw")
+    _run(test_the_individuation_horizon_is_one_constant_bounded_by_the_camera, "test_the_individuation_horizon_is_one_constant_bounded_by_the_camera")
+    _run(test_placement_is_a_function_of_where_and_thins_by_a_stable_prefix, "test_placement_is_a_function_of_where_and_thins_by_a_stable_prefix")
+    _run(test_two_builds_over_the_same_ground_place_the_same_plants, "test_two_builds_over_the_same_ground_place_the_same_plants")
+    _run(test_a_census_is_the_stand_a_headless_replay_can_score, "test_a_census_is_the_stand_a_headless_replay_can_score")
+    _run(test_a_flight_trace_round_trips_and_a_pan_cannot_churn, "test_a_flight_trace_round_trips_and_a_pan_cannot_churn")
+    _run(test_no_committed_trace_is_over_the_size_this_repo_commits, "test_no_committed_trace_is_over_the_size_this_repo_commits")
+    _run(test_every_committed_trace_holds_the_quanta_its_writer_declares, "test_every_committed_trace_holds_the_quanta_its_writer_declares")
+    _run(test_the_pinned_flight_replays_to_what_the_artefact_says, "test_the_pinned_flight_replays_to_what_the_artefact_says")
+    _run(test_a_density_schedule_is_finer_than_the_texel_it_thins, "test_a_density_schedule_is_finer_than_the_texel_it_thins")
+    _run(test_pft_fractions_are_a_composition_of_the_cover, "test_pft_fractions_are_a_composition_of_the_cover")
+    _run(test_the_tint_takes_wire_shares_unfloored_and_the_drawn_unit_can_change, "test_the_tint_takes_wire_shares_unfloored_and_the_drawn_unit_can_change")
+    _run(test_the_tint_holds_the_quantity_a_seam_has_to_conserve, "test_the_tint_holds_the_quantity_a_seam_has_to_conserve")
+    _run(test_a_recorded_distance_names_what_it_is_conditional_on, "test_a_recorded_distance_names_what_it_is_conditional_on")
+    _run(test_the_seam_metric_fails_the_bad_frame, "test_the_seam_metric_fails_the_bad_frame")
+    _run(test_plants_stand_on_the_surface_that_is_drawn, "test_plants_stand_on_the_surface_that_is_drawn")
+    _run(test_the_shading_is_exaggerated_and_the_geometry_is_not, "test_the_shading_is_exaggerated_and_the_geometry_is_not")
+    _run(test_the_harness_guards_refuse_what_they_were_written_for, "test_the_harness_guards_refuse_what_they_were_written_for")
+    _run(test_the_motion_metrics_and_which_of_them_detects_popping, "test_the_motion_metrics_and_which_of_them_detects_popping")
+    _run(test_the_frame_run_does_not_report_a_budget_the_timer_cannot_adjudicate, "test_the_frame_run_does_not_report_a_budget_the_timer_cannot_adjudicate")
+    _run(test_the_solved_horizon_discriminates_rather_than_returning_its_ceiling, "test_the_solved_horizon_discriminates_rather_than_returning_its_ceiling")
+    _run(test_every_recorded_seam_run_says_which_question_it_answers, "test_every_recorded_seam_run_says_which_question_it_answers")
+    _run(test_a_per_family_reference_holds_only_that_family, "test_a_per_family_reference_holds_only_that_family")
+    _run(test_a_family_is_scored_in_its_own_annulus_or_not_at_all, "test_a_family_is_scored_in_its_own_annulus_or_not_at_all")
+    _run(test_the_seam_measurement_separates_the_tint_from_the_null, "test_the_seam_measurement_separates_the_tint_from_the_null")
+    _run(test_the_project_does_not_import_blend_sources, "test_the_project_does_not_import_blend_sources")
+    _run(test_phenology_is_the_cell_measured_against_itself, "test_phenology_is_the_cell_measured_against_itself")
+    _run(test_the_tint_moves_with_the_season_it_is_read_from, "test_the_tint_moves_with_the_season_it_is_read_from")
+    _run(test_multimesh_custom_data_does_not_read_back_headless, "test_multimesh_custom_data_does_not_read_back_headless")
+    _run(test_the_bundle_admits_only_what_it_declares, "test_the_bundle_admits_only_what_it_declares")
+    _run(test_the_same_moment_produces_the_same_bundle, "test_the_same_moment_produces_the_same_bundle")
+    _run(test_the_passthrough_earns_nothing_and_hides_nothing, "test_the_passthrough_earns_nothing_and_hides_nothing")
+    _run(test_the_bundle_paints_the_pixels_the_fixture_did, "test_the_bundle_paints_the_pixels_the_fixture_did")
+    _run(test_an_overlay_refuses_a_bundle_it_did_not_bind_against, "test_an_overlay_refuses_a_bundle_it_did_not_bind_against")
+    _run(test_the_observation_point_is_the_bodys_and_never_the_cameras, "test_the_observation_point_is_the_bodys_and_never_the_cameras")
+    _run(test_the_transducer_subtree_consumes_the_bundle_and_never_the_fixture, "test_the_transducer_subtree_consumes_the_bundle_and_never_the_fixture")
+    _run(test_the_body_moves_at_the_speed_the_bundle_reports, "test_the_body_moves_at_the_speed_the_bundle_reports")
+    _run(test_walk_mode_is_refused_while_the_ground_is_a_plane, "test_walk_mode_is_refused_while_the_ground_is_a_plane")
+    _run(test_a_recorded_walk_replays_and_cannot_outrun_its_own_locomotion, "test_a_recorded_walk_replays_and_cannot_outrun_its_own_locomotion")
+    _run(test_the_console_partitions_its_verbs_from_birth, "test_the_console_partitions_its_verbs_from_birth")
+    _run(test_the_percept_min_names_what_binds_and_never_folds_art_debt, "test_the_percept_min_names_what_binds_and_never_folds_art_debt")
+    _run(test_the_probe_re_derives_what_the_build_placed, "test_the_probe_re_derives_what_the_build_placed")
+    _run(test_a_re_centre_that_moved_a_key_is_a_defect_and_not_churn, "test_a_re_centre_that_moved_a_key_is_a_defect_and_not_churn")
+    _run(test_the_console_answers_headless_from_a_named_point, "test_the_console_answers_headless_from_a_named_point")
+    _run(test_the_tiles_do_not_decode_with_the_overviews_constants, "test_the_tiles_do_not_decode_with_the_overviews_constants")
+    _run(test_an_unwritten_tile_is_empty_ground_and_not_a_missing_fetch, "test_an_unwritten_tile_is_empty_ground_and_not_a_missing_fetch")
+    _run(test_the_pyramid_makes_the_near_field_relief_and_does_not_open_walk_mode, "test_the_pyramid_makes_the_near_field_relief_and_does_not_open_walk_mode")
+    _run(test_a_node_with_no_asset_draws_its_parent_and_says_it_is_art_debt, "test_a_node_with_no_asset_draws_its_parent_and_says_it_is_art_debt")
+    _run(test_the_mock_earns_a_rung_and_its_boundary_is_cell_shaped, "test_the_mock_earns_a_rung_and_its_boundary_is_cell_shaped")
+    _run(test_no_subject_is_drawn_at_two_rungs_and_the_guard_can_fire, "test_no_subject_is_drawn_at_two_rungs_and_the_guard_can_fire")
+    _run(test_walking_the_boundary_switches_the_rung_once_and_never_both, "test_walking_the_boundary_switches_the_rung_once_and_never_both")
+    _run(test_the_detail_is_exactly_zero_at_every_parent_sample, "test_the_detail_is_exactly_zero_at_every_parent_sample")
+    _run(test_the_detail_tells_a_playa_from_a_talus_slope, "test_the_detail_tells_a_playa_from_a_talus_slope")
+    _run(test_one_ground_for_every_consumer_or_none_at_all, "test_one_ground_for_every_consumer_or_none_at_all")
+    _run(test_the_detail_rows_say_that_they_are_invented, "test_the_detail_rows_say_that_they_are_invented")
+    _run(test_the_finest_level_is_the_one_chosen_and_z_zero_is_it, "test_the_finest_level_is_the_one_chosen_and_z_zero_is_it")
+    _run(test_a_tile_in_flight_is_not_empty_ground, "test_a_tile_in_flight_is_not_empty_ground")
+    _run(test_the_patch_rim_lies_on_the_coarse_plane_exactly, "test_the_patch_rim_lies_on_the_coarse_plane_exactly")
+    _run(test_a_rebuild_moves_no_shared_vertex, "test_a_rebuild_moves_no_shared_vertex")
+    _run(test_the_patch_never_takes_ground_away, "test_the_patch_never_takes_ground_away")
+    _run(test_the_ground_refuses_a_patch_it_is_not_standing_on, "test_the_ground_refuses_a_patch_it_is_not_standing_on")
+    _run(test_the_near_field_gains_the_data_s_own_samples, "test_the_near_field_gains_the_data_s_own_samples")
+    _run(test_the_detail_vanishes_on_the_patch_and_appears_below_it, "test_the_detail_vanishes_on_the_patch_and_appears_below_it")
+    _run(test_one_row_serves_two_parents, "test_one_row_serves_two_parents")
+    _run(test_a_level_switch_moves_no_plant, "test_a_level_switch_moves_no_plant")
+    _run(test_a_patch_refines_its_own_level_and_not_the_overview, "test_a_patch_refines_its_own_level_and_not_the_overview")
+    _run(test_the_view_turns_detail_on_for_both_surfaces_or_neither, "test_the_view_turns_detail_on_for_both_surfaces_or_neither")
+    _run(test_the_patch_keeps_ground_the_native_grid_does_not_have, "test_the_patch_keeps_ground_the_native_grid_does_not_have")
+    _run(test_the_layers_ride_the_pyramids_own_grid, "test_the_layers_ride_the_pyramids_own_grid")
+    _run(test_aspect_is_read_through_its_validity_byte_and_never_around_it, "test_aspect_is_read_through_its_validity_byte_and_never_around_it")
+    _run(test_a_layer_decodes_into_the_range_its_pin_declares, "test_a_layer_decodes_into_the_range_its_pin_declares")
+    _run(test_the_classifier_reads_the_layers_and_can_reach_the_margin, "test_the_classifier_reads_the_layers_and_can_reach_the_margin")
+    _run(test_the_golden_bundle_carries_exactly_what_the_schema_declares, "test_the_golden_bundle_carries_exactly_what_the_schema_declares")
+    _run(test_the_golden_bundle_loads_checks_and_round_trips, "test_the_golden_bundle_loads_checks_and_round_trips")
+    _run(test_the_schema_refuses_an_undeclared_name_at_every_level, "test_the_schema_refuses_an_undeclared_name_at_every_level")
+    _run(test_no_consumer_paints_one_lattices_row_through_the_others_join, "test_no_consumer_paints_one_lattices_row_through_the_others_join")
+    _run(test_probe_row_reads_a_node_row_through_the_residence_layers_own_node_id, "test_probe_row_reads_a_node_row_through_the_residence_layers_own_node_id")
+    _run(test_the_flow_drape_paints_from_a_bundle_and_never_from_the_fixture, "test_the_flow_drape_paints_from_a_bundle_and_never_from_the_fixture")
+    _run(test_a_withheld_node_draws_as_no_information_and_not_as_no_water, "test_a_withheld_node_draws_as_no_information_and_not_as_no_water")
+    _run(test_the_amplitude_field_has_no_step_on_a_class_boundary, "test_the_amplitude_field_has_no_step_on_a_class_boundary")
+    _run(test_the_blend_cannot_break_the_exactness_at_a_parent_node, "test_the_blend_cannot_break_the_exactness_at_a_parent_node")
+    _run(test_hand_conditions_the_amplitude_and_absence_is_full_strength, "test_hand_conditions_the_amplitude_and_absence_is_full_strength")
+    _run(test_the_detail_is_band_limited_below_the_parent_spacing, "test_the_detail_is_band_limited_below_the_parent_spacing")
+    _run(test_the_field_is_c1_and_says_which_term_binds, "test_the_field_is_c1_and_says_which_term_binds")
+    _run(test_a_token_rotates_at_all_three_boundaries_and_nowhere_else, "test_a_token_rotates_at_all_three_boundaries_and_nowhere_else")
+    _run(test_a_rotation_is_not_an_erasure_and_the_map_rides_the_envelope, "test_a_rotation_is_not_an_erasure_and_the_map_rides_the_envelope")
+    _run(test_the_skin_keys_on_precision_and_dies_with_the_token, "test_the_skin_keys_on_precision_and_dies_with_the_token")
+    _run(test_the_detail_function_conforms_to_its_published_vectors, "test_the_detail_function_conforms_to_its_published_vectors")
+    _run(test_the_five_part_hash_is_the_general_one, "test_the_five_part_hash_is_the_general_one")
+    _run(test_the_structure_function_refuses_below_the_spacing_it_declares, "test_the_structure_function_refuses_below_the_spacing_it_declares")
+    _run(test_the_plain_form_reports_the_slope_and_the_detrended_form_cannot_see_it, "test_the_plain_form_reports_the_slope_and_the_detrended_form_cannot_see_it")
+    _run(test_the_instrument_repeats_and_recovers_a_known_exponent, "test_the_instrument_repeats_and_recovers_a_known_exponent")
+    _run(test_walk_mode_is_shut_for_986s_reasons_and_itemises_which, "test_walk_mode_is_shut_for_986s_reasons_and_itemises_which")
+    _run(test_the_strata_are_the_membership_functions_on_real_ground, "test_the_strata_are_the_membership_functions_on_real_ground")
     stage_the_main_scene()
 
 
@@ -203,16 +203,123 @@ func _process(_delta: float) -> bool:
     return true
 
 
+const CHECK_COUNTS := "res://tests/check_counts.json"
+
+
+## Which tests contributed fewer checks than the pin says they did.
+##
+## Reported before the pass/fail line, because a suite that says ALL GREEN
+## having quietly stopped running something has answered a different question
+## from the one the reader asked.
+func _fallen_checks() -> PackedStringArray:
+    var out := PackedStringArray()
+    if not FileAccess.file_exists(CHECK_COUNTS):
+        return out
+    var pinned = JSON.parse_string(
+            FileAccess.open(CHECK_COUNTS, FileAccess.READ).get_as_text())
+    if typeof(pinned) != TYPE_DICTIONARY:
+        return out
+    var led := _ledger()
+    for name in (pinned as Dictionary):
+        var was := int((pinned as Dictionary)[name])
+        if not led.has(name):
+            out.append("%s: %d -> the test did not run at all" % [str(name), was])
+        elif int(led[name]) < was:
+            out.append("%s: %d -> %d" % [str(name), was, int(led[name])])
+    return out
+
+
+## Checks that ran inside no wrapped test -- the fixture-absence notice, the
+## staging, and the main-scene block.
+##
+## PINNED TOO, BECAUSE OTHERWISE THEY ARE THE ONE PLACE A FALL STAYS INVISIBLE.
+## 4,240 of 4,288 were attributed when this landed; the other 48 run outside the
+## per-test wrapper, and a guard that covers everything except a known 48 has a
+## known 48-check hole in it. The name is not a test's, so it sorts apart.
+const UNATTRIBUTED := "_outside_any_test"
+
+
+func _ledger() -> Dictionary:
+    var attributed := 0
+    for n in _per_test:
+        attributed += int(_per_test[n])
+    var out := _per_test.duplicate()
+    out[UNATTRIBUTED] = _checks - attributed
+    return out
+
+
+func _write_check_counts() -> void:
+    var sorted_names: Array = _ledger().keys()
+    sorted_names.sort()
+    var led := _ledger()
+    var out := {}
+    for n in sorted_names:
+        out[n] = led[n]
+    var f := FileAccess.open(CHECK_COUNTS, FileAccess.WRITE)
+    f.store_string(JSON.stringify(out, "  ") + "\n")
+    f.close()
+    print("pinned %d test(s), %d checks" % [out.size(), _checks])
+
+
 func _finish() -> void:
     print("")
-    if _failures.is_empty():
+    if "--pin-counts" in OS.get_cmdline_user_args():
+        _write_check_counts()
+        quit(0)
+        return
+    var fallen := _fallen_checks()
+    for line in fallen:
+        printerr("CHECKS FELL: %s" % line)
+    if not fallen.is_empty():
+        printerr("%d test(s) contributed fewer checks than tests/check_counts.json pins. A "
+                % fallen.size()
+                + "check that stops running is invisible in a total that went up, which is why "
+                + "this is per test. If the fall is intended -- an artefact carries less, a "
+                + "test was narrowed -- re-pin with `bash tools/pin_check_counts.sh` and let "
+                + "the diff say so.")
+    if _failures.is_empty() and fallen.is_empty():
         print("OK -- %d checks passed" % _checks)
         quit(0)
+    elif _failures.is_empty():
+        printerr("%d checks passed, and the count fell" % _checks)
+        quit(1)
     else:
         for f in _failures:
             printerr("FAIL: %s" % f)
         printerr("%d of %d checks failed" % [_failures.size(), _checks])
         quit(1)
+
+
+## Per-test check counts, so a check that stops running is visible even when the
+## total rises.
+##
+## THE TOTAL ALONE CANNOT SEE A COMPENSATING CHANGE, and that is the failure
+## this exists for. Moving `CLIENT_MINOR` from 0 to 1 against a fixture that did
+## not carry the row took the suite from 4,057 checks to 4,054 and printed ALL
+## GREEN: at equal minors the version reports stop being emitted, so the loop
+## that inspects them had nothing to iterate and three checks quietly did not
+## run. Nobody deleted a test. A commit that adds five checks and silently loses
+## three nets +2 and looks like progress.
+##
+## A FALL IS REFUSED AND THE DECLARATION IS THE COMMITTED DIFF. `tests/check_counts.json`
+## pins what each test contributed; `bash tools/pin_check_counts.sh` rewrites it,
+## and the fall then appears as a red line in review, which is decision 932's
+## typed delta in the form this repo already reads. A rise needs no ceremony.
+##
+## COUNTS MOVE WITH THE ARTEFACTS AND THAT IS NOT A DEFECT: a test looping over
+## the fixture's windows contributes more checks when the fixture carries more.
+## Re-pinning after a re-vendor is expected, and the diff is where a reader sees
+## which tests the new artefact stopped exercising.
+var _per_test: Dictionary = {}
+var _current_test: String = ""
+
+
+func _run(fn: Callable, name: String) -> void:
+    var before := _checks
+    _current_test = name
+    fn.call()
+    _current_test = ""
+    _per_test[name] = _checks - before
 
 
 func check(cond: bool, what: String) -> void:
