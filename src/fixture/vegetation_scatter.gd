@@ -209,6 +209,15 @@ func solve_k_at(window: String, day: int, centre: Vector2,
         return {"ok": false, "why": "the scatter is not bound to everything the solve needs"}
     if not _fc.is_loaded():
         return {"ok": false, "why": _fc.why_absent}
+    # A CAMERA THAT DOES NOT EXIST IS REFUSED, NOT TREATED AS A SMALL ONE.
+    # `resolution_k` returns 0.0 for a zero-height viewport, so the ceiling
+    # would be 0, the clamp would take it, and the build would draw a world with
+    # nothing individuated anywhere while reporting that it had solved for the
+    # budget. A missing viewport is not a tiny one.
+    if viewport_height_px <= 0.0 or fov_degrees <= 0.0:
+        return {"ok": false, "why": ("no camera to solve against: viewport height %s px, fov %s "
+                + "deg. k_res is a pinhole property and there is no pinhole here."
+                ) % [String.num(viewport_height_px, 1), String.num(fov_degrees, 1)]}
     var t := _hf.world_to_texel(centre.x, centre.y)
     var huc := _rl.huc10_at(int(t.x), int(t.y))
     var key: Array = _rl.key_at(int(t.x), int(t.y))

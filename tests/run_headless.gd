@@ -6113,6 +6113,57 @@ func test_the_horizon_is_solved_from_the_budget_rather_than_handed_over() -> voi
         check(float(tall["ceiling"]) > float(at["ceiling"]) * 1.9,
                 "doubling the viewport height did not roughly double the ceiling: %s against %s"
                 % [String.num(float(tall["ceiling"]), 2), String.num(float(at["ceiling"]), 2)])
+    # ---- AND THE VIEW CAN ASK FOR IT, which is what makes it the DRAWN world
+    # rather than a function that exists. The build must refuse where it cannot
+    # solve and must not fall back to the ceiling: a world drawn at decision
+    # 949's constant while the report says the budget was solved for is the
+    # failure this whole lane is against.
+    var v := TerrainView.new()
+    get_root().add_child(v)
+    v.build()
+    v.bind_fields()
+    # PAINT A ROW FIRST. `scatter_at` refuses without one -- "no row is painted,
+    # so there is no day to scatter" -- and the first cut of this guarded on
+    # `v.shown` being non-empty, which it never was, so the whole view path
+    # silently did not run. The count not moving is what showed it: 4,303 before
+    # the block and 4,303 after.
+    var painted := v.show_field("deepest_winter", "band.pft_fractions", 45)
+    check(painted, "the field did not paint, so the view path cannot be exercised")
+    if bool(v.bind_families().get("ok", false)) and painted:
+        var verts: PackedVector3Array = v.terrain.mesh.surface_get_arrays(0)[Mesh.ARRAY_VERTEX]
+        var where := v.terrain.mesh_to_world(verts[5000], v.heightfield)
+        var solved_build := v.scatter_at(where, 1800.0, VegetationScatter.NO_SCHEDULE,
+                VegetationScatter.MAX_BUILT_INSTANCES, VegetationScatter.SOLVE_HORIZON)
+        if bool(solved_build.get("ok", false)):
+            var rep: Dictionary = solved_build.get("horizon_solve", {})
+            check(not rep.is_empty(),
+                    "a solved build reported no solve, so nothing says which k was in force")
+            check(float(solved_build["individuation_k"]) > 0.0,
+                    "a solved build drew at k %s" % str(solved_build["individuation_k"]))
+            check(solved_build.has("dropped_to_tint"),
+                    "the drop-to-tint clause is not reported, so a family leaving the "
+                    + "instances for the field layer would be invisible")
+            print("C2 through the view: solved %s, applied %s, dropped %s"
+                    % [String.num(float(rep.get("k", NAN)), 2),
+                       String.num(float(solved_build["individuation_k"]), 2),
+                       str(solved_build["dropped_to_tint"])])
+        else:
+            # A REFUSAL IS A LEGITIMATE OUTCOME and must say why rather than
+            # drawing something. Asserted so the refusal path cannot rot.
+            check(str(solved_build.get("why", "")).contains("solve"),
+                    "the build refused a solved horizon without saying it was the solve: %s"
+                    % str(solved_build.get("why", "")))
+            # AND THE REFUSAL IS THE CAMERA'S, which is the only one reachable
+            # headless: a viewport with no height has no pinhole, so `k_res` has
+            # no meaning and the solve refuses rather than clamping to zero.
+            check(str(solved_build.get("why", "")).contains("camera"),
+                    "the refusal is not the missing-camera one, so something else is wrong "
+                    + "with the solved path: %s" % str(solved_build.get("why", "")))
+            print("C2 through the view: refused for want of a camera, which is the only "
+                    + "outcome a headless run can reach -- the SUCCESS path through the view "
+                    + "is exercised only in a window, and is not covered here")
+    v.queue_free()
+
     print("C2: k %s under the ceiling, %s clamped to it, ceiling %s at 800 px / 75 deg"
             % [String.num(float(below["k"]), 2), String.num(float(at["k"]), 2),
                String.num(float(at["ceiling"]), 2)])

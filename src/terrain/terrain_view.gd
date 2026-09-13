@@ -867,6 +867,22 @@ func clear_stream() -> void:
 ##
 ## THE DAY IS THE SCRUBBER'S, through `shown`. A scatter holding its own day
 ## would put winter's canopy over summer's ground.
+## Seconds since the last scatter build, for convention 2's relaxation.
+##
+## MEASURED, NOT A FRAME COUNT. The relaxation is a half-life in seconds, so a
+## build that took 300 ms must move the applied `k` further than one that took
+## 16 ms -- counting frames would make the horizon settle at a rate that depends
+## on how expensive the scene already is, which is the wrong way round.
+var _last_scatter_usec: int = 0
+
+
+func _since_last_scatter_s() -> float:
+    var now := Time.get_ticks_usec()
+    var was := _last_scatter_usec
+    _last_scatter_usec = now
+    return 0.0 if was == 0 else float(now - was) / 1.0e6
+
+
 func scatter_at(centre: Vector2, radius_m: float = SCATTER_HORIZON_M,
                 bands: Array = VegetationScatter.NO_SCHEDULE,
                 ceiling: int = VegetationScatter.MAX_BUILT_INSTANCES,
@@ -882,8 +898,22 @@ func scatter_at(centre: Vector2, radius_m: float = SCATTER_HORIZON_M,
     # it would only half use would be a seam in name.
     bundle = bundle_at(str(shown["window"]), int(shown["day"]))
     scatter.refinements = bundle.refinements
+    # THE CAMERA THE SOLVE IS AGAINST, read here rather than passed in, because
+    # `k_res` is a property of THIS viewport and this field of view and a caller
+    # supplying them could supply a different camera from the one that draws.
+    #
+    # ONLY WHEN SOLVING, AND THE VIEWPORT MAY NOT BE THERE. `get_viewport()` is
+    # null for a view that is not inside one, which several harnesses build
+    # deliberately -- calling it unconditionally took every constant-`k` build
+    # in the suite down with a null-value error, on a line those builds have no
+    # use for.
+    var height_px := 0.0
+    if is_equal_approx(k, VegetationScatter.SOLVE_HORIZON):
+        var vp := get_viewport()
+        height_px = 0.0 if vp == null else vp.get_visible_rect().size.y
     var r := scatter.build(str(shown["window"]), int(shown["day"]), centre, radius_m,
-            bands, ceiling, k, only, frame_budget)
+            bands, ceiling, k, only, frame_budget,
+            height_px, rig.fly.fov, _since_last_scatter_s())
     if not bool(r.get("ok", false)):
         return r
     for life_form in scatter.meshes:
