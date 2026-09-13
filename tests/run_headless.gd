@@ -822,9 +822,26 @@ func test_the_main_scene_populated_itself() -> void:
                                     "TerrainView/Vegetation_%s" % g) != null,
                                     "%s placed instances and reached no node in the scene" % g)
                     check(drawn.size() > 0, "the scatter placed nothing at all here")
+                    # WHICH FAMILIES LEFT THE INSTANCES, AND WHY. Since lane
+                    # C2's inversion the horizon is solved per place, and a
+                    # family whose solved `d_f` falls under the 31.25 m
+                    # placement sub-cell drops to decision 890's field layer
+                    # (decision 1030). At this place that takes shrub and
+                    # succulent out of the instances entirely -- a real change
+                    # to what is drawn, so it is printed rather than left for a
+                    # reader to notice that a families list got shorter.
                     print("main scene scatter: %d texels, share %s, families %s"
                             % [int(sr["texels"]), String.num(float(sr["share_drawn"]), 5),
                                str(drawn)])
+                    var solve_rep: Dictionary = sr.get("horizon_solve", {})
+                    if not solve_rep.is_empty():
+                        print("main scene horizon: solved k %s, ceiling %s at %s px, "
+                                % [String.num(float(solve_rep.get("k", NAN)), 2),
+                                   String.num(float(solve_rep.get("ceiling", NAN)), 2),
+                                   String.num(float(solve_rep.get("viewport_height_px", NAN)), 0)]
+                                + "at_ceiling %s; " % str(solve_rep.get("at_ceiling", "?"))
+                                + "dropped to the field layer: %s"
+                                % str(sr.get("dropped_to_tint", {})))
 
                     # AND IT HAS TO BE REACHABLE. The overview camera shows
                     # 1,545,600 m of basin and the scatter is 3,000 m across, so

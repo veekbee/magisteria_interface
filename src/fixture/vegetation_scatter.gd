@@ -258,6 +258,12 @@ func solve_k_at(window: String, day: int, centre: Vector2,
     var out := HorizonSolve.k_for_cell(per_family, b_eff_ns(), ceiling)
     out["ceiling"] = ceiling
     out["k_resolution"] = VegetationScatter.resolution_k(viewport_height_px, fov_degrees)
+    # THE CAMERA THIS WAS SOLVED AGAINST, recorded because `k_res` is a pinhole
+    # property and a solve is only meaningful against the view it was taken
+    # for. A report carrying the ceiling and not the viewport cannot tell a
+    # place that genuinely affords little from a window nobody looks through.
+    out["viewport_height_px"] = viewport_height_px
+    out["fov_degrees"] = fov_degrees
     out["cell"] = cell
     out["huc10"] = huc
     out["band"] = int(key[1])

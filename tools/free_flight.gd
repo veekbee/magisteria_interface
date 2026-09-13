@@ -91,7 +91,10 @@ var window_name := ""
 var row_name := "band.pft.biomass"
 var day := 22
 var at_world := Vector2.ZERO
-var k_fraction := 0.35
+## `--k` as a fraction of `k_res`. ZERO MEANS SOLVE IT, which is the default
+## since decision 1030: the horizon is what the place affords, and 949's
+## constant is the ceiling rather than the value.
+var k_fraction := 0.0
 var speed_m_s := WALK_M_S
 ## Metres the camera may travel before the scatter is rebuilt around it. Zero
 ## is what ships: one build, flown through. Anything above zero is backlog
@@ -122,6 +125,18 @@ var _unfocused := 0
 var _builds := 0
 var _blocked_ms := 0.0
 var _k_res := 0.0
+## How many builds fell back because the solve refused. Counted rather than
+## only printed: three notices then silence would otherwise read as a flight
+## that stopped refusing.
+var _solve_refusals := 0
+
+
+## The window's height. `free_flight` is a SceneTree script, so there is no
+## `get_viewport()` on `self` -- the root is the viewport, and reading it from
+## the wrong place is how the first cut of this failed to parse at all.
+func _viewport_height_px() -> float:
+    var r := get_root()
+    return 0.0 if r == null else r.get_visible_rect().size.y
 var _hud: Label = null
 var _look: MouseLook = null
 
@@ -302,8 +317,28 @@ func _build(centre: Vector2, first: bool) -> void:
     var t := Time.get_ticks_usec()
     if not first:
         _prev_census = view.scatter.census.duplicate()
-    view.scatter_at(centre, RADIUS_M, [], VegetationScatter.MAX_BUILT_INSTANCES,
-            k_fraction * _k_res)
+    # DECISION 1030'S SOLVED HORIZON IS THE DEFAULT HERE. `--k` still pins a
+    # constant for anyone comparing against the pre-inversion world; without it
+    # the place decides what it can afford.
+    var want_k := VegetationScatter.SOLVE_HORIZON if k_fraction <= 0.0 \
+            else k_fraction * _k_res
+    var built: Dictionary = view.scatter_at(centre, RADIUS_M, [],
+            VegetationScatter.MAX_BUILT_INSTANCES, want_k)
+    # A REFUSED SOLVE FALLS BACK HERE AND SAYS SO, WHICH THE BUILD MUST NOT DO.
+    # The build refuses because a silent substitution would draw a world at
+    # decision 949's constant while reporting the budget solved for. A VIEWER
+    # still has to put something on screen, so the fallback is the viewer's
+    # explicit policy and it is announced -- a flight that quietly stopped
+    # solving would look like a flight where every place afforded the ceiling.
+    if not bool(built.get("ok", false)) \
+            and is_equal_approx(want_k, VegetationScatter.SOLVE_HORIZON):
+        _solve_refusals += 1
+        if _solve_refusals <= 3:
+            print("free_flight: the horizon could not be solved here (%s); drawing at "
+                    % str(built.get("why", "?"))
+                    + "decision 949's ceiling instead, which is the pre-inversion world")
+        built = view.scatter_at(centre, RADIUS_M, [], VegetationScatter.MAX_BUILT_INSTANCES,
+                HorizonSolve.ceiling_for(_viewport_height_px(), view.rig.fly.fov))
     _build_centre = centre
     _last_build_ms = float(Time.get_ticks_usec() - t) / 1000.0
     _rebuilt_this_frame = true

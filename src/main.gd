@@ -261,6 +261,19 @@ func _on_probed(result: Dictionary) -> void:
     # M5 rides on the probe: the scatter needs a place to stand, and the point
     # the viewer just asked about is the one they are looking at.
     if str(result.get("state", "")) == CellProbe.RESOLVED and result.has("world"):
+        # NOT ON THE SOLVED HORIZON, DELIBERATELY. `free_flight` defaults to it
+        # since lane C2's inversion; this one does not, and the reason is the
+        # viewport. `k_res` is a pinhole property, so a small window solves a
+        # small ceiling -- at the 64 px the headless harness stands this scene
+        # at, the ceiling is 14.60 m, under the 31.25 m placement floor for any
+        # plant shorter than about 2.1 m, and shrub and succulent drop to the
+        # field layer. Correct arithmetic on a window nobody looks through.
+        #
+        # This scatter is the probe panel's, driven by a click, and the gate
+        # reads it to check that every family placing instances reaches a node.
+        # Putting it on the solved horizon costs that coverage for a reason
+        # that is the harness's rather than the world's. The far field C2 is
+        # about is `free_flight`'s, and that is where the default went.
         scatter_report = _terrain.scatter_at(result["world"])
         if probe_panel != null:
             probe_panel.show_scatter(scatter_report)
