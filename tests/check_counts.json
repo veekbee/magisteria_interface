@@ -167,7 +167,7 @@
     "test_two_builds_over_the_same_ground_place_the_same_plants": 12,
     "test_unknown_value_kind_is_skipped_and_reported": 3,
     "test_walk_mode_is_refused_while_the_ground_is_a_plane": 8,
-    "test_walk_mode_is_shut_for_986s_reasons_and_itemises_which": 11,
+    "test_walk_mode_is_shut_for_986s_reasons_and_itemises_which": 15,
     "test_walking_the_boundary_switches_the_rung_once_and_never_both": 6,
     "test_wire_rung_outside_its_domain_is_skipped": 2
   }

@@ -11673,9 +11673,16 @@ func test_walk_mode_is_shut_for_986s_reasons_and_itemises_which() -> void:
     for a retired reason is the shape that survives review and fails later.
 
     Re-keyed on the three conditions, itemised, with a third outcome beside
-    pass and fail. The payoff is that when the grading form is ruled exactly
-    one row flips and a reader can see which -- instead of a boolean that has
-    been hiding the fact that condition 1 has been met since yesterday."""
+    pass and fail. The payoff is that when the missing piece lands exactly one
+    row flips and a reader can see which -- instead of a boolean that has been
+    hiding the fact that condition 1 has been met since yesterday.
+
+    WHAT THE MISSING PIECE IS HAS ITSELF CHANGED, and the refusal text did not
+    follow it. Conditions 2 and 3 waited on gap 164's ruling; decision 1019
+    ruled it, `StratumGrade` builds that form here, and the refusal went on
+    saying the form was unruled -- a sentence this repo's own code contradicts
+    two files away. The state stayed right, so nothing failed and nobody
+    re-read it. What is actually absent is the published band VALUES."""
     var fl := fixture()
     var b := FixturePassthrough.over(fl).bundle_for(fl.windows[0], 0, _dev_observer())
     var w := DebugPlayer.walk_available(b, 1000.0, 4000.0)
@@ -11687,6 +11694,23 @@ func test_walk_mode_is_shut_for_986s_reasons_and_itemises_which() -> void:
             "with no evidence at all, %d conditions read MET and %d not gradeable. Nothing "
                     % [int(w["met"]), int(w["not_gradeable"])]
             + "has been measured, and that is three NOT_GRADEABLE rather than three failures.")
+
+    # AND THE REFUSAL NAMES WHAT IS MISSING TODAY, not what was missing when it
+    # was written. A NOT_GRADEABLE is read by a person deciding what to do
+    # next, so its text is the whole of its value: pointing at an unruled form
+    # sends them to the corpus, where they find decision 1019 and no work to
+    # do. Pinned because prose has no other guard -- the state is identical
+    # either way, which is exactly why it went stale unnoticed.
+    for it in (w["conditions"] as Array):
+        if str((it as Dictionary)["condition"]) == DebugPlayer.CONDITION_FUNCTION:
+            continue
+        var said := str((it as Dictionary)["why"])
+        check(not said.contains("unruled"),
+                "the refusal still calls the grading form unruled, and decision 1019 ruled "
+                + "it: %s" % said)
+        check(said.contains("1019") and said.contains("StratumGrade"),
+                "the refusal does not name the ruling that landed or the form built here: %s"
+                        % said)
 
     # THE CONDITION THIS CLIENT CAN ALREADY MEET, supplied as evidence rather
     # than fetched: this file is inside the transducer subtree and consumes

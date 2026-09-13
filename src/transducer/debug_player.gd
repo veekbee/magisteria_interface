@@ -267,17 +267,33 @@ static func walk_available(bundle: PerceptBundle, ground_sample_m: float,
                         % [vectors, String.num(worst, 17), String.num(tol, 17),
                                 "exactly zero" if exact else "NOT exactly zero"])})
 
-    # 2 and 3. Both wait on the same ruling, and both say so separately,
+    # 2 and 3. Both wait on the same MEASUREMENT, and both say so separately,
     # because they will not land together and a caller has to see which moved.
+    #
+    # THIS USED TO SAY THEY WAITED ON A RULING, AND THE RULING HAS LANDED.
+    # Decision 1019 rules gap 164: the structure function is taken on the
+    # second difference for both of convention 6's clauses, banded per lag and
+    # cross-window on landform-membership strata. `StratumGrade` is that form,
+    # built and pinned in this repo -- so a caller reading "the grading form
+    # does not exist" was being told something this repo's own code contradicts
+    # two files away. The state was right and the reason was stale, which is
+    # the shape that survives review: nobody re-reads a refusal they agree with.
+    #
+    # What is actually absent is the VALUES -- decision 985's rows carrying
+    # measured second-difference fits per landform instead of placeholders,
+    # which ride the fixture re-cut. That is a producing-side artefact, not a
+    # rule nobody has written.
     for pair in [[CONDITION_BANDS, "bands"], [CONDITION_SPREAD, "spread"]]:
         var name := str((pair as Array)[0])
         var key := str((pair as Array)[1])
         var got: Dictionary = evidence.get(key, {})
         if got.is_empty():
             items.append({"condition": name, "state": NOT_GRADEABLE,
-                    "why": ("the bands exist and the grading form does not: which form "
-                            + "`S_q(l)` is declared on is unruled, so a measurement here "
-                            + "would be graded against a rule nobody has written")})
+                    "why": ("no %s measurement was supplied. The grading form is ruled "
+                            % key + "(decision 1019, second difference, banded per lag "
+                            + "cross-window on landform-membership strata) and built here as "
+                            + "`StratumGrade`; what is missing is the published band values, "
+                            + "which ride decision 985's rows at the fixture re-cut")})
         else:
             items.append({"condition": name,
                     "state": MET if bool(got.get("ok", false)) else UNMET,
