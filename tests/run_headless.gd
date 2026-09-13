@@ -5865,6 +5865,17 @@ func test_the_solved_horizon_discriminates_rather_than_returning_its_ceiling() -
     var doc: Dictionary = JSON.parse_string(f.get_as_text())
     var ceiling := float((doc["camera"] as Dictionary)["ceiling"])
     check(ceiling > 0.0, "the artefact records no ceiling")
+    # WHICH RULING THIS SOLVES, beside which client cut measured it. A solve is
+    # only as current as the decision it encodes, and `measured_at_commit`
+    # answers a different question -- it would keep moving while the formula
+    # went stale underneath it.
+    var ruled: Dictionary = doc.get("ruled_by", {})
+    check(str(ruled.get("decision", "")) != "",
+            "the solve does not say which decision it implements, so nothing connects these "
+            + "numbers to the ruling they validate")
+    check(str(ruled.get("corpus_commit", "")).length() >= 7,
+            "the solve names decision %s and not the corpus it was read at"
+            % str(ruled.get("decision", "?")))
     var windows: Array = doc.get("windows", [])
     check(windows.size() >= 1, "the solve was evaluated over no window")
     for wd in windows:

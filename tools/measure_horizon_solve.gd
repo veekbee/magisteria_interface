@@ -42,6 +42,27 @@ const PLACEMENT_FLOOR_M := 31.25
 
 const OUT := "measurements/horizon_solve.json"
 
+## WHICH VERSION OF THE RULING THIS IMPLEMENTS, declared because the tool cannot
+## derive it. `measured_at_commit` says which client cut took the measurement;
+## it says nothing about which corpus the formula came from, and a solve is only
+## as current as the decision it encodes.
+##
+## NOT AUTO-UPDATED AND NOT MEANT TO BE. This is where the ruling was READ, not
+## where it will live: rev 36's review pass adds commits rather than rewriting
+## these, so the content at this commit is stable and a later SHA would say
+## something different -- that a human re-read the ruling and confirmed the
+## solve still matches it. That claim has to be made by whoever makes it.
+const RULED_BY := {
+    "decision": "1030",
+    "validates": "§24 gap 170 items (ii) and (iii)",
+    "corpus_commit": "28716784c311701280599b66d31342a69e52f08e",
+    "_corpus_commit_was_not_pushed": ("rev 36's merged head, unpushed when this was built -- "
+            + "decision 879 makes a rev's review commit unconditional and a review is dispatched "
+            + "FROM the merged head, so the audit row cannot be green between merge and review. "
+            + "Recorded because the solve's provenance is the ruling's text, which is fixed, and "
+            + "not the remote's state, which was not."),
+}
+
 
 func _init() -> void:
     var fl := FixtureLoader.load_from("res://assets/fixture/")
@@ -72,6 +93,7 @@ func _init() -> void:
                 + "wire quantities and committed coefficients, so it needs no frame. Item (i) "
                 + "is the frame-timing half and is not here."),
         "measured_at_commit": _commit(),
+        "ruled_by": RULED_BY,
         "camera": {
             "viewport_height_px": VIEWPORT_H, "fov_degrees": FOV,
             "_declared_not_discovered": ("k_res is a property of the viewport and the field of "
