@@ -215,10 +215,19 @@ func _fallen_checks() -> PackedStringArray:
     var out := PackedStringArray()
     if not FileAccess.file_exists(CHECK_COUNTS):
         return out
-    var pinned = JSON.parse_string(
+    var doc = JSON.parse_string(
             FileAccess.open(CHECK_COUNTS, FileAccess.READ).get_as_text())
-    if typeof(pinned) != TYPE_DICTIONARY:
+    if typeof(doc) != TYPE_DICTIONARY:
         return out
+    var seen := _artefacts_seen()
+    var was_seen: Dictionary = (doc as Dictionary).get("artefacts_seen", {})
+    if was_seen != seen:
+        print("check counts: NOT ENFORCED -- pinned with %s, this run has %s. A run that "
+                % [str(was_seen), str(seen)]
+                + "cannot see an artefact runs fewer checks for a reason that is not a "
+                + "regression, so the comparison is refused rather than reported as a fall.")
+        return out
+    var pinned: Dictionary = (doc as Dictionary).get("counts", {})
     var led := _ledger()
     for name in (pinned as Dictionary):
         var was := int((pinned as Dictionary)[name])
@@ -239,6 +248,30 @@ func _fallen_checks() -> PackedStringArray:
 const UNATTRIBUTED := "_outside_any_test"
 
 
+## WHICH FETCHED ARTEFACTS THIS RUN COULD SEE, because the pin is only
+## comparable against a run that saw the same ones.
+##
+## CI IS PERMANENTLY REDUCED AND THAT IS NOT A FAULT. Decision 972 hosts the
+## tiles and layers at `file://` paths, so CI reports `2440 rows: 1 fetched,
+## 2439 unreachable` and the tests that need them contribute nothing. A pin
+## taken on a full local checkout can never hold there -- which is how this
+## guard failed on its own first push, telling CI that twenty tests had lost
+## checks when what had happened is that CI never had the bytes.
+##
+## So the pin records what it was taken under and the comparison refuses to run
+## across a mismatch. It says so on every run rather than passing quietly: a
+## guard that is not enforcing has to be distinguishable from one that is, or
+## the green means something different from what a reader takes it for.
+func _artefacts_seen() -> Dictionary:
+    return {
+        "fixture_bin": FileAccess.file_exists("res://assets/fixture/fixture_client.bin"),
+        "tiles": DirAccess.dir_exists_absolute(
+                ProjectSettings.globalize_path("res://assets/terrain/tiles/0")),
+        "layers": DirAccess.dir_exists_absolute(
+                ProjectSettings.globalize_path("res://assets/terrain/layers/slope/0")),
+    }
+
+
 func _ledger() -> Dictionary:
     var attributed := 0
     for n in _per_test:
@@ -256,7 +289,17 @@ func _write_check_counts() -> void:
     for n in sorted_names:
         out[n] = led[n]
     var f := FileAccess.open(CHECK_COUNTS, FileAccess.WRITE)
-    f.store_string(JSON.stringify(out, "  ") + "\n")
+    f.store_string(JSON.stringify({
+        "_what": ("what each test contributed, so a check that STOPS RUNNING is visible even "
+                + "when the total rises. Re-pin with `bash tools/pin_check_counts.sh` and read "
+                + "the diff: a fall shows as a red line, which is the declaration."),
+        "artefacts_seen": _artefacts_seen(),
+        "_artefacts_seen_is": ("the pin is only comparable against a run that saw the same "
+                + "fetched artefacts. CI cannot reach the decision 972 `file://` hosts, so it "
+                + "runs a smaller suite and the comparison is refused there rather than "
+                + "reported as twenty regressions."),
+        "counts": out,
+    }, "  ") + "\n")
     f.close()
     print("pinned %d test(s), %d checks" % [out.size(), _checks])
 
