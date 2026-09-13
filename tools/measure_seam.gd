@@ -343,72 +343,18 @@ func _plan() -> Array:
     return out
 
 
-## Decision 1030's `k` for the cell the camera stands in, from the same wire
-## quantities and committed coefficients the headless run uses.
+## Decision 1030's `k` for the cell the camera stands in.
+##
+## DELEGATED, NOT REIMPLEMENTED. `VegetationScatter.solve_k_at` is what the
+## drawn world uses since lane C2's inversion landed, and a harness solving its
+## own `k` would be grading a number the build does not compute (convention 4).
+## This once carried its own copy; the copy is gone.
 func _solve_here() -> Dictionary:
-    var hf: Heightfield = view.heightfield
-    var fl: FixtureLoader = view.fixture
-    var fc: FrameCost = view.frame_cost
-    var fs: FamilySet = view.families
-    if hf == null or fl == null or fc == null or fs == null or not fc.is_loaded():
-        return {"ok": false, "why": "the view did not bind everything the solve needs"}
-    var t := hf.world_to_texel(at_world.x, at_world.y)
-    var huc: String = view.residence.huc10_at(int(t.x), int(t.y))
-    var key: Array = view.residence.key_at(int(t.x), int(t.y))
-    if huc == "" or key.size() < 2:
-        return {"ok": false, "why": "no residence key at the camera"}
-    var cell: int = int(fl.cell_of_key.get("%s|%d" % [huc, int(key[1])], -1))
-    if cell < 0:
-        return {"ok": false, "why": "the camera's residence key is not in the fixture"}
-    var w := window_name if window_name != "" else str(fl.windows[0])
-    var groups := fl.taxon_groups(w, "band.pft_fractions")
-    var bare := fl.day_values(w, "band.bare_fraction", day)
-    var biomass_hi: float = view.scatter.row_hi(w, "band.pft.biomass")
-    var texel_area: float = hf.pixel_size_m * hf.pixel_size_m
-    var per_family := {}
-    var unpriced := PackedStringArray()
-    for gi in groups.size():
-        var g := str(groups[gi])
-        var vf := fl.day_values(w, "band.pft_fractions", day, gi)
-        var vb := fl.day_values(w, "band.pft.biomass", day, gi)
-        if cell >= vf.size() or cell >= vb.size() or cell >= bare.size():
-            continue
-        var imp: Dictionary = view.scatter.implication(g, vf[cell], bare[cell],
-                vb[cell], biomass_hi, texel_area)
-        if not bool(imp["ok"]):
-            continue
-        var cost: Dictionary = fc.per_instance_ns(fs.triangles_of(g))
-        if not bool(cost["ok"]):
-            unpriced.append(g)
-            continue
-        var crown := float(imp["crown_m"])
-        per_family[g] = {
-            "cover": float(imp["cover"]), "height_m": float(imp["height_m"]),
-            "crown_area_m2": PI * (0.5 * crown) * (0.5 * crown),
-            "cost_ns": float(cost["ns"]),
-        }
-    var k_res := VegetationScatter.resolution_k(
+    if view.scatter == null or not view.scatter.is_bound():
+        return {"ok": false, "why": "no scatter bound"}
+    var w := window_name if window_name != "" else str(view.fixture.windows[0])
+    return view.scatter.solve_k_at(w, day, at_world,
             float(get_root().get_visible_rect().size.y), view.rig.fly.fov)
-    var ceiling := HorizonSolve.ceiling_for(
-            float(get_root().get_visible_rect().size.y), view.rig.fly.fov)
-    var sol: Dictionary = HorizonSolve.k_for_cell(per_family, _b_eff_ns(), ceiling)
-    sol["k_resolution"] = k_res
-    sol["ceiling"] = ceiling
-    sol["cell"] = cell
-    sol["huc10"] = huc
-    sol["band"] = int(key[1])
-    sol["b_eff_ms"] = _b_eff_ns() / 1.0e6
-    sol["families_without_a_cost_coefficient"] = unpriced
-    sol["per_family"] = per_family
-    return sol
-
-
-## §19.8.5's vegetation line item divided by decision 951's measured multiplier
-## at the point of use -- the same composition the budgeter applies.
-func _b_eff_ns() -> float:
-    return (view.frame_cost.budget_ms / VegetationScatter.EMPTY_STAGE_UNDER_PREDICTS) * 1.0e6
-
-
 ## Zeros are not milliseconds. `InstanceBench` learned this on the same machine
 ## and records it the same way: GPU render time is NOT IMPLEMENTED under
 ## `gl_compatibility`, so it reads 0.0 on every frame -- and 0.0 is a perfectly

@@ -113,6 +113,7 @@
     "test_the_harness_guards_refuse_what_they_were_written_for": 15,
     "test_the_heightfield_decodes_to_real_elevations": 4,
     "test_the_hillshade_arrives_from_the_north_west": 5,
+    "test_the_horizon_is_solved_from_the_budget_rather_than_handed_over": 15,
     "test_the_individuation_horizon_is_one_constant_bounded_by_the_camera": 36,
     "test_the_inspector_builds_from_a_document": 1,
     "test_the_instrument_repeats_and_recovers_a_known_exponent": 20,

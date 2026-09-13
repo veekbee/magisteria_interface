@@ -116,6 +116,7 @@ func _initialize() -> void:
     _run(test_the_shading_is_exaggerated_and_the_geometry_is_not, "test_the_shading_is_exaggerated_and_the_geometry_is_not")
     _run(test_the_harness_guards_refuse_what_they_were_written_for, "test_the_harness_guards_refuse_what_they_were_written_for")
     _run(test_the_motion_metrics_and_which_of_them_detects_popping, "test_the_motion_metrics_and_which_of_them_detects_popping")
+    _run(test_the_horizon_is_solved_from_the_budget_rather_than_handed_over, "test_the_horizon_is_solved_from_the_budget_rather_than_handed_over")
     _run(test_the_frame_run_does_not_report_a_budget_the_timer_cannot_adjudicate, "test_the_frame_run_does_not_report_a_budget_the_timer_cannot_adjudicate")
     _run(test_the_solved_horizon_discriminates_rather_than_returning_its_ceiling, "test_the_solved_horizon_discriminates_rather_than_returning_its_ceiling")
     _run(test_every_recorded_seam_run_says_which_question_it_answers, "test_every_recorded_seam_run_says_which_question_it_answers")
@@ -6014,6 +6015,107 @@ func test_the_motion_metrics_and_which_of_them_detects_popping() -> void:
                     + "instances exist at every camera step, so a low reading means the "
                     + "instrument stopped seeing the one thing it was built to see.")
     print("motion: the dolly metric does not separate the control; the instance churn does")
+
+
+func test_the_horizon_is_solved_from_the_budget_rather_than_handed_over() -> void:
+    """Lane C2's inversion, decision 1030. `k` was a constant the caller chose;
+    it is now solved from what the place can afford, with decision 949's
+    constant as the ceiling.
+
+    THE SOLVE IS SHOWN ACTING AND SHOWN CLAMPED. A place measured to come out
+    below the ceiling must solve below it -- otherwise the inversion is
+    arithmetic nobody can see -- and a place that affords the ceiling must be
+    clamped to it, which is the half that makes this safe to land: the drawn
+    world does not move where the budget was never binding."""
+    var fc := FrameCost.load_from()
+    var hf := heightfield()
+    var rl := residence()
+    var sc := VegetationScatter.new()
+
+    # ---- THE RELAXATION, pure and needing no build ------------------------
+    # Convention 2: the applied k lags the solved one, so crossing a cell
+    # boundary does not re-cut every horizon on a single frame.
+    check(VegetationScatter.relaxed_k(-1.0, 100.0, 0.016) == 100.0,
+            "the first solve is not adopted outright, so a place opens at a horizon it never "
+            + "solved for")
+    var one_half := VegetationScatter.relaxed_k(0.0, 100.0,
+            VegetationScatter.APPLIED_K_HALF_LIFE_S)
+    check(absf(one_half - 50.0) < 1e-6,
+            "one half-life from 0 toward 100 landed at %s rather than 50"
+            % String.num(one_half, 4))
+    check(VegetationScatter.relaxed_k(100.0, 100.0, 0.016) == 100.0,
+            "a settled k moves when the solve has not")
+    # STEPPED AGAINST THE CLOSED FORM, not against a hand-picked bound. Forty
+    # steps of 0.05 s is 2.0 s, which at a 0.5 s half-life is exactly four of
+    # them, so the value is 100 * (1 - 0.5^4) = 93.75. The first cut of this
+    # asserted "> 99" and failed on correct code: I had not counted the
+    # half-lives, and a bound nobody derived cannot tell a wrong law from a
+    # right one it disagrees with.
+    var walk := 0.0
+    var steps := 40
+    var dt := 0.05
+    for i in steps:
+        walk = VegetationScatter.relaxed_k(walk, 100.0, dt)
+    var lives := float(steps) * dt / VegetationScatter.APPLIED_K_HALF_LIFE_S
+    var want := 100.0 * (1.0 - pow(0.5, lives))
+    check(absf(walk - want) < 1e-9,
+            "%s steps of %s s is %s half-lives, so the law gives %s and the relaxation gave %s"
+            % [str(steps), String.num(dt, 3), String.num(lives, 2),
+               String.num(want, 6), String.num(walk, 6)])
+    # AND IT NEVER OVERSHOOTS, which is the property a linear step would break
+    # and the closed form above would not catch on its own.
+    var over := 0.0
+    for i in 200:
+        over = VegetationScatter.relaxed_k(over, 100.0, 0.05)
+        if over > 100.0:
+            break
+    check(over <= 100.0, "the relaxation overshot its target, reaching %s" % String.num(over, 6))
+
+    if hf == null or rl == null or not fc.is_loaded():
+        print("C2: no heightfield, residence layer or cost model -- the solve has no place")
+        return
+    sc.bind(hf, rl, fixture(), family_set(), fc, null)
+    var w: String = fixture().windows[0]
+
+    # ---- BELOW THE CEILING, at a place the distribution run measured -------
+    var below := sc.solve_k_at(w, 22, Vector2(-1396666.75, 1528013.625), 800.0, 75.0)
+    check(bool(below.get("ok", false)), "the solve refused where it should reach: %s"
+            % str(below.get("why", "")))
+    if not bool(below.get("ok", false)):
+        return
+    check(float(below["k"]) < float(below["ceiling"]),
+            "the solve returned its ceiling at a place measured under it (%s against %s)"
+            % [String.num(float(below["k"]), 2), String.num(float(below["ceiling"]), 2)])
+    check(not bool(below["at_ceiling"]), "at_ceiling is set where the value is under it")
+    check(Array(below["families_without_a_cost_coefficient"]).is_empty(),
+            "a family is outside the measured triangle span, so it is absent from the "
+            + "denominator and the solved k here is too high: %s"
+            % str(below["families_without_a_cost_coefficient"]))
+
+    # ---- AND CLAMPED where the place affords the ceiling -------------------
+    var at := sc.solve_k_at(w, 22, Vector2(-1339372.5, 1498223.125), 800.0, 75.0)
+    check(bool(at.get("ok", false)), "the solve refused at the second place: %s"
+            % str(at.get("why", "")))
+    if not bool(at.get("ok", false)):
+        return
+    check(float(at["k"]) <= float(at["ceiling"]) + 1e-9,
+            "the solve returned %s, above its own ceiling of %s"
+            % [String.num(float(at["k"]), 3), String.num(float(at["ceiling"]), 3)])
+    check(bool(at["at_ceiling"]) == (float(at["k_solved"]) >= float(at["ceiling"])),
+            "at_ceiling disagrees with the unclamped value it is about")
+    check(float(at["k"]) > float(below["k"]),
+            "the two places solve the same k, so this test compares nothing")
+
+    # ---- THE CEILING IS THE CAMERA'S, not a constant in the file ----------
+    var tall := sc.solve_k_at(w, 22, Vector2(-1339372.5, 1498223.125), 1600.0, 75.0)
+    check(bool(tall.get("ok", false)), "the solve refused at a taller viewport")
+    if bool(tall.get("ok", false)):
+        check(float(tall["ceiling"]) > float(at["ceiling"]) * 1.9,
+                "doubling the viewport height did not roughly double the ceiling: %s against %s"
+                % [String.num(float(tall["ceiling"]), 2), String.num(float(at["ceiling"]), 2)])
+    print("C2: k %s under the ceiling, %s clamped to it, ceiling %s at 800 px / 75 deg"
+            % [String.num(float(below["k"]), 2), String.num(float(at["k"]), 2),
+               String.num(float(at["ceiling"]), 2)])
 
 
 func test_the_frame_run_does_not_report_a_budget_the_timer_cannot_adjudicate() -> void:

@@ -137,6 +137,26 @@ const NO_SCHEDULE: Array = []
 ## resolution, and the sweep is looking for how far before.
 const NO_HORIZON_RULE := 0.0
 
+## Ask the build to SOLVE the horizon rather than be handed one — decision
+## 1030, roadmap lane C2's inversion.
+##
+## A SENTINEL AND NOT A FLAG, so `k` stays one parameter with three readings:
+## `NO_HORIZON_RULE` draws every implied plant, a positive value is the constant
+## the caller chose, and this asks the place what it can afford. A separate
+## boolean would let a caller pass both and mean nothing.
+const SOLVE_HORIZON := -1.0
+
+## Convention 2's fixed half-life for the applied `k` relaxing toward the solved
+## one, in seconds.
+##
+## THE SOLVE IS PER PLACE AND A CAMERA MOVES THROUGH PLACES. Snapping `k` to
+## each new cell's solution would re-cut every horizon on the frame the camera
+## crosses a cell boundary, which is decision 953's continuous cut undone by the
+## thing that decides where to cut. Relaxation makes the horizon a function of
+## where the camera has BEEN as well as where it is, which is what convention 2
+## asks of a quantity that drives what is drawn.
+const APPLIED_K_HALF_LIFE_S := 0.5
+
 ## How far `render_cost.json`'s coefficient sits below a real frame, and the
 ## divisor the budget solve applies because of it.
 ##
@@ -164,6 +184,98 @@ const NO_HORIZON_RULE := 0.0
 ## measured. `test_the_budget_solve_divides_by_the_floors_measured_multiplier` keeps the quoted
 ## figure current against the artefact it came from.
 const EMPTY_STAGE_UNDER_PREDICTS := 1.33
+
+
+## Decision 1030's `k` for the place a build is centred on, from realised wire
+## quantities and committed coefficients. Lane C2's inversion.
+##
+## ONE ENTRY POINT, USED BY THE BUILD AND BY THE HARNESS THAT GRADES IT.
+## `tools/measure_seam.gd --k-solved` calls this rather than carrying its own
+## copy: the windowed frame run and the drawn world have to be solving the same
+## number or the measurement is of something else (convention 4).
+##
+## THE PLACE IS THE CAMERA'S CELL, WHICH IS THE RULING'S FORM AND HAS A KNOWN
+## EDGE. A frame draws many cells and the solve is keyed on one, so a camera
+## standing in thin cover beside dense cover solves a `k` its own frame can
+## exceed. Decision 1030 pairs the feedforward coefficients with §19.8.7's
+## controller for exactly that -- "each doing the part the other cannot" -- and
+## the controller is not built here, so what this implements is the feedforward
+## half alone and `s` is 1.0. Measured at gap 170 item (i): of five cells, the
+## three at the ceiling came in far inside the line item and the two the solve
+## reduced landed either side of it, on a timer that could not say which side.
+func solve_k_at(window: String, day: int, centre: Vector2,
+                viewport_height_px: float, fov_degrees: float) -> Dictionary:
+    if _hf == null or _rl == null or _fl == null or _fs == null or _fc == null:
+        return {"ok": false, "why": "the scatter is not bound to everything the solve needs"}
+    if not _fc.is_loaded():
+        return {"ok": false, "why": _fc.why_absent}
+    var t := _hf.world_to_texel(centre.x, centre.y)
+    var huc := _rl.huc10_at(int(t.x), int(t.y))
+    var key: Array = _rl.key_at(int(t.x), int(t.y))
+    if huc == "" or key.size() < 2:
+        return {"ok": false, "why": "no residence key under the camera"}
+    var cell: int = int(_fl.cell_of_key.get("%s|%d" % [huc, int(key[1])], -1))
+    if cell < 0:
+        return {"ok": false, "why": "the camera's residence key is not in the fixture"}
+
+    var groups := _fl.taxon_groups(window, "band.pft_fractions")
+    var bare := _fl.day_values(window, "band.bare_fraction", day)
+    var biomass_hi := row_hi(window, "band.pft.biomass")
+    var texel_area: float = _hf.pixel_size_m * _hf.pixel_size_m
+    var per_family := {}
+    var unpriced := PackedStringArray()
+    for gi in groups.size():
+        var g := str(groups[gi])
+        var vf := _fl.day_values(window, "band.pft_fractions", day, gi)
+        var vb := _fl.day_values(window, "band.pft.biomass", day, gi)
+        if cell >= vf.size() or cell >= vb.size() or cell >= bare.size():
+            continue
+        var imp := implication(g, vf[cell], bare[cell], vb[cell], biomass_hi, texel_area)
+        if not bool(imp["ok"]):
+            continue
+        var cost := _fc.per_instance_ns(_fs.triangles_of(g))
+        if not bool(cost["ok"]):
+            # PRICED OR ABSENT, NEVER EXTRAPOLATED. A family outside the
+            # measured triangle span leaves the denominator smaller, so the
+            # solved `k` comes out too HIGH and the budget it claims is not the
+            # budget the frame would spend. Reported so a caller can refuse.
+            unpriced.append(g)
+            continue
+        var crown := float(imp["crown_m"])
+        per_family[g] = {"cover": float(imp["cover"]), "height_m": float(imp["height_m"]),
+                "crown_area_m2": PI * (0.5 * crown) * (0.5 * crown),
+                "cost_ns": float(cost["ns"])}
+    var ceiling := HorizonSolve.ceiling_for(viewport_height_px, fov_degrees)
+    var out := HorizonSolve.k_for_cell(per_family, b_eff_ns(), ceiling)
+    out["ceiling"] = ceiling
+    out["k_resolution"] = VegetationScatter.resolution_k(viewport_height_px, fov_degrees)
+    out["cell"] = cell
+    out["huc10"] = huc
+    out["band"] = int(key[1])
+    out["families_without_a_cost_coefficient"] = unpriced
+    out["per_family"] = per_family
+    return out
+
+
+## §19.8.5's vegetation line item divided by decision 951's measured multiplier
+## at the point of use, in nanoseconds -- the same composition `_affordable`
+## applies, and not a second reading of the budget.
+func b_eff_ns() -> float:
+    if _fc == null or not _fc.is_loaded():
+        return 0.0
+    return (_fc.budget_ms / EMPTY_STAGE_UNDER_PREDICTS) * 1.0e6
+
+
+## The applied `k` after one step of convention 2's relaxation toward `solved`.
+##
+## EXPOSED AND PURE so the gate can step it without a build. The first solve is
+## adopted outright: there is nothing to relax from, and starting at zero would
+## open every place with no vegetation individuated at all.
+static func relaxed_k(applied: float, solved: float, dt_s: float,
+                      half_life_s: float = APPLIED_K_HALF_LIFE_S) -> float:
+    if applied < 0.0 or half_life_s <= 0.0 or dt_s <= 0.0:
+        return solved
+    return solved + (applied - solved) * pow(0.5, dt_s / half_life_s)
 
 
 ## How far one object of this drawn height is individuated, under constant `k`.
@@ -425,6 +537,12 @@ var _fl: FixtureLoader = null
 var _fs: FamilySet = null
 var _fc: FrameCost = null
 var _tm: TerrainMesh = null
+
+## The `k` actually in force, which lags the solved one by
+## `APPLIED_K_HALF_LIFE_S`. Negative until the first solve, because there is no
+## honest value to relax FROM before one has been taken -- the first frame at a
+## new place has no measurement, which is decision 1030's own entry hitch.
+var _applied_k := -1.0
 var _season: Dictionary = {}         ## "window|group" -> {"lo": .., "hi": ..} per cell
 
 
@@ -456,10 +574,25 @@ func is_bound() -> bool:
 func build(window: String, day: int, centre: Vector2, radius_m: float,
            bands: Array = NO_SCHEDULE, ceiling: int = MAX_BUILT_INSTANCES,
            k: float = NO_HORIZON_RULE, only: String = "",
-           frame_budget: bool = true) -> Dictionary:
+           frame_budget: bool = true, viewport_height_px: float = 0.0,
+           fov_degrees: float = 0.0, dt_s: float = 0.0) -> Dictionary:
     var t_build := Time.get_ticks_usec()
     meshes = {}
     census = {}
+    # LANE C2'S INVERSION. `k` arrives solved rather than chosen, and the
+    # applied value relaxes toward it so crossing a cell boundary does not
+    # re-cut every horizon on one frame.
+    var solve := {}
+    if is_equal_approx(k, SOLVE_HORIZON):
+        solve = solve_k_at(window, day, centre, viewport_height_px, fov_degrees)
+        if not bool(solve.get("ok", false)):
+            # REFUSED, NOT DEFAULTED. Falling back to the ceiling would draw a
+            # world at decision 949's constant while the report said the budget
+            # had been solved for.
+            return {"ok": false, "why": "the horizon could not be solved here: %s"
+                    % str(solve.get("why", "?")), "solve": solve}
+        _applied_k = relaxed_k(_applied_k, float(solve["k"]), dt_s)
+        k = _applied_k
     if not is_bound():
         report = {"ok": false, "why": "the scatter is not bound to its artefacts"}
         return report
@@ -523,6 +656,8 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
     ## [life_form, horizon_m] per cell the rule was evaluated at, so the report
     ## can say what one `k` actually meant in metres per family.
     var horizons_seen: Array = []
+    ## life form -> cells whose solved horizon fell under the placement sub-cell
+    var dropped_to_tint := {}
     var centre_texel := _hf.world_to_texel(centre.x, centre.y)
     # A TEXEL IS A KILOMETRE AND THE DISC IS OFTEN SMALLER THAN ONE.
     #
@@ -650,6 +785,21 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
                 var horizon_m := individuation_horizon_m(float(params["height_m"]), k)
                 if k > 0.0:
                     horizons_seen.append([life_form, horizon_m])
+                # DECISION 1030'S DROP-TO-TINT CLAUSE. A family whose solved
+                # horizon falls under the placement sub-cell goes to decision
+                # 890's field layer instead of the budget breaking -- backlog
+                # 198's polarity clause, the budget holding everywhere rather
+                # than on average. Horizon reduction degrades RANGE, which
+                # §19.8.3's ladder is designed to degrade; thinning at a fixed
+                # horizon would misstate the world's declared cover instead, and
+                # a sparsified near field is a lie where a far field truncated
+                # to the tint is the designed representation.
+                #
+                # Only under a SOLVED horizon: a caller that chose a small `k`
+                # asked for a short horizon and is not owed a silent substitution.
+                if not solve.is_empty() and HorizonSolve.drops_to_tint(horizon_m):
+                    dropped_to_tint[life_form] = int(dropped_to_tint.get(life_form, 0)) + 1
+                    continue
                 # NO FAST PATH FOR A WHOLE TEXEL ANY MORE, and the reason is
                 # placement rather than tidiness. A sub-cell's placement key
                 # carries the granularity it was emitted at, so a texel emitted
@@ -1043,6 +1193,18 @@ func build(window: String, day: int, centre: Vector2, radius_m: float,
         "placed": placed,
         "form": form,
         "individuation_k": k,
+        # WHAT THE PLACE COULD AFFORD, BESIDE WHAT WAS DRAWN. They differ while
+        # the applied value is still relaxing toward the solved one, and a
+        # report carrying only the second cannot tell a horizon that is settling
+        # from one the budget chose.
+        "horizon_solve": solve,
+        # WHICH FAMILIES THE SOLVE SENT TO THE FIELD LAYER, and at how many
+        # cells. Empty is the common case and is reported as empty rather than
+        # omitted: a clause that governs nothing today still has to be visible
+        # the day it governs something.
+        "dropped_to_tint": dropped_to_tint,
+        "applied_k_lags_solved_by": (0.0 if solve.is_empty()
+                else float(solve.get("k", k)) - k),
         "horizon": horizon,
         "only_life_form": only,
         "frame_budget_applied": frame_budget,
