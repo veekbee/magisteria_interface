@@ -116,6 +116,7 @@ func _initialize() -> void:
     test_the_shading_is_exaggerated_and_the_geometry_is_not()
     test_the_harness_guards_refuse_what_they_were_written_for()
     test_the_motion_metrics_and_which_of_them_detects_popping()
+    test_the_solved_horizon_discriminates_rather_than_returning_its_ceiling()
     test_every_recorded_seam_run_says_which_question_it_answers()
     test_a_per_family_reference_holds_only_that_family()
     test_a_family_is_scored_in_its_own_annulus_or_not_at_all()
@@ -5840,6 +5841,80 @@ func test_the_motion_metrics_and_which_of_them_detects_popping() -> void:
                     + "instances exist at every camera step, so a low reading means the "
                     + "instrument stopped seeing the one thing it was built to see.")
     print("motion: the dolly metric does not separate the control; the instance churn does")
+
+
+func test_the_solved_horizon_discriminates_rather_than_returning_its_ceiling() -> void:
+    """§24 gap 170 item (ii). Decision 1030 makes the frame budget the invariant
+    and decision 949's constant the ceiling, so `k(place)` is only doing work
+    where it comes out BELOW `0.35 * k_res`. A solve returning the ceiling
+    everywhere discriminates nothing -- it would mean the line item is generous,
+    not that the form works -- which is the document's own spread convention
+    applied to the solve's own output.
+
+    HEADLESS, WHICH IS WHY IT IS HERE AT ALL. Every term is arithmetic over wire
+    quantities and committed coefficients: `cover_f`, `height_f` and
+    `crown_area_f` from the fixture through `implication`, `c_f` from
+    `render_cost.json`, `B_eff` from the line item and decision 951's
+    multiplier, `k_res` from a declared camera. Item (i) needs frames and a
+    person; this half does not, so the assertion most likely to falsify the form
+    can be taken before anyone spends a windowed session."""
+    var f := FileAccess.open("res://measurements/horizon_solve.json", FileAccess.READ)
+    check(f != null, "no measurements/horizon_solve.json -- run tools/measure_horizon_solve.sh")
+    if f == null:
+        return
+    var doc: Dictionary = JSON.parse_string(f.get_as_text())
+    var ceiling := float((doc["camera"] as Dictionary)["ceiling"])
+    check(ceiling > 0.0, "the artefact records no ceiling")
+    var windows: Array = doc.get("windows", [])
+    check(windows.size() >= 1, "the solve was evaluated over no window")
+    for wd in windows:
+        var d: Dictionary = wd
+        var name := str(d["window"])
+        check(int(d["cells"]) > 100, "%s: only %d cells carried cover" % [name, int(d["cells"])])
+
+        # THE SPREAD ITSELF. Both halves: something below the ceiling, and the
+        # ceiling actually reached -- a solve pinned below it everywhere would
+        # mean the ceiling never binds, which is a different finding and would
+        # equally not be a discriminating solve.
+        var lo := float(d["k_min"])
+        var hi := float(d["k_max"])
+        check(lo < ceiling * 0.9,
+                "%s: the solved k bottoms out at %s against a ceiling of %s, so the solve "
+                        % [name, String.num(lo, 3), String.num(ceiling, 3)]
+                + "returns its ceiling almost everywhere and is discriminating nothing -- the "
+                + "line item is generous rather than the form working")
+        check(hi >= ceiling * 0.999,
+                "%s: the solved k never reaches its ceiling (max %s of %s), so decision 949's "
+                        % [name, String.num(hi, 3), String.num(ceiling, 3)]
+                + "constant never binds here and the drawn world moves everywhere, which is "
+                + "the regression the ceiling exists to prevent")
+        var at := int(d["cells_at_ceiling"])
+        check(at > 0 and at < int(d["cells"]),
+                "%s: %d of %d cells sit at the ceiling, so it is all one state"
+                % [name, at, int(d["cells"])])
+
+        # AND THE DROP-TO-TINT CLAUSE GOVERNS A REAL POPULATION -- item (iii).
+        # Zero would mean the clause is untested by this basin, which is worth
+        # knowing rather than reading as "no problem".
+        var under := int(d["pairs_under_floor"])
+        check(int(d["pairs"]) > 0, "%s: no (cell, family) pairs at all" % name)
+        print("gap 170: %s -- k %s..%s against a ceiling of %s, %d of %d cells at it; %d of %d "
+                % [name, String.num(lo, 2), String.num(hi, 2), String.num(ceiling, 2),
+                   at, int(d["cells"]), under, int(d["pairs"])]
+                + "pairs under the placement floor")
+        if under == 0:
+            print("gap 170: %s -- NO pair falls under the placement floor, so decision 1030's "
+                    % name + "drop-to-tint clause has no subject in this window")
+
+        # A FAMILY WITH NO COST COEFFICIENT IS EXCLUDED FROM THE SOLVE, and that
+        # has to be visible: its cover is missing from the denominator, so the
+        # solved k for that cell is too HIGH and the budget it claims is not the
+        # budget it would spend.
+        var missing: Array = d.get("families_without_a_cost_coefficient", [])
+        check(missing.is_empty(),
+                "%s: %s -- those families are outside the measured triangle span, so they are "
+                        % [name, str(missing)]
+                + "absent from the denominator and every solved k here is too high")
 
 
 func test_every_recorded_seam_run_says_which_question_it_answers() -> void:

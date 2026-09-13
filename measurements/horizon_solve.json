@@ -1,0 +1,66 @@
+{
+  "_vertical_exaggeration_is": "the naturalistic view, where drawn height equals wire height. The solve is over wire quantities; at a view that exaggerates, the heights entering the denominator and `d_f` are the DRAWN ones and this run does not answer for it.",
+  "_what": "§24 gap 170 items (ii) and (iii): decision 1030's solved instancing horizon evaluated over the basin fixture. Headless -- the solve is arithmetic over wire quantities and committed coefficients, so it needs no frame. Item (i) is the frame-timing half and is not here.",
+  "budget": {
+    "_line_item_is": "§19.8.5's vegetation line item, currently the whole frame budget as a named placeholder, divided by decision 951's measured multiplier at the point of use",
+    "b_eff_ms": 25.0375939849624,
+    "empty_stage_multiplier": 1.33,
+    "line_item_ms": 33.3
+  },
+  "camera": {
+    "_ceiling_is": "decision 949's constant as decision 1030's ceiling, 0.35 * k_res",
+    "_declared_not_discovered": "k_res is a property of the viewport and the field of view, so a headless run states a camera rather than reading a window. The solve moves with the window and this is the one the rest of `measurements/` is taken at.",
+    "ceiling": 182.451552197769,
+    "fov_degrees": 75.0,
+    "k_res": 521.290149136482,
+    "viewport_height_px": 800.0
+  },
+  "detail_scale": {
+    "_why": "§19.8.7's `detail_scale` with the controller at rest. It does not enter k(place), so item (ii) is independent of it; it does enter d_f, and a controller that has cut detail pushes MORE pairs under the floor -- so item (iii)'s count is a LOWER BOUND on the population, not an estimate.",
+    "s": 1.0
+  },
+  "measured_at_commit": "423990f",
+  "not_covered": "item (i), the frame p50 against the vegetation line item at §23.909's five cells, which needs a window. And the solve is evaluated, not applied: decision 1030 says the client changes nothing now.",
+  "placement_floor_m": 31.25,
+  "vertical_exaggeration": 1.0,
+  "windows": [
+    {
+      "cells": 5462,
+      "cells_at_ceiling": 3500,
+      "day": 22,
+      "families_without_a_cost_coefficient": [],
+      "k_max": 182.451552197769,
+      "k_median": 182.451552197769,
+      "k_min": 29.0616693571229,
+      "k_p25": 124.469238152038,
+      "k_p75": 182.451552197769,
+      "pairs": 14054,
+      "pairs_under_floor": 237,
+      "pairs_under_floor_by_family": {
+        "grass": 71,
+        "shrub": 136,
+        "succulent": 30
+      },
+      "window": "largest_fire"
+    },
+    {
+      "cells": 5562,
+      "cells_at_ceiling": 3781,
+      "day": 22,
+      "families_without_a_cost_coefficient": [],
+      "k_max": 182.451552197769,
+      "k_median": 182.451552197769,
+      "k_min": 28.9422055650014,
+      "k_p25": 133.473782625869,
+      "k_p75": 182.451552197769,
+      "pairs": 14394,
+      "pairs_under_floor": 144,
+      "pairs_under_floor_by_family": {
+        "grass": 74,
+        "shrub": 68,
+        "succulent": 2
+      },
+      "window": "deepest_winter"
+    }
+  ]
+}
