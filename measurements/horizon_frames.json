@@ -9,7 +9,7 @@
       800.0
     ]
   },
-  "measured_at_commit": "453d97c",
+  "measured_at_commit": "4948213",
   "measured_at_commit_means": "the HEAD the run was taken against; the commit that lands this artefact is its child",
   "method": {
     "annulus": "one binary mask render per band through annulus.gdshader; a depth image does not survive this renderer's sRGB output",
@@ -557,28 +557,28 @@
               "lo_m": 514.911435689176
             }
           ],
-          "build_ms": 26195.722,
+          "build_ms": 26085.431,
           "cut_m": 300.0,
           "frame_ms": {
-            "max": 44.644,
-            "mean": 43.9905,
-            "min": 43.853,
+            "max": 44.095,
+            "mean": 43.6027333333333,
+            "min": 41.8113333333336,
             "n": 40.0,
-            "p50": 43.9393939393939,
-            "p95": 44.349,
-            "p99": 44.644
+            "p50": 43.75,
+            "p95": 43.858,
+            "p99": 44.095
           },
           "kind": "instances",
           "name": "oracle",
           "per_family": [],
           "render_ms_cpu": {
-            "max": 0.148000001907349,
-            "mean": 0.0856000006198883,
-            "min": 0.0700000002980232,
+            "max": 0.293000012636185,
+            "mean": 0.109000000357628,
+            "min": 0.0810000002384186,
             "n": 40.0,
-            "p50": 0.0769999995827675,
-            "p95": 0.127000004053116,
-            "p99": 0.148000001907349
+            "p50": 0.096000000834465,
+            "p95": 0.174999997019768,
+            "p99": 0.293000012636185
           },
           "render_ms_gpu": {
             "available": false,
@@ -1139,27 +1139,27 @@
               "lo_m": 514.911435689176
             }
           ],
-          "build_ms": 2035.083,
+          "build_ms": 2035.998,
           "cut_m": 0.0,
           "frame_ms": {
-            "max": 4.096,
-            "mean": 3.47035555555556,
-            "min": 2.77777777777778,
+            "max": 3.762,
+            "mean": 3.39988333333333,
+            "min": 3.33333333333333,
             "n": 40.0,
-            "p50": 3.7037037037037,
-            "p95": 3.7037037037037,
-            "p99": 4.096
+            "p50": 3.33333333333333,
+            "p95": 3.586,
+            "p99": 3.762
           },
           "kind": "instances",
           "name": "null",
           "render_ms_cpu": {
-            "max": 0.0920000001788139,
-            "mean": 0.0708500003442168,
-            "min": 0.0649999976158142,
+            "max": 0.0949999988079071,
+            "mean": 0.0710750002413988,
+            "min": 0.0640000030398369,
             "n": 40.0,
-            "p50": 0.0700000002980232,
-            "p95": 0.0790000036358833,
-            "p99": 0.0920000001788139
+            "p50": 0.0689999982714653,
+            "p95": 0.0799999982118607,
+            "p99": 0.0949999988079071
           },
           "render_ms_gpu": {
             "available": false,
@@ -1720,7 +1720,7 @@
               "lo_m": 514.911435689176
             }
           ],
-          "build_ms": 4124.728,
+          "build_ms": 4102.021,
           "curve": {
             "bands_fitted": 10.0,
             "fitted": true,
@@ -1731,25 +1731,25 @@
           },
           "cut_m": 120.0,
           "frame_ms": {
-            "max": 8.464,
-            "mean": 7.83611666666666,
+            "max": 8.013,
+            "mean": 7.68419166666666,
             "min": 7.57575757575758,
             "n": 40.0,
-            "p50": 7.834,
-            "p95": 8.33333333333333,
-            "p99": 8.464
+            "p50": 7.57575757575758,
+            "p95": 7.981,
+            "p99": 8.013
           },
           "kind": "tint",
           "matched": false,
           "name": "constant",
           "render_ms_cpu": {
-            "max": 0.108000002801418,
-            "mean": 0.0723500004038215,
-            "min": 0.0640000030398369,
+            "max": 0.150999993085861,
+            "mean": 0.0724750000983477,
+            "min": 0.063000001013279,
             "n": 40.0,
-            "p50": 0.0700000002980232,
-            "p95": 0.0879999995231628,
-            "p99": 0.108000002801418
+            "p50": 0.068000003695488,
+            "p95": 0.0829999968409538,
+            "p99": 0.150999993085861
           },
           "render_ms_gpu": {
             "available": false,
@@ -1777,7 +1777,7 @@
           },
           "tint": {
             "cells": 5684.0,
-            "cells_ms": 12.17,
+            "cells_ms": 12.105,
             "cells_with_cover": 5462.0,
             "day": 22.0,
             "foliage_fraction": {
@@ -1795,7 +1795,7 @@
             "mean_cover_where_covered": 0.479830648126154,
             "ok": true,
             "phenology_source": "band.phenology_index",
-            "rebuild_ms": 211.767,
+            "rebuild_ms": 208.124,
             "what": "mean vegetation colour weighted by cover, and coverage as the sum of the families' cover fractions -- the two conserved quantities any seam has to hold",
             "window": "largest_fire"
           }
@@ -2334,7 +2334,7 @@
               "lo_m": 514.911435689176
             }
           ],
-          "build_ms": 4159.046,
+          "build_ms": 4137.318,
           "curve": {
             "bands_fitted": 10.0,
             "fitted": true,
@@ -2345,25 +2345,25 @@
           },
           "cut_m": 120.0,
           "frame_ms": {
-            "max": 8.33333333333333,
-            "mean": 8.01266666666666,
-            "min": 7.759,
+            "max": 8.142,
+            "mean": 7.8939,
+            "min": 7.742,
             "n": 40.0,
-            "p50": 7.952,
-            "p95": 8.33333333333333,
-            "p99": 8.33333333333333
+            "p50": 7.874,
+            "p95": 8.027,
+            "p99": 8.142
           },
           "kind": "tint",
           "matched": true,
           "name": "range_matched",
           "render_ms_cpu": {
-            "max": 0.090999998152256,
-            "mean": 0.0708000004291534,
+            "max": 0.100000001490116,
+            "mean": 0.0713250001892447,
             "min": 0.063000001013279,
             "n": 40.0,
             "p50": 0.0689999982714653,
-            "p95": 0.0790000036358833,
-            "p99": 0.090999998152256
+            "p95": 0.090999998152256,
+            "p99": 0.100000001490116
           },
           "render_ms_gpu": {
             "available": false,
@@ -2391,7 +2391,7 @@
           },
           "tint": {
             "cells": 5684.0,
-            "cells_ms": 12.507,
+            "cells_ms": 11.93,
             "cells_with_cover": 5462.0,
             "day": 22.0,
             "foliage_fraction": {
@@ -2409,7 +2409,7 @@
             "mean_cover_where_covered": 0.479830648126154,
             "ok": true,
             "phenology_source": "band.phenology_index",
-            "rebuild_ms": 212.895,
+            "rebuild_ms": 208.519,
             "what": "mean vegetation colour weighted by cover, and coverage as the sum of the families' cover fractions -- the two conserved quantities any seam has to hold",
             "window": "largest_fire"
           }
@@ -2948,16 +2948,16 @@
               "lo_m": 514.911435689176
             }
           ],
-          "build_ms": 7311.564,
+          "build_ms": 7331.438,
           "cut_m": 0.0,
           "frame_ms": {
-            "max": 13.159,
-            "mean": 12.5832166666667,
+            "max": 12.753,
+            "mean": 12.5072,
             "min": 12.5,
             "n": 40.0,
             "p50": 12.5,
-            "p95": 12.962962962963,
-            "p99": 13.159
+            "p95": 12.5,
+            "p99": 12.753
           },
           "k": 182.451552197769,
           "k_fraction": 0.35,
@@ -3029,13 +3029,13 @@
             }
           ],
           "render_ms_cpu": {
-            "max": 0.105999998748302,
-            "mean": 0.0733249995857477,
-            "min": 0.068000003695488,
+            "max": 0.155000001192093,
+            "mean": 0.0802250009030104,
+            "min": 0.0649999976158142,
             "n": 40.0,
-            "p50": 0.0710000023245811,
-            "p95": 0.0869999974966049,
-            "p99": 0.105999998748302
+            "p50": 0.0790000036358833,
+            "p95": 0.101999998092651,
+            "p99": 0.155000001192093
           },
           "render_ms_gpu": {
             "available": false,
@@ -3082,7 +3082,6 @@
           },
           "solve": {
             "at_ceiling": true,
-            "b_eff_ms": 25.0375939849624,
             "band": 2.0,
             "ceiling": 182.451552197769,
             "cell": 3777.0,
@@ -3200,7 +3199,7 @@
       },
       "reference_is_a_sample": null,
       "reference_reach_m": {},
-      "role": "gap 170 item (i): frame cost at decision 1030's solved k, at the five densest cells of §23.909. Not a sweep. s = 1.0, controller NOT engaged -- the feedforward half alone. Solved against corpus 28716784.",
+      "role": "C2 confirmation: the harness delegates to VegetationScatter.solve_k_at rather than carrying its own copy. Compared bit for bit against the own-copy baseline. s = 1.0, controller NOT engaged.",
       "scene": {
         "at_world_epsg5070": [
           -1339372.5,
@@ -3813,28 +3812,28 @@
               "lo_m": 1174.72427884308
             }
           ],
-          "build_ms": 9639.632,
+          "build_ms": 9478.037,
           "cut_m": 300.0,
           "frame_ms": {
-            "max": 22.2222222222222,
-            "mean": 22.0706138888889,
-            "min": 17.5498888888867,
+            "max": 22.638,
+            "mean": 21.9385722222222,
+            "min": 21.471,
             "n": 40.0,
-            "p50": 22.2222222222222,
+            "p50": 21.737,
             "p95": 22.2222222222222,
-            "p99": 22.2222222222222
+            "p99": 22.638
           },
           "kind": "instances",
           "name": "oracle",
           "per_family": [],
           "render_ms_cpu": {
-            "max": 0.175999999046326,
-            "mean": 0.0788500001654029,
-            "min": 0.0670000016689301,
+            "max": 0.216999992728233,
+            "mean": 0.0932999996468425,
+            "min": 0.0759999975562096,
             "n": 40.0,
-            "p50": 0.0729999989271164,
-            "p95": 0.101999998092651,
-            "p99": 0.175999999046326
+            "p50": 0.0829999968409538,
+            "p95": 0.144999995827675,
+            "p99": 0.216999992728233
           },
           "render_ms_gpu": {
             "available": false,
@@ -4448,27 +4447,27 @@
               "lo_m": 1174.72427884308
             }
           ],
-          "build_ms": 1988.831,
+          "build_ms": 1979.68,
           "cut_m": 0.0,
           "frame_ms": {
-            "max": 4.609,
-            "mean": 3.96598333333333,
-            "min": 3.33333333333333,
+            "max": 4.069,
+            "mean": 3.9823,
+            "min": 3.921,
             "n": 40.0,
-            "p50": 4.16666666666667,
-            "p95": 4.16666666666667,
-            "p99": 4.609
+            "p50": 3.976,
+            "p95": 4.044,
+            "p99": 4.069
           },
           "kind": "instances",
           "name": "null",
           "render_ms_cpu": {
-            "max": 0.115000002086163,
-            "mean": 0.0784500000998378,
-            "min": 0.068000003695488,
+            "max": 0.108000002801418,
+            "mean": 0.074100000038743,
+            "min": 0.0649999976158142,
             "n": 40.0,
-            "p50": 0.0740000009536743,
-            "p95": 0.108999997377396,
-            "p99": 0.115000002086163
+            "p50": 0.0710000023245811,
+            "p95": 0.0850000008940697,
+            "p99": 0.108000002801418
           },
           "render_ms_gpu": {
             "available": false,
@@ -5082,7 +5081,7 @@
               "lo_m": 1174.72427884308
             }
           ],
-          "build_ms": 1607.559,
+          "build_ms": 1600.226,
           "curve": {
             "bands_fitted": 11.0,
             "fitted": true,
@@ -5093,25 +5092,25 @@
           },
           "cut_m": 120.0,
           "frame_ms": {
-            "max": 4.76190476190476,
-            "mean": 4.76190476190476,
-            "min": 4.76190476190476,
+            "max": 5.146,
+            "mean": 4.79111666666667,
+            "min": 4.16666666666667,
             "n": 40.0,
-            "p50": 4.76190476190476,
-            "p95": 4.76190476190476,
-            "p99": 4.76190476190476
+            "p50": 5.0,
+            "p95": 5.0,
+            "p99": 5.146
           },
           "kind": "tint",
           "matched": false,
           "name": "constant",
           "render_ms_cpu": {
-            "max": 0.096000000834465,
-            "mean": 0.0728499997407198,
-            "min": 0.0670000016689301,
+            "max": 0.0839999988675117,
+            "mean": 0.0709000006318092,
+            "min": 0.0640000030398369,
             "n": 40.0,
-            "p50": 0.0719999969005585,
-            "p95": 0.0810000002384186,
-            "p99": 0.096000000834465
+            "p50": 0.0700000002980232,
+            "p95": 0.0790000036358833,
+            "p99": 0.0839999988675117
           },
           "render_ms_gpu": {
             "available": false,
@@ -5139,7 +5138,7 @@
           },
           "tint": {
             "cells": 5684.0,
-            "cells_ms": 12.186,
+            "cells_ms": 12.088,
             "cells_with_cover": 5462.0,
             "day": 22.0,
             "foliage_fraction": {
@@ -5157,7 +5156,7 @@
             "mean_cover_where_covered": 0.479830648126154,
             "ok": true,
             "phenology_source": "band.phenology_index",
-            "rebuild_ms": 210.772,
+            "rebuild_ms": 217.145,
             "what": "mean vegetation colour weighted by cover, and coverage as the sum of the families' cover fractions -- the two conserved quantities any seam has to hold",
             "window": "largest_fire"
           }
@@ -5749,7 +5748,7 @@
               "lo_m": 1174.72427884308
             }
           ],
-          "build_ms": 1619.216,
+          "build_ms": 1628.135,
           "curve": {
             "bands_fitted": 11.0,
             "fitted": true,
@@ -5760,25 +5759,25 @@
           },
           "cut_m": 120.0,
           "frame_ms": {
-            "max": 5.321,
-            "mean": 4.85136666666667,
-            "min": 4.16666666666667,
+            "max": 6.11111111111111,
+            "mean": 4.86869920631773,
+            "min": 4.744,
             "n": 40.0,
-            "p50": 5.0,
-            "p95": 5.121,
-            "p99": 5.321
+            "p50": 4.76190476190476,
+            "p95": 5.55555555555555,
+            "p99": 6.11111111111111
           },
           "kind": "tint",
           "matched": true,
           "name": "range_matched",
           "render_ms_cpu": {
-            "max": 0.120999999344349,
-            "mean": 0.0788499997928739,
-            "min": 0.0689999982714653,
+            "max": 0.0979999974370003,
+            "mean": 0.0718250002712011,
+            "min": 0.0640000030398369,
             "n": 40.0,
-            "p50": 0.0740000009536743,
-            "p95": 0.101000003516674,
-            "p99": 0.120999999344349
+            "p50": 0.0700000002980232,
+            "p95": 0.0850000008940697,
+            "p99": 0.0979999974370003
           },
           "render_ms_gpu": {
             "available": false,
@@ -5806,7 +5805,7 @@
           },
           "tint": {
             "cells": 5684.0,
-            "cells_ms": 12.073,
+            "cells_ms": 12.477,
             "cells_with_cover": 5462.0,
             "day": 22.0,
             "foliage_fraction": {
@@ -5824,7 +5823,7 @@
             "mean_cover_where_covered": 0.479830648126154,
             "ok": true,
             "phenology_source": "band.phenology_index",
-            "rebuild_ms": 211.145,
+            "rebuild_ms": 215.759,
             "what": "mean vegetation colour weighted by cover, and coverage as the sum of the families' cover fractions -- the two conserved quantities any seam has to hold",
             "window": "largest_fire"
           }
@@ -6416,16 +6415,16 @@
               "lo_m": 1174.72427884308
             }
           ],
-          "build_ms": 20276.924,
+          "build_ms": 20237.802,
           "cut_m": 0.0,
           "frame_ms": {
-            "max": 38.643,
-            "mean": 38.1344333333334,
+            "max": 38.0481111111132,
+            "mean": 37.5231724747475,
             "min": 37.5,
             "n": 40.0,
-            "p50": 38.3333333333333,
-            "p95": 38.465,
-            "p99": 38.643
+            "p50": 37.5,
+            "p95": 37.5,
+            "p99": 38.0481111111132
           },
           "k": 117.015616862195,
           "k_fraction": 0.22447310208342,
@@ -6491,13 +6490,13 @@
             }
           ],
           "render_ms_cpu": {
-            "max": 0.142000004649162,
-            "mean": 0.0827000003308058,
-            "min": 0.0719999969005585,
+            "max": 0.162000000476837,
+            "mean": 0.098900000192225,
+            "min": 0.0780000016093254,
             "n": 40.0,
-            "p50": 0.0769999995827675,
-            "p95": 0.11599999666214,
-            "p99": 0.142000004649162
+            "p50": 0.0920000001788139,
+            "p95": 0.148000001907349,
+            "p99": 0.162000000476837
           },
           "render_ms_gpu": {
             "available": false,
@@ -6550,7 +6549,6 @@
           },
           "solve": {
             "at_ceiling": false,
-            "b_eff_ms": 25.0375939849624,
             "band": 2.0,
             "ceiling": 182.451552197769,
             "cell": 3628.0,
@@ -6674,7 +6672,7 @@
       },
       "reference_is_a_sample": null,
       "reference_reach_m": {},
-      "role": "gap 170 item (i): frame cost at decision 1030's solved k, at the five densest cells of §23.909. Not a sweep. s = 1.0, controller NOT engaged -- the feedforward half alone. Solved against corpus 28716784.",
+      "role": "C2 confirmation: the harness delegates to VegetationScatter.solve_k_at rather than carrying its own copy. Compared bit for bit against the own-copy baseline. s = 1.0, controller NOT engaged.",
       "scene": {
         "at_world_epsg5070": [
           -1315799.875,
@@ -7287,28 +7285,28 @@
               "lo_m": 672.027639074199
             }
           ],
-          "build_ms": 17506.796,
+          "build_ms": 17487.084,
           "cut_m": 300.0,
           "frame_ms": {
-            "max": 58.327,
-            "mean": 57.4139388888888,
-            "min": 56.821,
+            "max": 58.042,
+            "mean": 56.502975,
+            "min": 55.7003333333363,
             "n": 40.0,
-            "p50": 57.4074074074074,
-            "p95": 57.5769259259228,
-            "p99": 58.327
+            "p50": 56.4843333333303,
+            "p95": 56.9444444444444,
+            "p99": 58.042
           },
           "kind": "instances",
           "name": "oracle",
           "per_family": [],
           "render_ms_cpu": {
-            "max": 0.151999995112419,
-            "mean": 0.086399999819696,
-            "min": 0.0710000023245811,
+            "max": 0.196999996900558,
+            "mean": 0.112949999980628,
+            "min": 0.0879999995231628,
             "n": 40.0,
-            "p50": 0.0790000036358833,
-            "p95": 0.123000003397465,
-            "p99": 0.151999995112419
+            "p50": 0.103000000119209,
+            "p95": 0.152999997138977,
+            "p99": 0.196999996900558
           },
           "render_ms_gpu": {
             "available": false,
@@ -7922,27 +7920,27 @@
               "lo_m": 672.027639074199
             }
           ],
-          "build_ms": 1976.704,
+          "build_ms": 1991.842,
           "cut_m": 0.0,
           "frame_ms": {
-            "max": 6.158,
-            "mean": 5.57616111111111,
-            "min": 5.464,
+            "max": 5.55555555555555,
+            "mean": 5.53051388888889,
+            "min": 5.468,
             "n": 40.0,
-            "p50": 5.55555555555555,
-            "p95": 5.583,
-            "p99": 6.158
+            "p50": 5.532,
+            "p95": 5.55555555555555,
+            "p99": 5.55555555555555
           },
           "kind": "instances",
           "name": "null",
           "render_ms_cpu": {
-            "max": 0.0949999988079071,
-            "mean": 0.0738749999552965,
-            "min": 0.0649999976158142,
+            "max": 0.103000000119209,
+            "mean": 0.0724750008434057,
+            "min": 0.0640000030398369,
             "n": 40.0,
-            "p50": 0.0729999989271164,
-            "p95": 0.0829999968409538,
-            "p99": 0.0949999988079071
+            "p50": 0.0700000002980232,
+            "p95": 0.0860000029206276,
+            "p99": 0.103000000119209
           },
           "render_ms_gpu": {
             "available": false,
@@ -8556,7 +8554,7 @@
               "lo_m": 672.027639074199
             }
           ],
-          "build_ms": 2918.661,
+          "build_ms": 2967.677,
           "curve": {
             "bands_fitted": 11.0,
             "fitted": true,
@@ -8567,25 +8565,25 @@
           },
           "cut_m": 120.0,
           "frame_ms": {
-            "max": 12.81,
-            "mean": 12.1870416666667,
-            "min": 11.738,
+            "max": 12.78,
+            "mean": 12.2844136363636,
+            "min": 11.1111111111111,
             "n": 40.0,
-            "p50": 12.1212121212121,
-            "p95": 12.5,
-            "p99": 12.81
+            "p50": 12.5,
+            "p95": 12.714,
+            "p99": 12.78
           },
           "kind": "tint",
           "matched": false,
           "name": "constant",
           "render_ms_cpu": {
-            "max": 0.108999997377396,
-            "mean": 0.0758749997243285,
-            "min": 0.0689999982714653,
+            "max": 0.168999999761581,
+            "mean": 0.0742000004276633,
+            "min": 0.0659999996423721,
             "n": 40.0,
-            "p50": 0.0729999989271164,
-            "p95": 0.0890000015497208,
-            "p99": 0.108999997377396
+            "p50": 0.0700000002980232,
+            "p95": 0.090999998152256,
+            "p99": 0.168999999761581
           },
           "render_ms_gpu": {
             "available": false,
@@ -8613,7 +8611,7 @@
           },
           "tint": {
             "cells": 5684.0,
-            "cells_ms": 12.183,
+            "cells_ms": 12.519,
             "cells_with_cover": 5462.0,
             "day": 22.0,
             "foliage_fraction": {
@@ -8631,7 +8629,7 @@
             "mean_cover_where_covered": 0.479830648126154,
             "ok": true,
             "phenology_source": "band.phenology_index",
-            "rebuild_ms": 209.797,
+            "rebuild_ms": 211.668,
             "what": "mean vegetation colour weighted by cover, and coverage as the sum of the families' cover fractions -- the two conserved quantities any seam has to hold",
             "window": "largest_fire"
           }
@@ -9223,7 +9221,7 @@
               "lo_m": 672.027639074199
             }
           ],
-          "build_ms": 2920.294,
+          "build_ms": 2926.784,
           "curve": {
             "bands_fitted": 11.0,
             "fitted": true,
@@ -9234,25 +9232,25 @@
           },
           "cut_m": 120.0,
           "frame_ms": {
-            "max": 13.175,
-            "mean": 12.2045416666667,
-            "min": 11.903,
+            "max": 12.707,
+            "mean": 12.1432,
+            "min": 11.787,
             "n": 40.0,
             "p50": 12.1212121212121,
             "p95": 12.5,
-            "p99": 13.175
+            "p99": 12.707
           },
           "kind": "tint",
           "matched": true,
           "name": "range_matched",
           "render_ms_cpu": {
-            "max": 0.0930000022053719,
-            "mean": 0.073450000025332,
+            "max": 0.172999992966652,
+            "mean": 0.0813999999314547,
             "min": 0.0670000016689301,
             "n": 40.0,
-            "p50": 0.0729999989271164,
-            "p95": 0.0799999982118607,
-            "p99": 0.0930000022053719
+            "p50": 0.0750000029802322,
+            "p95": 0.118000000715256,
+            "p99": 0.172999992966652
           },
           "render_ms_gpu": {
             "available": false,
@@ -9280,7 +9278,7 @@
           },
           "tint": {
             "cells": 5684.0,
-            "cells_ms": 11.981,
+            "cells_ms": 12.154,
             "cells_with_cover": 5462.0,
             "day": 22.0,
             "foliage_fraction": {
@@ -9298,7 +9296,7 @@
             "mean_cover_where_covered": 0.479830648126154,
             "ok": true,
             "phenology_source": "band.phenology_index",
-            "rebuild_ms": 209.078,
+            "rebuild_ms": 211.554,
             "what": "mean vegetation colour weighted by cover, and coverage as the sum of the families' cover fractions -- the two conserved quantities any seam has to hold",
             "window": "largest_fire"
           }
@@ -9890,15 +9888,15 @@
               "lo_m": 672.027639074199
             }
           ],
-          "build_ms": 14530.311,
+          "build_ms": 14491.296,
           "cut_m": 0.0,
           "frame_ms": {
             "max": 33.3333333333333,
-            "mean": 32.6118666666667,
-            "min": 28.4917777777742,
+            "mean": 31.9791666666667,
+            "min": 31.4814814814815,
             "n": 40.0,
-            "p50": 32.697,
-            "p95": 33.3333333333333,
+            "p50": 31.9444444444444,
+            "p95": 31.9444444444445,
             "p99": 33.3333333333333
           },
           "k": 50.6274405482783,
@@ -9981,13 +9979,13 @@
             }
           ],
           "render_ms_cpu": {
-            "max": 0.135000005364418,
-            "mean": 0.0810250002890825,
-            "min": 0.0700000002980232,
+            "max": 0.216000005602837,
+            "mean": 0.0992500005289912,
+            "min": 0.0759999975562096,
             "n": 40.0,
-            "p50": 0.0750000029802322,
-            "p95": 0.111000001430511,
-            "p99": 0.135000005364418
+            "p50": 0.090999998152256,
+            "p95": 0.136000007390976,
+            "p99": 0.216000005602837
           },
           "render_ms_gpu": {
             "available": false,
@@ -10040,7 +10038,6 @@
           },
           "solve": {
             "at_ceiling": false,
-            "b_eff_ms": 25.0375939849624,
             "band": 3.0,
             "ceiling": 182.451552197769,
             "cell": 3754.0,
@@ -10165,7 +10162,7 @@
       },
       "reference_is_a_sample": null,
       "reference_reach_m": {},
-      "role": "gap 170 item (i): frame cost at decision 1030's solved k, at the five densest cells of §23.909. Not a sweep. s = 1.0, controller NOT engaged -- the feedforward half alone. Solved against corpus 28716784.",
+      "role": "C2 confirmation: the harness delegates to VegetationScatter.solve_k_at rather than carrying its own copy. Compared bit for bit against the own-copy baseline. s = 1.0, controller NOT engaged.",
       "scene": {
         "at_world_epsg5070": [
           -1396666.75,
@@ -10725,28 +10722,28 @@
               "lo_m": 809.121308305566
             }
           ],
-          "build_ms": 9345.898,
+          "build_ms": 9702.049,
           "cut_m": 300.0,
           "frame_ms": {
-            "max": 19.4444444444444,
-            "mean": 19.0575396825397,
-            "min": 19.047619047619,
+            "max": 19.047619047619,
+            "mean": 18.7556904761905,
+            "min": 18.575,
             "n": 40.0,
-            "p50": 19.047619047619,
-            "p95": 19.047619047619,
-            "p99": 19.4444444444444
+            "p50": 18.75,
+            "p95": 18.75,
+            "p99": 19.047619047619
           },
           "kind": "instances",
           "name": "oracle",
           "per_family": [],
           "render_ms_cpu": {
-            "max": 0.112000003457069,
-            "mean": 0.076600000448525,
-            "min": 0.0649999976158142,
+            "max": 0.163000002503395,
+            "mean": 0.0922500001266599,
+            "min": 0.0729999989271164,
             "n": 40.0,
-            "p50": 0.0729999989271164,
-            "p95": 0.090999998152256,
-            "p99": 0.112000003457069
+            "p50": 0.0839999988675117,
+            "p95": 0.130999997258186,
+            "p99": 0.163000002503395
           },
           "render_ms_gpu": {
             "available": false,
@@ -11307,27 +11304,27 @@
               "lo_m": 809.121308305566
             }
           ],
-          "build_ms": 1956.868,
+          "build_ms": 2001.855,
           "cut_m": 0.0,
           "frame_ms": {
-            "max": 4.245,
-            "mean": 3.71358518518519,
-            "min": 3.626,
+            "max": 3.85,
+            "mean": 3.683325,
+            "min": 3.633,
             "n": 40.0,
-            "p50": 3.7037037037037,
-            "p95": 3.709,
-            "p99": 4.245
+            "p50": 3.684,
+            "p95": 3.7037037037037,
+            "p99": 3.85
           },
           "kind": "instances",
           "name": "null",
           "render_ms_cpu": {
-            "max": 0.0829999968409538,
-            "mean": 0.0699999999254942,
+            "max": 0.0900000035762787,
+            "mean": 0.0697750004008412,
             "min": 0.063000001013279,
             "n": 40.0,
             "p50": 0.0689999982714653,
-            "p95": 0.0810000002384186,
-            "p99": 0.0829999968409538
+            "p95": 0.0829999968409538,
+            "p99": 0.0900000035762787
           },
           "render_ms_gpu": {
             "available": false,
@@ -11888,7 +11885,7 @@
               "lo_m": 809.121308305566
             }
           ],
-          "build_ms": 1446.562,
+          "build_ms": 1495.773,
           "curve": {
             "bands_fitted": 10.0,
             "fitted": true,
@@ -11899,25 +11896,25 @@
           },
           "cut_m": 120.0,
           "frame_ms": {
-            "max": 4.54545454545454,
-            "mean": 3.83101944444445,
+            "max": 4.101,
+            "mean": 3.77061481481482,
             "min": 3.7037037037037,
             "n": 40.0,
             "p50": 3.7037037037037,
-            "p95": 4.16666666666667,
-            "p99": 4.54545454545454
+            "p95": 3.954,
+            "p99": 4.101
           },
           "kind": "tint",
           "matched": false,
           "name": "constant",
           "render_ms_cpu": {
-            "max": 0.101000003516674,
-            "mean": 0.0721250012516975,
-            "min": 0.0659999996423721,
+            "max": 0.0879999995231628,
+            "mean": 0.070525000244379,
+            "min": 0.061999998986721,
             "n": 40.0,
-            "p50": 0.0700000002980232,
-            "p95": 0.0860000029206276,
-            "p99": 0.101000003516674
+            "p50": 0.0689999982714653,
+            "p95": 0.0829999968409538,
+            "p99": 0.0879999995231628
           },
           "render_ms_gpu": {
             "available": false,
@@ -11945,7 +11942,7 @@
           },
           "tint": {
             "cells": 5684.0,
-            "cells_ms": 12.247,
+            "cells_ms": 12.203,
             "cells_with_cover": 5462.0,
             "day": 22.0,
             "foliage_fraction": {
@@ -11963,7 +11960,7 @@
             "mean_cover_where_covered": 0.479830648126154,
             "ok": true,
             "phenology_source": "band.phenology_index",
-            "rebuild_ms": 210.068,
+            "rebuild_ms": 218.962,
             "what": "mean vegetation colour weighted by cover, and coverage as the sum of the families' cover fractions -- the two conserved quantities any seam has to hold",
             "window": "largest_fire"
           }
@@ -12502,7 +12499,7 @@
               "lo_m": 809.121308305566
             }
           ],
-          "build_ms": 1447.685,
+          "build_ms": 1525.389,
           "curve": {
             "bands_fitted": 10.0,
             "fitted": true,
@@ -12513,25 +12510,25 @@
           },
           "cut_m": 120.0,
           "frame_ms": {
-            "max": 4.33,
-            "mean": 3.767075,
-            "min": 3.7037037037037,
+            "max": 3.988,
+            "mean": 3.72010185185182,
+            "min": 2.83396296296149,
             "n": 40.0,
             "p50": 3.7037037037037,
-            "p95": 4.16666666666667,
-            "p99": 4.33
+            "p95": 3.919,
+            "p99": 3.988
           },
           "kind": "tint",
           "matched": true,
           "name": "range_matched",
           "render_ms_cpu": {
-            "max": 0.0949999988079071,
-            "mean": 0.0713749999180436,
-            "min": 0.0640000030398369,
+            "max": 0.0879999995231628,
+            "mean": 0.0690500006079674,
+            "min": 0.061999998986721,
             "n": 40.0,
-            "p50": 0.0689999982714653,
+            "p50": 0.0670000016689301,
             "p95": 0.0799999982118607,
-            "p99": 0.0949999988079071
+            "p99": 0.0879999995231628
           },
           "render_ms_gpu": {
             "available": false,
@@ -12559,7 +12556,7 @@
           },
           "tint": {
             "cells": 5684.0,
-            "cells_ms": 12.105,
+            "cells_ms": 11.945,
             "cells_with_cover": 5462.0,
             "day": 22.0,
             "foliage_fraction": {
@@ -12577,7 +12574,7 @@
             "mean_cover_where_covered": 0.479830648126154,
             "ok": true,
             "phenology_source": "band.phenology_index",
-            "rebuild_ms": 209.316,
+            "rebuild_ms": 211.401,
             "what": "mean vegetation colour weighted by cover, and coverage as the sum of the families' cover fractions -- the two conserved quantities any seam has to hold",
             "window": "largest_fire"
           }
@@ -13116,16 +13113,16 @@
               "lo_m": 809.121308305566
             }
           ],
-          "build_ms": 8970.542,
+          "build_ms": 9289.873,
           "cut_m": 0.0,
           "frame_ms": {
-            "max": 18.0555555555556,
-            "mean": 17.1058083333333,
-            "min": 16.6666666666667,
+            "max": 16.855,
+            "mean": 16.6768416666667,
+            "min": 16.571,
             "n": 40.0,
-            "p50": 17.0803333333333,
-            "p95": 17.7953333333333,
-            "p99": 18.0555555555556
+            "p50": 16.6666666666667,
+            "p95": 16.759,
+            "p99": 16.855
           },
           "k": 182.451552197769,
           "k_fraction": 0.35,
@@ -13181,13 +13178,13 @@
             }
           ],
           "render_ms_cpu": {
-            "max": 0.0989999994635582,
-            "mean": 0.0732250003144145,
-            "min": 0.068000003695488,
+            "max": 0.149000003933907,
+            "mean": 0.0866250006482005,
+            "min": 0.0740000009536743,
             "n": 40.0,
-            "p50": 0.0710000023245811,
-            "p95": 0.0839999988675117,
-            "p99": 0.0989999994635582
+            "p50": 0.0829999968409538,
+            "p95": 0.112000003457069,
+            "p99": 0.149000003933907
           },
           "render_ms_gpu": {
             "available": false,
@@ -13234,7 +13231,6 @@
           },
           "solve": {
             "at_ceiling": true,
-            "b_eff_ms": 25.0375939849624,
             "band": 1.0,
             "ceiling": 182.451552197769,
             "cell": 3757.0,
@@ -13352,7 +13348,7 @@
       },
       "reference_is_a_sample": null,
       "reference_reach_m": {},
-      "role": "gap 170 item (i): frame cost at decision 1030's solved k, at the five densest cells of §23.909. Not a sweep. s = 1.0, controller NOT engaged -- the feedforward half alone. Solved against corpus 28716784.",
+      "role": "C2 confirmation: the harness delegates to VegetationScatter.solve_k_at rather than carrying its own copy. Compared bit for bit against the own-copy baseline. s = 1.0, controller NOT engaged.",
       "scene": {
         "at_world_epsg5070": [
           -1368151.75,
@@ -13859,28 +13855,28 @@
               "lo_m": 501.86445184037
             }
           ],
-          "build_ms": 24962.283,
+          "build_ms": 24964.635,
           "cut_m": 300.0,
           "frame_ms": {
-            "max": 40.352,
-            "mean": 39.5740222222221,
+            "max": 38.8888888888889,
+            "mean": 38.8888888888889,
             "min": 38.8888888888889,
             "n": 40,
-            "p50": 39.5833333333333,
-            "p95": 40.291,
-            "p99": 40.352
+            "p50": 38.8888888888889,
+            "p95": 38.8888888888889,
+            "p99": 38.8888888888889
           },
           "kind": "instances",
           "name": "oracle",
           "per_family": [],
           "render_ms_cpu": {
-            "max": 0.162000000476837,
-            "mean": 0.0821250000968576,
-            "min": 0.0659999996423721,
+            "max": 0.31700000166893,
+            "mean": 0.097100000269711,
+            "min": 0.0759999975562096,
             "n": 40,
-            "p50": 0.0740000009536743,
-            "p95": 0.112999998033047,
-            "p99": 0.162000000476837
+            "p50": 0.0860000029206276,
+            "p95": 0.149000003933907,
+            "p99": 0.31700000166893
           },
           "render_ms_gpu": {
             "available": false,
@@ -14388,27 +14384,27 @@
               "lo_m": 501.86445184037
             }
           ],
-          "build_ms": 1991.286,
+          "build_ms": 1987.458,
           "cut_m": 0.0,
           "frame_ms": {
-            "max": 3.563,
-            "mean": 3.33881666666666,
-            "min": 3.323,
+            "max": 3.687,
+            "mean": 3.34424166666667,
+            "min": 3.33333333333333,
             "n": 40,
             "p50": 3.33333333333333,
             "p95": 3.33333333333333,
-            "p99": 3.563
+            "p99": 3.687
           },
           "kind": "instances",
           "name": "null",
           "render_ms_cpu": {
-            "max": 0.0939999967813492,
-            "mean": 0.0700500002130866,
-            "min": 0.061999998986721,
+            "max": 0.119000002741814,
+            "mean": 0.0694500002078712,
+            "min": 0.0590000003576279,
             "n": 40,
-            "p50": 0.0670000016689301,
-            "p95": 0.0829999968409538,
-            "p99": 0.0939999967813492
+            "p50": 0.0649999976158142,
+            "p95": 0.090999998152256,
+            "p99": 0.119000002741814
           },
           "render_ms_gpu": {
             "available": false,
@@ -14916,7 +14912,7 @@
               "lo_m": 501.86445184037
             }
           ],
-          "build_ms": 4148.88,
+          "build_ms": 4128.952,
           "curve": {
             "bands_fitted": 9,
             "fitted": true,
@@ -14927,25 +14923,25 @@
           },
           "cut_m": 120.0,
           "frame_ms": {
-            "max": 7.923,
-            "mean": 7.41797870370371,
-            "min": 7.233,
+            "max": 7.50219047619125,
+            "mean": 7.23410476190478,
+            "min": 7.14285714285714,
             "n": 40,
-            "p50": 7.40740740740741,
-            "p95": 7.57575757575758,
-            "p99": 7.923
+            "p50": 7.14285714285714,
+            "p95": 7.383,
+            "p99": 7.50219047619125
           },
           "kind": "tint",
           "matched": false,
           "name": "constant",
           "render_ms_cpu": {
-            "max": 0.108000002801418,
-            "mean": 0.0715500012040138,
-            "min": 0.0640000030398369,
+            "max": 0.157000005245209,
+            "mean": 0.0749750006012619,
+            "min": 0.0599999986588955,
             "n": 40,
-            "p50": 0.068000003695488,
-            "p95": 0.0920000001788139,
-            "p99": 0.108000002801418
+            "p50": 0.0659999996423721,
+            "p95": 0.118000000715256,
+            "p99": 0.157000005245209
           },
           "render_ms_gpu": {
             "available": false,
@@ -14973,7 +14969,7 @@
           },
           "tint": {
             "cells": 5684,
-            "cells_ms": 12.298,
+            "cells_ms": 12.159,
             "cells_with_cover": 5462,
             "day": 22,
             "foliage_fraction": {
@@ -14991,7 +14987,7 @@
             "mean_cover_where_covered": 0.479830648126154,
             "ok": true,
             "phenology_source": "band.phenology_index",
-            "rebuild_ms": 211.611,
+            "rebuild_ms": 209.944,
             "what": "mean vegetation colour weighted by cover, and coverage as the sum of the families' cover fractions -- the two conserved quantities any seam has to hold",
             "window": "largest_fire"
           }
@@ -15477,7 +15473,7 @@
               "lo_m": 501.86445184037
             }
           ],
-          "build_ms": 4152.818,
+          "build_ms": 4147.917,
           "curve": {
             "bands_fitted": 9,
             "fitted": true,
@@ -15488,25 +15484,25 @@
           },
           "cut_m": 120.0,
           "frame_ms": {
-            "max": 7.939,
-            "mean": 7.41039537037037,
-            "min": 7.258,
+            "max": 7.40740740740741,
+            "mean": 7.3413,
+            "min": 7.238,
             "n": 40,
-            "p50": 7.40740740740741,
-            "p95": 7.57575757575758,
-            "p99": 7.939
+            "p50": 7.342,
+            "p95": 7.40740740740741,
+            "p99": 7.40740740740741
           },
           "kind": "tint",
           "matched": true,
           "name": "range_matched",
           "render_ms_cpu": {
-            "max": 0.0890000015497208,
-            "mean": 0.0716750008054078,
-            "min": 0.0610000006854534,
+            "max": 0.119000002741814,
+            "mean": 0.070550000667572,
+            "min": 0.0599999986588955,
             "n": 40,
-            "p50": 0.0700000002980232,
+            "p50": 0.0649999976158142,
             "p95": 0.0879999995231628,
-            "p99": 0.0890000015497208
+            "p99": 0.119000002741814
           },
           "render_ms_gpu": {
             "available": false,
@@ -15534,7 +15530,7 @@
           },
           "tint": {
             "cells": 5684,
-            "cells_ms": 12.51,
+            "cells_ms": 12.113,
             "cells_with_cover": 5462,
             "day": 22,
             "foliage_fraction": {
@@ -15552,7 +15548,7 @@
             "mean_cover_where_covered": 0.479830648126154,
             "ok": true,
             "phenology_source": "band.phenology_index",
-            "rebuild_ms": 212.014,
+            "rebuild_ms": 212.99,
             "what": "mean vegetation colour weighted by cover, and coverage as the sum of the families' cover fractions -- the two conserved quantities any seam has to hold",
             "window": "largest_fire"
           }
@@ -16038,16 +16034,16 @@
               "lo_m": 501.86445184037
             }
           ],
-          "build_ms": 6685.378,
+          "build_ms": 6658.126,
           "cut_m": 0.0,
           "frame_ms": {
-            "max": 12.096,
-            "mean": 11.1763916666667,
-            "min": 11.073,
+            "max": 11.4227777777778,
+            "mean": 11.1230944444444,
+            "min": 11.1111111111111,
             "n": 40,
             "p50": 11.1111111111111,
-            "p95": 11.6666666666667,
-            "p99": 12.096
+            "p95": 11.1111111111111,
+            "p99": 11.4227777777778
           },
           "k": 182.451552197769,
           "k_fraction": 0.35,
@@ -16093,13 +16089,13 @@
             }
           ],
           "render_ms_cpu": {
-            "max": 0.100000001490116,
-            "mean": 0.0696999996900558,
-            "min": 0.0640000030398369,
+            "max": 0.0939999967813492,
+            "mean": 0.0680750001221895,
+            "min": 0.0610000006854534,
             "n": 40,
             "p50": 0.0659999996423721,
-            "p95": 0.0810000002384186,
-            "p99": 0.100000001490116
+            "p95": 0.0839999988675117,
+            "p99": 0.0939999967813492
           },
           "render_ms_gpu": {
             "available": false,
@@ -16140,7 +16136,6 @@
           },
           "solve": {
             "at_ceiling": true,
-            "b_eff_ms": 25.0375939849624,
             "band": 0,
             "ceiling": 182.451552197769,
             "cell": 4727,
@@ -16252,7 +16247,7 @@
       },
       "reference_is_a_sample": null,
       "reference_reach_m": {},
-      "role": "gap 170 item (i): frame cost at decision 1030's solved k, at the five densest cells of §23.909. Not a sweep. s = 1.0, controller NOT engaged -- the feedforward half alone. Solved against corpus 28716784.",
+      "role": "C2 confirmation: the harness delegates to VegetationScatter.solve_k_at rather than carrying its own copy. Compared bit for bit against the own-copy baseline. s = 1.0, controller NOT engaged.",
       "scene": {
         "at_world_epsg5070": [
           -1468919.25,
