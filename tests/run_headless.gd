@@ -265,11 +265,33 @@ const UNATTRIBUTED := "_outside_any_test"
 func _artefacts_seen() -> Dictionary:
     return {
         "fixture_bin": FileAccess.file_exists("res://assets/fixture/fixture_client.bin"),
-        "tiles": DirAccess.dir_exists_absolute(
-                ProjectSettings.globalize_path("res://assets/terrain/tiles/0")),
-        "layers": DirAccess.dir_exists_absolute(
-                ProjectSettings.globalize_path("res://assets/terrain/layers/slope/0")),
+        "tiles": _pin_first_file_present("res://assets/terrain/tiles/"),
+        "layers": _pin_first_file_present("res://assets/terrain/layers/"),
     }
+
+
+## Is the first file a PIN names actually on disk?
+##
+## FILES, NOT DIRECTORIES, AND THE DIFFERENCE COST A SECOND RED CI. The first
+## version asked whether `assets/terrain/tiles/0/` existed. It does in CI:
+## `fetch_artefacts.py` creates the destination's parent before writing into it,
+## and the write is what fails when the decision 972 `file://` host is
+## unreachable -- so CI has the empty directory and none of the 496 PNGs. An
+## empty directory and a full one answered the same question the same way, which
+## is the shape this whole guard is about, met twice in one hour by the guard.
+##
+## The PIN names the bytes, so the PIN is what to ask.
+func _pin_first_file_present(dir_path: String) -> bool:
+    var pin_path := dir_path + "PIN"
+    if not FileAccess.file_exists(pin_path):
+        return false
+    var doc = JSON.parse_string(FileAccess.open(pin_path, FileAccess.READ).get_as_text())
+    if typeof(doc) != TYPE_DICTIONARY:
+        return false
+    var files: Dictionary = (doc as Dictionary).get("files", {})
+    for name in files:
+        return FileAccess.file_exists(dir_path + str(name))
+    return false
 
 
 func _ledger() -> Dictionary:
