@@ -261,19 +261,29 @@ func _on_probed(result: Dictionary) -> void:
     # M5 rides on the probe: the scatter needs a place to stand, and the point
     # the viewer just asked about is the one they are looking at.
     if str(result.get("state", "")) == CellProbe.RESOLVED and result.has("world"):
-        # NOT ON THE SOLVED HORIZON, DELIBERATELY. `free_flight` defaults to it
-        # since lane C2's inversion; this one does not, and the reason is the
-        # viewport. `k_res` is a pinhole property, so a small window solves a
-        # small ceiling -- at the 64 px the headless harness stands this scene
-        # at, the ceiling is 14.60 m, under the 31.25 m placement floor for any
-        # plant shorter than about 2.1 m, and shrub and succulent drop to the
-        # field layer. Correct arithmetic on a window nobody looks through.
+        # ON THE SOLVED HORIZON, like `free_flight`. The whole viewer is on
+        # decision 1030's solve now (owner ruling, `owner_questions.md` row
+        # 31); this panel held out one commit longer for a reason that turned
+        # out to be the harness's and not the world's.
         #
-        # This scatter is the probe panel's, driven by a click, and the gate
-        # reads it to check that every family placing instances reaches a node.
-        # Putting it on the solved horizon costs that coverage for a reason
-        # that is the harness's rather than the world's. The far field C2 is
-        # about is `free_flight`'s, and that is where the default went.
-        scatter_report = _terrain.scatter_at(result["world"])
+        # WHAT THE REASON WAS, because it is worth not re-discovering: `k_res`
+        # is a pinhole property, so a small viewport solves a small ceiling,
+        # and the gate stood this scene at 64 px -- a 14.60 m ceiling, under
+        # the 31.25 m placement floor for any plant shorter than ~2.1 m, which
+        # dropped shrub and succulent to the field layer and cost the gate its
+        # coverage of them. The 64 was Godot's default `Window.min_size`
+        # standing in for a window headless does not have, not a size anyone
+        # chose. The harness declares a real one now, so the ceiling here is
+        # the ceiling a person gets.
+        #
+        # `k` IS THE FOURTH PARAMETER, and the three before it are spelled out
+        # at their own defaults rather than left off. Passing the sentinel in
+        # the second slot makes it a RADIUS of -1.0 -- a scatter over a
+        # negative world that fails somewhere further down, describing
+        # something other than what went wrong.
+        scatter_report = _terrain.scatter_at(result["world"],
+                TerrainView.SCATTER_HORIZON_M, VegetationScatter.NO_SCHEDULE,
+                VegetationScatter.MAX_BUILT_INSTANCES,
+                VegetationScatter.SOLVE_HORIZON)
         if probe_panel != null:
             probe_panel.show_scatter(scatter_report)

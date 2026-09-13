@@ -598,7 +598,42 @@ func test_the_inspector_builds_from_a_document() -> void:
 # the scene as it actually runs
 # --------------------------------------------------------------------------
 
+## The size 1152x648 is `display/window/size/viewport_{width,height}`'s default,
+## i.e. what this application opens at when a person runs it. The harness has to
+## say it out loud because HEADLESS HAS NO WINDOW TO ASK.
+const SCENE_VIEWPORT := Vector2i(1152, 648)
+
+
+## Stand the scene at the size the application actually opens at.
+##
+## THE 64 PX, FOUND. Under `--headless` the display server has no window and
+## reports `window_get_size()` as (0, 0). On the first frame the root Window
+## syncs its size from the display server, receives that zero, and clamps it up
+## to `Window.min_size` -- which defaults to **64 x 64**. So the 64 is not a
+## setting anyone wrote: it is the smallest window Godot will admit, standing in
+## for a window that does not exist. `ProjectSettings`' 1152/648 never arrives,
+## because there is no window for it to be applied to.
+##
+## THAT IS WHY EVERY EARLIER ATTEMPT READ BACK RIGHT AND WAS 64 BY THE TIME
+## ANYTHING DREW. Setting the size here is undone by that frame-0 sync a moment
+## later, which is exactly what it looked like from the outside. So the floor
+## itself has to move: `min_size` is what the clamp reads, and raising it is the
+## only assignment the sync cannot undercut. The `size` line is still wanted, so
+## that anything reading during `_ready()` -- before frame 0 -- sees it too.
+##
+## WHY IT MATTERS BEYOND TIDINESS. `k_res` is a pinhole property, so 64 px
+## solves a 14.60 m instancing ceiling: under decision 1030's 31.25 m placement
+## floor for any plant shorter than ~2.1 m. Left alone it would send shrub and
+## succulent to the field layer in the gate and nowhere else -- correct
+## arithmetic on a window nobody looks through.
+func _stand_the_root_at_a_window_size() -> void:
+    var r := get_root()
+    r.min_size = SCENE_VIEWPORT
+    r.size = SCENE_VIEWPORT
+
+
 func stage_the_main_scene() -> void:
+    _stand_the_root_at_a_window_size()
     var packed := load("res://scenes/main.tscn") as PackedScene
     check(packed != null, "main.tscn did not load as a PackedScene")
     if packed == null:
@@ -833,8 +868,39 @@ func test_the_main_scene_populated_itself() -> void:
                     print("main scene scatter: %d texels, share %s, families %s"
                             % [int(sr["texels"]), String.num(float(sr["share_drawn"]), 5),
                                str(drawn)])
+                    # THE SCENE IS ON THE SOLVED HORIZON, so the solve report
+                    # has to be there. Empty means the scatter took a constant
+                    # `k`, which is the pre-1030 world wearing the same
+                    # `ok: true` -- and the only visible symptom would be a
+                    # families list that is longer than it should be.
                     var solve_rep: Dictionary = sr.get("horizon_solve", {})
-                    if not solve_rep.is_empty():
+                    check(not solve_rep.is_empty(),
+                            "the scene's scatter reports no solve: it drew at a constant k")
+                    # AND THE VIEWPORT IT SOLVED AGAINST IS THE ONE WE STOOD IT
+                    # AT. This is the negative control on the 64 px: if the
+                    # frame-0 clamp ever wins again, `k_res` silently drops to
+                    # a 14.60 m ceiling and takes shrub and succulent out of
+                    # the instances -- correct arithmetic, plausible number,
+                    # families quietly missing. Read the height the solve
+                    # actually used, not the one we asked for.
+                    check(is_equal_approx(
+                            float(solve_rep.get("viewport_height_px", 0.0)),
+                            float(SCENE_VIEWPORT.y)),
+                            "the scene solved against %s px, not the %d it was stood at"
+                            % [String.num(float(solve_rep.get("viewport_height_px", 0.0)), 0),
+                               SCENE_VIEWPORT.y])
+                    # A BLOCK THAT SAYS WHY IT IS QUIET IS NOT THE TRAP; ONE
+                    # THAT IS MERELY QUIET IS. This reporter was written while
+                    # the scene still drew at a constant `k`, so it could never
+                    # fire -- permanent silence dressed as coverage. The scene
+                    # is on the solve now and it always fires, but the else is
+                    # kept: if the default is ever moved back, this says so in
+                    # a line instead of leaving a reader to notice a report
+                    # that stopped appearing.
+                    if solve_rep.is_empty():
+                        print("main scene horizon: NOT on the solved horizon -- "
+                                + "the scatter took a constant k and there is nothing to report")
+                    else:
                         print("main scene horizon: solved k %s, ceiling %s at %s px, "
                                 % [String.num(float(solve_rep.get("k", NAN)), 2),
                                    String.num(float(solve_rep.get("ceiling", NAN)), 2),
