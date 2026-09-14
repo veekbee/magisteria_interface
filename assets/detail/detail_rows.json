@@ -2,9 +2,9 @@
   "artefact": "decision 985's detail-function rows: the published inputs to `d(x, y)`",
   "generated_by": "tools/build_detail_rows.py",
   "generated_from": [
-    "/Users/victoriabarnes/project_magisteria/magisteria_interface/assets/detail/detail_rows.json"
+    "data/fit_pair_1019_v2_output/rows_settled.json"
   ],
-  "generated_at_utc": "2026-09-12T19:02:59Z",
+  "generated_at_utc": "2026-09-14T21:34:23Z",
   "ruled_by": [
     "decision 985",
     "decision 986",
@@ -14,8 +14,14 @@
     "\u00a716.10 mitigations 1-3"
   ],
   "reference_implementation": "sim/detail.py -- authoritative; the transducer conforms",
-  "_values_are_placeholders": "EVERY VALUE IN THIS FILE IS A PLACEHOLDER. Not measured, not fitted, not derived -- carried forward so the function has something to run on and so the row SHAPES are settled before the data arrives. They are replaced wholesale by calibration rows measured from real metre ground, not adjusted. A reader quoting a figure from here is quoting a placeholder.",
-  "_values_land_when": "decision 986 rules the grading form (plain or detrended) and the mapping from backlog 229's measured strata to these landform rows. The SCHEMA, the seed and the normalisation are settled here; the numbers are not, and \u00a723.425 forbids choosing them from what the synthesizer currently produces.",
+  "_values_are_placeholders": null,
+  "_values_landed": "measured, not invented: exponents are \u00a725 backlog 229(1)'s re-sourced per-landform band means on membership-stratified windows; amplitudes are the per-row solve at those exponents over the settled window, which this loop settled by iteration",
+  "_values_landed_at": {
+    "basin_ceiling_m": 60,
+    "iterations": 2,
+    "bands": "data/calibration_rows_1019_output/calibration_rows_1019.json",
+    "fit_pair": "fit_pair.json beside this file"
+  },
   "world_name": "magisteria/colorado-basin/0",
   "world_seed": 2714988810,
   "_world_seed_is": "FNV-1a 32 over `world_name`'s UTF-8 bytes -- `StableHash.of_name`. Derived from a name and not written as a literal, because a seed exists so a world can be re-seeded and editing a hex constant in a source file is not that. 985 names a published world seed among `d`'s three inputs; the client's stage-0 recipe carried a salt (`0x9e37`) instead, which is not one.",
@@ -61,17 +67,18 @@
     "anisotropy": "ratio of along-orientation wavelength to across; 1.0 is isotropic",
     "orientation_source": "which field orients the anisotropy. `aspect` is downslope; `none` is isotropic",
     "finest_wavelength_m": "the finest wavelength this class synthesises. Octaves are DERIVED from it and the parent spacing, so the row states a resolution rather than a count that means different things under different parents",
-    "orientation_deg": "constant orientation of the anisotropy for this class, degrees. Orientation by local aspect or drainage is NOT implemented -- see DetailField.orientation_note for the measured reason -- and `orientation_source` records what the calibration will want."
+    "orientation_deg": "constant orientation of the anisotropy for this class, degrees. Orientation by local aspect or drainage is NOT implemented -- see DetailField.orientation_note for the measured reason -- and `orientation_source` records what the calibration will want.",
+    "amplitude_m_at_parent": "the same standard deviation at the SHIPPED parent rather than at the calibration parent. Which parent each of the two is measured at is stated per row: `parent_spacing_m` for `amplitude_m`, and `_amplitude_m_at_parent_is` for this one. Neither is scale free and neither may be recovered by arithmetic on the other."
   },
   "landforms": {
     "floor": {
       "amplitude_m": {
-        "dec": 0.18,
-        "hex": "0x3fc70a3d70a3d70a"
+        "dec": 0.5699966493627107,
+        "hex": "0x3fe23d699cfaf51e"
       },
       "spectral_slope": {
-        "dec": 0.95,
-        "hex": "0x3fee666666666666"
+        "dec": 1.3674520282623979,
+        "hex": "0x3ff5e11560c3c61c"
       },
       "anisotropy": {
         "dec": 1.4,
@@ -92,35 +99,36 @@
       },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
       "residual_rms": {
-        "dec": 0.2664668760424955,
-        "hex": "0x3fd10dcb158477ac"
+        "dec": 0.2648318763479242,
+        "hex": "0x3fd0f30165f691d3"
       },
       "octaves_at_parent": 9,
       "amplitude_m_at_parent": {
-        "dec": 0.020196332177435345,
-        "hex": "0x3f94ae58e8ce1125"
+        "dec": 0.024457962483208865,
+        "hex": "0x3f990b8213f7fd41"
       },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
         "100": {
-          "dec": 0.2664668760424955,
-          "hex": "0x3fd10dcb158477ac"
+          "dec": 0.2648318763479242,
+          "hex": "0x3fd0f30165f691d3"
         },
         "1000": {
-          "dec": 0.27701601834167405,
-          "hex": "0x3fd1baa164cfb857"
+          "dec": 0.2741563836627181,
+          "hex": "0x3fd18bc737748b50"
         }
       },
-      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
+      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation.",
+      "_amplitude_m_at_parent_is": "`amplitude_m` rescaled to the SHIPPED parent, 100 m, by `amplitude_m * (parent / parent_spacing_m) ** spectral_slope`. Published beside the calibration-parent value so a consumer reads the number for the lattice it refines instead of computing it; the two together make the rescale rule checkable as an identity -- `log10(amplitude_m / amplitude_m_at_parent) == spectral_slope` exactly, while parent_spacing_m is 10x the shipped parent. That is a comparison of two published quantities a rule relates, and NOT a dec/hex cross-check, which fires on a correct file."
     },
     "playa": {
       "amplitude_m": {
-        "dec": 0.04,
-        "hex": "0x3fa47ae147ae147b"
+        "dec": 0.10185712523965175,
+        "hex": "0x3fba134efdc4d559"
       },
       "spectral_slope": {
-        "dec": 1.2,
-        "hex": "0x3ff3333333333333"
+        "dec": 0.8056251351707906,
+        "hex": "0x3fe9c7ae5d0c9cac"
       },
       "anisotropy": {
         "dec": 1.0,
@@ -142,35 +150,36 @@
       },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
       "residual_rms": {
-        "dec": 0.28898968536725633,
-        "hex": "0x3fd27ece97e22812"
+        "dec": 0.28661524879061706,
+        "hex": "0x3fd257e77c05cc74"
       },
       "octaves_at_parent": 9,
       "amplitude_m_at_parent": {
-        "dec": 0.0025238293779207732,
-        "hex": "0x3f64acda94717d69"
+        "dec": 0.015935521461350396,
+        "hex": "0x3f905166be15b70c"
       },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
         "100": {
-          "dec": 0.28898968536725633,
-          "hex": "0x3fd27ece97e22812"
+          "dec": 0.28661524879061706,
+          "hex": "0x3fd257e77c05cc74"
         },
         "1000": {
-          "dec": 0.27105945260775044,
-          "hex": "0x3fd15909bf0e346e"
+          "dec": 0.2716214673983673,
+          "hex": "0x3fd1623f01d78569"
         }
       },
-      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
+      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation.",
+      "_amplitude_m_at_parent_is": "`amplitude_m` rescaled to the SHIPPED parent, 100 m, by `amplitude_m * (parent / parent_spacing_m) ** spectral_slope`. Published beside the calibration-parent value so a consumer reads the number for the lattice it refines instead of computing it; the two together make the rescale rule checkable as an identity -- `log10(amplitude_m / amplitude_m_at_parent) == spectral_slope` exactly, while parent_spacing_m is 10x the shipped parent. That is a comparison of two published quantities a rule relates, and NOT a dec/hex cross-check, which fires on a correct file."
     },
     "riparian_margin": {
       "amplitude_m": {
-        "dec": 0.09,
-        "hex": "0x3fb70a3d70a3d70a"
+        "dec": 0.4279040415375239,
+        "hex": "0x3fdb62c7a20eb688"
       },
       "spectral_slope": {
-        "dec": 1.1,
-        "hex": "0x3ff199999999999a"
+        "dec": 1.2385546295332692,
+        "hex": "0x3ff3d11ea8c27a02"
       },
       "anisotropy": {
         "dec": 3.0,
@@ -192,35 +201,36 @@
       },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
       "residual_rms": {
-        "dec": 0.2283654474288456,
-        "hex": "0x3fcd3b14381f246d"
+        "dec": 0.2267486701277194,
+        "hex": "0x3fcd0619b54e1605"
       },
       "octaves_at_parent": 9,
       "amplitude_m_at_parent": {
-        "dec": 0.007148954112518532,
-        "hex": "0x3f7d4838c1d26b3c"
+        "dec": 0.02470539254851862,
+        "hex": "0x3f994c5ed41f7792"
       },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
         "100": {
-          "dec": 0.2283654474288456,
-          "hex": "0x3fcd3b14381f246d"
+          "dec": 0.2267486701277194,
+          "hex": "0x3fcd0619b54e1605"
         },
         "1000": {
-          "dec": 0.2335523438849696,
-          "hex": "0x3fcde50b0f71ee78"
+          "dec": 0.23186791769282836,
+          "hex": "0x3fcdadd911bdbc95"
         }
       },
-      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
+      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation.",
+      "_amplitude_m_at_parent_is": "`amplitude_m` rescaled to the SHIPPED parent, 100 m, by `amplitude_m * (parent / parent_spacing_m) ** spectral_slope`. Published beside the calibration-parent value so a consumer reads the number for the lattice it refines instead of computing it; the two together make the rescale rule checkable as an identity -- `log10(amplitude_m / amplitude_m_at_parent) == spectral_slope` exactly, while parent_spacing_m is 10x the shipped parent. That is a comparison of two published quantities a rule relates, and NOT a dec/hex cross-check, which fires on a correct file."
     },
     "slope": {
       "amplitude_m": {
-        "dec": 0.55,
-        "hex": "0x3fe199999999999a"
+        "dec": 1.8835316743356554,
+        "hex": "0x3ffe22f21be40738"
       },
       "spectral_slope": {
-        "dec": 0.8,
-        "hex": "0x3fe999999999999a"
+        "dec": 1.4593467874982415,
+        "hex": "0x3ff7597c045d3de3"
       },
       "anisotropy": {
         "dec": 2.0,
@@ -242,35 +252,36 @@
       },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
       "residual_rms": {
-        "dec": 0.2548107102385988,
-        "hex": "0x3fd04ed194c94cd4"
+        "dec": 0.24330777321850347,
+        "hex": "0x3fcf24b5886b03eb"
       },
       "octaves_at_parent": 9,
       "amplitude_m_at_parent": {
-        "dec": 0.08716912558536125,
-        "hex": "0x3fb650b73f9c2bce"
+        "dec": 0.06540728772321361,
+        "hex": "0x3fb0be8831b0f6ba"
       },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
         "100": {
-          "dec": 0.2548107102385988,
-          "hex": "0x3fd04ed194c94cd4"
+          "dec": 0.24330777321850347,
+          "hex": "0x3fcf24b5886b03eb"
         },
         "1000": {
-          "dec": 0.26841954238816335,
-          "hex": "0x3fd12dc9290a864e"
+          "dec": 0.2610197476492125,
+          "hex": "0x3fd0b48c2bf0ddd9"
         }
       },
-      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
+      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation.",
+      "_amplitude_m_at_parent_is": "`amplitude_m` rescaled to the SHIPPED parent, 100 m, by `amplitude_m * (parent / parent_spacing_m) ** spectral_slope`. Published beside the calibration-parent value so a consumer reads the number for the lattice it refines instead of computing it; the two together make the rescale rule checkable as an identity -- `log10(amplitude_m / amplitude_m_at_parent) == spectral_slope` exactly, while parent_spacing_m is 10x the shipped parent. That is a comparison of two published quantities a rule relates, and NOT a dec/hex cross-check, which fires on a correct file."
     },
     "talus": {
       "amplitude_m": {
-        "dec": 1.6,
-        "hex": "0x3ff999999999999a"
+        "dec": 1.6158051242486187,
+        "hex": "0x3ff9da567955b669"
       },
       "spectral_slope": {
-        "dec": 0.55,
-        "hex": "0x3fe199999999999a"
+        "dec": 1.5074836799346873,
+        "hex": "0x3ff81ea735092be2"
       },
       "anisotropy": {
         "dec": 1.2,
@@ -292,26 +303,27 @@
       },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
       "residual_rms": {
-        "dec": 0.2661343450101737,
-        "hex": "0x3fd10858590a4f15"
+        "dec": 0.26326014661386316,
+        "hex": "0x3fd0d9411602fd41"
       },
       "octaves_at_parent": 9,
       "amplitude_m_at_parent": {
-        "dec": 0.45094126900231263,
-        "hex": "0x3fdcdc38c4b206e7"
+        "dec": 0.05022330645805608,
+        "hex": "0x3fa9b6de8577faf3"
       },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
         "100": {
-          "dec": 0.2661343450101737,
-          "hex": "0x3fd10858590a4f15"
+          "dec": 0.26326014661386316,
+          "hex": "0x3fd0d9411602fd41"
         },
         "1000": {
-          "dec": 0.2730956860533822,
-          "hex": "0x3fd17a665411ca18"
+          "dec": 0.26452167453798847,
+          "hex": "0x3fd0edec514e5302"
         }
       },
-      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation."
+      "_residual_rms_by_parent_is": "the same constant at every parent spacing a consumer in this project actually refines. A parent not listed here is computed by the recipe rather than interpolated: the sample set is itself a published function of the seed, so recomputing is reproduction and not estimation.",
+      "_amplitude_m_at_parent_is": "`amplitude_m` rescaled to the SHIPPED parent, 100 m, by `amplitude_m * (parent / parent_spacing_m) ** spectral_slope`. Published beside the calibration-parent value so a consumer reads the number for the lattice it refines instead of computing it; the two together make the rescale rule checkable as an identity -- `log10(amplitude_m / amplitude_m_at_parent) == spectral_slope` exactly, while parent_spacing_m is 10x the shipped parent. That is a comparison of two published quantities a rule relates, and NOT a dec/hex cross-check, which fires on a correct file."
     }
   },
   "classifier": {
@@ -338,6 +350,6 @@
     "_live_now": "the HAND layer landed and this mechanism was plugged in without being rebuilt, which is the whole reason it was wired before the data existed. `floor_fraction` of full amplitude at the drainage, full strength above `full_strength_above_m`, smoothstep between -- saturating rather than cut, per convention 1.",
     "_absent_hand_is_full_strength": "NAN HAND means outside the basin, or ground whose filled descent reaches no channel at all -- 6,301,722 px of endorheic and edge-draining ground. Undrained upland is not a floodplain, so the honest default is no suppression. Defaulting the other way would have flattened all of it on the strength of a missing value."
   },
-  "elapsed_s": 0.8,
-  "content_digest": "sha256:4fe0874f04e7abdfe23126d70a4ff4587b1b95ed480c1747c37b8dea4d8f1f28"
+  "elapsed_s": 0.7,
+  "content_digest": "sha256:704edb7c24f2f8891bd18a16cecbedaa64f1506f9577f37aa87b648dd125d2a2"
 }

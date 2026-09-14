@@ -8600,16 +8600,31 @@ func test_the_detail_rows_say_that_they_are_invented() -> void:
     # somebody cites; a measurement that still calls itself pending is the same
     # failure pointing the other way, and both are the artefact failing to say
     # what it is.
-    var declares_placeholder := headline != ""
-    var flag_present: bool = doc.has("_values_are_placeholders")
-    check(declares_placeholder or flag_present,
+    # KEYED ON THE FIELD NAMES AND NOT ON PROSE. The first cut of this scanned
+    # every top-level string for "PLACEHOLDER" or "INVENTED" and matched
+    # `_values_landed`'s own sentence -- "measured, NOT INVENTED" -- reading a
+    # denial as the claim it denies. The producing side now emits the two states
+    # under different keys with only one present, so the state is a fact about
+    # which key is there rather than about what a sentence says.
+    var declares_placeholder: bool = (typeof(doc.get("_values_are_placeholders", null))
+            == TYPE_STRING and str(doc["_values_are_placeholders"]).length() > 20)
+    var declares_landed: bool = (typeof(doc.get("_values_landed", null)) == TYPE_STRING
+            and str(doc["_values_landed"]).length() > 20)
+    check(declares_placeholder or declares_landed,
             "no top-level field in the rows declares whether the values are placeholders or "
             + "measurements. A reader cannot tell what it is holding, and a number that does "
             + "not say which it is becomes a number somebody cites.")
+    check(not (declares_placeholder and declares_landed),
+            "the rows declare BOTH that their values are placeholders and that they landed. "
+            + "Only one can be true and a reader cannot tell which it is holding.")
     if declares_placeholder:
         check(str(doc.get("_replaced_by", doc.get("_values_land_when", ""))).length() > 20,
                 "the rows say their values are placeholders and do not say what replaces them")
     else:
+        # AND A CALIBRATED CUT SAYS WHAT MEASURED IT. "These are measurements"
+        # without a provenance is a claim a reader cannot check or cite.
+        check(str(JSON.stringify(doc.get("_values_landed_at", {}))).length() > 20,
+                "the rows say their values landed and do not say what measured them")
         # AND THE OTHER FIELDS AGREE WITH IT. `_values_are_placeholders` present
         # and null means the values landed; a sibling still saying they have not
         # is the artefact holding both positions at once, which is what
@@ -12298,12 +12313,17 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
                         % [str(pub_lags), str(StratumGrade.GRADED_LAGS)]
                 + "producing side bounds its fit ceiling from the published copy")
 
+    ## The sourced-window measurement, hoisted so the vendored bands can be
+    ## graded against the window set 1019 rules rather than against the
+    ## hand-picked six that cover three of five strata.
+    var sourced_m: Dictionary = {}
     var sourced := _sourced_windows()
     if sourced.is_empty():
         print("986/1019: no window_sourcing.json, so the sourced-centre half is NOT RUNNING. "
                 + "`tools/find_windows.sh`")
     else:
-        var sm := StratumGrade.over_windows(df, hf, sourced, 3000.0, lags, 0.5, 300, 21)
+        sourced_m = StratumGrade.over_windows(df, hf, sourced, 3000.0, lags, 0.5, 300, 21)
+        var sm := sourced_m
         check(bool(sm["ok"]), "the grader refused the sourced windows: %s" % str(sm["why"]))
         var sourced_covered := _strata_covered(sm, lags)
         check(sourced_covered == df.landforms().size(),
@@ -12391,6 +12411,74 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
     print("986/1019: bands absent -> 3 not gradeable; bands containing the measurement -> "
             + "met; bands excluding it -> unmet. The grading form is built and the values "
             + "are the only thing missing.")
+
+    # THE REAL BAND SET, GRADED -- AND AGAINST THE SOURCED WINDOWS, NOT THE
+    # HAND-PICKED SIX. The first cut of this block graded the bands against the
+    # six-centre measurement, which covers three of five strata, and got back
+    # `NO_COVERAGE` -- a true statement about the wrong measurement, and one
+    # that would have read as the band set being at fault. The sourced set is
+    # the one that covers the space 1019 rules; it is what the bands are for.
+    var cb := CalibrationBands.load_from()
+    if not cb.is_loaded():
+        print("986/1019: NO VENDORED BAND SET (%s) -- conditions 2 and 3 are not being graded "
+                % cb.why_absent + "against measured bands and this half is NOT RUNNING")
+    else:
+        # THE LAGS HAVE TO BE THE ONES THIS GATE GRADES. The producing side
+        # measured these bands at `GRADED_LAGS` read from our own vendored
+        # declaration; if the two ever part, the grader finds no band at its own
+        # lag and reports NO_BANDS for a set sitting right there.
+        var their_lags := cb.graded_lags()
+        check(their_lags.size() == StratumGrade.GRADED_LAGS.size(),
+                "the bands are measured at %s and this gate grades at %s"
+                        % [str(their_lags), str(StratumGrade.GRADED_LAGS)])
+        for li in mini(their_lags.size(), StratumGrade.GRADED_LAGS.size()):
+            check(is_equal_approx(float(their_lags[li]), float(StratumGrade.GRADED_LAGS[li])),
+                    "band lag %s against graded lag %s"
+                            % [str(their_lags[li]), str(StratumGrade.GRADED_LAGS[li])])
+
+        var real_bands := cb.bands_for_grading()
+        check(real_bands.size() == df.landforms().size(),
+                "the band set carries %d landforms and the rows declare %d"
+                        % [real_bands.size(), df.landforms().size()])
+        # THE SUPPORT REFUSAL CLEARS ON THE ARTEFACT'S OWN DECLARATION. It has
+        # been armed against a synthetic fixture until now; this is the first
+        # time it has seen a real band set, and the whole point of it was that
+        # it would clear on evidence rather than on an assurance.
+        for name in real_bands:
+            check(StratumGrade.support_of(real_bands[name] as Dictionary)
+                            == StratumGrade.SUPPORT_1019,
+                    "%s's band declares support %s"
+                            % [str(name), StratumGrade.support_of(real_bands[name])])
+
+        var graded_on := sourced_m if not sourced_m.is_empty() else m
+        var real_verdict := StratumGrade.gradeable(graded_on, real_bands)
+        print("986/1019: against the VENDORED bands, the grader says %s"
+                % ("gradeable" if bool(real_verdict["ok"]) else str(real_verdict["why"])))
+        # AND THE CROSS-STRATUM CLAUSE IS THE ARTEFACT'S, NOT MY RATIO. See
+        # `CalibrationBands.separation_evidence`: decision 986 states the clause
+        # pairwise and with no threshold, and a ratio of the loudest to the
+        # quietest can pass while two middle strata sit on top of each other.
+        var sep := cb.separation_evidence()
+        check(not sep.is_empty(), "the band set carries no cross-stratum verdict")
+        check(str(sep.get("separates_iff", "")).length() > 10,
+                "the band set does not say what separation means, so its verdict cannot be read")
+        print("986/1019: cross-stratum -- %s" % str(sep.get("why", "")))
+        if bool(real_verdict["ok"]):
+            var real_ev := StratumGrade.evidence(graded_on,
+                    StratumGrade.spread(graded_on, lags), real_bands)
+            real_ev["spread"] = sep
+            var walked := DebugPlayer.walk_available(b, 1000.0, 4000.0, real_ev)
+            for it in (walked["conditions"] as Array):
+                print("986/1019: %s -- %s" % [str((it as Dictionary)["state"]),
+                        str((it as Dictionary)["condition"])])
+                if str((it as Dictionary)["state"]) == DebugPlayer.UNMET:
+                    # WHICH STRATUM, AT WHICH LAG, AND BY HOW MUCH. An UNMET is
+                    # a claim that the drawn ground is wrong; handing it over as
+                    # one word makes it unanswerable.
+                    print("986/1019:   %s" % str((it as Dictionary).get("why", "")))
+            check(int(walked["not_gradeable"]) <= 1,
+                    "with measured bands vendored, %d conditions are still NOT_GRADEABLE"
+                            % int(walked["not_gradeable"]))
 
     # AND THE BANDS MUST COME FROM THE STRATIFICATION THIS CLIENT MEASURES ON.
     #
