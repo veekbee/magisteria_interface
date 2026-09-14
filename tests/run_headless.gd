@@ -12025,9 +12025,14 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
     # AND THE GATE STILL READS NOT_GRADEABLE, because nothing is published to
     # measure against. Measuring is not grading.
     var ev := StratumGrade.evidence(m, sp, {})
-    check(ev.is_empty(),
+    check(not ev.has("bands") and not ev.has("spread"),
             "the grader offered evidence with no bands published. A measurement with nothing "
             + "to measure against is a number and not a verdict.")
+    # AND IT SAYS WHICH ABSENCE, because the gate cannot tell four of them apart
+    # from an empty dictionary and used to describe whichever one was true when
+    # the sentence was written.
+    check(str(ev.get("not_gradeable", "")) != "",
+            "the grader refused and carried no reason, so the gate has to reconstruct one")
     var fl := fixture()
     var b := FixturePassthrough.over(fl).bundle_for(fl.windows[0], 0, _dev_observer())
     var w := DebugPlayer.walk_available(b, 1000.0, 4000.0, ev)
@@ -12108,6 +12113,10 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
         for lag in lags:
             var sv := float((synth["strata"][str(name)] as Dictionary)[float(lag)])
             per[float(lag)] = [sv * 0.5, sv * 2.0]
+        # DECLARED, because a real band set declares it and a synthetic one
+        # standing in for a real one has to carry what the real one carries --
+        # otherwise this fixture passes on a shape the producer cannot publish.
+        per[StratumGrade.SUPPORT_KEY] = StratumGrade.SUPPORT_1019
         bands[str(name)] = per
     check(bool(StratumGrade.gradeable(synth, bands)["ok"]),
             "a fully covered and fully banded measurement is still not gradeable: %s"
@@ -12128,6 +12137,7 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
         for lag in lags:
             var sv2 := float((synth["strata"][str(name)] as Dictionary)[float(lag)])
             per2[float(lag)] = [sv2 * 10.0, sv2 * 20.0]
+        per2[StratumGrade.SUPPORT_KEY] = StratumGrade.SUPPORT_1019
         tight[str(name)] = per2
     var w3 := DebugPlayer.walk_available(b, 1000.0, 4000.0,
             StratumGrade.evidence(synth, synth_sp, tight))
@@ -12145,3 +12155,56 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
     print("986/1019: bands absent -> 3 not gradeable; bands containing the measurement -> "
             + "met; bands excluding it -> unmet. The grading form is built and the values "
             + "are the only thing missing.")
+
+    # AND THE BANDS MUST COME FROM THE STRATIFICATION THIS CLIENT MEASURES ON.
+    #
+    # At catchment-median support `talus` membership is zero in every window and
+    # `riparian_margin` zero in every window -- the producing side measured that
+    # and it is why 1019 rules the support is the window. Bands from that
+    # sourcing would compare two strata against numbers taken where they do not
+    # exist, and the verdict would read UNMET: a claim that the DRAWN GROUND is
+    # wrong, produced by a support mismatch. Refused instead, by name.
+    var pre_1019 := bands.duplicate(true)
+    for name in strata:
+        (pre_1019[str(name)] as Dictionary)[StratumGrade.SUPPORT_KEY] = "huc10_median_pre_1019"
+    var wrong := StratumGrade.gradeable(synth, pre_1019)
+    check(not bool(wrong["ok"]), "bands sourced at catchment median graded anyway")
+    check(str(wrong["why"]).begins_with(StratumGrade.WRONG_SUPPORT),
+            "the refusal does not name the support: %s" % str(wrong["why"]))
+    check(str(wrong["why"]).contains("huc10_median_pre_1019"),
+            "the refusal does not say what the bands actually declared, so a reader cannot "
+            + "tell a wrong support from a missing one: %s" % str(wrong["why"]))
+    var wrong_ev := StratumGrade.evidence(synth, synth_sp, pre_1019)
+    check(not wrong_ev.has("bands") and not wrong_ev.has("spread"),
+            "wrongly-sourced bands still produced evidence, so the refusal stops at the "
+            + "grader and the gate would grade against them anyway")
+    # AND THE GATE SAYS SO IN THOSE WORDS. Refusing correctly while reporting
+    # "nobody published a band" would send someone to fetch what they had
+    # already sent -- this gate has named the wrong absence twice and this is
+    # the check that it does not do it a third time.
+    var w_wrong := DebugPlayer.walk_available(b, 1000.0, 4000.0, wrong_ev)
+    var told := ""
+    for it in (w_wrong["conditions"] as Array):
+        if str((it as Dictionary)["condition"]) == DebugPlayer.CONDITION_BANDS:
+            told = str((it as Dictionary)["why"])
+    check(told.contains(StratumGrade.WRONG_SUPPORT) and told.contains("huc10_median_pre_1019"),
+            "with bands refused for their support the gate still reports: %s" % told)
+
+    # UNDECLARED IS REFUSED TOO, AND NOT DEFAULTED. A band set published before
+    # the field existed and one sourced correctly must not be the same case --
+    # they are exactly the two this separates.
+    var undeclared := bands.duplicate(true)
+    for name in strata:
+        (undeclared[str(name)] as Dictionary).erase(StratumGrade.SUPPORT_KEY)
+    var silent := StratumGrade.gradeable(synth, undeclared)
+    check(not bool(silent["ok"]), "bands declaring no window support graded anyway")
+    check(str(silent["why"]).contains(StratumGrade.SUPPORT_KEY),
+            "the refusal for an undeclared support does not name the field: %s"
+                    % str(silent["why"]))
+    # AND THE CONTROL, because a refusal that fires on everything is not a
+    # check: the same bands declaring 1019's support are gradeable.
+    check(bool(StratumGrade.gradeable(synth, bands)["ok"]),
+            "bands declaring 1019's own support were refused, so the support check refuses "
+            + "every band set and can never pass")
+    print("986/1019: window support -- 1019's sourcing grades, `huc10_median_pre_1019` is "
+            + "refused by name, undeclared is refused rather than defaulted")

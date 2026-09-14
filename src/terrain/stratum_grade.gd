@@ -57,6 +57,26 @@ const MIN_EFFECTIVE_SAMPLES := 256.0
 const NO_LAYERS := "NO_LAYERS"            ## no real HAND or slope to evaluate membership on
 const NO_COVERAGE := "NO_COVERAGE"        ## the stratum is not in these windows
 const NO_BANDS := "NO_BANDS"              ## measured, and nothing published to measure against
+const WRONG_SUPPORT := "WRONG_SUPPORT"    ## bands published, sourced from a stratification this is not
+
+## THE ONLY WINDOW SOURCING THESE BANDS MAY COME FROM.
+##
+## Decision 1019 rules the calibration support is the WINDOW, membership per
+## point within it, never the catchment median -- and §25 backlog 229(1) sources
+## windows to cover the joint HAND-by-slope space. `find_windows.gd` measures on
+## that rule. Bands measured on any other stratification grade this client's
+## numbers against a basin it does not draw.
+##
+## THE STAKES ARE WHY THIS IS A REFUSAL AND NOT A NOTE. At catchment-median
+## support `talus` membership is zero in every window (no median exceeds 22
+## degrees) and `riparian_margin` zero in every window (every median HAND is at
+## least 68 m against a 10 m condition). Graded against bands from that support,
+## two strata would be compared to numbers measured where they do not exist --
+## and the result would read UNMET, which is a claim that the DRAWN GROUND is
+## wrong. A support mismatch must never be able to say that.
+const SUPPORT_1019 := "joint_membership_per_point_1019"
+## The key the bands declare it at, per block, refused blocks included.
+const SUPPORT_KEY := "window_support"
 
 
 ## The q-quantile of values carrying weights.
@@ -343,7 +363,35 @@ static func gradeable(measured: Dictionary, bands: Dictionary = {}) -> Dictionar
     if not unbanded.is_empty():
         return {"ok": false, "why": "%s: %s" % [NO_BANDS, str(unbanded)],
                 "unbanded": unbanded}
+    # AND THE BANDS HAVE TO COME FROM THE STRATIFICATION THIS CLIENT MEASURES
+    # ON. Ranked after NO_BANDS because it is a question about bands that exist:
+    # a set that is absent is not a set sourced wrongly, and naming the second
+    # where the first is true would send a reader looking for a support field on
+    # a block nobody published.
+    var wrong := PackedStringArray()
+    for name in strata:
+        var declared := support_of(bands.get(str(name), {}) as Dictionary)
+        if declared != SUPPORT_1019:
+            wrong.append("%s: %s" % [str(name), declared])
+    if not wrong.is_empty():
+        return {"ok": false, "why": "%s: %s" % [WRONG_SUPPORT, str(wrong)],
+                "wrong_support": wrong}
     return {"ok": true, "why": ""}
+
+
+## What one band block declares its window sourcing to be.
+##
+## UNDECLARED IS REFUSED AND NOT DEFAULTED, which is the producing side's own
+## rule for the same field and the right one here for a stronger reason: a
+## default would make a band set published before the field existed
+## indistinguishable from one sourced correctly, and those are the two cases
+## this exists to separate. The string is returned rather than a boolean so the
+## refusal can name what the bands actually said.
+static func support_of(band: Dictionary) -> String:
+    var v: Variant = band.get(SUPPORT_KEY, null)
+    if v == null or typeof(v) != TYPE_STRING or str(v) == "":
+        return "declares no %s" % SUPPORT_KEY
+    return str(v)
 
 
 ## The evidence `DebugPlayer.walk_available` consumes for 986's second and third
@@ -356,10 +404,19 @@ static func gradeable(measured: Dictionary, bands: Dictionary = {}) -> Dictionar
 static func evidence(measured: Dictionary, spread_by_lag: Dictionary,
                      bands: Dictionary = {}) -> Dictionary:
     if not bool(measured.get("ok", false)):
-        return {}
+        return {"not_gradeable": str(measured.get("why", NO_LAYERS))}
     var strata: Dictionary = measured.get("strata", {})
-    if not bool(gradeable(measured, bands)["ok"]):
-        return {}
+    # WHY, AND NOT JUST THAT. This returned a bare `{}` and the gate then said
+    # what it had always said -- that nobody has published a band. That is one
+    # of four reasons to arrive here, and the moment bands exist it is the
+    # WRONG one: a set refused for its window support would be reported as a set
+    # nobody published, and a reader would go and ask for a thing they had
+    # already sent. This gate has now named the wrong absence twice, so the
+    # reason travels with the refusal rather than being reconstructed by
+    # whoever reads it.
+    var verdict := gradeable(measured, bands)
+    if not bool(verdict["ok"]):
+        return {"not_gradeable": str(verdict["why"])}
     var band_ok := true
     var why := PackedStringArray()
     for name in strata:
@@ -388,7 +445,8 @@ static func evidence(measured: Dictionary, spread_by_lag: Dictionary,
     if seen == 0:
         # Convention 6's second clause cannot be answered from one stratum, and
         # answering it anyway is the failure mode the clause exists to catch.
-        return {}
+        return {"not_gradeable": ("%s: no lag produced a spread between two distinct strata, "
+                % NO_COVERAGE) + "so convention 6's second clause has one stratum to spread"}
     return {
         "bands": {"ok": band_ok, "why": " / ".join(why), "strata": strata.keys()},
         "spread": {"ok": spread_ok, "why": JSON.stringify(spread_by_lag)},

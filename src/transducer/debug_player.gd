@@ -288,12 +288,19 @@ static func walk_available(bundle: PerceptBundle, ground_sample_m: float,
         var key := str((pair as Array)[1])
         var got: Dictionary = evidence.get(key, {})
         if got.is_empty():
+            # THE GRADER'S OWN REASON WHEN IT GAVE ONE. It knows which of four
+            # absences it hit -- no layers, no coverage, no bands, or bands
+            # sourced at a support this client does not measure on -- and the
+            # sentence below can only describe the third. Reconstructing it here
+            # is how this refusal went stale the first time.
+            var said := str(evidence.get("not_gradeable", ""))
             items.append({"condition": name, "state": NOT_GRADEABLE,
-                    "why": ("no %s measurement was supplied. The grading form is ruled "
+                    "why": (said if said != "" else
+                            ("no %s measurement was supplied. The grading form is ruled "
                             % key + "(decision 1019, second difference, banded per lag "
                             + "cross-window on landform-membership strata) and built here as "
                             + "`StratumGrade`; what is missing is the published band values, "
-                            + "which ride decision 985's rows at the fixture re-cut")})
+                            + "which ride decision 985's rows at the fixture re-cut"))})
         else:
             items.append({"condition": name,
                     "state": MET if bool(got.get("ok", false)) else UNMET,
