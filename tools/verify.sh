@@ -26,6 +26,10 @@ cd "$(dirname "$0")/.."
 fail=0
 
 echo "== contract pin =="
+# THE SELFTEST FIRST, because the comparison it guards agrees on every artefact
+# in the tree: a green content-digest check and one that cannot fire print the
+# same line.
+python3 tools/check_contract.py --selftest || fail=1
 python3 tools/check_contract.py || fail=1
 
 echo "== transport (decision 948/972) =="

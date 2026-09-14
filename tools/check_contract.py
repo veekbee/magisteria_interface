@@ -236,6 +236,61 @@ def check_multi(pin_path: Path, label: str) -> list[str]:
         print(f"  {label}: {len(absent_fetched)} file(s) ABSENT -- fetched artefacts, not "
               f"committed ({shown}{more}). `python3 tools/fetch_artefacts.py` brings them "
               f"in; checks that need them are not running.")
+    problems += check_content_digests(pin, pin_path, label)
+    return problems
+
+
+def check_content_digests(pin: dict, pin_path: Path, label: str) -> list[str]:
+    """The PIN's content-digest claim against the artefact's own.
+
+    A SECOND COPY OF A FACT, AND THIS ONE IS WANTED. Decision 1031 clause (v)
+    ranks removal above cross-check, and this is the residue the clause keeps
+    the guard for: the PIN carries the digest so a consumer can ask *did
+    anything I depend on change* BEFORE opening the file, which is the whole
+    reason it is not read out of the artefact. Both copies genuinely need to
+    exist, so they get compared.
+
+    AND NOTHING WAS COMPARING THEM. `files` above covers the BYTES and is
+    checked; this block covers the CONTENT with the emission stamp removed, and
+    was verified by nothing in either repo's client half. It is true today. A
+    re-vendor that updates the byte digests -- which the gate checks and would
+    therefore force you to update -- while leaving these behind would ship a
+    PIN answering *nothing changed* about an artefact whose values had all
+    moved, which is the exact question the field exists to answer and the worst
+    direction to be wrong in.
+
+    THE DIGEST IS NOT RECOMPUTED HERE, DELIBERATELY. Decision 1026 puts the
+    stamp-stripping procedure in one place, `tools/provenance.py`, on the
+    producing side. A client re-derivation would be a second definition of it,
+    free to disagree, and would fail as a digest mismatch that looks like a
+    corrupt artefact. What is checkable from here without owning the procedure
+    is that the two published copies agree, and that is what this does.
+    """
+    claims = (pin.get("content_digest") or {}).get("files") or {}
+    problems = []
+    for name, claimed in claims.items():
+        path = pin_path.parent / name
+        if not path.exists():
+            continue
+        try:
+            doc = json.loads(path.read_text())
+        except (json.JSONDecodeError, UnicodeDecodeError) as exc:
+            problems.append(f"{label} PIN claims a content digest for {name}, which is not "
+                            f"readable JSON: {exc}")
+            continue
+        carried = doc.get("content_digest")
+        if carried is None:
+            problems.append(
+                f"{label} PIN claims a content digest for {name} and the artefact carries "
+                f"none, so the claim is about a field that does not exist")
+            continue
+        if str(carried) != str(claimed):
+            problems.append(
+                f"{label} content digest for {name} disagrees with the artefact's own\n"
+                f"    PIN claims     {claimed}\n"
+                f"    artefact says  {carried}\n"
+                f"    The PIN exists so a consumer can ask whether anything changed WITHOUT "
+                f"reading the file. A stale one answers that question wrongly.")
     return problems
 
 
@@ -352,11 +407,58 @@ def check_against_multi(sim: Path, pin_path: Path, label: str) -> tuple[list[str
     return problems, tally
 
 
+def selftest() -> int:
+    """That the content-digest comparison can FAIL.
+
+    It agrees on every artefact in the tree, so a green run proves only that
+    nothing disagrees -- which is also what a comparison that never fires would
+    print. The three cases are built here rather than found: a PIN and an
+    artefact that disagree, a PIN claiming a digest for an artefact that carries
+    none, and the matching pair as the control.
+    """
+    import tempfile
+    problems = []
+    with tempfile.TemporaryDirectory() as tmp:
+        d = Path(tmp)
+        (d / "rows.json").write_text(json.dumps({"content_digest": "sha256:aaa"}))
+        pin_path = d / "PIN"
+        pin_path.write_text("{}")
+
+        disagree = {"content_digest": {"files": {"rows.json": "sha256:bbb"}}}
+        if not check_content_digests(disagree, pin_path, "t"):
+            problems.append("a PIN disagreeing with the artefact was not caught")
+
+        (d / "bare.json").write_text(json.dumps({"world": 1}))
+        missing = {"content_digest": {"files": {"bare.json": "sha256:bbb"}}}
+        if not check_content_digests(missing, pin_path, "t"):
+            problems.append("a PIN claiming a digest the artefact does not carry was not caught")
+
+        agree = {"content_digest": {"files": {"rows.json": "sha256:aaa"}}}
+        if check_content_digests(agree, pin_path, "t"):
+            problems.append("a matching pair was reported as a problem, so the check refuses "
+                            "everything and its firing means nothing")
+
+        absent = {"content_digest": {"files": {"gone.json": "sha256:bbb"}}}
+        if check_content_digests(absent, pin_path, "t"):
+            problems.append("a claim about an absent file failed rather than being skipped -- "
+                            "fetched artefacts are legitimately not here")
+    for line in problems:
+        print(f"  content-digest selftest: {line}")
+    print("  content-digest selftest: %s"
+          % ("FAILED" if problems else "disagreement, a missing field and the matching control "
+             "all behave"))
+    return 1 if problems else 0
+
+
 def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__.split("\n")[1])
     ap.add_argument("--against", type=Path, default=None, metavar="SIM_CHECKOUT",
                     help="also run the cross-repo half against a simulation-repo checkout")
+    ap.add_argument("--selftest", action="store_true",
+                    help="check that the content-digest comparison can fail")
     a = ap.parse_args(argv)
+    if a.selftest:
+        return selftest()
 
     pin = load_pin()
     problems = (check_local(pin) + check_multi(TERRAIN_PIN, "terrain")
