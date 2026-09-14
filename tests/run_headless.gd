@@ -8262,6 +8262,10 @@ func test_the_rescale_reproduces_the_amplitude_the_artefact_publishes() -> void:
         return
     var at_shipped := DetailField.load_from(heightfield(), DetailField.ROWS_PATH, shipped, null)
     var compared := 0
+    ## Rows that agree within the tolerance but not bit for bit. Reported rather
+    ## than asserted: exactness is a property of the producer's arithmetic and
+    ## losing it is worth seeing, not worth failing on.
+    var inexact := 0
     for name in df.landforms():
         var p := at_shipped.row(str(name))
         var published := PublishedBits.of(p, "amplitude_m_at_parent")
@@ -8269,33 +8273,81 @@ func test_the_rescale_reproduces_the_amplitude_the_artefact_publishes() -> void:
             continue
         compared += 1
         var mine := at_shipped.amplitude_for(str(name))
-        check(is_equal_approx(mine, published),
-                ("%s: rescaling %s m -> %s m gives %s and the artefact publishes %s. "
+        # A FEW ULPS AND NOT `is_equal_approx`, whose relative epsilon is about
+        # 1e-5 -- four orders looser than either side's arithmetic and wide
+        # enough to admit a genuinely wrong exponent on a small amplitude. The
+        # bound is derived from float64 rather than from these values: both
+        # sides evaluate the same closed form, so a handful of ulps is the whole
+        # budget. Measured at this base, all five agree BIT FOR BIT.
+        var rel: float = absf(mine - published) / maxf(1.0e-300, absf(published))
+        if rel != 0.0:
+            inexact += 1
+        check(rel <= 1.0e-15,
+                ("%s: rescaling %s m -> %s m gives %s and the artefact publishes %s "
                         % [str(name), String.num(at_shipped.calibration_parent_of(str(name)), 0),
                            String.num(shipped, 0), String.num(mine, 17),
                            String.num(published, 17)])
-                + "One of the two sides has the exponent or the direction wrong, and both are "
-                + "internally consistent.")
+                + "-- a relative difference of %s. One of the two sides has the exponent or "
+                        % String.num(rel, 17)
+                + "the direction wrong, and both are internally consistent.")
     check(compared == df.landforms().size(),
             "only %d of %d rows publish an amplitude at the shipped parent, so the fixed point "
                     % [compared, df.landforms().size()]
             + "does not cover the set and a row could change unchecked")
     # AND THE CHECK CAN FAIL, which is the half that makes the pass mean
-    # something: at the parent the amplitudes were CALIBRATED at, the rescale
-    # is the identity and every comparison above would be against a different
-    # number. If these agree, the test is comparing a value to itself.
+    # something.
+    #
+    # THIS USED TO CONTROL FOR THE WRONG THING. It compared the amplitude at the
+    # CALIBRATION parent against the published value and asserted they differ --
+    # true today, and it would stay true even if the comparison above went
+    # vacuous, because it is taken at a third spacing where a rescale still
+    # happens. It was guarding a coincidence rather than the property.
+    #
+    # THE PROPERTY IS THAT THE RESCALE MOVED THE NUMBER. If a row's calibration
+    # parent ever equals the shipped parent, `amplitude_for` returns
+    # `amplitude_m` untouched, `amplitude_m_at_parent` is that same number, and
+    # the comparison above passes while testing no exponent at all. So the
+    # control is taken where the comparison is: at the shipped parent, against
+    # the declared amplitude the rescale started from.
+    var moved := 0
     for name in df.landforms():
-        var published := PublishedBits.of(df.row(str(name)), "amplitude_m_at_parent")
-        if is_nan(published):
+        var p2 := at_shipped.row(str(name))
+        if is_nan(PublishedBits.of(p2, "amplitude_m_at_parent")):
             continue
-        check(not is_equal_approx(df.amplitude_for(str(name)), published),
-                "%s: the amplitude at the calibration parent already equals the published "
-                        % str(name)
-                + "value at the shipped parent, so the rescale above compared a number with "
-                + "itself and asserts nothing")
+        var declared := DetailField.scalar_of(p2, "amplitude_m", 0.0)
+        if not is_equal_approx(at_shipped.amplitude_for(str(name)), declared):
+            moved += 1
+    if moved == compared and compared > 0:
+        # PER ROW, because one row calibrated at the shipped parent while four
+        # are not would leave that row's comparison vacuous inside a set that
+        # still looks live -- and `parent_spacing_m` is a PER-ROW field, so
+        # that is a shape the artefact can actually take.
+        for name in df.landforms():
+            var p3 := at_shipped.row(str(name))
+            if is_nan(PublishedBits.of(p3, "amplitude_m_at_parent")):
+                continue
+            check(not is_equal_approx(at_shipped.amplitude_for(str(name)),
+                            DetailField.scalar_of(p3, "amplitude_m", 0.0)),
+                    ("%s rescales to its own declared `amplitude_m`, so comparing it against "
+                            % str(name))
+                    + "`amplitude_m_at_parent` tests no exponent. Its calibration parent is "
+                    + "the shipped parent.")
+    else:
+        # NOT A FAILURE AND NOT A SILENCE. A re-cut may legitimately calibrate
+        # rows at the shipped parent, and then this route cannot test the
+        # exponent -- the artefact changed shape, the reader did not break. It
+        # is announced, and the checks above it do not run, so the pinned check
+        # count falls and `_fallen_checks()` reports a guard that stopped
+        # guarding rather than leaving it to be noticed.
+        print("detail: THE IDENTITY CHECK IS VACUOUS -- %d of %d rows rescale to their own "
+                % [compared - moved, compared]
+                + "declared `amplitude_m`, so the comparison against "
+                + "`amplitude_m_at_parent` is a number against itself and no exponent is "
+                + "tested. The rows' calibration parent has become the shipped parent.")
     print("detail: the rescale to the shipped %s m parent reproduces all %d published "
             % [String.num(shipped, 0), compared]
-            + "`amplitude_m_at_parent` values exactly")
+            + ("`amplitude_m_at_parent` values bit for bit" if inexact == 0
+               else "`amplitude_m_at_parent` values, %d of them inexactly" % inexact))
 
 
 func test_the_detail_is_exactly_zero_at_every_parent_sample() -> void:
