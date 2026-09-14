@@ -54,7 +54,14 @@ const LAG_M := 8.0
 ## centred stencil -- `2 * lag * sqrt(2)` -- with room for the sample cloud.
 const SPAN_M := 400.0
 const SAMPLES := 4000
-const SEED := 11
+## SEVERAL SEEDS, BECAUSE ONE RATIO IS NOT A NUMBER. The statistic is a median
+## over a random sample cloud, and its scatter at a fixed sample count is about
+## +/-0.1 -- measured, by running 500 to 8000 samples and watching every
+## landform wander inside 1.00-1.19 with no trend. A single ratio handed across
+## a repo boundary gets read as precise: the first cut of this tool reported
+## `talus` at 1.24 against the reference's 1.11-1.13 and I carried that gap into
+## a handback as an unexplained residual. It was this scatter.
+const SEEDS := [11, 29, 47]
 
 
 func _init() -> void:
@@ -84,9 +91,17 @@ func _init() -> void:
     var worst_name := ""
     for name in coarse.landforms():
         var n := str(name)
-        var gc := _detrended(coarse, at, LAG_M, n)
-        var gf := _detrended(fine, at, LAG_M, n)
-        var ratio: float = maxf(gc, gf) / maxf(minf(gc, gf), 1.0e-12)
+        var gc := 0.0
+        var gf := 0.0
+        var lo := INF
+        var hi := 0.0
+        for sd in SEEDS:
+            gc = _detrended(coarse, at, LAG_M, n, int(sd))
+            gf = _detrended(fine, at, LAG_M, n, int(sd))
+            var r: float = maxf(gc, gf) / maxf(minf(gc, gf), 1.0e-12)
+            lo = minf(lo, r)
+            hi = maxf(hi, r)
+        var ratio: float = hi
         if ratio > worst:
             worst = ratio
             worst_name = n
@@ -99,11 +114,14 @@ func _init() -> void:
             "octaves_fine": fine.octaves_for(n),
             "s_detrended_coarse": gc,
             "s_detrended_fine": gf,
-            "ratio": ratio,
+            "ratio_max": hi,
+            "ratio_min": lo,
+            "_ratio_is_a_range": ("across %d seeds. The statistic is a median over a random "
+                    % SEEDS.size()) + "cloud and one draw of it is not a number.",
         })
-        print("cross_parent: %-16s slope %s  ratio %s"
+        print("cross_parent: %-16s slope %s  ratio %s to %s over %d seeds"
                 % [n, String.num(float(per[per.size() - 1]["spectral_slope"]), 4),
-                   String.num(ratio, 2)])
+                   String.num(lo, 2), String.num(hi, 2), SEEDS.size()])
     print("cross_parent: worst is %s at %sx" % [worst_name, String.num(worst, 2)])
 
     var doc := {
@@ -125,7 +143,7 @@ func _init() -> void:
         "_vertical_exaggeration_is": ("the detail field is sampled directly; the view's factor is "
                 + "applied at mesh build and does not reach this path"),
         "geometry": {"coarse_parent_m": COARSE_M, "fine_parent_m": FINE_M, "lag_m": LAG_M,
-                "span_m": SPAN_M, "samples": SAMPLES, "seed": SEED,
+                "span_m": SPAN_M, "samples": SAMPLES, "seeds": SEEDS,
                 "form": "detrended",
                 "_form_is": ("decision 1019's second difference, gradient-blind by "
                         + "construction. The first cut of this tool used a first difference and "
@@ -152,12 +170,13 @@ func _init() -> void:
 ## draws the same thing under two parents; the parent surface is the same field
 ## either way and would dilute the comparison with ground neither parent is
 ## responsible for.
-func _detrended(df: DetailField, at: Vector2, lag: float, landform: String) -> float:
+func _detrended(df: DetailField, at: Vector2, lag: float, landform: String,
+                seed: int) -> float:
     var sampler := func(x: float, y: float) -> float:
         return df.detail_at(Vector2(x, y), landform)
     var sf := StructureFunction.of_function(sampler, at - Vector2(SPAN_M, SPAN_M) * 0.5,
             Vector2(SPAN_M, SPAN_M), "detail term, %s" % landform)
-    var s := sf.s_of_lag([lag], 0.5, "detrended", SAMPLES, SEED)
+    var s := sf.s_of_lag([lag], 0.5, "detrended", SAMPLES, seed)
     var v = s.get(lag, null)
     return NAN if v == null or typeof(v) == TYPE_DICTIONARY else float(v)
 

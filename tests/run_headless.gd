@@ -8586,11 +8586,46 @@ func test_the_detail_rows_say_that_they_are_invented() -> void:
         if up.contains("INVENTED") or up.contains("PLACEHOLDER"):
             headline = str(k)
             break
-    check(headline != "",
-            "no top-level field in the rows says its values are placeholders. A number that "
-            + "does not say it is invented becomes a number somebody cites.")
-    check(str(doc.get("_replaced_by", doc.get("_values_land_when", ""))).length() > 20,
-            "the rows do not say what replaces them")
+    # THE ARTEFACT DECLARES ITS VALUE STATE, EITHER WAY, AND DOES NOT CONTRADICT
+    # ITSELF.
+    #
+    # THIS USED TO DEMAND THE WORD "PLACEHOLDER" and that was right for exactly
+    # as long as the values were invented. Decision 1019's calibrated values
+    # land in this artefact, and a check insisting a measurement call itself
+    # invented would refuse the cut everyone has been waiting for -- for a
+    # reason that is my check's age rather than the artefact's state.
+    #
+    # THE PROPERTY THAT SURVIVES THE TRANSITION is that a reader can tell WHICH
+    # it is holding. A number that does not say it is invented becomes a number
+    # somebody cites; a measurement that still calls itself pending is the same
+    # failure pointing the other way, and both are the artefact failing to say
+    # what it is.
+    var declares_placeholder := headline != ""
+    var flag_present: bool = doc.has("_values_are_placeholders")
+    check(declares_placeholder or flag_present,
+            "no top-level field in the rows declares whether the values are placeholders or "
+            + "measurements. A reader cannot tell what it is holding, and a number that does "
+            + "not say which it is becomes a number somebody cites.")
+    if declares_placeholder:
+        check(str(doc.get("_replaced_by", doc.get("_values_land_when", ""))).length() > 20,
+                "the rows say their values are placeholders and do not say what replaces them")
+    else:
+        # AND THE OTHER FIELDS AGREE WITH IT. `_values_are_placeholders` present
+        # and null means the values landed; a sibling still saying they have not
+        # is the artefact holding both positions at once, which is what
+        # `magisteria@72f7589` shipped and what the producing side is clearing.
+        var contradicts := ""
+        for k in doc:
+            if typeof(doc[k]) != TYPE_STRING:
+                continue
+            if str(doc[k]).contains("the numbers are not"):
+                contradicts = str(k)
+                break
+        check(contradicts == "",
+                ("the rows declare their values are no longer placeholders and `%s` still "
+                        % contradicts)
+                + "says the numbers are not settled. A reader opening this cannot tell whether "
+                + "it holds measurements, and both statements are in the same file.")
     check(str((doc.get("classifier", {}) as Dictionary).get("_FAKE", "")).length() > 20,
             "the classifier's thresholds do not say they are invented")
     check(str((doc.get("hand_taper", {}) as Dictionary).get("_FAKE", "")).length() > 20,
