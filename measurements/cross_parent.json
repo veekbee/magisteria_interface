@@ -4,75 +4,79 @@
   "_what": "Cross-parent invariance per landform: the same row's detail term measured at one graded lag under the two parents this client refines. A ratio above 1 is ground that changes when a streaming level switches.",
   "_why_it_matters": "§23.977 measured 3.55x cross-parent disagreement with the calibration parent UNDECLARED and 1.43x with it declared, which is why `calibrated_at_parent_m` exists. This measures what the declared rescale actually delivers, per row, rather than on the one row the gate asserts.",
   "geometry": {
+    "_form_is": "decision 1019's second difference, gradient-blind by construction. The first cut of this tool used a first difference and reported a 20.9x disagreement that was its own instrument.",
     "_lag_is": "a member of StratumGrade.GRADED_LAGS",
     "coarse_parent_m": 1000.0,
     "fine_parent_m": 100.0,
+    "form": "detrended",
     "lag_m": 8.0,
-    "samples": 200
+    "samples": 4000,
+    "seed": 11,
+    "span_m": 400.0
   },
   "landforms": [
     {
       "amplitude_m": 0.18,
       "calibration_parent_m": 1000.0,
-      "detail_variance_coarse": 0.0000726099147806177,
-      "detail_variance_fine": 0.0000332969950417155,
       "landform": "floor",
       "octaves_coarse": 12,
       "octaves_fine": 9,
-      "ratio": 2.1806747032172,
+      "ratio": 1.00787654659032,
+      "s_detrended_coarse": 0.00770030407525264,
+      "s_detrended_fine": 0.00776095587906101,
       "spectral_slope": 0.95
     },
     {
       "amplitude_m": 0.04,
       "calibration_parent_m": 1000.0,
-      "detail_variance_coarse": 0.00000294698502154561,
-      "detail_variance_fine": 0.000000652483838126204,
       "landform": "playa",
       "octaves_coarse": 12,
       "octaves_fine": 9,
-      "ratio": 4.51656401177495,
+      "ratio": 1.15911445399975,
+      "s_detrended_coarse": 0.000960484355651992,
+      "s_detrended_fine": 0.00082863633728115,
       "spectral_slope": 1.2
     },
     {
       "amplitude_m": 0.09,
       "calibration_parent_m": 1000.0,
-      "detail_variance_coarse": 0.000003671069355071,
-      "detail_variance_fine": 0.00000238908543450852,
       "landform": "riparian_margin",
       "octaves_coarse": 12,
       "octaves_fine": 9,
-      "ratio": 1.53660028312308,
+      "ratio": 1.00796665157735,
+      "s_detrended_coarse": 0.00203539677750574,
+      "s_detrended_fine": 0.00205161207445378,
       "spectral_slope": 1.1
     },
     {
       "amplitude_m": 0.55,
       "calibration_parent_m": 1000.0,
-      "detail_variance_coarse": 0.00194143107365405,
-      "detail_variance_fine": 0.00143240073480887,
       "landform": "slope",
       "octaves_coarse": 12,
       "octaves_fine": 9,
-      "ratio": 1.35536866637611,
+      "ratio": 1.10979868880549,
+      "s_detrended_coarse": 0.0353069321234583,
+      "s_detrended_fine": 0.0391835869763582,
       "spectral_slope": 0.8
     },
     {
       "amplitude_m": 1.6,
       "calibration_parent_m": 1000.0,
-      "detail_variance_coarse": 0.0611592235329813,
-      "detail_variance_fine": 0.0555893380899245,
       "landform": "talus",
       "octaves_coarse": 12,
       "octaves_fine": 9,
-      "ratio": 1.10019700961444,
+      "ratio": 1.00377477109468,
+      "s_detrended_coarse": 0.295370137101358,
+      "s_detrended_fine": 0.29648509175712,
       "spectral_slope": 0.55
     }
   ],
-  "measured_at_commit": "4671cc6",
+  "measured_at_commit": "4813321",
   "rows_are_vendored": true,
   "rows_read": "res://assets/detail/detail_rows.json",
   "vertical_exaggeration": 1.0,
   "worst": {
     "landform": "playa",
-    "ratio": 4.51656401177495
+    "ratio": 1.15911445399975
   }
 }

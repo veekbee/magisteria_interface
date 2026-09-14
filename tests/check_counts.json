@@ -62,7 +62,7 @@
     "test_nodata_decodes_to_nan_and_never_to_zero": 1,
     "test_node_rows_arrive_at_full_precision": 2,
     "test_one_ground_for_every_consumer_or_none_at_all": 11,
-    "test_one_row_serves_two_parents": 21,
+    "test_one_row_serves_two_parents": 29,
     "test_pft_fractions_are_a_composition_of_the_cover": 12,
     "test_phenology_is_the_cell_measured_against_itself": 11,
     "test_placement_is_a_function_of_where_and_thins_by_a_stable_prefix": 10,

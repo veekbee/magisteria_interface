@@ -9147,15 +9147,48 @@ func test_one_row_serves_two_parents() -> void:
                             String.num(want, 3)])
 
     # THE SURFACE ITSELF, over the band both parents cover.
+    #
+    # EVERY LANDFORM, AND ON THE SECOND DIFFERENCE. This measured ONE row --
+    # `talus`, hardcoded -- and measured it with a FIRST difference. Both halves
+    # were wrong and the second one was worse.
+    #
+    # The one row: the ratio is monotone in `spectral_slope`, and `talus`
+    # carried the shallowest exponent in the set this was written against. It
+    # asserted a property of five rows and watched the one that passed most
+    # easily.
+    #
+    # The statistic: decision 1019 rules the SECOND difference because it is
+    # gradient-blind, and a first difference here does not measure a weaker
+    # version of the property -- it measures the thing that is SUPPOSED to
+    # differ. Under a 1 km parent the detail term legitimately carries the
+    # 100-1000 m band, which under a 100 m parent the DATA carries instead, so
+    # at an 8 m lag a first difference is dominated by that band's local slope.
+    # It reported the band decomposition working as a 20.9x defect, and cost the
+    # producing side a dispatch and a re-plan before their reference measured
+    # 1.13x and the difference turned out to be the instrument.
+    #
+    # `StructureFunction`'s `detrended` form is the one implementation of the
+    # second difference in this tree. A third hand-rolled copy is what this was.
     var w0 := hf.texel_to_world(500.0, 700.0)
     var lag := 8.0
-    var g_coarse := _detail_variance(coarse, w0, lag)
-    var g_fine := _detail_variance(fine, w0, lag)
-    check(g_coarse > 0.0 and g_fine > 0.0, "one of the two surfaces is flat")
-    var ratio: float = maxf(g_coarse, g_fine) / maxf(minf(g_coarse, g_fine), 1.0e-12)
-    check(ratio < 2.0, "the same row under a 1,000 m and a 100 m parent differs by %sx in "
-            % String.num(ratio, 2) + "roughness at %s m, so a level switch changes the ground"
-            % String.num(lag, 0))
+    var worst := 0.0
+    var worst_name := ""
+    var ratios := PackedStringArray()
+    for name in coarse.landforms():
+        var n := str(name)
+        var g_coarse := _detail_roughness(coarse, w0, lag, n)
+        var g_fine := _detail_roughness(fine, w0, lag, n)
+        check(g_coarse > 0.0 and g_fine > 0.0,
+                "%s is flat at %s m under one of the two parents" % [n, String.num(lag, 0)])
+        var r: float = maxf(g_coarse, g_fine) / maxf(minf(g_coarse, g_fine), 1.0e-12)
+        ratios.append("%s %sx" % [n, String.num(r, 2)])
+        if r > worst:
+            worst = r
+            worst_name = n
+        check(r < 2.0, "%s under a 1,000 m and a 100 m parent differs by %sx in roughness at "
+                % [n, String.num(r, 2)]
+                + "%s m, so a level switch changes the ground" % String.num(lag, 0))
+    var ratio := worst
     # THE CONTROL: without the rescale it would have. Loose, because a discrete
     # octave ladder is not a continuum -- the two parents put their finest
     # octave at 0.24 m and 0.20 m, which is a 25% difference in the last band
@@ -9165,26 +9198,27 @@ func test_one_row_serves_two_parents() -> void:
     var scaled := fine.amplitude_for("talus")
     check(raw / scaled > 2.0, "the rescale is worth %sx, which is small enough that this "
             % String.num(raw / scaled, 2) + "check would pass without it")
-    print("one row, two parents: roughness at %s m agrees within %sx, and the rescale it "
-            % [String.num(lag, 0), String.num(ratio, 2)]
-            + "took is %sx on talus (%s m at a 1,000 m parent, %s m at 100 m)"
-            % [String.num(raw / scaled, 2), String.num(raw, 3), String.num(scaled, 3)])
+    print("every row, two parents: %s -- worst %s at %sx; the rescale is %sx on talus "
+            % [", ".join(ratios), worst_name, String.num(ratio, 2),
+               String.num(raw / scaled, 2)]
+            + "(%s m at a 1,000 m parent, %s m at 100 m)"
+            % [String.num(raw, 3), String.num(scaled, 3)])
 
 
-## Mean squared difference of the detail term over a fixed lag -- a variogram
-## at one distance, which is all this comparison needs.
-func _detail_variance(df: DetailField, at: Vector2, lag: float) -> float:
-    var total := 0.0
-    var n := 0
-    for k in 200:
-        var p := at + Vector2(float(k % 20) * 37.0, float(k / 20) * 41.0)
-        var a := df.detail_at(p, "talus")
-        var b := df.detail_at(p + Vector2(lag, 0.0), "talus")
-        if is_nan(a) or is_nan(b):
-            continue
-        total += (a - b) * (a - b)
-        n += 1
-    return 0.0 if n == 0 else 0.5 * total / float(n)
+## Decision 1019's second difference on one landform's detail term, through the
+## one implementation of it this tree has.
+##
+## THE DETAIL TERM ALONE AND NOT THE DRAWN GROUND: the question is whether one
+## ROW draws the same thing under two parents, and the parent surface is the
+## same field either way.
+func _detail_roughness(df: DetailField, at: Vector2, lag: float, landform: String) -> float:
+    var span := 400.0
+    var sampler := func(x: float, y: float) -> float:
+        return df.detail_at(Vector2(x, y), landform)
+    var sf := StructureFunction.of_function(sampler, at - Vector2(span, span) * 0.5,
+            Vector2(span, span), "detail term, %s" % landform)
+    var v = sf.s_of_lag([lag], 0.5, "detrended", 2000, 11).get(lag, null)
+    return 0.0 if v == null or typeof(v) == TYPE_DICTIONARY else float(v)
 
 
 func test_a_level_switch_moves_no_plant() -> void:

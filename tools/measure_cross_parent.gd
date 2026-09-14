@@ -20,10 +20,26 @@ extends SceneTree
 ## property that only becomes visible after a re-vendor is one both sides
 ## discover too late.
 ##
-## WHAT IS MEASURED. Half the mean square difference of the detail term over a
-## lag, at one place, sampled on a fixed 20x10 grid -- the same statistic and
-## the same sampling the gate's own `_detail_variance` uses, deliberately, so
-## the two cannot disagree about what they are measuring.
+## WHAT IS MEASURED, AND THE FIRST CUT OF THIS MEASURED THE WRONG THING.
+##
+## It took `0.5 * mean((z(x+L) - z(x))^2)` -- a FIRST difference -- and reported
+## ratios from 1.5 to 20.9 that grow with `spectral_slope`. The producing side
+## could not reproduce them against `sim/detail.py` and got 0.97 to 1.13, which
+## looked for a day like two implementations of a ruled function disagreeing by
+## an order of magnitude.
+##
+## THEY DO NOT DISAGREE. Decision 1019 rules the SECOND difference for exactly
+## this reason: it is gradient-blind by construction. Under a 1 km parent the
+## detail term legitimately carries the 100-1000 m band, which under a 100 m
+## parent is carried by the DATA instead -- so at an 8 m lag a first difference
+## is dominated by the local slope of those coarse octaves, which is not
+## roughness at 8 m at all. The ratio grew with the exponent because a steeper
+## exponent concentrates variance in the coarsest octave. That is the band
+## decomposition working, reported as a defect.
+##
+## So this reads `StructureFunction` in its `detrended` form, which is the one
+## definition of the second difference in this tree. A third hand-rolled copy is
+## what produced the first cut.
 
 const OUT := "measurements/cross_parent.json"
 ## The two parents this client actually refines: the shipped overview and the
@@ -34,7 +50,11 @@ const FINE_M := 100.0
 ## A graded lag (`StratumGrade.GRADED_LAGS`), so the number speaks to what walk
 ## mode's conditions 2 and 3 compare against rather than to a lag nothing reads.
 const LAG_M := 8.0
-const SAMPLES := 200
+## The window the second difference is measured over. It must hold the whole
+## centred stencil -- `2 * lag * sqrt(2)` -- with room for the sample cloud.
+const SPAN_M := 400.0
+const SAMPLES := 4000
+const SEED := 11
 
 
 func _init() -> void:
@@ -64,8 +84,8 @@ func _init() -> void:
     var worst_name := ""
     for name in coarse.landforms():
         var n := str(name)
-        var gc := _variance(coarse, at, LAG_M, n)
-        var gf := _variance(fine, at, LAG_M, n)
+        var gc := _detrended(coarse, at, LAG_M, n)
+        var gf := _detrended(fine, at, LAG_M, n)
         var ratio: float = maxf(gc, gf) / maxf(minf(gc, gf), 1.0e-12)
         if ratio > worst:
             worst = ratio
@@ -77,8 +97,8 @@ func _init() -> void:
             "calibration_parent_m": coarse.calibration_parent_of(n),
             "octaves_coarse": coarse.octaves_for(n),
             "octaves_fine": fine.octaves_for(n),
-            "detail_variance_coarse": gc,
-            "detail_variance_fine": gf,
+            "s_detrended_coarse": gc,
+            "s_detrended_fine": gf,
             "ratio": ratio,
         })
         print("cross_parent: %-16s slope %s  ratio %s"
@@ -105,7 +125,11 @@ func _init() -> void:
         "_vertical_exaggeration_is": ("the detail field is sampled directly; the view's factor is "
                 + "applied at mesh build and does not reach this path"),
         "geometry": {"coarse_parent_m": COARSE_M, "fine_parent_m": FINE_M, "lag_m": LAG_M,
-                "samples": SAMPLES,
+                "span_m": SPAN_M, "samples": SAMPLES, "seed": SEED,
+                "form": "detrended",
+                "_form_is": ("decision 1019's second difference, gradient-blind by "
+                        + "construction. The first cut of this tool used a first difference and "
+                        + "reported a 20.9x disagreement that was its own instrument."),
                 "_lag_is": "a member of StratumGrade.GRADED_LAGS"},
         "worst": {"landform": worst_name, "ratio": worst},
         "landforms": per,
@@ -121,21 +145,21 @@ func _init() -> void:
     quit(0)
 
 
-## THE GATE'S OWN STATISTIC, reproduced deliberately rather than improved on. If
-## this measured something subtly different the two would disagree about a
-## property neither of them is wrong about.
-func _variance(df: DetailField, at: Vector2, lag: float, landform: String) -> float:
-    var total := 0.0
-    var n := 0
-    for k in SAMPLES:
-        var p := at + Vector2(float(k % 20) * 37.0, float(k / 20) * 41.0)
-        var a := df.detail_at(p, landform)
-        var b := df.detail_at(p + Vector2(lag, 0.0), landform)
-        if is_nan(a) or is_nan(b):
-            continue
-        total += (a - b) * (a - b)
-        n += 1
-    return 0.0 if n == 0 else 0.5 * total / float(n)
+## Decision 1019's second difference on the detail term alone, through the one
+## implementation of it this tree has.
+##
+## THE DETAIL TERM AND NOT THE DRAWN GROUND. The question is whether one ROW
+## draws the same thing under two parents; the parent surface is the same field
+## either way and would dilute the comparison with ground neither parent is
+## responsible for.
+func _detrended(df: DetailField, at: Vector2, lag: float, landform: String) -> float:
+    var sampler := func(x: float, y: float) -> float:
+        return df.detail_at(Vector2(x, y), landform)
+    var sf := StructureFunction.of_function(sampler, at - Vector2(SPAN_M, SPAN_M) * 0.5,
+            Vector2(SPAN_M, SPAN_M), "detail term, %s" % landform)
+    var s := sf.s_of_lag([lag], 0.5, "detrended", SAMPLES, SEED)
+    var v = s.get(lag, null)
+    return NAN if v == null or typeof(v) == TYPE_DICTIONARY else float(v)
 
 
 func _commit() -> String:
