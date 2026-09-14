@@ -23,7 +23,7 @@
     "test_a_published_scalar_is_read_from_its_bits_and_never_from_its_decimal": 30,
     "test_a_re_centre_that_moved_a_key_is_a_defect_and_not_churn": 25,
     "test_a_rebuild_moves_no_shared_vertex": 8,
-    "test_a_recorded_distance_names_what_it_is_conditional_on": 27,
+    "test_a_recorded_distance_names_what_it_is_conditional_on": 29,
     "test_a_recorded_walk_replays_and_cannot_outrun_its_own_locomotion": 6,
     "test_a_rotation_is_not_an_erasure_and_the_map_rides_the_envelope": 5,
     "test_a_row_from_a_future_minor_is_masked_never_zeroed": 4,
