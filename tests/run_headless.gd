@@ -149,6 +149,7 @@ func _initialize() -> void:
     _run(test_the_mock_earns_a_rung_and_its_boundary_is_cell_shaped, "test_the_mock_earns_a_rung_and_its_boundary_is_cell_shaped")
     _run(test_no_subject_is_drawn_at_two_rungs_and_the_guard_can_fire, "test_no_subject_is_drawn_at_two_rungs_and_the_guard_can_fire")
     _run(test_walking_the_boundary_switches_the_rung_once_and_never_both, "test_walking_the_boundary_switches_the_rung_once_and_never_both")
+    _run(test_an_exponent_that_inverts_the_rescale_is_refused, "test_an_exponent_that_inverts_the_rescale_is_refused")
     _run(test_the_rescale_reproduces_the_amplitude_the_artefact_publishes, "test_the_rescale_reproduces_the_amplitude_the_artefact_publishes")
     _run(test_the_detail_is_exactly_zero_at_every_parent_sample, "test_the_detail_is_exactly_zero_at_every_parent_sample")
     _run(test_the_detail_tells_a_playa_from_a_talus_slope, "test_the_detail_tells_a_playa_from_a_talus_slope")
@@ -8147,6 +8148,88 @@ func test_walking_the_boundary_switches_the_rung_once_and_never_both() -> void:
 func detail_field() -> DetailField:
     return DetailField.load_from(heightfield(), DetailField.ROWS_PATH, 0.0,
             TerrainLayers.load_from())
+
+
+func test_an_exponent_that_inverts_the_rescale_is_refused() -> void:
+    """THE RE-FIT WILL MOVE `spectral_slope` AND THE READER HAD NO OPINION.
+
+    The shipped rows run 0.55 to 1.20 and nothing in this client bounded them.
+    Above that range nothing special happens and none is wanted -- 1.339
+    rescales monotonically and draws. Below it the failure is silent and total:
+
+      -0.50  a 100 m parent is handed 0.56921 where a 1 km parent gets 0.18000
+       0.00  both parents get 0.18000, which is the defect `calibrated_at_parent_m`
+             was introduced to fix, measured at 3.5x too much at a level switch
+
+    Neither raises anything. Both draw a plausible surface. The negative case
+    hands MORE detail to the lattice that already carries the coarser band,
+    which is the cross-parent argument running backwards.
+
+    Two-sided per convention 6: the shipped rows must still load, or the
+    refusal is refusing everything and its firing means nothing."""
+    var hf := heightfield()
+    var good := DetailField.load_from(hf, DetailField.ROWS_PATH, 0.0, null)
+    check(good.is_loaded(), "the shipped rows no longer load: %s" % good.why_absent)
+    check(good.why_absent == "", "the shipped rows loaded with a refusal: %s" % good.why_absent)
+
+    # The refusals, each mutating ONE row of an otherwise-shipped artefact --
+    # which is what a values-only re-cut produces.
+    for bad in [[-0.5, "INVERT"], [0.0, "not positive"], [400.0, "underflow"]]:
+        var pair: Array = bad
+        var f := DetailField.load_from(hf, DetailField.ROWS_PATH, 100.0, null)
+        check(f.is_loaded(), "the control did not load at a 100 m parent")
+        var mutated: Dictionary = JSON.parse_string(JSON.stringify(f.rows))
+        (mutated["landforms"]["talus"] as Dictionary)["spectral_slope"] = float(pair[0])
+        var probe := DetailField.new()
+        probe.rows = mutated
+        probe.parent_spacing_m = 100.0
+        probe.calibrated_at_parent_m = 1000.0
+        var why := probe._unusable_exponent()
+        check(why != "", "a `spectral_slope` of %s was accepted" % str(pair[0]))
+        check(why.contains("talus"),
+                "the refusal does not name the row it refused: %s" % why)
+        check(why.contains(String.num(float(pair[0]), 6)) or why.contains("400"),
+                "the refusal does not quote the value it refused: %s" % why)
+    # AND THE EXPONENT THE RE-FIT IS ABOUT TO SEND IS FINE. `talus` fits at
+    # 1.339, outside every value shipped today, and it must load rather than
+    # trip a bound nobody derived.
+    var f2 := DetailField.load_from(hf, DetailField.ROWS_PATH, 100.0, null)
+    var refit: Dictionary = JSON.parse_string(JSON.stringify(f2.rows))
+    for name in (refit["landforms"] as Dictionary):
+        (refit["landforms"][name] as Dictionary)["spectral_slope"] = 1.339
+    var ok_probe := DetailField.new()
+    ok_probe.rows = refit
+    ok_probe.parent_spacing_m = 100.0
+    ok_probe.calibrated_at_parent_m = 1000.0
+    check(ok_probe._unusable_exponent() == "",
+            "an exponent of 1.339 -- which 229's re-fit produces for talus -- was refused: %s"
+                    % ok_probe._unusable_exponent())
+    # AND THE GUARD IS WIRED INTO `load_from`, NOT ONLY AVAILABLE BESIDE IT.
+    # Every check above calls the helper directly, which proves the helper and
+    # says nothing about whether anything calls it. Written out and loaded back
+    # the way a vendored artefact is.
+    var tmp := "user://_test_inverted_rows.json"
+    var mutated2: Dictionary = JSON.parse_string(JSON.stringify(good.rows))
+    (mutated2["landforms"]["talus"] as Dictionary)["spectral_slope"] = -0.5
+    var w := FileAccess.open(tmp, FileAccess.WRITE)
+    check(w != null, "could not write the mutated rows")
+    if w != null:
+        w.store_string(JSON.stringify(mutated2))
+        w.close()
+        var loaded := DetailField.load_from(hf, tmp, 100.0, null)
+        check(not loaded.is_loaded(),
+                "a rows file with an inverting exponent loaded as a working field")
+        check(loaded.why_absent.contains("talus") and loaded.why_absent.contains("INVERT"),
+                "`load_from` accepted it or refused for another reason: %s" % loaded.why_absent)
+        # And the control through the same path: unmutated, it loads.
+        var w2 := FileAccess.open(tmp, FileAccess.WRITE)
+        w2.store_string(JSON.stringify(good.rows))
+        w2.close()
+        check(DetailField.load_from(hf, tmp, 100.0, null).is_loaded(),
+                "the same file unmutated did not load, so the refusal above is not the "
+                + "exponent")
+        DirAccess.remove_absolute(ProjectSettings.globalize_path(tmp))
+    print("detail: exponents at or below zero are refused by name at `load_from`; 1.339 is not")
 
 
 func test_the_rescale_reproduces_the_amplitude_the_artefact_publishes() -> void:

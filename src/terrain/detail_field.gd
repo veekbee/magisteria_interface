@@ -276,6 +276,11 @@ static func load_from(hf: Heightfield, path: String = ROWS_PATH,
     for name in df.landforms():
         df.finest_m = minf(df.finest_m,
                 df.parent_spacing_m / pow(2.0, float(df.octaves_for(str(name)))))
+    var bad := df._unusable_exponent()
+    if bad != "":
+        df.why_absent = bad
+        df.rows = {}
+        return df
     return df
 
 
@@ -340,8 +345,72 @@ func for_parent(spacing_m: float) -> DetailField:
     for name in df.landforms():
         df.finest_m = minf(df.finest_m,
                 df.parent_spacing_m / pow(2.0, float(df.octaves_for(str(name)))))
+    var bad := df._unusable_exponent()
+    if bad != "":
+        df.why_absent = bad
+        df.rows = {}
+        return df
     return df
 
+
+
+## Whether any row's `spectral_slope` cannot be used, and which.
+##
+## THE SHIPPED ROWS RUN 0.55 TO 1.20 AND THE RE-FIT WILL MOVE THEM. Above that
+## range nothing special happens -- 1.339 rescales monotonically and draws -- so
+## no bound is wanted at the top for its own sake. The damage is at the bottom
+## and it is silent, which is why it is measured rather than assumed:
+##
+##   slope   amplitude at a 1000 m parent   at a 100 m parent
+##   -0.50                        0.18000             0.56921   <- INVERTED
+##    0.00                        0.18000             0.18000   <- the identity
+##    0.55                        0.18000             0.05073
+##    1.34                        0.18000             0.00825
+##
+## A NEGATIVE EXPONENT INVERTS THE CROSS-PARENT ARGUMENT. Refining a 100 m
+## lattice must supply LESS than refining a 1 km one, because the data already
+## carries everything between them. At a negative exponent the finer parent is
+## handed MORE, which is the opposite of the reason `calibrated_at_parent_m`
+## exists.
+##
+## AND ZERO IS EXACTLY THE DEFECT THAT FIELD WAS ADDED TO FIX: the amplitude
+## stops depending on the parent, which is "taking the number literally at both
+## spacings" -- measured at 3.5x too much, arriving at the moment a level
+## switches and a viewer is watching the ground change.
+##
+## THE TOP IS BOUNDED BY CONSEQUENCE, NOT BY A NUMBER. An exponent large enough
+## that a declared non-zero amplitude rescales to exactly zero draws nothing
+## while the row says it draws something. Derived from the value underflowing
+## rather than from a threshold anybody picked.
+##
+## WHOLE-FIELD AND NOT PER-ROW, on the `world_seed` precedent above: an unusable
+## exponent means the artefact is wrong rather than one landform being
+## unavailable, and drawing the other four over a hole is a substitution nobody
+## asked for.
+func _unusable_exponent() -> String:
+    for name in landforms():
+        var p := row(str(name))
+        var sl := scalar_of(p, "spectral_slope", NAN)
+        if is_nan(sl) or not is_finite(sl):
+            return ("`%s` declares a `spectral_slope` of %s. The exponent is the whole of the "
+                    % [str(name), String.num(sl, 4)]
+                    + "cross-parent rescale, so there is nothing to evaluate.")
+        if sl <= 0.0:
+            return (("`%s` declares a `spectral_slope` of %s, which is not positive. The "
+                    % [str(name), String.num(sl, 6)])
+                    + "amplitude rescales as `(parent / calibrated_at)^slope`, so at zero it "
+                    + "stops depending on the parent at all -- measured at 3.5x too much when "
+                    + "a level switches -- and below zero it INVERTS: refining a finer lattice "
+                    + "would be handed MORE detail than refining a coarser one, when the finer "
+                    + "lattice already carries the band between them.")
+        var a := scalar_of(p, "amplitude_m", 0.0)
+        if a > 0.0 and amplitude_for(str(name)) <= 0.0:
+            return (("`%s` declares an amplitude of %s and a `spectral_slope` of %s, which "
+                    % [str(name), String.num(a, 6), String.num(sl, 6)])
+                    + ("rescales to exactly zero at the %s m parent being refined. The row "
+                            % String.num(parent_spacing_m, 0))
+                    + "says it draws something and the function would draw nothing.")
+    return ""
 
 ## WHETHER TWO FIELDS ARE THE SAME FUNCTION, DELIBERATELY IGNORING THE LATTICE.
 ##
