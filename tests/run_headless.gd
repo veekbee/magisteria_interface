@@ -11982,6 +11982,15 @@ static func _strata_covered(m: Dictionary, lags: Array) -> int:
 ## ABSENT IS NOT EMPTY-AND-CARRY-ON: the caller prints that the half is not
 ## running. A sourced-window check that quietly evaluates zero windows would
 ## report the same green as one that evaluated ten.
+## The whole sourcing artefact, or empty when it has not been run.
+func _sourcing_doc() -> Dictionary:
+    var f := FileAccess.open("res://measurements/window_sourcing.json", FileAccess.READ)
+    if f == null:
+        return {}
+    var doc = JSON.parse_string(f.get_as_text())
+    return doc if typeof(doc) == TYPE_DICTIONARY else {}
+
+
 func _sourced_windows() -> Array:
     var f := FileAccess.open("res://measurements/window_sourcing.json", FileAccess.READ)
     if f == null:
@@ -12042,7 +12051,11 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
     check(centres.size() >= 4, "only %d of the sampled window centres are on ground"
             % centres.size())
     var centre: Vector2 = centres[0]
-    var lags := [4.0, 8.0, 16.0]
+    # THE GRADER'S OWN DECLARATION. This was a bare literal, and the producing
+    # side read it out of `find_windows.gd` -- a second copy of the same literal
+    # -- to bound their fit ceiling. It is one constant now, on the side that
+    # owns the grading.
+    var lags := StratumGrade.GRADED_LAGS
     var m := StratumGrade.over_windows(df, hf, centres, 3000.0, lags, 0.5, 300, 21)
     check(bool(m["ok"]), "the grader refused a window with the layers bound: %s" % str(m["why"]))
     if not bool(m["ok"]):
@@ -12197,6 +12210,25 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
     # Read here rather than hard-coded: the centres are a measurement of this
     # basin at these layers, and a list transcribed into a test is a copy free
     # to disagree with the ground it was measured from.
+    # THE PUBLISHED LAG SET IS THE ONE BEING GRADED AT. The artefact is what the
+    # producing side reads to bound its fit ceiling, and a stale copy there
+    # would set that bound from a ladder this gate no longer uses -- silently,
+    # since both sides would be internally consistent.
+    var sourcing_doc := _sourcing_doc()
+    if not sourcing_doc.is_empty():
+        var pub_lags: Array = (sourcing_doc.get("graded_lags", {}) as Dictionary).get("lags_m", [])
+        check(pub_lags.size() == StratumGrade.GRADED_LAGS.size(),
+                "the artefact publishes %d graded lags and the grader declares %d"
+                        % [pub_lags.size(), StratumGrade.GRADED_LAGS.size()])
+        var same := pub_lags.size() == StratumGrade.GRADED_LAGS.size()
+        if same:
+            for i in pub_lags.size():
+                if not is_equal_approx(float(pub_lags[i]), float(StratumGrade.GRADED_LAGS[i])):
+                    same = false
+        check(same, "the artefact publishes lags %s and the grader grades at %s -- the "
+                        % [str(pub_lags), str(StratumGrade.GRADED_LAGS)]
+                + "producing side bounds its fit ceiling from the published copy")
+
     var sourced := _sourced_windows()
     if sourced.is_empty():
         print("986/1019: no window_sourcing.json, so the sourced-centre half is NOT RUNNING. "

@@ -196,6 +196,17 @@
     "seed": 21,
     "span_m": 3000.0
   },
+  "graded_lags": {
+    "_not_to_be_confused_with": "`tools/measure_variogram.gd`'s [1 ... 64], which is a different instrument: it measures the variogram's own slope over as wide a span as it can reach and gates nothing.",
+    "_what": "the lags decision 986's conditions 2 and 3 are graded at, from `StratumGrade.GRADED_LAGS`, which is the one declaration in this tree",
+    "_why_it_stops_there": "§23.1006(b) measures the parent lattice's share of the second difference at exactly these three lags and records that the share rises with lag, so the coarse-lag headroom shrinks upward. Above the maximum the parent's share is unmeasured.",
+    "lags_m": [
+      4.0,
+      8.0,
+      16.0
+    ],
+    "max_graded_lag_m": 16.0
+  },
   "grader": {
     "covered": [
       "floor",
@@ -216,7 +227,7 @@
     "why": "NO_BANDS: [\"floor\", \"playa\", \"riparian_margin\", \"slope\", \"talus\"]",
     "windows": 10
   },
-  "measured_at_commit": "c5ba60d",
+  "measured_at_commit": "83a9b05",
   "ruled_by": {
     "clause": "window sourcing covers the joint HAND-by-slope membership space rather than filling criterion 1b's five elevation classes; the calibration support is the window, membership per point within it, never the catchment median",
     "decision": "1019",

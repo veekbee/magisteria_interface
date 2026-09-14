@@ -52,6 +52,36 @@ const FORM := "detrended"
 ## is `(sum w)^2 / sum w^2`, which is the usual one.
 const MIN_EFFECTIVE_SAMPLES := 256.0
 
+## THE LAGS DECISION 986'S CONDITIONS 2 AND 3 ARE GRADED AT.
+##
+## ONE DECLARATION, BECAUSE IT CROSSES THE REPO BOUNDARY. The producing side's
+## fit ceiling must contain every lag graded here -- the maximum below is a
+## LOWER BOUND on their ceiling, and the two candidates they could have read
+## from this tree differ fivefold. Until this constant existed the set was a
+## bare literal typed twice, in `tools/find_windows.gd` and in the gate, with
+## the grader itself taking lags as a parameter and declaring none. A number
+## consumed by eye on one side of a boundary was already being consumed by eye
+## twice on this side.
+##
+## `tools/measure_variogram.gd`'s `[1 ... 64]` IS NOT THIS SET and must not be
+## read as it. That instrument measures the variogram's own slope over as wide
+## a span as it can reach; this is what walk mode grades against published
+## bands. Two instruments, two spans, and only one of them is a gate.
+##
+## WHY IT STOPS AT 16. §23.1006(b) measures the parent lattice's share of the
+## second difference at exactly these three lags -- 3.9%, 6.0%, 11.8% -- and
+## records that the share RISES with lag, so the coarse-lag headroom is "a
+## measured quantity that shrinks upward, not a standing property". The gate
+## reproduces those three numbers on this client's own ground. Above 16 m the
+## parent's share is unmeasured, and grading there would be grading a band the
+## parent lattice increasingly carries.
+##
+## WHY IT STARTS AT 4 IS A CHOICE AND NOT A DERIVATION, and is said so rather
+## than dressed up: 4 m is where §23.1006(b) starts. The floor decision 986
+## rules is the native-spacing probe's, which is about the surface being
+## measured rather than about this ladder.
+const GRADED_LAGS := [4.0, 8.0, 16.0]
+
 ## Why a grade is absent, as named things rather than as a number nobody can
 ## tell from a measurement.
 const NO_LAYERS := "NO_LAYERS"            ## no real HAND or slope to evaluate membership on

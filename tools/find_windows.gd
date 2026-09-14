@@ -34,7 +34,10 @@ const OUT := "measurements/window_sourcing.json"
 ## the geometry the grader will actually use. A centre good for a 3 km window is
 ## not necessarily good for a 10 km one.
 const SPAN_M := 3000.0
-const LAGS := [4.0, 8.0, 16.0]
+## READ FROM THE GRADER, NOT RESTATED. The search selects windows for the
+## geometry the conditions are actually graded at, so a second copy here could
+## select for a ladder nothing grades.
+const LAGS := StratumGrade.GRADED_LAGS
 ## The gate's own sample count, for the same reason.
 const SAMPLES_PER_LAG := 300
 const SEED := 21
@@ -154,6 +157,26 @@ func _init() -> void:
                 + "not reach this path, so these are field metres in both axes."),
         "geometry": {"span_m": SPAN_M, "lags": LAGS, "samples_per_lag": SAMPLES_PER_LAG,
                 "seed": SEED, "min_effective_samples": StratumGrade.MIN_EFFECTIVE_SAMPLES},
+        # THE ANSWER TO A CROSS-REPO QUESTION, PUBLISHED SO IT STOPS BEING READ
+        # BY EYE. The producing side's fit ceiling must contain every lag walk
+        # mode grades at, so this maximum is a LOWER BOUND on that ceiling --
+        # and they had to read it out of a source file, where this tree held two
+        # other lag sets that are not this one. Echoed here the way
+        # `window_support` is, so their chain consumes a declaration rather than
+        # somebody's reading of a constant.
+        "graded_lags": {
+            "_what": ("the lags decision 986's conditions 2 and 3 are graded at, from "
+                    + "`StratumGrade.GRADED_LAGS`, which is the one declaration in this tree"),
+            "lags_m": StratumGrade.GRADED_LAGS,
+            "max_graded_lag_m": StratumGrade.GRADED_LAGS[StratumGrade.GRADED_LAGS.size() - 1],
+            "_not_to_be_confused_with": ("`tools/measure_variogram.gd`'s [1 ... 64], which is "
+                    + "a different instrument: it measures the variogram's own slope over as "
+                    + "wide a span as it can reach and gates nothing."),
+            "_why_it_stops_there": ("§23.1006(b) measures the parent lattice's share of the "
+                    + "second difference at exactly these three lags and records that the "
+                    + "share rises with lag, so the coarse-lag headroom shrinks upward. Above "
+                    + "the maximum the parent's share is unmeasured."),
+        },
         "classifier_source": df.classifier_source(),
         "strata": Array(strata),
         "centres": out_centres,
