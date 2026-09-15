@@ -4,7 +4,7 @@
   "generated_from": [
     "data/fit_pair_1019_v2_output/rows_settled.json"
   ],
-  "generated_at_utc": "2026-09-14T21:34:23Z",
+  "generated_at_utc": "2026-09-14T23:58:47Z",
   "ruled_by": [
     "decision 985",
     "decision 986",
@@ -58,7 +58,7 @@
     "read_from": "data/terrain_layer_tiles_v2_output/terrain_layer_tiles.json",
     "_why_100_m": "decision 1004: real 10 m is calibration-only and 100 m is the finest shipped level, so there is no provisional parent here."
   },
-  "calibrated_at_parent_m": 1000.0,
+  "calibrated_at_parent_m": 100.0,
   "_scalars_are_published_as": "decision 985's nested form -- every value-bearing scalar is `{\"dec\": <rendering>, \"hex\": \"0x<8 bytes, big-endian>\"}`, and the HEX IS THE VALUE. `dec` is a rendering for a human and for a diff; a consumer reads `hex`. There is no cross-check between them by design: the same pattern beside a wrong decimal must still return the pattern's value, so a check would fire on a correct file. `sim.detail.published_float` is the reference reader and accepts the bare-float form too, because other artefacts still publish it.",
   "_scalars_not_published_as_pairs": "`octaves_at_parent` is an integer and its exactness is not in question; the `_`-prefixed fields are prose. Everything else under `landforms`, plus the parent's origin and spacing, carries bits.",
   "units": {
@@ -94,8 +94,8 @@
       },
       "_orientation_source_wanted": "aspect",
       "parent_spacing_m": {
-        "dec": 1000.0,
-        "hex": "0x408f400000000000"
+        "dec": 100.0,
+        "hex": "0x4059000000000000"
       },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
       "residual_rms": {
@@ -104,8 +104,8 @@
       },
       "octaves_at_parent": 9,
       "amplitude_m_at_parent": {
-        "dec": 0.024457962483208865,
-        "hex": "0x3f990b8213f7fd41"
+        "dec": 0.5699966493627107,
+        "hex": "0x3fe23d699cfaf51e"
       },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
@@ -145,8 +145,8 @@
       },
       "_orientation_source_wanted": "none",
       "parent_spacing_m": {
-        "dec": 1000.0,
-        "hex": "0x408f400000000000"
+        "dec": 100.0,
+        "hex": "0x4059000000000000"
       },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
       "residual_rms": {
@@ -155,8 +155,8 @@
       },
       "octaves_at_parent": 9,
       "amplitude_m_at_parent": {
-        "dec": 0.015935521461350396,
-        "hex": "0x3f905166be15b70c"
+        "dec": 0.10185712523965175,
+        "hex": "0x3fba134efdc4d559"
       },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
@@ -196,8 +196,8 @@
       },
       "_orientation_source_wanted": "channel",
       "parent_spacing_m": {
-        "dec": 1000.0,
-        "hex": "0x408f400000000000"
+        "dec": 100.0,
+        "hex": "0x4059000000000000"
       },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
       "residual_rms": {
@@ -206,8 +206,8 @@
       },
       "octaves_at_parent": 9,
       "amplitude_m_at_parent": {
-        "dec": 0.02470539254851862,
-        "hex": "0x3f994c5ed41f7792"
+        "dec": 0.4279040415375239,
+        "hex": "0x3fdb62c7a20eb688"
       },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
@@ -247,8 +247,8 @@
       },
       "_orientation_source_wanted": "aspect",
       "parent_spacing_m": {
-        "dec": 1000.0,
-        "hex": "0x408f400000000000"
+        "dec": 100.0,
+        "hex": "0x4059000000000000"
       },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
       "residual_rms": {
@@ -257,8 +257,8 @@
       },
       "octaves_at_parent": 9,
       "amplitude_m_at_parent": {
-        "dec": 0.06540728772321361,
-        "hex": "0x3fb0be8831b0f6ba"
+        "dec": 1.8835316743356554,
+        "hex": "0x3ffe22f21be40738"
       },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
@@ -298,8 +298,8 @@
       },
       "_orientation_source_wanted": "aspect",
       "parent_spacing_m": {
-        "dec": 1000.0,
-        "hex": "0x408f400000000000"
+        "dec": 100.0,
+        "hex": "0x4059000000000000"
       },
       "_parent_spacing_is": "the parent this row's amplitude was measured against. Required: \u00a723.977 measured 3.55x cross-parent disagreement with it undeclared against 1.43x declared, and a row without it is refused rather than defaulted.",
       "residual_rms": {
@@ -308,8 +308,8 @@
       },
       "octaves_at_parent": 9,
       "amplitude_m_at_parent": {
-        "dec": 0.05022330645805608,
-        "hex": "0x3fa9b6de8577faf3"
+        "dec": 1.6158051242486187,
+        "hex": "0x3ff9da567955b669"
       },
       "_residual_rms_is": "RMS of `f - P[f]` for this row on this parent, over the published sample set. `d` divides by it so that `amplitude_m` is the sd of THE DETAIL TERM, which is what the units block says and what 229 measures from real ground. A pure function of the row, the lattice and the seed -- published here so no consumer re-estimates it.",
       "residual_rms_by_parent_m": {
@@ -351,5 +351,5 @@
     "_absent_hand_is_full_strength": "NAN HAND means outside the basin, or ground whose filled descent reaches no channel at all -- 6,301,722 px of endorheic and edge-draining ground. Undrained upland is not a floodplain, so the honest default is no suppression. Defaulting the other way would have flattened all of it on the strength of a missing value."
   },
   "elapsed_s": 0.7,
-  "content_digest": "sha256:704edb7c24f2f8891bd18a16cecbedaa64f1506f9577f37aa87b648dd125d2a2"
+  "content_digest": "sha256:a2dd96a556b413cf1fa530b0d5f85aef14336ce5c9a8ec5a86bbbe18f923bf30"
 }

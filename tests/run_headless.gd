@@ -8180,6 +8180,14 @@ func test_an_exponent_that_inverts_the_rescale_is_refused() -> void:
         check(f.is_loaded(), "the control did not load at a 100 m parent")
         var mutated: Dictionary = JSON.parse_string(JSON.stringify(f.rows))
         (mutated["landforms"]["talus"] as Dictionary)["spectral_slope"] = float(pair[0])
+        # THE ROW'S OWN DECLARED PARENT IS SET TEN TIMES THE ONE BEING REFINED,
+        # so the underflow case still underflows. This pinned 100 against 1000
+        # and `magisteria@a868a0f` moved the shipped declaration to 100 -- which
+        # made the rescale the identity, so a `spectral_slope` of 400 no longer
+        # drove the amplitude to zero and the refusal had nothing to refuse. The
+        # bound is about the arithmetic, so the lattice it is tested on is this
+        # test's to construct rather than the artefact's to supply.
+        (mutated["landforms"]["talus"] as Dictionary)["parent_spacing_m"] = 1000.0
         var probe := DetailField.new()
         probe.rows = mutated
         probe.parent_spacing_m = 100.0
@@ -8197,6 +8205,8 @@ func test_an_exponent_that_inverts_the_rescale_is_refused() -> void:
     var refit: Dictionary = JSON.parse_string(JSON.stringify(f2.rows))
     for name in (refit["landforms"] as Dictionary):
         (refit["landforms"][name] as Dictionary)["spectral_slope"] = 1.339
+    for name in (refit["landforms"] as Dictionary):
+        (refit["landforms"][name] as Dictionary)["parent_spacing_m"] = 1000.0
     var ok_probe := DetailField.new()
     ok_probe.rows = refit
     ok_probe.parent_spacing_m = 100.0
@@ -9167,23 +9177,39 @@ func test_one_row_serves_two_parents() -> void:
     the same row puts the full kilometre-scale roughness into the last hundred
     metres, and it arrives exactly when a level switches."""
     var hf := heightfield()
-    var coarse := DetailField.load_from(hf, DetailField.ROWS_PATH, 1000.0)
-    var fine := DetailField.load_from(hf, DetailField.ROWS_PATH, 100.0)
+    # THE CALIBRATION PARENT IS READ, NOT ASSUMED. This hard-coded 1000 m on
+    # both counts and both were assertions about an artefact rather than about
+    # this reader: `magisteria@a868a0f` moved the declaration to 100 m -- the
+    # lattice the amplitudes were always solved against -- and every line below
+    # that named a number went red on a correct artefact. Which parent the rows
+    # were calibrated at is THEIR fact to declare and this test's job is that
+    # the rescale honours whatever it says.
+    var at_ref := DetailField.load_from(hf, DetailField.ROWS_PATH, 0.0)
+    check(at_ref.is_loaded(), "the rows did not load")
+    if not at_ref.is_loaded():
+        return
+    var ref_m := at_ref.calibrated_at_parent_m
+    check(ref_m > 0.0, "the rows declare no calibration parent")
+    # A SECOND LATTICE, AND IT HAS TO BE A DIFFERENT ONE. Derived from the
+    # declared parent rather than named, so this keeps testing a rescale
+    # whichever lattice the rows are cut against next.
+    var other_m := ref_m * 10.0
+    var coarse := DetailField.load_from(hf, DetailField.ROWS_PATH, ref_m)
+    var fine := DetailField.load_from(hf, DetailField.ROWS_PATH, other_m)
     check(coarse.is_loaded() and fine.is_loaded(), "the rows did not load at both spacings")
     if not (coarse.is_loaded() and fine.is_loaded()):
         return
     check(coarse.calibration_note == "",
             "the rows do not declare which parent their amplitudes belong to: %s"
             % coarse.calibration_note)
-    check(coarse.calibrated_at_parent_m == 1000.0,
-            "the rows say they were calibrated at %s m" % String.num(coarse.calibrated_at_parent_m, 0))
 
     # THE DECLARED NUMBER IS UNCHANGED AT THE PARENT IT WAS CALIBRATED AT, to
     # the bit. A single-level client must not move.
     for name in coarse.landforms():
         check(coarse.amplitude_for(str(name))
                         == DetailField.scalar_of(coarse.row(str(name)), "amplitude_m", NAN),
-                "%s's amplitude moved at the parent it was calibrated at" % str(name))
+                "%s's amplitude moved at the parent it was calibrated at (%s m)"
+                        % [str(name), String.num(ref_m, 0)])
 
     # AND THE ROW STATES A WAVELENGTH, so the octave count follows the parent
     # rather than the answer following the count.
@@ -9246,11 +9272,16 @@ func test_one_row_serves_two_parents() -> void:
     var talus := fine.row("talus")
     var raw := DetailField.scalar_of(talus, "amplitude_m", NAN)
     var scaled := fine.amplitude_for("talus")
-    check(raw / scaled > 2.0, "the rescale is worth %sx, which is small enough that this "
-            % String.num(raw / scaled, 2) + "check would pass without it")
+    # EITHER DIRECTION. The second lattice is derived from the declared
+    # calibration parent, so the rescale is a boost when it is coarser and a cut
+    # when it is finer -- and `raw / scaled` was written when only one of those
+    # could happen.
+    var worth: float = maxf(raw, scaled) / maxf(minf(raw, scaled), 1.0e-12)
+    check(worth > 2.0, "the rescale is worth %sx, which is small enough that this "
+            % String.num(worth, 2) + "check would pass without it")
     print("every row, two parents: %s -- worst %s at %sx; the rescale is %sx on talus "
             % [", ".join(ratios), worst_name, String.num(ratio, 2),
-               String.num(raw / scaled, 2)]
+               String.num(worth, 2)]
             + "(%s m at a 1,000 m parent, %s m at 100 m)"
             % [String.num(raw, 3), String.num(scaled, 3)])
 
