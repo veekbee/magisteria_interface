@@ -12481,6 +12481,62 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
                     "%s's band declares support %s"
                             % [str(name), StratumGrade.support_of(real_bands[name])])
 
+        # DECISION 1040: CONDITIONS 2 AND 3 AT EVERY PARENT WALKABLE GROUND IS
+        # DRAWN AT, AND THE VERDICT IS THE CONJUNCTION.
+        #
+        # This graded one parent -- whichever `DetailField.load_from` defaulted
+        # to, the 1,000 m overview -- while walkable ground is a
+        # `NearFieldPatch` re-parented to a pyramid level. The overview is not
+        # in the set at all, so the gate was certifying a lattice nobody walks
+        # on. `WalkedParents` derives the set from the vendored pyramid rather
+        # than transcribing it, and absence is refused rather than defaulted.
+        var wp := WalkedParents.of_vendored()
+        if not wp.is_declared():
+            print("986/1019: NO WALKED-PARENT SET (%s) -- the conjunction is NOT RUNNING"
+                    % wp.why_absent)
+        else:
+            print("986/1019: walked parents %s m" % str(wp.as_array()))
+            var per_parent: Array = []
+            var all_met := true
+            var any_graded := false
+            for parent_m in wp.as_array():
+                var pdf := DetailField.load_from(hf, DetailField.ROWS_PATH,
+                        float(parent_m), layers)
+                if not pdf.is_loaded():
+                    continue
+                var pm := StratumGrade.over_windows(pdf, hf, sourced, 3000.0, lags, 0.5, 300, 21)
+                var pv := StratumGrade.gradeable(pm, real_bands)
+                if not bool(pv["ok"]):
+                    per_parent.append("%s m: %s" % [String.num(float(parent_m), 0),
+                            str(pv["why"]).split(":")[0]])
+                    continue
+                var pev := StratumGrade.evidence(pm, StratumGrade.spread(pm, lags), real_bands)
+                var band_ok := bool((pev.get("bands", {}) as Dictionary).get("ok", false))
+                any_graded = true
+                all_met = all_met and band_ok
+                # WHICH STRATA, NOT ONLY WHETHER. A stratum outside its band at
+                # every parent and one outside at some are different objects,
+                # and the conjunction alone cannot tell them apart -- which is
+                # the distinction decision 1040 exists to make readable.
+                var missing := {}
+                for line in str((pev.get("bands", {}) as Dictionary).get("why", "")).split(" / "):
+                    var nm := str(line).split(" at ")[0].strip_edges()
+                    if nm != "":
+                        missing[nm] = true
+                per_parent.append("%s m: %s%s" % [String.num(float(parent_m), 0),
+                        "MET" if band_ok else "UNMET",
+                        "" if band_ok else " (%s)" % ", ".join(PackedStringArray(missing.keys()))])
+            print("986/1019: condition 2 per parent -- %s" % ", ".join(per_parent))
+            check(any_graded, "no declared walked parent could be graded, so the conjunction "
+                    + "is over an empty set and would read as MET")
+            # THE CONJUNCTION IS NOT THE BEST CASE. A stratum inside its band at
+            # the finest parent and outside at a coarser one is a different
+            # object from one that misses everywhere, and 1040 is explicit that
+            # the verdict is over the set rather than over the one a
+            # fully-fetched client reaches.
+            print("986/1019: condition 2, CONJUNCTION over %d declared parents: %s"
+                    % [wp.as_array().size(), "MET" if all_met and any_graded else "UNMET"])
+
         var graded_on := sourced_m if not sourced_m.is_empty() else m
         var real_verdict := StratumGrade.gradeable(graded_on, real_bands)
         print("986/1019: against the VENDORED bands, the grader says %s"
