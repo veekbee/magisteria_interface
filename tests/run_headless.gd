@@ -6599,8 +6599,15 @@ func test_a_family_is_scored_in_its_own_annulus_or_not_at_all() -> void:
                             + "that only reaches %s m. Past that there are no instances to "
                                     % String.num(reach, 0)
                             + "compare, and the agreement is two empty annuli agreeing.")
+    # THE RE-TAKE INSTRUCTION NAMED THE RETIRED SWEEP. It said to run
+    # `measure_seam.sh --sweep-k`, and decision 1030 retired the swept `k` --
+    # so the repair attached to a live check sent a reader to re-orphan an
+    # instrument. The rows this test needs come from the seam measurement
+    # itself, which is not retired; only the sweep is. Found by §24 gap 175's
+    # backward sweep.
     check(rows > 0, "no per-family rows in scatter_seam.json, so nothing here is checked -- "
-            + "run `bash tools/measure_seam.sh --sweep-k` or drop this test")
+            + "run `bash tools/measure_seam.sh` (NOT `--sweep-k`, which decision 1030 retired) "
+            + "or drop this test")
     print("annuli: %d per-family row(s), %d scored in their own annulus, %d refused for reach"
             % [rows, scored, refused])
 

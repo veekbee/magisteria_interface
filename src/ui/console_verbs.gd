@@ -25,9 +25,32 @@ var instances: InstanceProbe = null
 ## of the measurement -- which is how two numbers with one name come to exist.
 ## Shelling out is not a shortcut here; it is the strongest available form of
 ## "the same measurement".
+## Which of them grade a basis a ruling has retired, and what retired it.
+##
+## A RETIRED MEASUREMENT IS REFUSED HERE RATHER THAN REMOVED. Deleting the verb
+## makes the name unknown, which sends a reader looking for a tool that is still
+## on disk; running it writes an artefact that reads green forever against
+## ground nobody grades. Saying which ruling retired it is the only one of the
+## three that leaves the reader better off.
+const RETIRED := {
+    "scatter": ("Decision 1030 solves the instancing horizon per place, so the swept `k` is not "
+            + "the rule any more and `scatter_horizon.json` grades nothing. §24 gap 170's row "
+            + "records it RETIRED."),
+}
+
 const MEASUREMENTS := {
     "seam": ["tools/measure_seam.sh", "measurements/scatter_seam.json"],
     "motion": ["tools/measure_motion.sh", "measurements/scatter_motion.json"],
+    # RETIRED BY DECISION 1030 AND KEPT VISIBLE RATHER THAN DELETED. The swept
+    # `k` is not the individuation rule any more -- the horizon is solved per
+    # place -- so `scatter_horizon.json` grades nothing, and gap 170's own row
+    # already records it RETIRED. Offering it as a live verb is a re-take
+    # INSTRUCTION for a retired instrument: anyone typing it re-orphans the
+    # artefact, and the re-taken file reads green forever against a basis
+    # nobody grades. Found by §24 gap 175's backward sweep.
+    #
+    # The entry stays so the verb can say WHY rather than reporting an unknown
+    # name, which would send a reader looking for a tool that is still there.
     "scatter": ["tools/measure_scatter.sh", "measurements/scatter_horizon.json"],
     "bands": ["tools/measure_bands.sh", "measurements/scatter_bands.json"],
     "flight": ["tools/free_flight.sh", "measurements/flights/"],
@@ -596,6 +619,12 @@ func _world_measure(args: PackedStringArray) -> PackedStringArray:
         return PackedStringArray(["world.measure <%s>"
                 % "|".join(Array(MEASUREMENTS.keys()))])
     var entry: Array = MEASUREMENTS[str(args[0])]
+    if RETIRED.has(str(args[0])):
+        return PackedStringArray([
+            "%s is RETIRED and this verb will not run it." % str(args[0]),
+            str(RETIRED[str(args[0])]),
+            "The tool and the artefact are both still on disk; what is gone is the basis they "
+            + "grade against. Re-taking it would write a file that reads green forever."])
     var script := ProjectSettings.globalize_path("res://" + str(entry[0]))
     if not FileAccess.file_exists(str(entry[0]).replace("tools/", "res://tools/")):
         return PackedStringArray(["no tool at %s" % str(entry[0])])
