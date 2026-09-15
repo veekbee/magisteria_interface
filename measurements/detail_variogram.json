@@ -1,13 +1,16 @@
 {
   "_exaggeration_is": "1:1. Every number here is a vertical distance compared with a horizontal one, so an exaggerated surface would inflate the whole artefact against ground that had not moved.",
   "_flat_is": "a synthesizer that adds a constant offset inside its amplitude bound. It satisfies every range check and discriminates nothing, which is why bounds alone cannot be the test.",
+  "_rows_content_digest_is": "the digest of the rows this run measured. The gate compares it against the vendored rows and refuses a stale artefact -- which is a stronger check than the verdict it replaced, because a verdict taken against the wrong rows is wrong whichever way it reads.",
   "classes": {
     "floor": {
+      "_fit_ceiling_is": "decision 1033's settled basin ceiling, read from the rows' `_values_landed_at`. Lags above it are MEASURED and reported in `gamma_m2` and excluded from the fit `matches_rows` gates on -- 1033 retired the decades above the ceiling as gated quantities, not as measured ones. Zero means the rows declare no ceiling, and then nothing is excluded.",
       "_residual_is": "total surface minus lattice at the longest lag. It should come out near `gamma_at_max_lag`; a large disagreement means the detail term is not reaching the surface consumers sample.",
-      "amplitude_m_declared": 0.18,
+      "amplitude_m_declared": 0.569996649362711,
       "anisotropy": 1.4,
-      "gamma_at_max_lag": 0.000182043297661332,
-      "gamma_implied_by_row": 0.000174697608890078,
+      "fit_ceiling_m": 60.0,
+      "gamma_at_max_lag": 10.6866855038349,
+      "gamma_implied_by_row": 0.0001765067724263,
       "gamma_lattice_m2": {
         "1.0": 0.00184337369545654,
         "16.0": 0.4592556443486,
@@ -18,34 +21,39 @@
         "8.0": 0.111309031046639
       },
       "gamma_m2": {
-        "1.0": 0.000000193564742490557,
-        "16.0": 0.0000210405173287231,
-        "2.0": 0.000000561998281571371,
-        "32.0": 0.0000653074671786176,
-        "4.0": 0.00000194313043651272,
-        "64.0": 0.000182043297661332,
-        "8.0": 0.00000634379032127074
+        "1.0": 0.00368865371829083,
+        "16.0": 0.857430399616459,
+        "2.0": 0.0127684054410489,
+        "32.0": 3.0834203370211,
+        "4.0": 0.0533902330457596,
+        "64.0": 10.6866855038349,
+        "8.0": 0.219175827860951
       },
-      "gamma_residual_at_max_lag": -0.0300052579865353,
+      "gamma_residual_at_max_lag": 4.87433724954535,
       "gamma_total_m2": {
-        "1.0": 0.00183724355590637,
-        "16.0": 0.45744867734752,
-        "2.0": 0.00714950951399665,
-        "32.0": 1.89044242114139,
-        "4.0": 0.0275577449571471,
-        "64.0": 7.62860454178976,
-        "8.0": 0.110798509732153
+        "1.0": 0.00491901620564433,
+        "16.0": 1.04433804967803,
+        "2.0": 0.0173845445012863,
+        "32.0": 4.06692649302272,
+        "4.0": 0.0729663899713361,
+        "64.0": 12.5329470493216,
+        "8.0": 0.251139677452358
       },
-      "hurst_declared": 0.95,
-      "hurst_measured": 0.835527527408619,
-      "matches_rows": true
+      "hurst_declared": 1.3674520282624,
+      "hurst_measured": 0.982595090386141,
+      "lags_above_ceiling": [
+        64.0
+      ],
+      "matches_rows": false
     },
     "playa": {
+      "_fit_ceiling_is": "decision 1033's settled basin ceiling, read from the rows' `_values_landed_at`. Lags above it are MEASURED and reported in `gamma_m2` and excluded from the fit `matches_rows` gates on -- 1033 retired the decades above the ceiling as gated quantities, not as measured ones. Zero means the rows declare no ceiling, and then nothing is excluded.",
       "_residual_is": "total surface minus lattice at the longest lag. It should come out near `gamma_at_max_lag`; a large disagreement means the detail term is not reaching the surface consumers sample.",
-      "amplitude_m_declared": 0.04,
+      "amplitude_m_declared": 0.101857125239652,
       "anisotropy": 1.0,
-      "gamma_at_max_lag": 0.0000106313460033292,
-      "gamma_implied_by_row": 0.00000218248828001157,
+      "fit_ceiling_m": 60.0,
+      "gamma_at_max_lag": 0.0579646990674113,
+      "gamma_implied_by_row": 0.00012372002234933,
       "gamma_lattice_m2": {
         "1.0": 0.00184337369545654,
         "16.0": 0.4592556443486,
@@ -56,34 +64,39 @@
         "8.0": 0.111309031046639
       },
       "gamma_m2": {
-        "1.0": 0.00000000454036827171799,
-        "16.0": 0.000000873208688273433,
-        "2.0": 0.0000000165334037866546,
-        "32.0": 0.000003182565818166,
-        "4.0": 0.0000000617729746485881,
-        "64.0": 0.0000106313460033292,
-        "8.0": 0.000000228999017880474
+        "1.0": 0.000106259828220828,
+        "16.0": 0.00860060902805998,
+        "2.0": 0.000305488980455377,
+        "32.0": 0.0225127150824374,
+        "4.0": 0.000949023235700696,
+        "64.0": 0.0579646990674113,
+        "8.0": 0.00285252429477043
       },
-      "gamma_residual_at_max_lag": 0.00034250570197969,
+      "gamma_residual_at_max_lag": -0.145815360171698,
       "gamma_total_m2": {
-        "1.0": 0.0018436715461564,
-        "16.0": 0.459319919339079,
-        "2.0": 0.00718096623913002,
-        "32.0": 1.89745221149368,
-        "4.0": 0.0276294073892498,
-        "64.0": 7.65895230547827,
-        "8.0": 0.111314247174392
+        "1.0": 0.00190101753161584,
+        "16.0": 0.455087299906387,
+        "2.0": 0.00711111311967817,
+        "32.0": 1.85502971789839,
+        "4.0": 0.0269685634544616,
+        "64.0": 7.5127944396046,
+        "8.0": 0.110460567154269
       },
-      "hurst_declared": 1.2,
-      "hurst_measured": 0.938897969475113,
+      "hurst_declared": 0.805625135170791,
+      "hurst_measured": 0.780978048733921,
+      "lags_above_ceiling": [
+        64.0
+      ],
       "matches_rows": true
     },
     "riparian_margin": {
+      "_fit_ceiling_is": "decision 1033's settled basin ceiling, read from the rows' `_values_landed_at`. Lags above it are MEASURED and reported in `gamma_m2` and excluded from the fit `matches_rows` gates on -- 1033 retired the decades above the ceiling as gated quantities, not as measured ones. Zero means the rows declare no ceiling, and then nothing is excluded.",
       "_residual_is": "total surface minus lattice at the longest lag. It should come out near `gamma_at_max_lag`; a large disagreement means the detail term is not reaching the surface consumers sample.",
-      "amplitude_m_declared": 0.09,
+      "amplitude_m_declared": 0.427904041537524,
       "anisotropy": 3.0,
-      "gamma_at_max_lag": 0.0000183834683835958,
-      "gamma_implied_by_row": 0.0000191461281592909,
+      "fit_ceiling_m": 60.0,
+      "gamma_at_max_lag": 3.19295668609535,
+      "gamma_implied_by_row": 0.000202055248835753,
       "gamma_lattice_m2": {
         "1.0": 0.00184337369545654,
         "16.0": 0.4592556443486,
@@ -94,34 +107,39 @@
         "8.0": 0.111309031046639
       },
       "gamma_m2": {
-        "1.0": 0.0000000129325578181302,
-        "16.0": 0.00000197042120322788,
-        "2.0": 0.0000000533396935452128,
-        "32.0": 0.00000706854649753959,
-        "4.0": 0.000000201643165004016,
-        "64.0": 0.0000183834683835958,
-        "8.0": 0.000000610709283170863
+        "1.0": 0.00141004737045247,
+        "16.0": 0.252667466688997,
+        "2.0": 0.00463253953920264,
+        "32.0": 1.07701254949023,
+        "4.0": 0.0155404032147171,
+        "64.0": 3.19295668609535,
+        "8.0": 0.0742268077998229
       },
-      "gamma_residual_at_max_lag": 0.000674495644745754,
+      "gamma_residual_at_max_lag": 4.07747213232409,
       "gamma_total_m2": {
-        "1.0": 0.00184334864576558,
-        "16.0": 0.459360781723149,
-        "2.0": 0.00717685063221169,
-        "32.0": 1.89713563434016,
-        "4.0": 0.0276187357207994,
-        "64.0": 7.65928429542104,
-        "8.0": 0.111321728945764
+        "1.0": 0.00334488099850796,
+        "16.0": 0.773146934962794,
+        "2.0": 0.0120687112761505,
+        "32.0": 3.23012588654084,
+        "4.0": 0.0448904900073265,
+        "64.0": 11.7360819321004,
+        "8.0": 0.201355800307379
       },
-      "hurst_declared": 1.1,
-      "hurst_measured": 0.871576875092446,
+      "hurst_declared": 1.23855462953327,
+      "hurst_measured": 0.963559620112099,
+      "lags_above_ceiling": [
+        64.0
+      ],
       "matches_rows": true
     },
     "slope": {
+      "_fit_ceiling_is": "decision 1033's settled basin ceiling, read from the rows' `_values_landed_at`. Lags above it are MEASURED and reported in `gamma_m2` and excluded from the fit `matches_rows` gates on -- 1033 retired the decades above the ceiling as gated quantities, not as measured ones. Zero means the rows declare no ceiling, and then nothing is excluded.",
       "_residual_is": "total surface minus lattice at the longest lag. It should come out near `gamma_at_max_lag`; a large disagreement means the detail term is not reaching the surface consumers sample.",
-      "amplitude_m_declared": 0.55,
+      "amplitude_m_declared": 1.88353167433566,
       "anisotropy": 2.0,
-      "gamma_at_max_lag": 0.00170645115772949,
-      "gamma_implied_by_row": 0.00372060304670088,
+      "fit_ceiling_m": 60.0,
+      "gamma_at_max_lag": 155.190118765958,
+      "gamma_implied_by_row": 0.00116292315045153,
       "gamma_lattice_m2": {
         "1.0": 0.00184337369545654,
         "16.0": 0.4592556443486,
@@ -132,34 +150,39 @@
         "8.0": 0.111309031046639
       },
       "gamma_m2": {
-        "1.0": 0.00000354862241345199,
-        "16.0": 0.000231726558550047,
-        "2.0": 0.0000103897588584981,
-        "32.0": 0.000754858394996498,
-        "4.0": 0.0000283830941200629,
-        "64.0": 0.00170645115772949,
-        "8.0": 0.0000843651467031236
+        "1.0": 0.0505397316508054,
+        "16.0": 10.2767023110552,
+        "2.0": 0.182509637307507,
+        "32.0": 48.522229166263,
+        "4.0": 0.702753759552401,
+        "64.0": 155.190118765958,
+        "8.0": 3.02943699071413
       },
-      "gamma_residual_at_max_lag": -0.104223016391861,
+      "gamma_residual_at_max_lag": 184.085355684009,
       "gamma_total_m2": {
-        "1.0": 0.00182592366888107,
-        "16.0": 0.453501330040812,
-        "2.0": 0.00707428001822239,
-        "32.0": 1.87167395244148,
-        "4.0": 0.0272148449250764,
-        "64.0": 7.55438678338443,
-        "8.0": 0.109870955989234
+        "1.0": 0.0592934504267755,
+        "16.0": 12.1638410843821,
+        "2.0": 0.213952637116325,
+        "32.0": 59.9464063043973,
+        "4.0": 0.828214870370325,
+        "64.0": 191.743965483786,
+        "8.0": 3.53119302744466
       },
-      "hurst_declared": 0.8,
-      "hurst_measured": 0.752211366762681,
-      "matches_rows": true
+      "hurst_declared": 1.45934678749824,
+      "hurst_measured": 0.986982884186386,
+      "lags_above_ceiling": [
+        64.0
+      ],
+      "matches_rows": false
     },
     "talus": {
+      "_fit_ceiling_is": "decision 1033's settled basin ceiling, read from the rows' `_values_landed_at`. Lags above it are MEASURED and reported in `gamma_m2` and excluded from the fit `matches_rows` gates on -- 1033 retired the decades above the ceiling as gated quantities, not as measured ones. Zero means the rows declare no ceiling, and then nothing is excluded.",
       "_residual_is": "total surface minus lattice at the longest lag. It should come out near `gamma_at_max_lag`; a large disagreement means the detail term is not reaching the surface consumers sample.",
-      "amplitude_m_declared": 1.6,
+      "amplitude_m_declared": 1.61580512424862,
       "anisotropy": 1.2,
-      "gamma_at_max_lag": 0.0342627539579208,
-      "gamma_implied_by_row": 0.12446233279404,
+      "fit_ceiling_m": 60.0,
+      "gamma_at_max_lag": 193.685207934795,
+      "gamma_implied_by_row": 0.000656824811985567,
       "gamma_lattice_m2": {
         "1.0": 0.00184337369545654,
         "16.0": 0.4592556443486,
@@ -170,27 +193,30 @@
         "8.0": 0.111309031046639
       },
       "gamma_m2": {
-        "1.0": 0.000376644101251874,
-        "16.0": 0.0069834398309613,
-        "2.0": 0.000759130336616826,
-        "32.0": 0.0151594874847986,
-        "4.0": 0.00169423146323992,
-        "64.0": 0.0342627539579208,
-        "8.0": 0.00409704272094827
+        "1.0": 0.0640008641960846,
+        "16.0": 14.264550823958,
+        "2.0": 0.220533858315167,
+        "32.0": 56.7722217831082,
+        "4.0": 0.827480534705119,
+        "64.0": 193.685207934795,
+        "8.0": 3.37941616460299
       },
-      "gamma_residual_at_max_lag": -0.00199212415489836,
+      "gamma_residual_at_max_lag": 179.619590043696,
       "gamma_total_m2": {
-        "1.0": 0.0022988292028644,
-        "16.0": 0.465695245170014,
-        "2.0": 0.00810712624270504,
-        "32.0": 1.94458634079756,
-        "4.0": 0.030412820574001,
-        "64.0": 7.6566176756214,
-        "8.0": 0.114704238424078
+        "1.0": 0.0647797281017026,
+        "16.0": 14.4127364824695,
+        "2.0": 0.220924227061804,
+        "32.0": 54.3456586621301,
+        "4.0": 0.84521648714075,
+        "64.0": 187.278199843473,
+        "8.0": 3.43290944511738
       },
-      "hurst_declared": 0.55,
-      "hurst_measured": 0.539368787362984,
-      "matches_rows": true
+      "hurst_declared": 1.50748367993469,
+      "hurst_measured": 0.986289118189187,
+      "lags_above_ceiling": [
+        64.0
+      ],
+      "matches_rows": false
     }
   },
   "finest_synthesised_m": 0.244140625,
@@ -203,21 +229,22 @@
     32.0,
     64.0
   ],
-  "measured_at_utc": "2026-09-10T22:44:59",
+  "measured_at_utc": "2026-09-15T06:16:15",
   "measurement": "variogram of the synthesized detail surface, per landform",
   "parameters_are": "PLACEHOLDER rows from assets/detail/detail_rows.json, every value invented. What is checked is that the surface delivers what the rows declare; when measured targets land they drop into the same comparison.",
   "parent_spacing_m": 1000.0,
+  "rows_content_digest": "sha256:a2dd96a556b413cf1fa530b0d5f85aef14336ce5c9a8ec5a86bbbe18f923bf30",
   "synthesizer": "conditional spectral refinement",
   "verdict": {
     "_control": "",
     "discriminates": true,
-    "gamma_ratio": 3222.80489668866,
-    "gamma_ratio_implied": 1600.0,
-    "ok": true,
-    "roughest": "talus",
-    "slopes_match_rows": true,
+    "gamma_ratio": 2677.32121899704,
+    "gamma_ratio_implied": 341.950329342828,
+    "ok": false,
+    "roughest": "slope",
+    "slopes_match_rows": false,
     "smoothest": "playa",
-    "why": "classes discriminate 3223x at the longest lag against 1600x implied by their amplitudes, and every class delivers its declared slope"
+    "why": "[\"floor\", \"slope\", \"talus\"] did not deliver the spectral slope its row declares"
   },
   "vertical_exaggeration": 1.0
 }

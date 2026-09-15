@@ -92,7 +92,7 @@
     "test_the_detail_is_band_limited_below_the_parent_spacing": 5,
     "test_the_detail_is_exactly_zero_at_every_parent_sample": 219,
     "test_the_detail_rows_say_that_they_are_invented": 16,
-    "test_the_detail_tells_a_playa_from_a_talus_slope": 6,
+    "test_the_detail_tells_a_playa_from_a_talus_slope": 7,
     "test_the_detail_vanishes_on_the_patch_and_appears_below_it": 8,
     "test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it": 7,
     "test_the_exaggeration_is_applied_after_the_check_not_before": 4,

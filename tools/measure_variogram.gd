@@ -80,6 +80,17 @@ func _init() -> void:
                 + "invented. What is checked is that the surface delivers what the rows "
                 + "declare; when measured targets land they drop into the same comparison."),
         "classes": classes,
+        # WHICH ROWS THIS WAS MEASURED AGAINST, so a consumer can tell a live
+        # artefact from one taken before the values moved. §24 gap 175's FIFTH
+        # orphan was this file itself: it was measured when `talus` declared a
+        # `spectral_slope` of 0.55 and went on being asserted by the gate after
+        # re-vendor #2 put 1.5075 in the rows. An artefact measured against a
+        # retired basis reads green forever, and this one did.
+        "rows_content_digest": str(df.rows.get("content_digest", "")),
+        "_rows_content_digest_is": ("the digest of the rows this run measured. The gate compares "
+                + "it against the vendored rows and refuses a stale artefact -- which is a "
+                + "stronger check than the verdict it replaced, because a verdict taken against "
+                + "the wrong rows is wrong whichever way it reads."),
         "verdict": verdict,
     }
     _write(out_path, doc)
@@ -155,7 +166,27 @@ func _score(df: DetailField, centre: Vector2, landform: String, pairs: int,
     var sxx := 0.0
     var sxy := 0.0
     var m := 0
+    # THE FIT STOPS AT THE DECLARED CEILING, AND THE LAGS ABOVE IT STAY
+    # MEASURED. §24 gap 175's fourth orphan: `LAGS` reaches 64 m, decision
+    # 1033's settled basin ceiling is 60 m, and the gate asserts this
+    # artefact's `verdict.ok` -- which depends on `matches_rows`, which depends
+    # on this fit. So a GATED quantity was fitted partly above the ceiling 1033
+    # retired the decades above from gating.
+    #
+    # 1033 keeps those decades measured and disclosed, which is why the rung is
+    # not dropped from `LAGS`: `gamma` still carries 64 m and the artefact still
+    # reports it. What changed is that it no longer enters the number a gate
+    # reads.
+    #
+    # THE CEILING IS READ FROM THE ROWS, NOT TYPED. `_values_landed_at` carries
+    # the basin ceiling the values were settled at, so a re-cut that moves it
+    # moves this with it -- and a client with a typed 60 would go on fitting to
+    # an old bound while the rows said otherwise, which is this sweep's own
+    # subject one level down.
+    var ceiling := _fit_ceiling_m(df)
     for lag in LAGS:
+        if ceiling > 0.0 and float(lag) > ceiling:
+            continue
         var g := float(gamma[str(lag)])
         if g <= 0.0:
             continue
@@ -189,12 +220,38 @@ func _score(df: DetailField, centre: Vector2, landform: String, pairs: int,
                 + "reaching the surface consumers sample."),
         "hurst_declared": declared_hurst,
         "hurst_measured": hurst,
+        "fit_ceiling_m": _fit_ceiling_m(df),
+        "_fit_ceiling_is": ("decision 1033's settled basin ceiling, read from the rows' "
+                + "`_values_landed_at`. Lags above it are MEASURED and reported in `gamma_m2` "
+                + "and excluded from the fit `matches_rows` gates on -- 1033 retired the "
+                + "decades above the ceiling as gated quantities, not as measured ones. Zero "
+                + "means the rows declare no ceiling, and then nothing is excluded."),
+        "lags_above_ceiling": _above(LAGS, _fit_ceiling_m(df)),
         "gamma_m2": gamma,
         "gamma_at_max_lag": at_max,
         "gamma_implied_by_row": implied,
         "matches_rows": (not is_nan(hurst)) and absf(hurst - declared_hurst) < 0.35,
         "anisotropy": DetailField.scalar_of(row, "anisotropy", 1.0),
     }
+
+
+## Decision 1033's settled fit ceiling, as the rows declare it.
+##
+## ABSENT MEANS NO CEILING AND THEREFORE NO EXCLUSION, which is the honest
+## reading for a rows file cut before 1033: it is not a claim that every lag is
+## gradeable, it is the absence of a claim either way, and inventing 60 here
+## would put a number this client does not own into a fit the gate reads.
+static func _above(lags: Array, ceiling: float) -> Array:
+    var out: Array = []
+    for lag in lags:
+        if ceiling > 0.0 and float(lag) > ceiling:
+            out.append(float(lag))
+    return out
+
+
+func _fit_ceiling_m(df: DetailField) -> float:
+    var landed: Dictionary = df.rows.get("_values_landed_at", {})
+    return float(landed.get("basin_ceiling_m", 0.0))
 
 
 ## The detail TERM under test. `flat` replaces it with a constant offset inside

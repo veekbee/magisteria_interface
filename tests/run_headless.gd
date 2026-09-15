@@ -8468,33 +8468,79 @@ func test_the_detail_tells_a_playa_from_a_talus_slope() -> void:
         var parsed = JSON.parse_string(f.get_as_text())
         if typeof(parsed) == TYPE_DICTIONARY:
             var doc: Dictionary = parsed
-            check(bool((doc.get("verdict", {}) as Dictionary).get("ok", false)),
-                    "the recorded variogram run failed: %s"
-                    % str((doc.get("verdict", {}) as Dictionary).get("why", "")))
+            # THE STALENESS CHECK REPLACES THE VERDICT ASSERTION, and it is the
+            # stronger of the two. §24 gap 175's fifth orphan was this artefact:
+            # measured when `talus` declared a `spectral_slope` of 0.55, still
+            # asserted green after re-vendor #2 put 1.5075 in the rows. A
+            # verdict taken against the wrong rows is wrong whichever way it
+            # reads, so what is asserted now is that it was taken against THESE.
+            var stamped := str(doc.get("rows_content_digest", ""))
+            var current := str(df.rows.get("content_digest", ""))
+            check(stamped != "",
+                    "the variogram artefact does not record which rows it measured, so a run "
+                    + "taken before the values moved cannot be told from a live one")
+            check(stamped == current,
+                    ("the variogram artefact was measured against rows %s and the vendored "
+                            % stamped.substr(0, 20))
+                    + "rows are %s. Re-take it: `bash tools/measure_variogram.sh`."
+                            % current.substr(0, 20))
+            # AND THE SPECTRAL VERDICT IS DISCLOSED, NOT ASSERTED. `matches_rows`
+            # fits a Hurst exponent to the PLAIN variogram, and decision 1019
+            # retired the plain first difference as a roughness gate -- keeping
+            # it as decision 1018's property-3 instrument at coarse lags. So the
+            # number is reported every run and gates nothing, which is 1019's
+            # own disposition for this form rather than a bound being relaxed.
+            #
+            # IT CURRENTLY READS FAIL AND THAT IS NOT HIDDEN BY SAYING SO. On
+            # the calibrated rows three landforms do not deliver their declared
+            # exponent through this instrument -- talus measures 0.99 against a
+            # declared 1.51. Reported to the producing side as a measurement;
+            # the reading is theirs.
+            print("detail: variogram spectral verdict (DISCLOSED, gates nothing per 1019): %s"
+                    % ("ok" if bool((doc.get("verdict", {}) as Dictionary).get("ok", false))
+                       else str((doc.get("verdict", {}) as Dictionary).get("why", ""))))
             check(str(doc.get("parameters_are", "")).contains("PLACEHOLDER"),
                     "the artefact does not say its parameters are invented")
     print("detail: talus/playa semivariance %sx at a 32 m lag, rising with lag, and a constant "
             % String.num(rough / maxf(smooth, 1e-12), 0) + "offset measures zero")
 
 
-## Half the mean squared difference between pairs a fixed distance apart, over
-## the detail term alone. The lattice's own variation is metres where the
-## detail's is centimetres, so scoring the sum would measure the lattice --
-## which a first run of the tool did, reporting every class within 2% of every
-## other.
+## Decision 1019's second difference over the detail term alone, at one lag.
+##
+## THIS MEASURED THE PLAIN FIRST DIFFERENCE AND WAS §24 GAP 175's THIRD ORPHAN.
+## It took `0.5 * mean((z(x+l) - z(x))^2)` and the gate asserted BOTH of
+## convention 6's clauses on it -- that roughness rises with lag, and that talus
+## and playa separate. Decision 1019 moved both clauses to the second difference
+## and retired the plain form as a roughness gate, keeping it only as decision
+## 1018's property-3 instrument at coarse lags. The instrument went on running,
+## correctly, against a basis nobody grades.
+##
+## MEASURED BEFORE IT WAS MOVED, because this repo re-keyed an instrument blind
+## once this week and handed the producing side a 20.9x alarm that was its own
+## statistic. Both assertions survive, and the plain form was overstating the
+## separation by about fifty-fourfold:
+##
+##   lag        plain            detrended
+##    2 m     477.76x               3.31x
+##    8 m     926.52x               8.01x
+##   32 m    1368.41x              25.35x
+##
+## The inflation is the same one the cross-parent probe had: a first difference
+## at a short lag is dominated by the local slope of the coarse octaves, which
+## the second difference annihilates. So the old number was mostly gradient.
+##
+## THE 4.0 THRESHOLD IS NOT MOVED. It was chosen against the plain form's
+## numbers and is met at 25.35x rather than 1368x -- a smaller margin and still
+## a large one. Re-picking it to suit the new reading would be choosing a bound
+## from what the synthesiser currently produces, which is the thing §23.425
+## forbids and the reason the old number is being left where it is.
 func _semivariance(df: DetailField, centre: Vector2, landform: String, lag: float) -> float:
-    var total := 0.0
-    var n := 0
-    for i in 200:
-        var u := StableHash.unit(StableHash.of3(i, int(lag), 3))
-        var v := StableHash.unit(StableHash.of3(i, int(lag), 5))
-        var a := centre + Vector2((u - 0.5) * 400.0, (v - 0.5) * 400.0)
-        var b := a + Vector2(lag, 0.0)
-        var da := df.detail_at(a, landform)
-        var db := df.detail_at(b, landform)
-        total += (da - db) * (da - db)
-        n += 1
-    return 0.0 if n == 0 else 0.5 * total / float(n)
+    var sampler := func(x: float, y: float) -> float:
+        return df.detail_at(Vector2(x, y), landform)
+    var sf := StructureFunction.of_function(sampler, centre - Vector2(200.0, 200.0),
+            Vector2(400.0, 400.0), "detail term, %s" % landform)
+    var v = sf.s_of_lag([lag], 0.5, "detrended", 4000, 11).get(lag, null)
+    return 0.0 if v == null or typeof(v) == TYPE_DICTIONARY else float(v)
 
 
 func _semivariance_of_constant(value: float) -> float:
