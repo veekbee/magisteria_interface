@@ -12499,6 +12499,10 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
             var per_parent: Array = []
             var all_met := true
             var any_graded := false
+            ## GAP 176 WANT (iv): `S(l)` per landform per graded lag per walked
+            ## parent, so the cross-parent ratio can be read BESIDE the verdicts
+            ## and against the band's own width. `landform -> lag -> [values]`.
+            var s_by := {}
             for parent_m in wp.as_array():
                 var pdf := DetailField.load_from(hf, DetailField.ROWS_PATH,
                         float(parent_m), layers)
@@ -12510,6 +12514,24 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
                     per_parent.append("%s m: %s" % [String.num(float(parent_m), 0),
                             str(pv["why"]).split(":")[0]])
                     continue
+                for nm in (pm.get("strata", {}) as Dictionary):
+                    var entry: Dictionary = pm["strata"][nm]
+                    for lag in lags:
+                        var sv = entry.get(float(lag), null)
+                        if sv == null:
+                            continue
+                        if not s_by.has(str(nm)):
+                            s_by[str(nm)] = {}
+                        # ARRAY AND NOT `PackedFloat64Array`. The packed arrays
+                        # are VALUE types, so a lookup through the dictionary
+                        # hands back a copy and appending to it stores nothing --
+                        # which is how the first cut of this collected six
+                        # parents into an empty table and printed no lines at
+                        # all. This repo has that lesson written down one file
+                        # over and I walked into it anyway.
+                        if not (s_by[str(nm)] as Dictionary).has(float(lag)):
+                            (s_by[str(nm)] as Dictionary)[float(lag)] = []
+                        ((s_by[str(nm)] as Dictionary)[float(lag)] as Array).append(float(sv))
                 var pev := StratumGrade.evidence(pm, StratumGrade.spread(pm, lags), real_bands)
                 var band_ok := bool((pev.get("bands", {}) as Dictionary).get("ok", false))
                 any_graded = true
@@ -12536,6 +12558,55 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
             # fully-fetched client reaches.
             print("986/1019: condition 2, CONJUNCTION over %d declared parents: %s"
                     % [wp.as_array().size(), "MET" if all_met and any_graded else "UNMET"])
+
+            # GAP 176 WANT (iv), AND IT GATES NOTHING. Decision 1040 rules the
+            # drawn surface is NOT required to be parent-invariant, so this is
+            # disclosure and not a criterion -- but a stratum whose `S(l)`
+            # CHANGES SHAPE across the walked set is a different object from one
+            # that merely misses at all of them, and the conjunction cannot tell
+            # those apart either. Read against the band's own width, because a
+            # ratio of 1.3 means one thing beside a band 20% wide and another
+            # beside one wider than its own mean.
+            #
+            # THE INSTRUMENT'S SCATTER IS ABOUT +/-0.1, measured by sweeping
+            # sample counts, so a ratio inside about 1.1 is not distinguishable
+            # from 1.0 by this probe and is reported as such rather than as a
+            # small effect.
+            for nm in s_by:
+                var cells := PackedStringArray()
+                for lag in lags:
+                    var across: Array = (s_by[nm] as Dictionary).get(float(lag), [])
+                    if across.size() < 2:
+                        continue
+                    var lo := INF
+                    var hi := 0.0
+                    for v in across:
+                        lo = minf(lo, float(v))
+                        hi = maxf(hi, float(v))
+                    var ratio: float = hi / maxf(lo, 1.0e-12)
+                    var band: Array = (real_bands.get(str(nm), {}) as Dictionary).get(
+                            float(lag), [])
+                    var width := ""
+                    if band.size() == 2:
+                        var mean: float = 0.5 * (float(band[0]) + float(band[1]))
+                        width = ", band width %s of its mean" % String.num(
+                                (float(band[1]) - float(band[0])) / maxf(absf(mean), 1e-12), 2)
+                    # A BAND WHOSE LOWER EDGE IS AT OR BELOW ZERO CANNOT BE
+                    # FAILED FROM BELOW, because a second difference is
+                    # non-negative. Its "in band" is not a pass, it is an
+                    # inability to fail, and counting it as a pass is how a
+                    # verdict certifies the cells it cannot discriminate.
+                    # Disclosed per cell rather than as a caveat on the whole
+                    # verdict, since it is true of some cells and not others.
+                    var unfailable := band.size() == 2 and float(band[0]) <= 0.0
+                    cells.append("%s m %sx%s%s%s" % [String.num(float(lag), 0),
+                            String.num(ratio, 2), width,
+                            "" if ratio > 1.1 else " (within the probe's own scatter)",
+                            " -- LOWER EDGE %s, so this cell CANNOT FAIL from below"
+                                    % String.num(float(band[0]), 4) if unfailable else ""])
+                if not cells.is_empty():
+                    print("986/1019: (iv) %-16s across %d walked parents -- %s"
+                            % [str(nm), wp.as_array().size(), "; ".join(cells)])
 
         var graded_on := sourced_m if not sourced_m.is_empty() else m
         var real_verdict := StratumGrade.gradeable(graded_on, real_bands)
