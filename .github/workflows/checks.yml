@@ -27,9 +27,28 @@ jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      # PINNED TO A MAJOR AND BUMPED DELIBERATELY, not left to drift. `v4` and
+      # `v5` target Node.js 20, which GitHub deprecated: the runner forced them
+      # onto Node 24 anyway and annotated every green run saying so. A warning
+      # that appears on every run and changes nothing is a warning people learn
+      # to scroll past, and the next one will be under it.
+      #
+      # Node 24 arrived in `checkout@v5` and `setup-python@v6`, so this is a
+      # bump to CURRENT rather than the minimum that clears the annotation.
+      # What the majors in between change, checked rather than assumed, because
+      # the only input this job passes is `python-version`:
+      #
+      #   * checkout v6 persists credentials to a separate file; v7 blocks
+      #     checking out a fork's PR under `pull_request_target` and
+      #     `workflow_run`. This workflow triggers on `push` and
+      #     `pull_request`, so that one is a hardening and not a loss.
+      #   * setup-python v7 removes the `pip-install` input, which is not used
+      #     here, and stops classifying stderr warnings as error annotations.
+      #
+      # Both need runner >= v2.327.1; `ubuntu-latest` is long past it.
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with: { python-version: '3.12' }
 
       - name: fetch Godot ${{ env.GODOT_VERSION }}
