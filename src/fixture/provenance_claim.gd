@@ -132,6 +132,83 @@ func area_weighted_mean(values: PackedFloat64Array) -> float:
     return NAN if den <= 0.0 else num / den
 
 
+## THE DECLARED COUNTS, CHECKED AGAINST THE BYTES THEY DESCRIBE.
+##
+## The `density` block declares how much of a window carries vegetation. This
+## client holds the payload, so it can RECOMPUTE those counts rather than
+## render them -- and a declaration a consumer can check is one that cannot
+## quietly stop describing what it names.
+##
+## THIS IS WRITTEN AGAINST A LIVE INSTANCE. `any_biomass_cells` is declared
+## 5,665 and the shipped bytes carry 3,470: the count was measured on the
+## float64 payload while the client's copy is quantised to a step of 3.023e-4,
+## so 2,195 cells hold biomass this artefact renders as exactly zero. The
+## producing side has fixed it in code and the correction arrives with the next
+## cut; until then the manifest and the payload disagree, and the honest thing
+## is to SAY so on every run rather than to render the declared number or to
+## hard-code a note about one fixture.
+##
+## THE CHEAPER CHECK EXISTED AND NEITHER SIDE TOOK IT. `any_biomass_cells` read
+## 5,665 in BOTH windows while `vegetated_cells` read 4,103 and 3,659 -- a
+## vegetation count identical in a burned window and a winter one is not
+## measuring the window, and that was on the face of the block without decoding
+## anything. Recomputing is what this function does; noticing is what it is
+## for.
+##
+## Rows are `{window, field, declared, shipped, agrees}`. `shipped` is counted
+## on the values as this client decodes them, which is the only population it
+## can draw from.
+func declared_vs_shipped(fl: FixtureLoader) -> Array:
+    var out: Array = []
+    for w in windows:
+        var density: Dictionary = (_windows[w] as Dictionary).get("density", {})
+        if density.is_empty():
+            continue
+        var day := int(density.get("_at_day", 0))
+        var groups := fl.taxon_groups(w, "band.pft_fractions")
+        var cover := PackedInt32Array()
+        var biomass := PackedInt32Array()
+        for gi in groups.size():
+            var vf := fl.day_values(w, "band.pft_fractions", day, gi)
+            var vb := fl.day_values(w, "band.pft.biomass", day, gi)
+            if cover.is_empty():
+                cover.resize(vf.size())
+                biomass.resize(vf.size())
+            for i in vf.size():
+                if i < vf.size() and not is_nan(vf[i]) and vf[i] > 0.0:
+                    cover[i] = 1
+                if i < vb.size() and not is_nan(vb[i]) and vb[i] > 0.0:
+                    biomass[i] = 1
+        var n_cover := 0
+        for v in cover:
+            n_cover += v
+        var n_biomass := 0
+        for v in biomass:
+            n_biomass += v
+        for pair in [["vegetated_cells", n_cover], ["any_biomass_cells", n_biomass]]:
+            var field := str(pair[0])
+            if not density.has(field):
+                continue
+            var declared := int(density[field])
+            var shipped := int(pair[1])
+            out.append({"window": w, "field": field, "declared": declared,
+                        "shipped": shipped, "agrees": declared == shipped})
+    return out
+
+
+## The rows above that disagree, as sentences. Empty when every declared count
+## describes the bytes it sits beside.
+func declaration_mismatches(fl: FixtureLoader) -> PackedStringArray:
+    var out := PackedStringArray()
+    for r in declared_vs_shipped(fl):
+        var d: Dictionary = r
+        if bool(d["agrees"]):
+            continue
+        out.append("%s declares %s = %d and the shipped bytes carry %d"
+                % [d["window"], d["field"], int(d["declared"]), int(d["shipped"])])
+    return out
+
+
 ## Everything the fixture declares about one window, for a reader who has the
 ## room. `{}` for a window the fixture does not carry.
 func window_facts(window: String) -> Dictionary:

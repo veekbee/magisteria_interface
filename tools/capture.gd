@@ -182,6 +182,8 @@ func _say_verdict() -> void:
     if scene.provenance != null:
         for l in scene.provenance.lines():
             print("fixture: %s" % l)
+        for l in scene.provenance.declaration_mismatches(scene._terrain.fixture):
+            print("fixture: DECLARED != SHIPPED -- %s" % l)
     for f in v.named_not_evaluable():
         print("  NOT EVALUABLE — %s" % f)
     for f in v.named_fails():

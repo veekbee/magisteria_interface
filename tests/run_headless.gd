@@ -4393,6 +4393,63 @@ func test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence() ->
     for l in ship.lines():
         print("provenance: %s" % l)
 
+    # ---- THE DECLARED COUNTS, CHECKED AGAINST THE BYTES --------------------
+    # A declaration a consumer can recompute is one that cannot quietly stop
+    # describing what it names. Written against a live instance:
+    # `any_biomass_cells` is declared 5,665 and the shipped bytes carry 3,470,
+    # because the count was taken on the float64 payload while this client's
+    # copy is quantised. The producing side has fixed it in code and it arrives
+    # with the next cut.
+    #
+    # THE MECHANISM IS GUARDED BY CONSTRUCTED DECLARATIONS AND NOT BY THAT
+    # DEFECT. Asserting the shipped mismatch still exists would make this gate
+    # depend on somebody else's release schedule and go red on the day they fix
+    # it. The declarations below are synthetic; the recomputation underneath
+    # them is the real loader over the real bytes.
+    var rows := ship.declared_vs_shipped(fl)
+    check(not rows.is_empty(), "no declared count was checked against the payload at all")
+    var veg_rows := 0
+    for r in rows:
+        var d: Dictionary = r
+        if str(d["field"]) != "vegetated_cells":
+            continue
+        veg_rows += 1
+        check(bool(d["agrees"]), "%s declares vegetated_cells = %d and the shipped bytes carry "
+                % [str(d["window"]), int(d["declared"])] + "%d" % int(d["shipped"]))
+    check(veg_rows == ship.windows.size(),
+            "vegetated_cells was checked for %d of %d windows" % [veg_rows, ship.windows.size()])
+    for l in ship.declaration_mismatches(fl):
+        print("provenance: DECLARED != SHIPPED -- %s" % l)
+
+    # THE PAIR. A declaration set to what the bytes carry must agree; the same
+    # declaration moved by one must not. Without the second, "agrees" could be
+    # returning true unconditionally and every check above would pass.
+    var true_count := -1
+    for r in rows:
+        if str((r as Dictionary)["field"]) == "vegetated_cells":
+            true_count = int((r as Dictionary)["shipped"])
+            break
+    var agree_man: Dictionary = FixtureLoader.load_from("res://assets/fixture/").manifest.duplicate(true)
+    var first_window := str(ship.windows[0])
+    agree_man["windows"][first_window]["density"]["vegetated_cells"] = true_count
+    var agreed := ProvenanceClaim.read_from(agree_man).declared_vs_shipped(fl)
+    for r in agreed:
+        var d: Dictionary = r
+        if str(d["window"]) == first_window and str(d["field"]) == "vegetated_cells":
+            check(bool(d["agrees"]), "a declaration set to the shipped count did not agree")
+    var off_man: Dictionary = agree_man.duplicate(true)
+    off_man["windows"][first_window]["density"]["vegetated_cells"] = true_count + 1
+    var off := ProvenanceClaim.read_from(off_man)
+    var caught := false
+    for r in off.declared_vs_shipped(fl):
+        var d: Dictionary = r
+        if str(d["window"]) == first_window and str(d["field"]) == "vegetated_cells":
+            caught = not bool(d["agrees"])
+    check(caught, "a declaration one cell off the shipped count was reported as agreeing, so "
+            + "this whole check cannot fail")
+    check(not off.declaration_mismatches(fl).is_empty(),
+            "a disagreeing declaration produced no sentence for anyone to read")
+
 
 func test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one() -> void:
     """`measurements/scatter_cost.json` is the scatter's frame cost measured in

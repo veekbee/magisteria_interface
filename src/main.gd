@@ -90,6 +90,8 @@ func _ready() -> void:
             print("verdict:   %s" % l)
         for l in provenance.lines():
             print("fixture: %s" % l)
+        for l in provenance.declaration_mismatches(_terrain.fixture):
+            print("fixture: DECLARED != SHIPPED -- %s" % l)
         for f in verdict.named_not_evaluable():
             print("verdict:   NOT EVALUABLE — %s" % f)
         for f in verdict.named_fails():
