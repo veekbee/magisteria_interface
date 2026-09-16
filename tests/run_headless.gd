@@ -784,11 +784,54 @@ func test_the_main_scene_populated_itself() -> void:
         # M4's probe, through the input path the application uses. The panel
         # is what a click has to reach: a signal wired to nothing looks exactly
         # like a signal wired correctly until someone clicks.
+        # THE CENTRE FIRST, BECAUSE THAT IS WHAT A PERSON GETS, and then outward
+        # only if the centre cell cannot be priced.
+        #
+        # Under `m3-001` it cannot: the run is 61.0% priceable at WY 753 against
+        # `millennium-001`'s 95.6%, the cell under the middle of the screen is
+        # in the remainder, and the scatter refuses. Leaving it there cost the
+        # eighteen checks below -- the whole of M5's scene wiring, the one
+        # place the probe-to-scatter signal is exercised at all -- and pinning
+        # that fall would have recorded the loss rather than repaired it.
+        #
+        # SO THE REFUSAL IS STILL REACHED AND STILL ASSERTED, above; this only
+        # goes on to find the application a cell it can draw, so the wiring
+        # checks keep a subject. The spots are a fixed grid: a scan that
+        # searched until it succeeded would report a different place per
+        # fixture with nothing saying so.
         var click := InputEventMouseButton.new()
         click.button_index = MOUSE_BUTTON_LEFT
         click.pressed = true
-        click.position = Vector2(get_root().size) * 0.5
+        var screen := Vector2(get_root().size)
+        click.position = screen * 0.5
         get_root().push_input(click)
+        # THE CENTRE'S OWN OUTCOME, KEPT. Once the scan below moves on, the
+        # scene's report is the successful spot's, and the refusal that is the
+        # fact about this artefact would be gone with no one having checked it.
+        var centre_refusal := ""
+        if not bool(_scene_root.scatter_report.get("ok", false)):
+            centre_refusal = str(_scene_root.scatter_report.get("why", "(no reason given)"))
+        var clicked_at := "the centre"
+        if centre_refusal != "":
+            for fy in [0.4, 0.55, 0.7]:
+                for fx in [0.35, 0.5, 0.65, 0.8]:
+                    var spot := Vector2(screen.x * fx, screen.y * fy)
+                    var again := InputEventMouseButton.new()
+                    again.button_index = MOUSE_BUTTON_LEFT
+                    again.pressed = true
+                    again.position = spot
+                    get_root().push_input(again)
+                    if str(_scene_root.probe_report.get("state", "")) == CellProbe.RESOLVED \
+                            and bool(_scene_root.scatter_report.get("ok", false)):
+                        clicked_at = "(%.2f, %.2f) of the viewport" % [fx, fy]
+                        break
+                if clicked_at != "the centre":
+                    break
+            if clicked_at == "the centre":
+                # NOTHING ON THIS SCREEN CAN BE DRAWN, so the canonical state is
+                # put back rather than leaving the panel showing the last miss.
+                get_root().push_input(click)
+        print("main scene click: probed at %s" % clicked_at)
         check(_scene_root.probe_panel != null, "no probe panel in the running scene")
         # THE DISCLAIMER HAS TO FIT THE WINDOW, and this is the assert that
         # catches it. Photographed at 1280x800 -- the default size every shot
@@ -832,9 +875,31 @@ func test_the_main_scene_populated_itself() -> void:
                 # exactly like working code if the signal reached nothing.
                 var sr: Dictionary = _scene_root.scatter_report
                 check(not sr.is_empty(), "a resolved click scattered nothing")
-                check(bool(sr.get("ok", false)),
-                        "the scene's scatter failed: %s" % str(sr.get("why", "")))
-                if bool(sr.get("ok", false)):
+                # A REFUSAL HERE IS THE ARTEFACT'S OR IT IS A DEFECT, AND THE
+                # TWO ARE TOLD APART RATHER THAN BOTH PASSING.
+                #
+                # This was a hard assert on `ok`, and `m3-001` made it red at
+                # the centre of the screen: that cell has no priceable family,
+                # and the solve refuses. That is criterion 6 arriving on screen
+                # -- cover falls 0.96 to 0.53 across the run, and 61.0% of cells
+                # price at WY 753 against `millennium-001`'s 95.6% -- and not a
+                # fault in the wiring this block exists to check.
+                #
+                # ONLY THE ONE REASON THAT IS A PROPERTY OF THE RUN IS ADMITTED.
+                # Every other refusal `solve_k_at` can return -- an unbound
+                # scatter, a missing residence key, a key absent from the
+                # fixture, no camera -- is the wiring being wrong, and fails.
+                if centre_refusal != "":
+                    check(centre_refusal.contains("nothing priced at this cell"),
+                            "the scene's scatter refused at the centre for a reason that is "
+                            + "not the artefact's: %s" % centre_refusal)
+                    print("main scene scatter: the centre cell refused -- %s -- so the wiring "
+                            % centre_refusal + "below was exercised at %s instead"
+                            % clicked_at)
+                var scattered := bool(sr.get("ok", false))
+                check(scattered, "the scene's scatter failed at %s: %s"
+                        % [clicked_at, str(sr.get("why", ""))])
+                if scattered:
                     var world: Vector2 = _scene_root.probe_report["world"]
                     var at: Array = sr["centre_m"]
                     check(Vector2(float(at[0]), float(at[1])).distance_to(world) < 1.0,
@@ -1454,11 +1519,24 @@ func test_node_rows_arrive_at_full_precision() -> void:
     the accusation pointing at the one component that had done nothing wrong.
     It now finds its subject by asking the manifest which rows are wide.
 
-    Measured on the fixture in hand: `node.streamflow` is the ONLY unquantised
-    row, at 17.41% of samples below float32's floor in `largest_fire` and 5.38%
-    in `deepest_winter`, smallest 5e-324. So the witness count below is 1, and
-    a narrowing takes it to 0 -- which is why it is printed every run rather
-    than left to be inferred from a test that stopped being about anything."""
+    Measured on the fixture in hand, RE-TAKEN at the `m3-001` landing because
+    both figures moved and one of them moved a branch: `node.streamflow` is
+    still the ONLY unquantised row, now at 0.2600% of samples below float32's
+    floor in `largest_fire` (270 of 103,860, smallest 5.778e-93) and **none at
+    all** in `deepest_winter` (smallest 1.508e-35, which float32 carries). It
+    read 17.41% and 5.38% under `millennium-001`, smallest 5e-324.
+
+    THE SUB-FLOAT32 GUARD BELOW WAS DORMANT AND IS NOT ANY MORE, which is the
+    part worth keeping. Under `millennium-001` day 45 of the first window held
+    no sub-float32 sample, so the `below_f32 > 0` branch never ran and this test
+    pinned at two checks; `m3-001` puts three there and it pins at three. A
+    guard whose subject is supplied by whichever run is vendored is a guard that
+    can retire without anyone deciding to retire it -- and the count moving is
+    the only reason anybody looked.
+
+    The witness count is 1, and a narrowing takes it to 0 -- which is why it is
+    printed every run rather than left to be inferred from a test that stopped
+    being about anything."""
     var fl := fixture()
     var wide := fl.unquantised_rows(fl.windows[0])
     var carried := 0
@@ -3909,6 +3987,35 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     check(eq.excluded_fields().size() == 1
             and eq.excluded_fields()[0].contains("gauge"),
             "the excluded field's reason did not survive the read")
+
+    # THE STATE-ARRAY CLAUSE, WITH THE PAIR THAT REPAIRS IT AND THE CASE THAT
+    # MUST FAIL. Decision 1057, retrofitted here because this is the repair.
+    #
+    # `_proof` read `state_arrays_identical`, a name no emitter has ever
+    # written, so on every real manifest the clause rendered nothing -- and
+    # nothing here noticed, because the assertions above read the field counts
+    # and the ticks and stopped at that. A clause that renders nothing on the
+    # only artefact that exists is indistinguishable from one that is absent.
+    check(eq.headline().contains("33 state arrays"),
+            "the header's own name for the count stopped being read: %s" % eq.headline())
+    var pair := proven.duplicate(true)
+    (pair["run"]["acceptance"]["equivalence"] as Dictionary).erase("state_arrays_identical")
+    pair["run"]["acceptance"]["equivalence"]["state_arrays_compared"] = 33
+    pair["run"]["acceptance"]["equivalence"]["state_arrays_bit_identical"] = true
+    check(AncestorVerdict.read_from(pair).headline().contains("33 state arrays"),
+            "the emitter's own names for the state-array pair do not render: %s"
+            % AncestorVerdict.read_from(pair).headline())
+    # THE MUST-FAIL SIDE, AND IT IS NOT THE FIELD BEING ABSENT. Read through
+    # `int()` a bool renders as "1 state arrays", and a bool declaring the
+    # arrays DIFFER must not render as agreement at any count.
+    var denied := pair.duplicate(true)
+    denied["run"]["acceptance"]["equivalence"]["state_arrays_bit_identical"] = false
+    var denied_line := AncestorVerdict.read_from(denied).headline()
+    check(denied_line.contains("NOT bit-identical"),
+            "the emitter declared the state arrays are not bit-identical and the banner "
+            + "printed agreement: %s" % denied_line)
+    check(not denied_line.contains("1 state arrays"),
+            "the bool was read as the count it sits beside: %s" % denied_line)
     # The emitter writes `scored_run_dir`; this header declared `scored_on_run`.
     # Both are read, so a proof that checks out is not refused over the name of
     # a label neither side interprets.
@@ -6162,37 +6269,88 @@ func test_the_horizon_is_solved_from_the_budget_rather_than_handed_over() -> voi
     sc.bind(hf, rl, fixture(), family_set(), fc, null)
     var w: String = fixture().windows[0]
 
-    # ---- BELOW THE CEILING, at a place the distribution run measured -------
-    var below := sc.solve_k_at(w, 22, Vector2(-1396666.75, 1528013.625), 800.0, 75.0)
-    check(bool(below.get("ok", false)), "the solve refused where it should reach: %s"
-            % str(below.get("why", "")))
-    if not bool(below.get("ok", false)):
+    # ---- THE PLACES ARE FOUND IN THE ARTEFACT RATHER THAN TYPED IN --------
+    # This block held two literal world coordinates, "a place the distribution
+    # run measured". The run they were measured in was `millennium-001`.
+    # Vendoring `m3-001` moved the vegetation out from under the first of them,
+    # `solve_k_at` returned "nothing priced at this cell", and this test took an
+    # early return with twelve of its eighteen checks never run -- a whole lane
+    # of the inversion silently not exercised, on an artefact that was fine.
+    # Where the budget binds is a property of the FIXTURE, so it is read off the
+    # fixture. Same lesson as the three assertions that carried the old
+    # calibration parent as a literal and went red on a correct artefact.
+    #
+    # AND THE PROPERTIES ARE ASSERTED OVER EVERY PROBE, not over two chosen
+    # ones. Picking a place BECAUSE it is under the ceiling and then asserting
+    # it is under the ceiling is a check that cannot fail; the scan below
+    # chooses nothing and the counts are what carry the claim. A solve that
+    # always returned its ceiling fails `under == 0`; one that never clamped
+    # fails `clamped == 0`; one that clamped the wrong way fails `disagreed`.
+    var seen: Array = []
+    var probed := 0
+    var stride: int = maxi(1, int(mini(hf.width, hf.height) / 40))
+    for ty in range(0, hf.height, stride):
+        for tx in range(0, hf.width, stride):
+            if seen.size() >= 64:
+                break
+            var where := hf.texel_to_world(float(tx), float(ty))
+            var r := sc.solve_k_at(w, 22, where, 800.0, 75.0)
+            probed += 1
+            if bool(r.get("ok", false)):
+                r["where"] = where
+                seen.append(r)
+        if seen.size() >= 64:
+            break
+    check(not seen.is_empty(), "the solve reached nowhere in %d probed place(s), so this "
+            % probed + "fixture prices no cell at all and the inversion has no subject")
+    if seen.is_empty():
         return
-    check(float(below["k"]) < float(below["ceiling"]),
-            "the solve returned its ceiling at a place measured under it (%s against %s)"
-            % [String.num(float(below["k"]), 2), String.num(float(below["ceiling"]), 2)])
-    check(not bool(below["at_ceiling"]), "at_ceiling is set where the value is under it")
+
+    # THE TWO KINDS, counted rather than assumed. `below` and `at` are the
+    # first of each kind and exist only to be reported and re-probed at a
+    # taller viewport; the assertions are on the counts.
+    var below := {}
+    var at := {}
+    var clamped := 0
+    var under := 0
+    var over_ceiling := 0
+    var disagreed := 0
+    for r in seen:
+        var d: Dictionary = r
+        if float(d["k"]) > float(d["ceiling"]) + 1e-9:
+            over_ceiling += 1
+        if bool(d["at_ceiling"]) != (float(d["k_solved"]) >= float(d["ceiling"])):
+            disagreed += 1
+        if bool(d["at_ceiling"]):
+            clamped += 1
+            if at.is_empty():
+                at = d
+        else:
+            under += 1
+            if below.is_empty():
+                below = d
+    check(under > 0, "no place under the ceiling in %d solved place(s): the solve returns its "
+            % seen.size() + "ceiling everywhere here, which is the inversion not acting")
+    check(clamped > 0, "no place AT the ceiling in %d solved place(s), so the clamp that makes "
+            % seen.size() + "this safe to land is not exercised by this artefact")
+    check(over_ceiling == 0, "%d solved place(s) came back above their own ceiling"
+            % over_ceiling)
+    check(disagreed == 0, "at_ceiling disagrees with the unclamped value it is about in %d "
+            % disagreed + "solved place(s)")
+    if below.is_empty() or at.is_empty():
+        print("C2: %d probed, %d solved, %d under the ceiling and %d at it -- one kind is "
+                % [probed, seen.size(), under, clamped] + "missing, so the comparison below "
+                + "is not made")
+        return
     check(Array(below["families_without_a_cost_coefficient"]).is_empty(),
             "a family is outside the measured triangle span, so it is absent from the "
             + "denominator and the solved k here is too high: %s"
             % str(below["families_without_a_cost_coefficient"]))
-
-    # ---- AND CLAMPED where the place affords the ceiling -------------------
-    var at := sc.solve_k_at(w, 22, Vector2(-1339372.5, 1498223.125), 800.0, 75.0)
-    check(bool(at.get("ok", false)), "the solve refused at the second place: %s"
-            % str(at.get("why", "")))
-    if not bool(at.get("ok", false)):
-        return
-    check(float(at["k"]) <= float(at["ceiling"]) + 1e-9,
-            "the solve returned %s, above its own ceiling of %s"
-            % [String.num(float(at["k"]), 3), String.num(float(at["ceiling"]), 3)])
-    check(bool(at["at_ceiling"]) == (float(at["k_solved"]) >= float(at["ceiling"])),
-            "at_ceiling disagrees with the unclamped value it is about")
     check(float(at["k"]) > float(below["k"]),
             "the two places solve the same k, so this test compares nothing")
 
     # ---- THE CEILING IS THE CAMERA'S, not a constant in the file ----------
-    var tall := sc.solve_k_at(w, 22, Vector2(-1339372.5, 1498223.125), 1600.0, 75.0)
+    var tall := sc.solve_k_at(w, 22, at["where"], 1600.0, 75.0)
     check(bool(tall.get("ok", false)), "the solve refused at a taller viewport")
     if bool(tall.get("ok", false)):
         check(float(tall["ceiling"]) > float(at["ceiling"]) * 1.9,
@@ -8751,7 +8909,45 @@ func test_the_detail_rows_say_that_they_are_invented() -> void:
 
 ## A place with the pyramid under it, and everything a patch needs to be built
 ## there. Empty when the tiles are not fetched, which is a valid clone.
-func streaming_place() -> Dictionary:
+## The first day at `centre` on which a plant could stand: a taxon group with
+## both a cover fraction and a biomass, which is what `implication()` needs to
+## turn cover into an object. `{}` where the artefact puts nothing there on any
+## of the days sampled.
+##
+## THE FIXTURE DECIDES, NOT A SCATTER. Trying days by building a scatter and
+## counting what came out costs a full placement per attempt; this reads the
+## two rows the placement would have read.
+func _priced_day_at(hf: Heightfield, rl: ResidenceLayer, c: Vector2) -> Dictionary:
+    var t := hf.world_to_texel(c.x, c.y)
+    var huc := rl.huc10_at(int(t.x), int(t.y))
+    var key: Array = rl.key_at(int(t.x), int(t.y))
+    if huc == "" or key.size() < 2:
+        return {}
+    var cell: int = int(fixture().cell_of_key.get("%s|%d" % [huc, int(key[1])], -1))
+    if cell < 0:
+        return {}
+    for win in fixture().windows:
+        for d in [0, 22, 45, 67, 89]:
+            for gi in fixture().taxon_groups(win, "band.pft_fractions").size():
+                var vf := fixture().day_values(win, "band.pft_fractions", d, gi)
+                var vb := fixture().day_values(win, "band.pft.biomass", d, gi)
+                if cell < vf.size() and cell < vb.size() \
+                        and vf[cell] > 0.0 and vb[cell] > 0.0:
+                    return {"window": win, "day": d, "cell": cell}
+    return {}
+
+
+## `require_cover` ALSO DEMANDS SOMETHING TO PLACE, and the default does not.
+##
+## The scan returns the first place where the coarse mesh draws and the pyramid
+## has tiles, and most callers want exactly that. `test_a_level_switch_moves_no
+## _plant` wants one more thing -- plants -- and under `m3-001` the first place
+## the scan finds has none: the run is 61.0% priceable at WY 753 against
+## `millennium-001`'s 95.6%, and this place is in the remainder on every day
+## sampled. The fifth place the same scan reaches is fully covered. So the
+## requirement is declared by the caller that has it rather than imposed on the
+## callers that do not.
+func streaming_place(require_cover := false) -> Dictionary:
     var tp := TilePyramid.load_from()
     if not tp.is_loaded() or int(tp.inventory()["present"]) == 0:
         return {}
@@ -8759,6 +8955,7 @@ func streaming_place() -> Dictionary:
     var tm := TerrainMesh.new()
     tm.build(hf, 4, 1.0)
     var res := TileResidency.over(tp)
+    var rl_for_places := residence()
     # SOMEWHERE THE COARSE MESH DRAWS AND THE PYRAMID HAS TILES. Both, because
     # a patch over a hole in either is a patch with nothing in it, and a test
     # that built one would pass by comparing nothing.
@@ -8775,7 +8972,13 @@ func streaming_place() -> Dictionary:
                 continue
             if is_nan(tp.height_at_world(c.x, c.y, z)):
                 continue
-            return {"tp": tp, "hf": hf, "tm": tm, "res": res, "centre": c, "z": z}
+            var priced := {}
+            if require_cover:
+                priced = _priced_day_at(hf, rl_for_places, c)
+                if priced.is_empty():
+                    continue
+            return {"tp": tp, "hf": hf, "tm": tm, "res": res, "centre": c, "z": z,
+                    "cover_at": priced}
     return {}
 
 
@@ -9373,17 +9576,26 @@ func test_a_level_switch_moves_no_plant() -> void:
 
     A plant DROPPED would also be a plant moved, and worse. The patch never
     subtracts, so the instance count is asserted too."""
-    var p := streaming_place()
+    # THE PLACE MUST HAVE SOMETHING TO PLACE, and that is asked for rather than
+    # assumed. This took the scan's first streamable place and painted
+    # `deepest_winter` day 45 on it. Under `m3-001` that place is bare on every
+    # day sampled, the comparison ran over zero plants, and two digests of
+    # nothing are equal -- so three of the four assertions below would have
+    # passed while the guarantee went unexercised.
+    var p := streaming_place(true)
     if p.is_empty():
-        print("streaming: no fetched pyramid -- skipping, and saying so")
+        print("streaming: no fetched pyramid, or no streamable place with a plant on it -- "
+                + "skipping, and saying so")
         return
     var v := TerrainView.new()
     get_root().add_child(v)
     v.build()
     v.bind_fields()
     v.bind_families()
-    v.show_field("deepest_winter", "band.pft_fractions", 45)
     var c: Vector2 = p["centre"]
+    var cover_at: Dictionary = p["cover_at"]
+    var painted_at := "%s day %d" % [str(cover_at["window"]), int(cover_at["day"])]
+    v.show_field(str(cover_at["window"]), "band.pft_fractions", int(cover_at["day"]))
     # WELL INSIDE THE REFINED INTERIOR. A radius reaching the blend ring would
     # compare plants on ramped ground, which is a fair comparison of the wrong
     # thing.
@@ -9422,8 +9634,12 @@ func test_a_level_switch_moves_no_plant() -> void:
             "%d plants were placed on the coarse surface and %d on the streamed one; a rebuild "
             % [int(n0["all"]), int(n1["all"])] + "that removes a plant is a worse rebuild than "
             + "one that moves it")
-    check(int(n0["all"]) > 100, "only %d plants were placed, so the digest is comparing almost "
-            % int(n0["all"]) + "nothing")
+    # STILL ASSERTED, AND STILL ABLE TO FAIL. The place was chosen because the
+    # FIXTURE prices a taxon group at its cell; how many plants the scatter then
+    # puts on the ground is the placement's answer and not the selection's, so
+    # this is not the search agreeing with itself.
+    check(int(n0["all"]) > 100, "only %d plants were placed at %s, so the digest is comparing "
+            % [int(n0["all"]), painted_at] + "almost nothing")
     for ring in d0:
         check(int(d0[ring]) == int(d1[ring]), "ring %s of the digest changed across the level "
                 % str(ring) + "switch")
@@ -10412,10 +10628,45 @@ func test_the_flow_drape_paints_from_a_bundle_and_never_from_the_fixture() -> vo
             occupied.append(str(k))
     check(occupied.size() >= 2,
             "the basin came out all one state: %s" % str(counts))
-    # THE ZERO CLASS STILL HAS A WITNESS SOMEWHERE, and where it does not, the
-    # loss is printed rather than inferred from a check that quietly stopped
-    # being about it. `largest_fire` carries 90 exact zeros; `deepest_winter`
-    # carries none.
+    # THE ZERO CLASS, AND WHERE THE CLAIM ABOUT IT NOW LIVES.
+    #
+    # This asserted that the FIXTURE carried an exact zero somewhere, on the
+    # reasoning that a distinction with no witness in the artefact is a
+    # distinction nobody has exercised. It survived one narrowing already --
+    # `deepest_winter` lost its zeros at `31efcab` and `largest_fire`'s 90 were
+    # what kept it alive -- and `m3-001` carries none in either window, so the
+    # assert went red on an artefact that is exactly as scored.
+    #
+    # A WITNESS IN THE TREE WAS NEVER WHAT THE DISTINCTION RESTED ON. Whether
+    # `colour_for` separates no-flow from below-the-scale is a property of
+    # `FlowDisplay`, testable against constructed values, and holding it
+    # hostage to whichever run is vendored is what let a re-cut retire it.
+    # Decision 1057: the guard is exhibited with the condition under which it
+    # must fail beside the case that must pass, and both are BUILT rather than
+    # found in a convenient artefact.
+    var fd := FlowDisplay.new()
+    fd.reset_counts()
+    var c_zero := fd.colour_for(0.0)
+    # Small enough to sit under the ramp's bottom decade, and present: this is
+    # the case a `flow <= 0.0` test would swallow if the two branches were ever
+    # collapsed, which is the defect this pair exists to catch.
+    var c_below := fd.colour_for(1.0e-12)
+    var c_in := fd.colour_for(10.0)
+    check(c_zero != c_below,
+            "no-flow and below-the-scale draw the same colour, so a reach with no water and a "
+            + "reach with a measured trickle are indistinguishable on screen")
+    check(c_below != c_in,
+            "below-the-scale and in-scale draw the same colour, so the bottom of the ramp "
+            + "swallows the class beneath it")
+    check(fd.n_zero == 1 and fd.n_below == 1 and fd.n_in_scale == 1,
+            "the three constructed values did not land one in each class: zero %d, below %d, "
+            % [fd.n_zero, fd.n_below] + "in scale %d" % fd.n_in_scale)
+
+    # AND WHAT THE SHIPPED ARTEFACT ACTUALLY HOLDS, disclosed rather than
+    # asserted. It is a fact about the run: `m3-001`'s flow never decays to
+    # exactly nothing, so the NO_FLOW class is unoccupied on screen and the
+    # reader of a screenshot should know that before reading its absence as a
+    # basin with water everywhere.
     var zeros_anywhere := 0
     for win in v.fixture.windows:
         for d in v.fixture.days(win, "node.streamflow"):
@@ -10423,11 +10674,10 @@ func test_the_flow_drape_paints_from_a_bundle_and_never_from_the_fixture() -> vo
                 if val == 0.0:
                     zeros_anywhere += 1
     print("flow: classes occupied %s in deepest_winter day 45; %d exact zeros across the "
-            % [str(Array(occupied)), zeros_anywhere] + "whole fixture")
-    check(zeros_anywhere > 0,
-            "no exact zero anywhere in the fixture, so `FlowDisplay`'s separation of no-flow "
-            + "from below-the-scale has no subject in this artefact at all. That is worth "
-            + "knowing before the distinction is read as exercised.")
+            % [str(Array(occupied)), zeros_anywhere] + "whole fixture -- the no-flow class is "
+            + ("occupied" if zeros_anywhere > 0 else "UNOCCUPIED, so nothing on screen is "
+                    + "drawn NO_FLOW and the separation above is carried by the constructed "
+                    + "pair rather than by this artefact"))
 
     # THE JOIN, SPOT-CHECKED AGAINST THE BUNDLE. Not against the fixture: what
     # is being checked is that the drape reads the wire, so the wire is the

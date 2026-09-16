@@ -6,80 +6,47 @@
     "path": "data/fixture_output"
   },
   "run": {
-    "dir": "millennium-001",
-    "base_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
+    "dir": "m3-001",
+    "base_commit": "c529aa3aaf41210912fe753c6159fab932e7a635",
     "master_seed": 20260820,
     "baseline_period": "1905-1922",
     "years": 1000,
     "acceptance": {
-      "scored_at_commit": "5317027b6543de846a4c53745996f0ed70d61119",
+      "scored_at_commit": "c529aa3aaf41210912fe753c6159fab932e7a635",
       "stale_against_replay": {
-        "replayed_at_commit": "66fa05134deff7f9b7ca9fe371298c8d6aceac58",
-        "declared_by_the_operator": "Owner-authorised 2026-09-11. This is the last scored verdict and it is stale against this payload's code: the melt gate (1ca6a0c) and swe_50's per-band build (245aec4) landed after the scoring, so criterion 1's 'near-bare snowpack overlay, area-weighted peak SWE 17.4 mm' describes code this payload does not contain -- band.snowpack_swe here reads about 35x that, and criterion 3's melt timing is downstream of the same repairs. Criteria 6, 7 and 8 (stationarity, surface-fire survival contrast, no quantity at a bound) are not obviously touched by the snow work and are the part of this verdict still worth reading. Shipped rather than dropped because a picture of this fixture needs SOME disclaimer that the run behind it does not pass acceptance, and absence would say less than a labelled staleness. Re-scoring at the replay commit is M2, already scheduled in the rev-34 review order; this block is superseded the moment it lands.",
+        "replayed_at_commit": "2d4b82585cf6502495973553285712562639b7a0",
+        "declared_by_the_operator": "Scored at d051f24, replayed at 2d4b825. Between those two commits sim/ changed in exactly two files and neither can move this payload. (1) 33807a8 added reads/prior_state_reads DECLARATIONS to sim/phase1.py; the engine executes topological_order(subsystems), and that order was re-measured across the pair -- byte-identical, the same fourteen subsystems in the same sequence. (2) fe63d80 and 0e936e8 touched sim/detail.py, the sub-grid detail synthesis, which is imported by tools/ only -- nothing under sim/ imports it, so it is in neither the engine's build nor its step path. No other file under sim/ changed. This is a commit-hash difference with no trajectory difference behind it, stated as a measurement rather than a judgement.",
         "what_the_equivalence_proof_below_does_not_cover": "the proof compares this verdict's RUN with this fixture's run. Both are state. The verdict's CODE and the replay's code are different here and nothing below compares them."
       },
-      "scored_run_dir": "runs/m0-instrumented-001",
-      "passed": 7,
-      "failed": 5,
-      "not_evaluable": 0,
+      "scored_run_dir": "runs/m3-001",
+      "passed": 8,
+      "failed": 3,
+      "not_evaluable": 1,
       "failed_criteria": [
-        {
-          "id": "1",
-          "name": "seasonal snowpack",
-          "renders_as": "a near-bare snowpack overlay -- area-weighted peak SWE 17.4 mm against a 229-330 mm reference, and no peaks at all June-September"
-        },
         {
           "id": "3",
           "name": "melt-led discharge peak",
-          "renders_as": "melt timing wrong at the outlet: it peaks in early winter, and only 43.7% of years peak in the melt season"
+          "renders_as": "the hydrograph is melt-led and misses by a margin, not by a season: the outlet peaks in May and 86.7% of years peak after the melt peak and nearer it than the precipitation peak, against a 90% floor"
         },
         {
           "id": "6",
           "name": "two-way equilibrium (stationarity)",
-          "renders_as": "the basin has not settled -- area-weighted cover runs 0.909 to 0.521 across the run and is still drifting at the end"
-        },
-        {
-          "id": "7",
-          "name": "surface-fire survival contrast",
-          "renders_as": "an instrument shape rather than a mechanism failure: the criterion's 1e-3 floor is unreachable against a hazard whose per-tick maximum is ~5.5e-05, so the fire regime on screen is not the thing that failed"
+          "renders_as": "the basin has not settled -- area-weighted cover falls 0.96 to 0.53 across the run, and its two fitted limits disagree by 0.85 cover, so the end state on screen is a basin still relaxing rather than one arrived"
         },
         {
           "id": "8",
           "name": "no quantity runs to a bound",
-          "renders_as": "stem density pinned at its floor -- occupancy 0.9994, so a vegetation field drawn per-stem is showing an absorbing state, not a stand"
+          "renders_as": "four quantities sit absorbed at a lower bound and cannot leave: band.local_runoff (occupancy 0.9994), band.pft_fractions (0.79), band.pft.biomass_pre_offtake (0.90), band.pft.stem_mortality_flux (0.99) -- fields drawn from these show an absorbing state, not a stand"
         }
-      ],
-      "equivalence": {
-        "to_commit": "6421064b2450bc448e457e0cc099249a2e77a65a",
-        "fields_compared": 18,
-        "fields_matching": 18,
-        "fields_excluded": [
-          {
-            "field": "outlet_min_daily_q_m3_s",
-            "why": "the criterion-2 gauge moved from the legacy playa terminal to the maximum-contributing-area outlet (Morelos). A deliberate instrument change, not a trajectory difference -- the same water, read at a different node"
-          },
-          {
-            "field": "outlet_peak_q_m3_s",
-            "why": "the criterion-2 gauge moved from the legacy playa terminal to the maximum-contributing-area outlet (Morelos). A deliberate instrument change, not a trajectory difference -- the same water, read at a different node"
-          },
-          {
-            "field": "outlet_peak_doy",
-            "why": "the criterion-2 gauge moved from the legacy playa terminal to the maximum-contributing-area outlet (Morelos). A deliberate instrument change, not a trajectory difference -- the same water, read at a different node"
-          }
-        ],
-        "state_arrays_bit_identical": true,
-        "state_arrays_compared": 33,
-        "ticks": 3650,
-        "method": "the model run twice, every recorder attached and none, requiring BIT-identical state -- not allclose, because a recorder that moved one cell's last bit still moved the run"
-      }
+      ]
     }
   },
   "is_a_display_encoding": "NOT the fixture. Band rows are quantised to 65,534 levels over each row's REALISED range in its own window -- not over the contract's declared bounds, which are a validity range and gave two rows 3 and 12 usable codes when they were used as a dynamic one (\u00a723.837). Every row carries its own `lo`/`hi` beside `contract_lo`/`contract_hi` so both are readable. 2 row-window(s) here are float64 because they reach below float32's floor; the full precision is in fixture_v1.bin.",
   "files": {
-    "fixture_client.bin": "e645a2305087e20389013ef9e451a8265cab329f474609d942126bb219bbc6f1",
-    "fixture_client.json": "507e1685ef41846afb86d997128b9fd9fb7599bcbeda8e071e2e2f6552e11d50"
+    "fixture_client.bin": "995a4a3dd3ee386a4800b951ac5c0030cb30532ca7b5552f48bcb619ff87af6e",
+    "fixture_client.json": "8fea79773cf5c0a5d09961a74c7dcdcc40c744d0128d4246c59b82032fd53420"
   },
-  "source_commit": "cef767d842df44597103c938b3ceda57ba64d6e9",
+  "source_commit": "5a36818fc38c7f3da691abebeb2c08cc9f22d522",
   "carried_rows": [
     "band.bare_fraction",
     "band.burned_fraction",
@@ -118,6 +85,6 @@
       }
     }
   },
-  "vendored_against_commit": "31efcab72c05904f512bf408f453b73f58468406",
+  "vendored_against_commit": "11b773ce002fa586af76e110006ba5a2dad373b5",
   "_two_commits_note": "`source_commit` is where the artefact's bytes came to rest -- the last commit touching the source directory, and what `cross_repo` checks against. `vendored_against_commit` is the sim tree this vendoring read. They differ whenever the sim moved without the artefact moving, which is most of the time."
 }

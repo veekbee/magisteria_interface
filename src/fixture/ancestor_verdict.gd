@@ -37,9 +37,16 @@ extends RefCounted
 ##       }
 ##     }
 ##
-## `ticks`, `state_arrays_identical` and `to_run` are read when present and are
-## not required: they enlarge the proof rather than constitute it. The three
-## fields that DO constitute it are `to_commit` and the two field counts.
+## `ticks`, `to_run` and the state-array pair -- `state_arrays_compared` with
+## `state_arrays_bit_identical` -- are read when present and are not required:
+## they enlarge the proof rather than constitute it. The three fields that DO
+## constitute it are `to_commit` and the two field counts.
+##
+## THE STATE-ARRAY PAIR IS NAMED HERE THE WAY THE EMITTER WRITES IT. This block
+## asked for `state_arrays_identical`, a single count; the emitter has always
+## written a count and a bool under different names, so that clause reached no
+## viewer until the names were reconciled. A header that declares a shape
+## nobody emits is a shape nobody emits.
 ##
 ## `scored_at_commit` IS THE RUN'S STAMP, not the commit the score artefact came
 ## to rest at. Only a run stamp is comparable to `run.base_commit`, which is the
@@ -319,8 +326,33 @@ func _proof() -> String:
     var parts := PackedStringArray()
     parts.append("%d/%d fields" % [int(equivalence.get("fields_matching", 0)),
                                    int(equivalence.get("fields_compared", 0))])
-    if int(equivalence.get("state_arrays_identical", 0)) > 0:
-        parts.append("%d state arrays" % int(equivalence.get("state_arrays_identical", 0)))
+    # THE STATE-ARRAY CLAUSE IS TWO FIELDS AND THIS READ A THIRD NAME FOR
+    # NEITHER. The emitter writes `state_arrays_compared` -- a count -- beside
+    # `state_arrays_bit_identical`, a bool. This header declared
+    # `state_arrays_identical`, a count no emitter has ever written, so the
+    # clause has never once reached a viewer. Renaming the bool onto the old
+    # key would be worse than the silence it replaced: read through `int()`, a
+    # `true` renders as "1 state arrays". THE COUNT IS THE NUMBER AND THE BOOL
+    # IS WHAT LICENSES PRINTING IT as agreement.
+    #
+    # The old name is still accepted as a count, because it is what this header
+    # asked for and refusing a proof over a label neither side reads would be
+    # strict in the wrong place.
+    var arrays := int(equivalence.get("state_arrays_compared",
+            equivalence.get("state_arrays_identical", 0)))
+    if arrays > 0:
+        # A DECLARATION AGAINST INTEREST IS BELIEVED AND ONE IN ITS OWN FAVOUR
+        # IS NOT. A `false` here can only weaken the sentence, so it is carried
+        # into it; a `true` adds nothing the counts do not already carry, which
+        # is why this does not gate the proof. What constitutes the proof is
+        # `to_commit` and the two field counts -- see `_check_equivalence` --
+        # and a bool is exactly the shape a future fixture could assert its way
+        # past.
+        var bits: Variant = equivalence.get("state_arrays_bit_identical", true)
+        if typeof(bits) == TYPE_BOOL and not bool(bits):
+            parts.append("%d state arrays NOT bit-identical" % arrays)
+        else:
+            parts.append("%d state arrays" % arrays)
     if int(equivalence.get("ticks", 0)) > 0:
         parts.append("%d ticks" % int(equivalence.get("ticks", 0)))
     var excluded: Array = equivalence.get("fields_excluded", [])
@@ -364,9 +396,16 @@ func named_fails() -> PackedStringArray:
 ## panel that overflows its window, cuts mid-sentence and silently hides
 ## everything below it -- a disclaimer that LOOKS complete. A line ending in an
 ## ellipsis says it is not complete, and the whole text is one `print` away in
-## the same run. The shipped declaration is 250 characters of provenance and
-## reason together; the first sentence carries the reason, which is the half a
-## reader of the picture needs.
+## the same run.
+##
+## WHAT THE SHIPPED DECLARATION COSTS, re-measured at the `m3-001` landing
+## because both halves of the old note stopped being true. It is 735 characters
+## now, not 250. And its FIRST sentence is 39 characters of provenance -- two
+## commit hashes -- with the reason in the second, where the old note said the
+## first sentence carried it. The 150-character budget happens to keep both:
+## the cut lands at the sentence end 134 characters in, so the reason survives
+## the trim. That is the artefact's shape being kind rather than this function
+## being careful, and it is worth knowing which.
 func staleness_lines(budget: int = 0) -> PackedStringArray:
     var out := PackedStringArray()
     if state != DECLARED_STALE:

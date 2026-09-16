@@ -30,8 +30,15 @@ extends PanelContainer
 ## enough that the brightest ramp value underneath cannot lift it.
 ## Characters of one staleness line the banner will render. Not a style choice:
 ## this panel has to fit an 800 px window, the size every shot in `shots/` is
-## taken at, and the shipped declaration beside five named fails wants 1,089 px
-## of it. The console and `tools/capture.gd` print the whole text untrimmed.
+## taken at. The console and `tools/capture.gd` print the whole text untrimmed.
+##
+## THE NUMBER THIS WAS SIZED AGAINST HAS MOVED TWICE, so it is recorded with
+## its fixture rather than left bare. `millennium-001` shipped five named fails
+## and wanted 1,089 px; measured in the running scene it came to 609 px with
+## its bottom at 795 of 800 -- five pixels of headroom. `m3-001` ships three
+## and measures 488 px, bottom at 674. The budget is unchanged because the
+## thing it guards against is a LONGER declaration rather than more fails, and
+## m3-001's is 735 characters against millennium-001's 250.
 const BANNER_LINE_BUDGET := 150
 
 const PLATE := Color(0.07, 0.07, 0.09, 0.92)
