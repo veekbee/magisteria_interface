@@ -163,7 +163,7 @@
     "test_the_tint_takes_phenology_from_the_wire_when_the_row_is_carried": 16,
     "test_the_tint_takes_wire_shares_unfloored_and_the_drawn_unit_can_change": 7,
     "test_the_transducer_subtree_consumes_the_bundle_and_never_the_fixture": 19,
-    "test_the_verdict_is_read_and_never_supplied": 62,
+    "test_the_verdict_is_read_and_never_supplied": 80,
     "test_the_view_turns_detail_on_for_both_surfaces_or_neither": 10,
     "test_the_wide_branch_has_a_witness_that_is_not_the_fixture": 9,
     "test_two_builds_over_the_same_ground_place_the_same_plants": 12,

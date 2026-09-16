@@ -86,6 +86,8 @@ func _ready() -> void:
         print("verdict: %s" % verdict.headline())
         for l in verdict.staleness_lines():
             print("verdict:   %s" % l)
+        for f in verdict.named_not_evaluable():
+            print("verdict:   NOT EVALUABLE — %s" % f)
         for f in verdict.named_fails():
             print("verdict:   %s" % f)
         # WARNED ON THE REASON, NOT ON THE STATE. This fired for every state but

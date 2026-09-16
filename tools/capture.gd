@@ -176,6 +176,8 @@ func _say_verdict() -> void:
     # to avoid one layer up.
     for l in v.staleness_lines():
         print("verdict:   %s" % l)
+    for f in v.named_not_evaluable():
+        print("  NOT EVALUABLE — %s" % f)
     for f in v.named_fails():
         print("verdict:   %s" % f)
 

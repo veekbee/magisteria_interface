@@ -14,14 +14,35 @@
     "acceptance": {
       "scored_at_commit": "c529aa3aaf41210912fe753c6159fab932e7a635",
       "stale_against_replay": {
-        "replayed_at_commit": "2d4b82585cf6502495973553285712562639b7a0",
-        "declared_by_the_operator": "Scored at d051f24, replayed at 2d4b825. Between those two commits sim/ changed in exactly two files and neither can move this payload. (1) 33807a8 added reads/prior_state_reads DECLARATIONS to sim/phase1.py; the engine executes topological_order(subsystems), and that order was re-measured across the pair -- byte-identical, the same fourteen subsystems in the same sequence. (2) fe63d80 and 0e936e8 touched sim/detail.py, the sub-grid detail synthesis, which is imported by tools/ only -- nothing under sim/ imports it, so it is in neither the engine's build nor its step path. No other file under sim/ changed. This is a commit-hash difference with no trajectory difference behind it, stated as a measurement rather than a judgement.",
+        "replayed_at_commit": "cf1dc89d2935f5af87ef0a6fddf4108b71d0804e",
+        "declared_by_the_operator": "Scored at d051f24, replayed at cf1dc89. FOUR files under sim/ changed between those commits -- see `sim_changed_since_scoring`, which is DERIVED at emit time and is authoritative; this prose accounts for all four and you should check it against that list rather than believe it. (1) sim/phase1.py at 33807a8: reads/prior_state_reads DECLARATIONS only, and topological_order was re-measured across the pair and is byte-identical -- the engine executes that order, so an unchanged order is an unchanged trajectory. (2) sim/detail.py at fe63d80 and 0e936e8: the sub-grid detail synthesis, imported by tools/ only -- nothing under sim/ imports it, so it is in neither the engine's build nor its step path. (3) and (4) sim/assemble.py and sim/nutrients.py at d580647: decision 1017's pulse knob, added as the parameters deposition_scale (default None) and sources_live (default False) and threaded through the engine build. tools/build_fixture.py calls build_phase1_engine() with NO ARGUMENTS, so neither parameter can reach this replay and the engine object is identical across the whole range. A PREVIOUS VERSION OF THIS DECLARATION SAID \"exactly two files\" and was stale: it was written at replay commit 2d4b825 and carried verbatim across four re-emissions while the stamp moved, and the client caught it on their side before vendoring. The derived list beside this prose exists so that cannot recur.",
         "what_the_equivalence_proof_below_does_not_cover": "the proof compares this verdict's RUN with this fixture's run. Both are state. The verdict's CODE and the replay's code are different here and nothing below compares them."
       },
       "scored_run_dir": "runs/m3-001",
+      "sim_changed_since_scoring": {
+        "from": "d051f24290c592864ebbc1a5582995aa72d2bfca",
+        "to": "cf1dc89d2935f5af87ef0a6fddf4108b71d0804e",
+        "files": [
+          "sim/assemble.py",
+          "sim/detail.py",
+          "sim/nutrients.py",
+          "sim/phase1.py"
+        ],
+        "n": 4,
+        "derived": true,
+        "_what": "files under sim/ that changed between the commit the verdict was SCORED at and the commit this payload was REPLAYED at, computed at emit time from the two commits above so it cannot disagree with them.",
+        "_how_to_read_it": "empty means the replay ran the code the verdict was scored against. Non-empty is what the operator's declaration must account for -- and that declaration is prose, so check it against this."
+      },
       "passed": 8,
       "failed": 3,
       "not_evaluable": 1,
+      "not_evaluable_criteria": [
+        {
+          "id": "7",
+          "name": "surface-fire regime",
+          "renders_as": "not a fire-model failure and the banner should not read as one: the REGIME is met -- mean annual area-weighted burned fraction 5.8e-03/yr against a 1e-3 floor, a 173-year rotation. What cannot be evaluated is the survival CONTRAST, because layer 1 carries no pre- and post-burn stem and biomass sums over the burned cells to compare"
+        }
+      ],
       "failed_criteria": [
         {
           "id": "3",
@@ -31,12 +52,12 @@
         {
           "id": "6",
           "name": "two-way equilibrium (stationarity)",
-          "renders_as": "the basin has not settled -- area-weighted cover falls 0.96 to 0.53 across the run, and its two fitted limits disagree by 0.85 cover, so the end state on screen is a basin still relaxing rather than one arrived"
+          "renders_as": "the basin has not settled: area-weighted cover falls 0.96 to 0.53 across the run and is still moving at the end. On screen that is emptiness -- about a third of the basin carries no individuable vegetation in these windows, so a field drawn per-plant has nowhere to put one"
         },
         {
           "id": "8",
           "name": "no quantity runs to a bound",
-          "renders_as": "four quantities sit absorbed at a lower bound and cannot leave: band.local_runoff (occupancy 0.9994), band.pft_fractions (0.79), band.pft.biomass_pre_offtake (0.90), band.pft.stem_mortality_flux (0.99) -- fields drawn from these show an absorbing state, not a stand"
+          "renders_as": "the one absorbed quantity a viewer can select is band.pft_fractions, at occupancy 0.79: the composition sits at its lower bound and does not leave. Three more are absorbed and are NOT carried in this fixture, so they cannot be drawn -- band.local_runoff (0.9994), band.pft.biomass_pre_offtake (0.90), band.pft.stem_mortality_flux (0.99)"
         }
       ]
     }
@@ -44,9 +65,9 @@
   "is_a_display_encoding": "NOT the fixture. Band rows are quantised to 65,534 levels over each row's REALISED range in its own window -- not over the contract's declared bounds, which are a validity range and gave two rows 3 and 12 usable codes when they were used as a dynamic one (\u00a723.837). Every row carries its own `lo`/`hi` beside `contract_lo`/`contract_hi` so both are readable. 2 row-window(s) here are float64 because they reach below float32's floor; the full precision is in fixture_v1.bin.",
   "files": {
     "fixture_client.bin": "995a4a3dd3ee386a4800b951ac5c0030cb30532ca7b5552f48bcb619ff87af6e",
-    "fixture_client.json": "8fea79773cf5c0a5d09961a74c7dcdcc40c744d0128d4246c59b82032fd53420"
+    "fixture_client.json": "e3bef5389146442571ba99d9479bcfb37e9c1ff86887c1523fedf609b50010cf"
   },
-  "source_commit": "5a36818fc38c7f3da691abebeb2c08cc9f22d522",
+  "source_commit": "b6dcb35a67f30c2127751f503be3c5b53ed1a390",
   "carried_rows": [
     "band.bare_fraction",
     "band.burned_fraction",
@@ -85,6 +106,6 @@
       }
     }
   },
-  "vendored_against_commit": "11b773ce002fa586af76e110006ba5a2dad373b5",
+  "vendored_against_commit": "b6dcb35a67f30c2127751f503be3c5b53ed1a390",
   "_two_commits_note": "`source_commit` is where the artefact's bytes came to rest -- the last commit touching the source directory, and what `cross_repo` checks against. `vendored_against_commit` is the sim tree this vendoring read. They differ whenever the sim moved without the artefact moving, which is most of the time."
 }

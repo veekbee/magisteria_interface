@@ -135,6 +135,9 @@ var scored_at_commit: String = ""
 var scored_on_run: String = ""
 var base_commit: String = ""
 var failed_criteria: Array = []
+## The fourth state's names. A criterion that could not be evaluated is NOT a
+## failure and must never be rendered as one -- see `named_not_evaluable`.
+var not_evaluable_criteria: Array = []
 var equivalence: Dictionary = {}
 var stale_against_replay: Dictionary = {}
 var replayed_at_commit: String = ""
@@ -162,6 +165,7 @@ static func read_from(manifest: Dictionary) -> AncestorVerdict:
     v.scored_at_commit = str(acc.get("scored_at_commit", ""))
     v.scored_on_run = str(acc.get("scored_run_dir", acc.get("scored_on_run", "")))
     v.failed_criteria = acc.get("failed_criteria", [])
+    v.not_evaluable_criteria = acc.get("not_evaluable_criteria", [])
     if typeof(acc.get("equivalence", null)) == TYPE_DICTIONARY:
         v.equivalence = acc["equivalence"]
     if typeof(acc.get("stale_against_replay", null)) == TYPE_DICTIONARY:
@@ -362,21 +366,77 @@ func _proof() -> String:
     return ", ".join(parts)
 
 
+## The criteria that could not be evaluated, named, and kept OUT of the fails.
+##
+## `not_evaluable` was a bare count for as long as the count existed: the banner
+## said "1 not evaluable" and nothing said WHICH, so the one state that is
+## neither pass nor fail was the only one a viewer could not look into. This
+## client asked the producing side for the block and it is emitted now, so the
+## count has names.
+##
+## THE SEPARATION IS THE POINT AND NOT A LAYOUT CHOICE. The shipped criterion
+## here is the surface-fire regime, whose own text opens "not a fire-model
+## failure and the banner should not read as one" -- the regime is MET and what
+## cannot be evaluated is the survival contrast. Folded in beside the fails, on
+## a line the banner prefixes with "fails:", it would assert in the layout the
+## exact thing its sentence denies. So it is a separate list with its own
+## heading, and a caller that wants one flat list has to ask for both.
+## `budget` trims the RENDERING, at a sentence end where one fits, exactly as
+## `staleness_lines` does and for the same reason: this panel has to fit an
+## 800 px window and a criterion's rendering is a paragraph. Zero means no
+## trim, which is what the console and `tools/capture.gd` pass.
+##
+## MEASURED, BECAUSE THE FIRST CUT OF THIS DID NOT TRIM. The shipped
+## not-evaluable rendering is 330 characters and it took the banner to 678 px
+## with its bottom at 864 of 800 -- the overflow assert caught it on the first
+## green-everything-else run, which is the assert working rather than a near
+## miss. The criterion itself is not too long; an untrimmed paragraph in a
+## 420 px column is.
+func named_not_evaluable(budget: int = 0) -> PackedStringArray:
+    return _named(not_evaluable_criteria,
+            "could not be evaluated and how it is not said", budget)
+
+
 ## The named fails, which are the half that says how a failure looks on screen.
-func named_fails() -> PackedStringArray:
+##
+## `budget` TRIMS THESE TOO, and it did not until the panel overflowed twice.
+## Staleness lines were trimmed, the not-evaluable line was trimmed, and the
+## fails -- three renderings, 750 characters on the shipped fixture, the bulk
+## of the panel -- were carried whole. That inconsistency was invisible for as
+## long as the total happened to fit, and the first fixture to add a fourth
+## rendering put the banner one pixel over an 800 px window. One pixel is not
+## a margin; it is the next slightly longer criterion name going red.
+##
+## The invariant this restores is that the panel's height is bounded by the
+## NUMBER of lines rather than by how verbose the producing side chose to be.
+## Nothing is lost: the console and `tools/capture.gd` pass no budget and print
+## every rendering whole.
+func named_fails(budget: int = 0) -> PackedStringArray:
+    return _named(failed_criteria, "unnamed in the manifest, so how it renders is not said",
+            budget)
+
+
+## ONE RENDERING FOR BOTH LISTS, so the two cannot drift in how they name a
+## criterion or in what they say when the manifest carries a bare id.
+## `bare_reason` is the sentence for an entry that is an id and nothing else --
+## which differs between the two, because an unnamed fail and an unnamed
+## not-evaluable leave a reader wanting different things.
+func _named(criteria: Array, bare_reason: String, budget: int = 0) -> PackedStringArray:
     var out := PackedStringArray()
-    for c in failed_criteria:
+    for c in criteria:
         if typeof(c) == TYPE_DICTIONARY:
             var d: Dictionary = c
             var s := "criterion %s" % str(d.get("id", "?"))
             if d.has("name"):
                 s += " (%s)" % str(d["name"])
             if d.has("renders_as"):
-                s += " — renders as %s" % str(d["renders_as"])
+                # THE NAME IS NEVER TRIMMED AND THE RENDERING IS. A cut that
+                # ate "criterion 7 (surface-fire regime)" would save the space
+                # and lose the only part a reader needs to look the rest up.
+                s += " — renders as %s" % _fit(str(d["renders_as"]), budget)
             out.append(s)
         else:
-            out.append("criterion %s — unnamed in the manifest, so how it renders is not said"
-                    % str(c))
+            out.append("criterion %s — %s" % [str(c), bare_reason])
     return out
 
 

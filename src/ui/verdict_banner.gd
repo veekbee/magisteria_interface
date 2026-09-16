@@ -32,19 +32,33 @@ extends PanelContainer
 ## this panel has to fit an 800 px window, the size every shot in `shots/` is
 ## taken at. The console and `tools/capture.gd` print the whole text untrimmed.
 ##
-## THE NUMBER THIS WAS SIZED AGAINST HAS MOVED TWICE, so it is recorded with
-## its fixture rather than left bare. `millennium-001` shipped five named fails
-## and wanted 1,089 px; measured in the running scene it came to 609 px with
-## its bottom at 795 of 800 -- five pixels of headroom. `m3-001` ships three
-## and measures 488 px, bottom at 674. The budget is unchanged because the
-## thing it guards against is a LONGER declaration rather than more fails, and
-## m3-001's is 735 characters against millennium-001's 250.
+## THE NUMBER THIS WAS SIZED AGAINST HAS MOVED THREE TIMES, so it is recorded
+## with its fixture rather than left bare. `millennium-001` shipped five named
+## fails and wanted 1,089 px; measured in the running scene it came to 609 px
+## with its bottom at 795 of 800 -- five pixels of headroom. `m3-001` ships
+## three and measured 488 px, bottom at 674.
+##
+## THEN IT GAINED A FOURTH RENDERING and the budget stopped being enough on its
+## own. `not_evaluable_criteria` -- asked for by this client, so that the one
+## state which is neither pass nor fail could be named rather than counted --
+## is a 330-character paragraph, and untrimmed it put the panel at 864 px.
+## Trimmed it still sat at 801, ONE pixel over, which is the reading that
+## matters: the budget was being applied to the staleness lines and to the new
+## one while the three fails, the bulk of the panel, were carried whole. Every
+## rendering is trimmed here now, and the panel's height is bounded by the
+## number of lines rather than by the producing side's word count.
 const BANNER_LINE_BUDGET := 150
 
 const PLATE := Color(0.07, 0.07, 0.09, 0.92)
 
 var _headline: Label
 var _fails: Label
+## ITS OWN LABEL AND NOT A LINE IN `_fails`, because `_fails` is prefixed
+## "fails:" and the shipped not-evaluable criterion's own sentence opens "not a
+## fire-model failure and the banner should not read as one". A heading is an
+## assertion; putting that text under this one would contradict it in the
+## layout while quoting it in the words.
+var _not_evaluable: Label
 var _box: VBoxContainer
 
 
@@ -61,12 +75,13 @@ func setup() -> void:
     add_child(_box)
     _headline = _line(16)
     _fails = _line()
+    _not_evaluable = _line()
 
 
 func show_verdict(v: AncestorVerdict) -> void:
     _headline.text = v.headline()
     _headline.add_theme_color_override("font_color", colour_for(v.state))
-    var lines := v.named_fails()
+    var lines := v.named_fails(BANNER_LINE_BUDGET)
     # ABOVE THE FAILS, because the staleness is a statement about whether those
     # fails describe the picture at all, and a caveat printed after the thing it
     # qualifies is read by somebody who has already stopped reading.
@@ -77,6 +92,13 @@ func show_verdict(v: AncestorVerdict) -> void:
         lines.append("equivalence excluded " + "; ".join(excluded))
     _fails.text = "" if lines.is_empty() else "fails: " + ", ".join(lines)
     _fails.visible = not lines.is_empty()
+    # BELOW THE FAILS AND ABOVE NOTHING. A criterion nobody could evaluate is
+    # weaker news than a failure and stronger than silence, and the headline
+    # already carries the count -- this is what turns that count into a name.
+    var unevaluated := v.named_not_evaluable(BANNER_LINE_BUDGET)
+    _not_evaluable.text = ("" if unevaluated.is_empty()
+            else "not evaluable: " + ", ".join(unevaluated))
+    _not_evaluable.visible = not unevaluated.is_empty()
 
 
 ## The headline colour per state, exposed so the contrast against `PLATE` can

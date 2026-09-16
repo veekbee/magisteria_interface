@@ -4016,6 +4016,84 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
             + "printed agreement: %s" % denied_line)
     check(not denied_line.contains("1 state arrays"),
             "the bool was read as the count it sits beside: %s" % denied_line)
+
+    # THE NOT-EVALUABLE BLOCK, BUILT RATHER THAN FOUND. Decision 1057: the case
+    # that must render beside the one that must not be read as a failure.
+    var fourth := proven.duplicate(true)
+    fourth["run"]["acceptance"]["not_evaluable"] = 2
+    fourth["run"]["acceptance"]["not_evaluable_criteria"] = [
+            {"id": "7", "name": "surface-fire regime",
+             "renders_as": "the regime is met; the survival contrast cannot be evaluated"},
+            "9"]
+    var fv := AncestorVerdict.read_from(fourth)
+    var fn := fv.named_not_evaluable()
+    check(fn.size() == 2, "the not-evaluable block named %d of 2 criteria" % fn.size())
+    check(str(fn[0]).contains("surface-fire regime") and str(fn[0]).contains("renders as"),
+            "a named not-evaluable criterion lost its name or its rendering: %s" % str(fn[0]))
+    # A BARE ID GETS THE SENTENCE FOR ITS OWN LIST. Reusing the fails wording
+    # would tell a reader "how it renders is not said" about a criterion that
+    # was never going to render at all.
+    check(str(fn[1]).contains("could not be evaluated"),
+            "a bare not-evaluable id borrowed the fails wording: %s" % str(fn[1]))
+    # THE MUST-NOT SIDE. None of them may appear among the fails.
+    #
+    # AND THE COMPARISON IS GIVEN SOMETHING TO COMPARE AGAINST, which the first
+    # cut of this block was not: `proven` carries no `failed_criteria`, so the
+    # loop below ran ZERO times and asserted nothing. It went green, and the
+    # only thing that surfaced it was the re-pinned count rising by 15 where
+    # the checks added should have made 17. A control that cannot fire is not
+    # a control -- decision 1057, caught here in a test written to satisfy it.
+    fourth["run"]["acceptance"]["failed_criteria"] = [
+            {"id": "3", "name": "melt-led discharge peak", "renders_as": "the outlet peaks late"}]
+    fv = AncestorVerdict.read_from(fourth)
+    fn = fv.named_not_evaluable()
+    check(not fv.named_fails().is_empty(), "the constructed manifest has no fails, so the "
+            + "comparison below compares against an empty list and cannot fire")
+    for line in fn:
+        for f in fv.named_fails():
+            check(str(line) != str(f),
+                    "a not-evaluable criterion is rendered as a failure: %s" % str(line))
+    # THE BUDGET TRIMS THE RENDERING AND NEVER THE NAME. Untrimmed by default,
+    # because the console and `capture.gd` want the whole paragraph; trimmed and
+    # MARKED when the banner asks, because 330 characters in a 420 px column
+    # took the panel to 864 px of an 800 px window.
+    var longs := proven.duplicate(true)
+    longs["run"]["acceptance"]["not_evaluable_criteria"] = [
+            {"id": "7", "name": "surface-fire regime",
+             "renders_as": ("the regime is met and the contrast is not evaluable. " as String)
+                     .repeat(8)}]
+    var lv := AncestorVerdict.read_from(longs)
+    var whole := str(lv.named_not_evaluable()[0])
+    var cut := str(lv.named_not_evaluable(150)[0])
+    check(cut.length() < whole.length(), "the budget did not trim a 400-character rendering")
+    check(cut.ends_with("…"), "a trimmed rendering does not say it was trimmed: %s" % cut)
+    check(cut.contains("criterion 7 (surface-fire regime)"),
+            "the trim ate the criterion's name, which is the part a reader needs to look the "
+            + "rest up: %s" % cut)
+    check(whole.ends_with("evaluable. "), "the untrimmed form is not whole, so the console and "
+            + "capture.gd no longer have the text the banner could not fit")
+    # AND THE FAILS TAKE THE SAME BUDGET, which they did not until the panel
+    # went one pixel over an 800 px window with every OTHER line already
+    # trimmed. Asserted on the same constructed input so the two paths cannot
+    # drift apart again.
+    longs["run"]["acceptance"]["failed_criteria"] = [
+            {"id": "3", "name": "melt-led discharge peak",
+             "renders_as": ("the outlet peaks in the wrong season. " as String).repeat(12)}]
+    var lf := AncestorVerdict.read_from(longs)
+    var f_whole := str(lf.named_fails()[0])
+    var f_cut := str(lf.named_fails(150)[0])
+    check(f_cut.length() < f_whole.length(),
+            "a fail's rendering is not trimmed by the budget, so the panel's height is still "
+            + "a function of how much the producing side wrote")
+    check(f_cut.ends_with("…") and f_cut.contains("criterion 3 (melt-led discharge peak)"),
+            "the fail trim lost its marker or its criterion name: %s" % f_cut)
+
+    # AND THE ABSENT CASE IS EMPTY RATHER THAN INVENTED -- the shape every
+    # fixture before this one shipped.
+    var third := proven.duplicate(true)
+    (third["run"]["acceptance"] as Dictionary).erase("not_evaluable_criteria")
+    check(AncestorVerdict.read_from(third).named_not_evaluable().is_empty(),
+            "a manifest with no not-evaluable block produced names for it anyway")
     # The emitter writes `scored_run_dir`; this header declared `scored_on_run`.
     # Both are read, so a proof that checks out is not refused over the name of
     # a label neither side interprets.
@@ -4167,6 +4245,37 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
     print("verdict: %d named fail(s), %d exclusion line(s) for %d excluded field(s)"
             % [shipped.named_fails().size(), ship_ex.size(),
                     (shipped.equivalence.get("fields_excluded", []) as Array).size()])
+
+    # THE FOURTH STATE HAS NAMES NOW, AND THE ARTEFACT IS THE WITNESS.
+    #
+    # `not_evaluable` was a bare count: the headline said "1 not evaluable" and
+    # nothing said which, so the one state that is neither pass nor fail was
+    # the only one a viewer could not look into. This client asked the
+    # producing side for the block; it is emitted, and this is the assert that
+    # it is READ rather than merely declared.
+    #
+    # ASSERTED ON THE SHIPPED FIXTURE AND NOT ONLY ON A CONSTRUCTED ONE,
+    # because `test_both_new_readers_run_on_the_shape_the_fixture_actually_
+    # ships` is in this file for exactly this mistake: `DECLARED_STALE` and
+    # `PublishedBits` were both built against a fixture carrying neither field
+    # and were green for weeks without once running.
+    var ship_ne := shipped.named_not_evaluable()
+    check(ship_ne.size() == shipped.not_evaluable, "the shipped fixture counts %d not "
+            % shipped.not_evaluable + "evaluable and names %d of them -- a count without "
+            % ship_ne.size() + "names is what this block was added to end")
+    for line in ship_ne:
+        check(str(line).contains("renders as"), "a not-evaluable criterion arrived without a "
+                + "rendering, so the banner can name it and cannot say what a viewer is "
+                + "looking at: %s" % str(line))
+    # AND IT IS NOT A FAIL. The shipped criterion's own sentence opens "not a
+    # fire-model failure and the banner should not read as one"; rendering it
+    # among the fails would contradict its text with the layout.
+    for line in ship_ne:
+        for f in shipped.named_fails():
+            check(str(line) != str(f), "a not-evaluable criterion is also being rendered as a "
+                    + "failure: %s" % str(line))
+    print("verdict: %d not-evaluable criterion(s) named -- %s"
+            % [ship_ne.size(), ", ".join(ship_ne)])
 
 
 func test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one() -> void:
