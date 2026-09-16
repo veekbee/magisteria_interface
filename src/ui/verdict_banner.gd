@@ -59,6 +59,12 @@ var _fails: Label
 ## assertion; putting that text under this one would contradict it in the
 ## layout while quoting it in the words.
 var _not_evaluable: Label
+## WHAT THE FIXTURE DECLARES ABOUT ITSELF, and only when it disclaims the
+## picture. A clean restore, a window that declares its start day and real area
+## weights all say nothing here -- this panel is already carrying a verdict, a
+## staleness and four renderings in 420 px. What reaches it is what a viewer
+## would otherwise read the picture wrongly without.
+var _provenance: Label
 var _box: VBoxContainer
 
 
@@ -76,6 +82,17 @@ func setup() -> void:
     _headline = _line(16)
     _fails = _line()
     _not_evaluable = _line()
+    _provenance = _line()
+
+
+## The fixture's own claims about its provenance. Separate from `show_verdict`
+## because a verdict is a property of a RUN and this is a property of the
+## ARTEFACT -- and because a fixture with nothing to disclaim must be able to
+## pass nothing without the banner reserving space for it.
+func show_provenance(p: ProvenanceClaim) -> void:
+    var lines := p.banner_lines()
+    _provenance.text = "" if lines.is_empty() else "fixture: " + "; ".join(lines)
+    _provenance.visible = not lines.is_empty()
 
 
 func show_verdict(v: AncestorVerdict) -> void:

@@ -69,6 +69,7 @@ func _ready() -> void:
         # the manifest, and the manifest carries none today -- which the banner
         # says out loud, because a silent banner and a passing run look alike.
         verdict = AncestorVerdict.read_from(_terrain.fixture.manifest)
+        provenance = ProvenanceClaim.read_from(_terrain.fixture.manifest)
         verdict_banner = VerdictBanner.new()
         verdict_banner.setup()
         _controls.add_child(verdict_banner)
@@ -83,9 +84,12 @@ func _ready() -> void:
         # reader can always scroll or resize to, take the cut instead.
         _controls.move_child(verdict_banner, 1)
         verdict_banner.show_verdict(verdict)
+        verdict_banner.show_provenance(provenance)
         print("verdict: %s" % verdict.headline())
         for l in verdict.staleness_lines():
             print("verdict:   %s" % l)
+        for l in provenance.lines():
+            print("fixture: %s" % l)
         for f in verdict.named_not_evaluable():
             print("verdict:   NOT EVALUABLE — %s" % f)
         for f in verdict.named_fails():
@@ -162,6 +166,7 @@ var probe_report: Dictionary = {}
 var family_report: Dictionary = {}
 var scatter_report: Dictionary = {}
 var verdict: AncestorVerdict = null
+var provenance: ProvenanceClaim = null
 var verdict_banner: VerdictBanner = null
 var console: DevConsole = null
 var verbs: ConsoleVerbs = null

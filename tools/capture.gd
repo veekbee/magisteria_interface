@@ -176,6 +176,12 @@ func _say_verdict() -> void:
     # to avoid one layer up.
     for l in v.staleness_lines():
         print("verdict:   %s" % l)
+    # AND WHAT THE ARTEFACT DECLARES ABOUT ITSELF, for the same reason. The
+    # verdict says whether the RUN passed; this says whether what is drawn is
+    # the run's state at all, which a screenshot cannot be re-asked later.
+    if scene.provenance != null:
+        for l in scene.provenance.lines():
+            print("fixture: %s" % l)
     for f in v.named_not_evaluable():
         print("  NOT EVALUABLE — %s" % f)
     for f in v.named_fails():

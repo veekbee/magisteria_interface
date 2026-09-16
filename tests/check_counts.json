@@ -102,6 +102,7 @@
     "test_the_fit_reports_what_it_costs_to_believe_it": 14,
     "test_the_fit_survives_a_renderer_with_no_gpu_timer": 5,
     "test_the_five_part_hash_is_the_general_one": 7,
+    "test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence": 21,
     "test_the_fixture_loads_and_says_what_it_refused": 4,
     "test_the_flow_drape_paints_from_a_bundle_and_never_from_the_fixture": 11,
     "test_the_flow_mapping_distinguishes_zero_from_below_scale": 9,

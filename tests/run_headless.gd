@@ -86,6 +86,7 @@ func _initialize() -> void:
     _run(test_ramp_agreement_survives_a_light_and_not_a_highlight, "test_ramp_agreement_survives_a_light_and_not_a_highlight")
     _run(test_the_hillshade_arrives_from_the_north_west, "test_the_hillshade_arrives_from_the_north_west")
     _run(test_the_verdict_is_read_and_never_supplied, "test_the_verdict_is_read_and_never_supplied")
+    _run(test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence, "test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence")
     _run(test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one, "test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one")
     _run(test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate, "test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate")
     _run(test_the_budget_solve_divides_by_the_floors_measured_multiplier, "test_the_budget_solve_divides_by_the_floors_measured_multiplier")
@@ -4276,6 +4277,121 @@ func test_the_verdict_is_read_and_never_supplied() -> void:
                     + "failure: %s" % str(line))
     print("verdict: %d not-evaluable criterion(s) named -- %s"
             % [ship_ne.size(), ", ".join(ship_ne)])
+
+
+func test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence() -> void:
+    """§24: the manifest's per-window provenance had no reader at all.
+
+    `restore_delta`, `seeded_not_restored`, `start_doy`, `water_year`,
+    `chosen_by`, `density` and `cell_areas_m2` are all declared by the
+    producing side and none of them was read here -- only the acceptance
+    verdict had a consumer. The cost is measured rather than supposed: for four
+    months the fixture declared that six arrays were a fresh build's seed
+    rather than the run's state, `band.phenology_index` among them and drawn,
+    and no viewer was ever told.
+
+    THE RULE UNDER TEST IS THAT AN ABSENT DECLARATION IS NEVER A DEFAULT.
+    `null` restore_delta is a fixture saying the restore was clean; a missing
+    key is a fixture that has not said; and those must not collapse into each
+    other, because collapsing them is what made four months of silence look
+    like four months of nothing to report."""
+    # ---- the three restore states, built rather than found -----------------
+    var clean := {"restore_delta": null, "carried_set": {"names": ["band.phenology_index"]},
+            "windows": {"w": {"start_doy": 1, "replay": {"seeded_not_restored": []}}}}
+    check(ProvenanceClaim.read_from(clean).restore_state == ProvenanceClaim.RESTORE_CLEAN,
+            "a null restore_delta with nothing seeded did not read as clean")
+    check(ProvenanceClaim.read_from(clean).banner_lines().is_empty(),
+            "a clean fixture put something on a banner that is already carrying a verdict, "
+            + "its staleness and four renderings in 420 px")
+
+    var undeclared := clean.duplicate(true)
+    undeclared.erase("restore_delta")
+    var u := ProvenanceClaim.read_from(undeclared)
+    check(u.restore_state == ProvenanceClaim.RESTORE_UNDECLARED,
+            "a fixture that never mentions its restore read as one that declared it clean, "
+            + "which is the collapse this class exists to prevent")
+    check(not u.banner_lines().is_empty(),
+            "an undeclared restore says nothing on the banner, so the absence is silent again")
+
+    # A SEEDED ROW THAT IS DRAWN, which is the case that matters: a seeded row
+    # nobody can select is a fact about the build, and a seeded row on screen is
+    # a fact about what the viewer is looking at.
+    var seeded := clean.duplicate(true)
+    seeded["windows"]["w"]["replay"]["seeded_not_restored"] = [
+            "band.phenology_index", "band.not_carried_here"]
+    var sc := ProvenanceClaim.read_from(seeded)
+    check(sc.restore_state == ProvenanceClaim.RESTORE_SEEDED, "seeded rows did not read as seeded")
+    var sentence := "; ".join(sc.banner_lines())
+    check(sentence.contains("band.phenology_index") and sentence.contains("drawn"),
+            "a seeded row that this client DRAWS is not named as drawn: %s" % sentence)
+    check(sentence.contains("not carried"),
+            "a seeded row that is not carried is not distinguished from one that is: %s" % sentence)
+
+    # ---- the weights, and the refusal that is the point --------------------
+    # AN UNWEIGHTED MEAN RETURNED WHERE A WEIGHTED ONE WAS ASKED FOR is a
+    # number that looks right and is a different statistic. That is not
+    # hypothetical here: an area-weighted cover of 0.6103 and an unweighted
+    # count of 0.6105 were read as agreement across two repositories for a day.
+    var vals := PackedFloat64Array([0.0, 1.0])
+    var placeholder := clean.duplicate(true)
+    placeholder["cell_areas_m2"] = {"weights_are_real": false, "values": [1.0, 3.0]}
+    var ph := ProvenanceClaim.read_from(placeholder)
+    check(is_nan(ph.area_weighted_mean(vals)),
+            "placeholder weights produced a number instead of a refusal, so a run weighted by "
+            + "the equal-split stands in for one weighted by the DEM")
+    check(ph.areas_why_absent.contains("placeholder"),
+            "the refusal does not say why: %s" % ph.areas_why_absent)
+    var none := clean.duplicate(true)
+    check(is_nan(ProvenanceClaim.read_from(none).area_weighted_mean(vals)),
+            "a fixture with no areas at all still answered an area-weighted question")
+
+    # ABSENT AND PLACEHOLDER REACH DIFFERENT SURFACES, and this is the control
+    # for that being a decision rather than an accident. Absent areas
+    # misrepresent nothing drawn -- they make one statistic unavailable, and
+    # the console says so every run. A placeholder is a claim about the
+    # artefact itself, so it disclaims the picture.
+    check(ProvenanceClaim.read_from(none).banner_lines().is_empty(),
+            "a fixture that simply has no areas is disclaiming a picture it does not misrepresent")
+    check("; ".join(ProvenanceClaim.read_from(none).lines()).contains("UNUSABLE"),
+            "absent areas are silent on the console too, so the absence defaults instead of "
+            + "being stated")
+    check(not ph.banner_lines().is_empty(),
+            "a placeholder-weighted fixture says nothing on the banner, so a run weighted by "
+            + "the equal-split reads as one weighted by the DEM")
+
+    # AND THE CONTROL: with real weights it must actually weight, and the
+    # answer must differ from the unweighted mean or this proves nothing.
+    var real := clean.duplicate(true)
+    real["cell_areas_m2"] = {"weights_are_real": true, "values": [1.0, 3.0]}
+    var rw := ProvenanceClaim.read_from(real).area_weighted_mean(vals)
+    check(is_equal_approx(rw, 0.75), "real weights gave %s where 3/4 was the weighted answer"
+            % String.num(rw, 6))
+    check(not is_equal_approx(rw, 0.5),
+            "the weighted answer equals the unweighted one, so this control cannot tell them apart")
+
+    # ---- and on the artefact this repo actually ships -----------------------
+    var ship := ProvenanceClaim.read_from(FixtureLoader.load_from("res://assets/fixture/").manifest)
+    check(ship.restore_state == ProvenanceClaim.RESTORE_CLEAN,
+            "the shipped fixture's restore reads %s" % ship.restore_state)
+    check(ship.weights_are_real and not ship.areas.is_empty(),
+            "the shipped fixture carries no usable area weights: %s" % ship.areas_why_absent)
+    # THE REPRODUCTION, from the vendored bytes and nobody's word. The producing
+    # side publishes `cover_area_weighted` for these windows; this is the client
+    # computing it rather than quoting it.
+    var fl := fixture()
+    for w in ship.windows:
+        var bare := fl.day_values(w, "band.bare_fraction", 22)
+        var cover := PackedFloat64Array()
+        for v in bare:
+            cover.append(NAN if is_nan(v) else clampf(1.0 - v, 0.0, 1.0))
+        var aw := ship.area_weighted_mean(cover)
+        check(not is_nan(aw), "the shipped weights could not weight %s" % w)
+        check(aw > 0.0 and aw < 1.0, "%s area-weighted cover came out at %s, outside [0,1]"
+                % [w, String.num(aw, 4)])
+        print("provenance: %s area-weighted cover %s (unweighted would be a DIFFERENT statistic)"
+                % [w, String.num(aw, 4)])
+    for l in ship.lines():
+        print("provenance: %s" % l)
 
 
 func test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one() -> void:
