@@ -88,6 +88,7 @@ func _initialize() -> void:
     _run(test_the_verdict_is_read_and_never_supplied, "test_the_verdict_is_read_and_never_supplied")
     _run(test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence, "test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence")
     _run(test_the_drawn_detail_carries_the_anisotropy_its_row_declares, "test_the_drawn_detail_carries_the_anisotropy_its_row_declares")
+    _run(test_the_published_residual_is_reproduced_and_not_merely_believed, "test_the_published_residual_is_reproduced_and_not_merely_believed")
     _run(test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one, "test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one")
     _run(test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate, "test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate")
     _run(test_the_budget_solve_divides_by_the_floors_measured_multiplier, "test_the_budget_solve_divides_by_the_floors_measured_multiplier")
@@ -4573,6 +4574,109 @@ func _directional_second_difference(df: DetailField, landform: String, centre: V
         var b := df.detail_at(Vector2(px + dx, py + dy), landform)
         acc += (b - a) * (b - a)
     return acc / float(n)
+
+
+func test_the_published_residual_is_reproduced_and_not_merely_believed() -> void:
+    """Every row publishes `residual_rms` and `residual_rms_by_parent_m`, the
+    transducer DIVIDES BY them so that `amplitude_m` is the sd of the detail
+    term, and neither name appeared anywhere in this file. A constant this
+    client's output is scaled by, taken on trust.
+
+    THE ARTEFACT ASKS TO BE CHECKED IN SO MANY WORDS: `residual_rms` is "a pure
+    function of the row, the lattice and the seed -- published here so no
+    consumer re-estimates it", and for a parent it does not list, "the sample
+    set is itself a published function of the seed, so recomputing is
+    reproduction and not estimation". This tests that sentence.
+
+    AND THE TWO PATHS HAD NEVER MET. `residual_rms_for` PREFERS the published
+    value and falls back to `compute_residual_rms` only where none is carried,
+    so the recipe and the constant have coexisted without ever being compared.
+
+    WHY THE UNLISTED PARENT IS THE HALF THAT MATTERS. The rows publish a
+    residual at 100 m and at 1,000 m. The walked-parent set is [100, 200, 400,
+    800, 1600, 3200] -- so at FOUR of the six parents this client may draw
+    walkable ground at, the normalising constant is recomputed rather than read.
+    Verifying the recipe where a published value exists is what licenses
+    trusting it where none does; that is the whole argument, and it only works
+    if the fallback genuinely recomputes rather than quietly returning the
+    shipped parent's scalar."""
+    var hf := heightfield()
+    if hf == null:
+        print("residual: no heightfield -- skipping, and saying so")
+        return
+    var rows := []
+    for spacing in [100.0, 1000.0]:
+        var df := DetailField.load_from(hf, DetailField.ROWS_PATH, spacing, null)
+        if df == null or not df.is_loaded():
+            continue
+        for name in df.landforms():
+            var by: Dictionary = df.row(name).get("residual_rms_by_parent_m", {})
+            var want := NAN
+            for k in by:
+                if is_equal_approx(float(str(k)), df.parent_spacing_m):
+                    want = DetailField.scalar_of(by, str(k), NAN)
+            check(not is_nan(want), "%s publishes no residual at %s m, so this comparison has "
+                    % [name, String.num(spacing, 0)] + "no subject")
+            if is_nan(want):
+                continue
+            var got := df.compute_residual_rms(name)
+            # THE THRESHOLD SITS IN A TEN-ORDER GAP, and it was measured rather
+            # than chosen. Written first at 1e-12, on the assumption that a
+            # published function of the seed reproduces to the last BIT. NONE
+            # of the ten does: measured, they run from 4.4e-15 (floor at 100 m)
+            # to 6.2e-12 (playa at 100 m) -- two languages summing 4,096 terms
+            # in different orders, not a different sample set.
+            #
+            # An earlier version of this comment said three of five were
+            # bit-identical. That was read off a probe printing six decimals,
+            # where 4.4e-15 and 0.0 look the same. The claim was wrong twice
+            # before the printed precision caught up with it, which is why the
+            # magnitudes below are emitted in scientific on every run.
+            #
+            # What the check must separate is REPRODUCED from ESTIMATED. An
+            # estimate over its own 4,096 draws would differ by the sampling
+            # error of that many samples, order 1e-2. Accumulation order differs
+            # by order 1e-12. Anything between is unoccupied, so 1e-9 admits the
+            # first and refuses the second with nine orders of room either way.
+            #
+            # `rel` is printed in scientific on every failure so the magnitude
+            # is recorded rather than rounded: the first cut printed it to six
+            # decimals, which displayed both real differences as "0.0".
+            var rel: float = absf(got - want) / want
+            check(rel <= 1.0e-9, "%s at %s m: the rows publish %s and the recipe reproduces "
+                    % [name, String.num(spacing, 0), String.num(want, 17)]
+                    + "%s, relative %s -- a resampling differs by ~1e-2 and an accumulation "
+                    % [String.num(got, 17), String.num_scientific(rel)]
+                    + "order by ~1e-12, so this is neither")
+            check(df.residual_source(name).contains("published"),
+                    "%s at %s m reads its residual from %s, not from the rows that carry one"
+                            % [name, String.num(spacing, 0), df.residual_source(name)])
+            rows.append("%s@%s %s" % [name, String.num(spacing, 0),
+                    "exact" if rel == 0.0 else String.num_scientific(rel)])
+
+    # ---- THE UNLISTED PARENT, WHICH IS FOUR OF THE SIX WALKED ONES ----------
+    var df400 := DetailField.load_from(hf, DetailField.ROWS_PATH, 400.0, null)
+    if df400 == null or not df400.is_loaded():
+        print("residual: no rows at 400 m -- the unlisted-parent half did not run")
+        return
+    for name in df400.landforms():
+        var scalar := DetailField.scalar_of(df400.row(name), "residual_rms", NAN)
+        var used := df400.residual_rms_for(name)
+        check(is_equal_approx(used, df400.compute_residual_rms(name)),
+                "%s at an unlisted 400 m parent did not use the recipe's value" % name)
+        # THE CONTROL, AND IT IS THE POINT. If the fallback returned the shipped
+        # parent's scalar the client would normalise the detail term by a
+        # constant measured on a different lattice -- and `amplitude_m` would
+        # stop being the sd of what is drawn, silently, at four of the six
+        # parents walk mode can open on.
+        check(not is_equal_approx(used, scalar),
+                "%s at 400 m returned the 100 m scalar %s rather than recomputing"
+                        % [name, String.num(scalar, 10)])
+        check(df400.residual_source(name).contains("recomputed"),
+                "%s at 400 m does not report that its residual was recomputed: %s"
+                        % [name, df400.residual_source(name)])
+    print("residual: every published constant reproduced within 1e-9 (relative) -- %s"
+            % ", ".join(rows))
 
 
 func test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one() -> void:
