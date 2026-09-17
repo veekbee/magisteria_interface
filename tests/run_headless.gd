@@ -87,6 +87,7 @@ func _initialize() -> void:
     _run(test_the_hillshade_arrives_from_the_north_west, "test_the_hillshade_arrives_from_the_north_west")
     _run(test_the_verdict_is_read_and_never_supplied, "test_the_verdict_is_read_and_never_supplied")
     _run(test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence, "test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence")
+    _run(test_the_drawn_detail_carries_the_anisotropy_its_row_declares, "test_the_drawn_detail_carries_the_anisotropy_its_row_declares")
     _run(test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one, "test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one")
     _run(test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate, "test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate")
     _run(test_the_budget_solve_divides_by_the_floors_measured_multiplier, "test_the_budget_solve_divides_by_the_floors_measured_multiplier")
@@ -4449,6 +4450,106 @@ func test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence() ->
             + "this whole check cannot fail")
     check(not off.declaration_mismatches(fl).is_empty(),
             "a disagreeing declaration produced no sentence for anyone to read")
+
+
+func test_the_drawn_detail_carries_the_anisotropy_its_row_declares() -> void:
+    """Every row publishes `anisotropy` and `orientation_deg`, `detail_field.gd`
+    applies both to the coordinate before sampling, and until now NEITHER
+    APPEARED ANYWHERE IN THIS FILE. A published pair the client acts on, with
+    nothing checking that acting on it produces the declared effect.
+
+    WHAT IS ASSERTED IS THE PAIR TOGETHER. The row says features are elongated
+    ALONG `orientation_deg` by a factor of `anisotropy`, so the second
+    difference measured along that axis must be SMALLER than across it, and the
+    contrast must grow with the declared ratio. A wrong angle fails this as
+    surely as a missing stretch: if the declared axis were not the smooth one,
+    `along` would not be the smaller of the two.
+
+    THE ARTEFACT SHIPS ITS OWN NEGATIVE CONTROL. `playa` declares anisotropy
+    1.0, so it must show NO preferred direction -- and a measurement that
+    cannot tell it from `riparian_margin` at 3.0 is measuring something other
+    than what the rows declare.
+
+    THE BOX IS 20 km AND THAT IS NOT A DETAIL. Measured first over +/-200 m,
+    `talus` came back with a contrast of 3.097 -- above `slope`, which declares
+    nearly twice its anisotropy -- and `playa` came back at 1.364 with a
+    preferred direction. Both were artefacts of the window: at an 8 m lag the
+    longest octave is ~50 m, so a 400 m box holds about eight periods of it and
+    more samples inside that box re-measure the same few realisations more
+    precisely rather than adding information. Widened to 20 km the ordering is
+    monotonic in the declared ratio and playa falls to 1.072. A statistic whose
+    convergence is in the SPAN rather than the COUNT is one a sample size
+    cannot rescue, and this comment is here because the unconverged numbers
+    looked stable enough to have been published."""
+    var df := detail_field()
+    if df == null or not df.is_loaded():
+        print("anisotropy: no detail rows -- skipping, and saying so")
+        return
+    const BOX := 20000.0
+    const LAG := 8.0
+    const N := 4000
+    var at := Vector2(-1339372.5, 1498223.125)
+    var contrast := {}
+    for name in ["riparian_margin", "slope", "floor", "talus", "playa"]:
+        var row := df.row(name)
+        if row.is_empty():
+            continue
+        var theta := deg_to_rad(DetailField.scalar_of(row, "orientation_deg", 0.0))
+        var s_along := _directional_second_difference(df, name, at, theta, LAG, BOX, N)
+        var s_across := _directional_second_difference(df, name, at, theta + PI * 0.5,
+                LAG, BOX, N)
+        contrast[name] = s_across / maxf(s_along, 1.0e-30)
+    check(contrast.size() == 5, "only %d of 5 landform rows were measured" % contrast.size())
+    if contrast.size() < 5:
+        return
+    # THE ISOTROPIC ROW IS THE FLOOR EVERY OTHER CLAIM IS MADE AGAINST, so it is
+    # measured rather than assumed to be 1.0 exactly.
+    var flat: float = float(contrast["playa"])
+    check(flat < 1.2, "playa declares anisotropy 1.0 and its detail term came out %s times "
+            % String.num(flat, 3) + "rougher across its axis than along it, so a row that "
+            + "declares no direction is drawing one")
+    for name in ["riparian_margin", "slope", "floor", "talus"]:
+        var c: float = float(contrast[name])
+        check(c > flat, "%s declares anisotropy %s and measured a contrast of %s, which is "
+                % [name, String.num(DetailField.scalar_of(df.row(name), "anisotropy", 1.0), 2),
+                   String.num(c, 3)]
+                + "not above the isotropic row's %s -- the declared stretch is not reaching "
+                % String.num(flat, 3) + "the drawn surface, or its axis is not where the row "
+                + "says it is")
+    # AND IT RESPONDS TO THE DECLARED VALUE rather than merely detecting that
+    # some anisotropy exists: the row declaring 3.0 must out-measure the one
+    # declaring 1.2 by a clear margin.
+    check(float(contrast["riparian_margin"]) > float(contrast["talus"]) * 2.0,
+            "riparian_margin declares 3.0 and talus 1.2, and their contrasts came out %s and "
+            % String.num(float(contrast["riparian_margin"]), 3)
+            + "%s -- this measurement is not responding to the declared ratio"
+            % String.num(float(contrast["talus"]), 3))
+    var names := PackedStringArray()
+    for n in ["riparian_margin", "slope", "floor", "talus", "playa"]:
+        names.append("%s %s" % [n, String.num(float(contrast[n]), 3)])
+    print("anisotropy: across/along at %d m over a %d km box -- %s"
+            % [int(LAG), int(BOX / 1000.0), ", ".join(names)])
+
+
+## Mean squared first difference of the detail term at `lag` along `theta`,
+## over points scattered across `box` metres. The span is the thing that makes
+## this converge -- see the caller.
+func _directional_second_difference(df: DetailField, landform: String, centre: Vector2,
+        theta: float, lag: float, box: float, n: int) -> float:
+    var rng := RandomNumberGenerator.new()
+    # FIXED SEED, because two directions compared across different point sets
+    # would differ by the point sets as much as by the direction.
+    rng.seed = 99
+    var dx := cos(theta) * lag
+    var dy := sin(theta) * lag
+    var acc := 0.0
+    for i in n:
+        var px := centre.x + rng.randf_range(-box, box)
+        var py := centre.y + rng.randf_range(-box, box)
+        var a := df.detail_at(Vector2(px, py), landform)
+        var b := df.detail_at(Vector2(px + dx, py + dy), landform)
+        acc += (b - a) * (b - a)
+    return acc / float(n)
 
 
 func test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one() -> void:

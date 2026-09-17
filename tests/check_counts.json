@@ -94,6 +94,7 @@
     "test_the_detail_rows_say_that_they_are_invented": 16,
     "test_the_detail_tells_a_playa_from_a_talus_slope": 7,
     "test_the_detail_vanishes_on_the_patch_and_appears_below_it": 8,
+    "test_the_drawn_detail_carries_the_anisotropy_its_row_declares": 7,
     "test_the_empty_stage_coefficient_is_a_floor_and_the_scene_sits_above_it": 7,
     "test_the_exaggeration_is_applied_after_the_check_not_before": 4,
     "test_the_families_hold_the_unit_convention_the_transform_relies_on": 17,
