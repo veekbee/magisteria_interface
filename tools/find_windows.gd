@@ -132,6 +132,40 @@ func _init() -> void:
             "membership_mass": d["mass"],
         })
 
+    # THE SET, OR A REFUSAL THAT SAYS WHY. Absent is refused rather than
+    # defaulted (decision 1040): a consumer that read a missing set as "the
+    # loaded parent" would compare a number against itself and certify nothing.
+    var wp := WalkedParents.of_vendored()
+    var wp_block := {}
+    if wp.is_declared():
+        wp_block = {
+            "_what": ("the parents decision 1040's conjunction is evaluated at -- every parent "
+                    + "walkable ground may be DRAWN at, derived from the vendored tile pin's "
+                    + "own levels by `WalkedParents`, not typed"),
+            "parents_m": wp.as_array(),
+            "finest_m": wp.finest_m(),
+            "_finest_is_not_privileged": ("1040's verdict is the CONJUNCTION over the whole set. "
+                    + "`finest_m` is published because gap 176 want (v) compares the ceiling's "
+                    + "parent against it; a consumer grading only there would be certifying the "
+                    + "best case and calling it the world."),
+            "_not_to_be_confused_with": ("`tools/measure_cross_parent.gd`'s pair of 1000 m and "
+                    + "100 m, which is a DIFFERENT set: the shipped overview and the pyramid's "
+                    + "finest level, being the two lattices a level switch moves between. THE "
+                    + "1,000 m OVERVIEW IS NOT A WALKED PARENT -- walkable ground is a "
+                    + "`NearFieldPatch` and a patch is always a pyramid level, so the overview "
+                    + "draws the far field and walk mode cannot open there. A set of [100, 1000] "
+                    + "would have the same finest parent as this one and would be wrong in every "
+                    + "other member, which is why the finest alone cannot check it."),
+            "_declared_by": "WalkedParents.of_vendored(), from assets/terrain/tiles/PIN",
+        }
+    else:
+        wp_block = {
+            "_what": "the walked-parent set is NOT declared by this run, and is not defaulted",
+            "why_absent": wp.why_absent,
+            "_absent_is_refused": ("decision 1040. A consumer must refuse rather than fall back "
+                    + "to the loaded parent: that default would pass want (v)'s check by "
+                    + "comparing a number against itself."),
+        }
     var doc := {
         "_what": ("Window centres covering decision 1019's joint HAND-by-slope membership "
                 + "space, so that decision 986's walk-mode conditions 2 and 3 refuse for the "
@@ -177,6 +211,18 @@ func _init() -> void:
                     + "share rises with lag, so the coarse-lag headroom shrinks upward. Above "
                     + "the maximum the parent's share is unmeasured."),
         },
+        # GAP 176 WANT (i): THE WALKED-PARENT SET, PUBLISHED BY THE THING THAT
+        # GRADES. Same reasoning as `graded_lags` one field up, and the same
+        # defect it fixed: the parent set existed as two bare literals in
+        # `tools/measure_cross_parent.gd` with the grading side declaring
+        # nothing, so a reading taken from the tool was taken from the place
+        # that does not grade.
+        #
+        # DERIVED FROM THE TILE PIN AND NOT TYPED HERE. `WalkedParents` reads
+        # the pyramid's own levels, so this cannot become a second copy free to
+        # disagree with the artefact it describes -- which is what the literals
+        # were.
+        "walked_parents": wp_block,
         "classifier_source": df.classifier_source(),
         "strata": Array(strata),
         "centres": out_centres,

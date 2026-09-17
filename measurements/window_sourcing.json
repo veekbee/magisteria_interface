@@ -227,7 +227,7 @@
     "why": "NO_BANDS: [\"floor\", \"playa\", \"riparian_margin\", \"slope\", \"talus\"]",
     "windows": 10
   },
-  "measured_at_commit": "83a9b05",
+  "measured_at_commit": "a577eeb",
   "ruled_by": {
     "clause": "window sourcing covers the joint HAND-by-slope membership space rather than filling criterion 1b's five elevation classes; the calibration support is the window, membership per point within it, never the catchment median",
     "decision": "1019",
@@ -240,5 +240,20 @@
     "slope",
     "talus"
   ],
-  "vertical_exaggeration": 1.0
+  "vertical_exaggeration": 1.0,
+  "walked_parents": {
+    "_declared_by": "WalkedParents.of_vendored(), from assets/terrain/tiles/PIN",
+    "_finest_is_not_privileged": "1040's verdict is the CONJUNCTION over the whole set. `finest_m` is published because gap 176 want (v) compares the ceiling's parent against it; a consumer grading only there would be certifying the best case and calling it the world.",
+    "_not_to_be_confused_with": "`tools/measure_cross_parent.gd`'s pair of 1000 m and 100 m, which is a DIFFERENT set: the shipped overview and the pyramid's finest level, being the two lattices a level switch moves between. THE 1,000 m OVERVIEW IS NOT A WALKED PARENT -- walkable ground is a `NearFieldPatch` and a patch is always a pyramid level, so the overview draws the far field and walk mode cannot open there. A set of [100, 1000] would have the same finest parent as this one and would be wrong in every other member, which is why the finest alone cannot check it.",
+    "_what": "the parents decision 1040's conjunction is evaluated at -- every parent walkable ground may be DRAWN at, derived from the vendored tile pin's own levels by `WalkedParents`, not typed",
+    "finest_m": 100.0,
+    "parents_m": [
+      100.0,
+      200.0,
+      400.0,
+      800.0,
+      1600.0,
+      3200.0
+    ]
+  }
 }

@@ -155,7 +155,7 @@
     "test_the_shading_is_exaggerated_and_the_geometry_is_not": 6,
     "test_the_skin_keys_on_precision_and_dies_with_the_token": 128,
     "test_the_solved_horizon_discriminates_rather_than_returning_its_ceiling": 17,
-    "test_the_strata_are_the_membership_functions_on_real_ground": 68,
+    "test_the_strata_are_the_membership_functions_on_real_ground": 71,
     "test_the_structure_function_refuses_below_the_spacing_it_declares": 17,
     "test_the_terrain_faces_the_camera_that_looks_at_it": 3,
     "test_the_terrain_mesh_holes_rather_than_walls_at_nodata": 4,

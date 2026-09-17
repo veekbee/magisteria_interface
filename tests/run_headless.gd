@@ -13030,6 +13030,41 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
                         % [str(pub_lags), str(StratumGrade.GRADED_LAGS)]
                 + "producing side bounds its fit ceiling from the published copy")
 
+        # GAP 176 WANT (i), AND THE SAME HAZARD ONE FIELD OVER. The walked-parent
+        # set is published here so the producing side consumes a declaration
+        # rather than somebody's reading of two literals in a measurement tool.
+        # A published copy free to drift from the derivation would be the defect
+        # the publication exists to end, so it is checked against `WalkedParents`
+        # rather than trusted.
+        var wp := WalkedParents.of_vendored()
+        var pub_block: Dictionary = sourcing_doc.get("walked_parents", {})
+        var pub_parents: Array = pub_block.get("parents_m", [])
+        if wp.is_declared():
+            check(pub_parents == wp.as_array(),
+                    "the artefact publishes walked parents %s and the pyramid yields %s"
+                            % [str(pub_parents), str(wp.as_array())])
+            # AND THE FINEST IS PUBLISHED RATHER THAN LEFT TO BE RECOMPUTED,
+            # because gap 176 want (v) compares the producing side's ceiling
+            # parent against it and two sides taking a min() of the same list is
+            # two places for it to be taken differently.
+            check(is_equal_approx(float(pub_block.get("finest_m", NAN)), wp.finest_m()),
+                    "the artefact publishes a finest walked parent of %s and the set's finest "
+                            % str(pub_block.get("finest_m", "(absent)")) + "is %s"
+                            % String.num(wp.finest_m(), 3))
+            # THE SET IS NOT THE MEASURE TOOL'S PAIR, and this is the check that
+            # says so. `measure_cross_parent.gd` compares 1000 m against 100 m --
+            # the overview and the finest level -- and a reader who took that for
+            # the walked set would publish [100, 1000]. Its FINEST WOULD BE
+            # CORRECT, so want (v) would pass and certify nothing; only the
+            # membership catches it. The 1,000 m overview is not a walked parent:
+            # walkable ground is a patch and a patch is always a pyramid level.
+            check(not pub_parents.has(1000.0),
+                    "the published walked-parent set contains the 1,000 m overview, which is "
+                    + "the far-field mesh and not a lattice walk mode can open on")
+        else:
+            check(not pub_block.get("why_absent", "").is_empty(),
+                    "the pyramid yields no walked-parent set and the artefact does not say why")
+
     ## The sourced-window measurement, hoisted so the vendored bands can be
     ## graded against the window set 1019 rules rather than against the
     ## hand-picked six that cover three of five strata.
