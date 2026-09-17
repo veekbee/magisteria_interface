@@ -138,7 +138,7 @@
     "test_the_probe_reads_the_row_that_is_drawn": 6,
     "test_the_probe_tells_the_three_absences_apart": 17,
     "test_the_project_does_not_import_blend_sources": 4,
-    "test_the_published_residual_is_reproduced_and_not_merely_believed": 45,
+    "test_the_published_residual_is_reproduced_and_not_merely_believed": 75,
     "test_the_pyramid_makes_the_near_field_relief_and_does_not_open_walk_mode": 5,
     "test_the_ramp_is_ordered_and_bounds_come_from_the_contract": 4,
     "test_the_ray_march_lands_on_the_surface_it_marched": 7,

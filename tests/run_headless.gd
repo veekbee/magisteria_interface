@@ -4678,6 +4678,44 @@ func test_the_published_residual_is_reproduced_and_not_merely_believed() -> void
     print("residual: every published constant reproduced within 1e-9 (relative) -- %s"
             % ", ".join(rows))
 
+    # ---- AND WHERE THE LADDER CANNOT REACH THE DECLARED BAND ----------------
+    # `finest_wavelength_m` is declared 0.25 m on every row, and `octaves_for`
+    # rounds UP, so the field normally lands finer than declared. `MAX_OCTAVES`
+    # is a cost bound and at the two coarsest WALKED parents it stops the ladder
+    # short: 1,600 m wants 13 octaves and 3,200 m wants 14. Decision 1040's
+    # conjunction is graded at all six, so at two of them the detail term is
+    # band-limited coarser than the row a consumer reads.
+    #
+    # THE CLAMP IS NOT ASSERTED AWAY. It is a decision about cost, not a defect,
+    # and this does not rule on it. What is asserted is that the field SAYS SO:
+    # a consumer reading the declaration must be able to find out the band is
+    # absent, which before this it could not.
+    var wp := WalkedParents.of_vendored()
+    if wp.is_declared():
+        var short_at := PackedStringArray()
+        for parent in wp.as_array():
+            var dfp := DetailField.load_from(hf, DetailField.ROWS_PATH, float(parent), null)
+            if dfp == null or not dfp.is_loaded():
+                continue
+            for name in dfp.landforms():
+                var declared := DetailField.scalar_of(dfp.row(name), "finest_wavelength_m", NAN)
+                var reached := dfp.finest_reached_m(name)
+                var note := dfp.band_limit_note(name)
+                # THE NOTE AND THE ARITHMETIC MUST AGREE IN BOTH DIRECTIONS. A
+                # disclosure that fires when the band IS reached is as useless
+                # as one that stays quiet when it is not.
+                check(note.is_empty() == (reached <= declared),
+                        "%s at %s m reaches %s against a declared %s and its note %s"
+                                % [name, String.num(float(parent), 0), String.num(reached, 4),
+                                   String.num(declared, 3),
+                                   "is empty" if note.is_empty() else "says: " + note])
+                if not note.is_empty():
+                    short_at.append("%s@%sm %s m" % [name, String.num(float(parent), 0),
+                            String.num(reached, 4)])
+        print("detail: the ladder falls short of the declared 0.25 m band at %d row-parent "
+                % short_at.size() + "pair(s) of %d -- %s"
+                % [wp.as_array().size() * 5, ", ".join(short_at)])
+
 
 func test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one() -> void:
     """`measurements/scatter_cost.json` is the scatter's frame cost measured in
