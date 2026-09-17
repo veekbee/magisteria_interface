@@ -180,7 +180,8 @@ func _say_verdict() -> void:
     # verdict says whether the RUN passed; this says whether what is drawn is
     # the run's state at all, which a screenshot cannot be re-asked later.
     if scene.provenance != null:
-        for l in scene.provenance.lines():
+        for l in scene.provenance.lines(
+                scene.provenance.drawable_counts(scene._terrain.fixture)):
             print("fixture: %s" % l)
         for l in scene.provenance.declaration_mismatches(scene._terrain.fixture):
             print("fixture: DECLARED != SHIPPED -- %s" % l)

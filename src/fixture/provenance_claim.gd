@@ -196,6 +196,61 @@ func declared_vs_shipped(fl: FixtureLoader) -> Array:
     return out
 
 
+## WHAT THIS CLIENT CAN ACTUALLY STAND A PLANT IN, recomputed from the payload.
+##
+## Neither side publishes it. The producing side's `density` block declares how
+## much of a window carries vegetation; what a viewer sees is how much of it can
+## carry a DRAWN one, and those are different populations.
+##
+## THE PREDICATE IS `VegetationScatter.ground_cover` ITSELF AND NOT A COPY OF IT.
+## That is the whole design of this function and it is a repair: I reported a
+## "priceable" count for weeks that conjoined cover with BIOMASS, because I
+## reasoned about what `implication()` required instead of calling what it calls.
+## Biomass is checked for NaN and nothing else; placement is cover times
+## `1 - bare`. A recompute that re-states the predicate can be wrong in exactly
+## the way the thing it checks cannot, so this one asks the renderer.
+##
+## BOTH TERMS ARE REPORTED BESIDE THE CONJUNCTION, deliberately. On this artefact
+## `bare < 1` is a strict subset of `cover > 0` -- zero exceptions in either
+## window -- so the conjunction currently equals one of its own terms. That is
+## MEASURED AND NOT PROVED: if it is an accident of these two windows it will
+## stop holding after a re-cut, and a conjunction whose second term is implied by
+## the first is a check that cannot fail. Keeping all three visible makes the day
+## they diverge information rather than a surprise.
+##
+## Rows are `{window, day, cells, cover, drawable, cover_but_not_drawable}`.
+func drawable_counts(fl: FixtureLoader) -> Array:
+    var out: Array = []
+    for w in windows:
+        var density: Dictionary = (_windows[w] as Dictionary).get("density", {})
+        var day := int(density.get("_at_day", 0))
+        var groups := fl.taxon_groups(w, "band.pft_fractions")
+        var bare := fl.day_values(w, "band.bare_fraction", day)
+        if bare.is_empty() or groups.is_empty():
+            continue
+        var has_cover := PackedInt32Array()
+        var drawable := PackedInt32Array()
+        has_cover.resize(bare.size())
+        drawable.resize(bare.size())
+        for gi in groups.size():
+            var share := fl.day_values(w, "band.pft_fractions", day, gi)
+            for i in mini(share.size(), bare.size()):
+                if is_nan(share[i]) or share[i] <= 0.0:
+                    continue
+                has_cover[i] = 1
+                # THE RENDERER'S OWN FUNCTION. Not `share > 0 and bare < 1`.
+                if VegetationScatter.ground_cover(share[i], bare[i]) > 0.0:
+                    drawable[i] = 1
+        var n_cover := 0
+        var n_draw := 0
+        for i in has_cover.size():
+            n_cover += has_cover[i]
+            n_draw += drawable[i]
+        out.append({"window": w, "day": day, "cells": bare.size(), "cover": n_cover,
+                    "drawable": n_draw, "cover_but_not_drawable": n_cover - n_draw})
+    return out
+
+
 ## The rows above that disagree, as sentences. Empty when every declared count
 ## describes the bytes it sits beside.
 func declaration_mismatches(fl: FixtureLoader) -> PackedStringArray:
@@ -228,7 +283,9 @@ func window_facts(window: String) -> Dictionary:
 ## THE LINES A CONSOLE PRINTS: everything, including the fields that are fine.
 ## A disclosure that only ever speaks when something is wrong cannot be
 ## distinguished from one that is not running.
-func lines() -> PackedStringArray:
+## `drawable_rows` is passed in rather than recomputed here: it needs the
+## payload and `lines()` is called where only the manifest is to hand.
+func lines(drawable_rows: Array = []) -> PackedStringArray:
     var out := PackedStringArray()
     match restore_state:
         RESTORE_CLEAN:
@@ -258,6 +315,12 @@ func lines() -> PackedStringArray:
         else:
             bits.append("no vegetation density declared")
         out.append("window %s: %s" % [w, "; ".join(bits)])
+    for r in drawable_rows:
+        var d: Dictionary = r
+        out.append(("window %s: %d of %d cells carry cover and %d can be drawn on -- %d carry "
+                + "cover this client cannot stand a plant in")
+                % [d["window"], int(d["cover"]), int(d["cells"]), int(d["drawable"]),
+                   int(d["cover_but_not_drawable"])])
     out.append("area weights: " + ("real, %d cells, basis declared" % areas.size()
             if weights_are_real and not areas.is_empty() else "UNUSABLE -- " + areas_why_absent))
     return out

@@ -4391,7 +4391,30 @@ func test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence() ->
                 % [w, String.num(aw, 4)])
         print("provenance: %s area-weighted cover %s (unweighted would be a DIFFERENT statistic)"
                 % [w, String.num(aw, 4)])
-    for l in ship.lines():
+    # ---- WHAT CAN ACTUALLY BE DRAWN ON, recomputed from the payload ---------
+    # Asked for by the producing side as an INDEPENDENT decode of a number they
+    # are about to correct: a figure that can only agree is not a check.
+    var draw_rows := ship.drawable_counts(fl)
+    check(draw_rows.size() == ship.windows.size(),
+            "drawable counts came back for %d of %d windows"
+                    % [draw_rows.size(), ship.windows.size()])
+    for r in draw_rows:
+        var d: Dictionary = r
+        # THE MECHANICAL PROPERTIES, which hold whatever the artefact carries.
+        # The SUBSET relation between the two terms is NOT asserted: on this
+        # artefact `bare < 1` is a strict subset of `cover > 0`, so the
+        # conjunction equals one of its own terms -- measured, not proved. A
+        # check keyed on that would be a check that cannot fail today and a red
+        # gate on the day a re-cut makes the two diverge, which is information
+        # rather than a defect. It is printed instead.
+        check(int(d["drawable"]) <= int(d["cover"]),
+                "%s can draw on %d cells and only %d carry cover"
+                        % [d["window"], int(d["drawable"]), int(d["cover"])])
+        check(int(d["drawable"]) > 0,
+                "%s can stand a plant in no cell at all" % d["window"])
+        check(int(d["cover_but_not_drawable"]) == int(d["cover"]) - int(d["drawable"]),
+                "%s's residue does not reconcile with its two counts" % d["window"])
+    for l in ship.lines(draw_rows):
         print("provenance: %s" % l)
 
     # ---- THE DECLARED COUNTS, CHECKED AGAINST THE BYTES --------------------

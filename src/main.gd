@@ -88,7 +88,7 @@ func _ready() -> void:
         print("verdict: %s" % verdict.headline())
         for l in verdict.staleness_lines():
             print("verdict:   %s" % l)
-        for l in provenance.lines():
+        for l in provenance.lines(provenance.drawable_counts(_terrain.fixture)):
             print("fixture: %s" % l)
         for l in provenance.declaration_mismatches(_terrain.fixture):
             print("fixture: DECLARED != SHIPPED -- %s" % l)
