@@ -1,0 +1,1312 @@
+{
+  "_the_comparison_is_paired": "`StratumGrade` draws its sample positions, directions and membership weights from the seed and the lag alone, so both ladders are read at the same places. The difference is the added band.",
+  "_the_control_is_the_unclamped_parents": "At 100, 200, 400 and 800 m the lifted ceiling does not bite and every S(l) must come back identical. `control_moved` is empty when the instrument is measuring the ground.",
+  "_the_normalisation_moves_with_it_and_barely": "`residual_rms_for` is not published at 1,600 m or 3,200 m and is computed from the running ladder, so lifting the ceiling renormalises rather than simply adding variance. MEASURED, it moves by 1.4e-7 to 4.7e-5 relative -- the added octaves are suppressed by the row's own spectral slope and the ladder is normalised by sqrt(norm). So the normalisation is carried correctly and is NOT what produces the movement reported below: that is the band itself, four to five orders larger.",
+  "_this_does_not_rule_on_the_bound": "Raising `MAX_OCTAVES` is a cost decision and is not made here. 14 octaves per sample against 12 is a real price.",
+  "_verdict_is_condition_2_only": "Condition 3 is the spread clause and is reported by the gate; this measures the band clause, which is the one the missing octaves could move.",
+  "_vertical_exaggeration_is": "the grader samples `Heightfield.height_at_world` and `DetailField` directly. The view's factor is applied at mesh build and does not reach this path, so these are field metres in both axes -- which is what makes the lags comparable with the wavelengths the ladder drops.",
+  "_what": "What `DetailField`'s octave ceiling costs decision 1040's condition 2, per walked parent: the same grading run twice over the same stencils, once at the shipped bound and once at the count the rows ask for.",
+  "_what_no_movement_does_and_does_not_license": "The graded lags are 4, 8 and 16 m and the octaves the clamp drops are at 0.39 m down to 0.25 m, and 0.78 m down to 0.25 m -- one to two orders FINER than the shortest lag graded. A second difference at 4 m is nearly blind to a band at 0.25 m by construction, so 'no verdict moved' is in part a statement about what this instrument can see. It licenses the conclusion that the clamp does not move decision 1040's condition 2. It does NOT license the conclusion that the clamp is invisible: the dropped band is sub-metre, which is walking-eye scale, and walk mode is what opens at these parents. What a viewer standing there sees is not graded by anything here.",
+  "_where_the_effect_concentrates": "On `playa`, at every parent and seed measured -- the smoothest row, whose second difference is the one a fine band can move proportionally most, and one of the two strata that make condition 2 UNMET today. The margin to its band edge is the number to read beside the movement, not the movement alone.",
+  "control_moved": [],
+  "grading_parameters": {
+    "_are_the_gate_s": true,
+    "lags_m": [
+      4.0,
+      8.0,
+      16.0
+    ],
+    "only_clamped_parents": false,
+    "quantile": 0.5,
+    "samples_per_lag": 300,
+    "seed": 21,
+    "span_m": 3000.0,
+    "windows": 10
+  },
+  "max_octaves_shipped": 12,
+  "measured_at_utc": "2026-09-17T20:21:07",
+  "per_parent": [
+    {
+      "clamp_bites": false,
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "finest_reached_lifted_m": 0.1953125,
+      "finest_reached_shipped_m": 0.1953125,
+      "octaves_shipped": 9,
+      "octaves_wanted": 9,
+      "parent_spacing_m": 100.0,
+      "per_lag": [
+        {
+          "band": [
+            0.005026,
+            0.123404
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "floor",
+          "relative_change": 0.0,
+          "s_lifted": 0.0612825878888543,
+          "s_shipped": 0.0612825878888543
+        },
+        {
+          "band": [
+            0.008768,
+            0.299832
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "floor",
+          "relative_change": 0.0,
+          "s_lifted": 0.134484662656632,
+          "s_shipped": 0.134484662656632
+        },
+        {
+          "band": [
+            0.020649,
+            0.733907
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "floor",
+          "relative_change": 0.0,
+          "s_lifted": 0.337302485441796,
+          "s_shipped": 0.337302485441796
+        },
+        {
+          "band": [
+            0.013333,
+            0.033243
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "playa",
+          "relative_change": 0.0,
+          "s_lifted": 0.0261861638078074,
+          "s_shipped": 0.0261861638078074
+        },
+        {
+          "band": [
+            0.023009,
+            0.048041
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "playa",
+          "relative_change": 0.0,
+          "s_lifted": 0.0456834749683708,
+          "s_shipped": 0.0456834749683708
+        },
+        {
+          "band": [
+            0.045672,
+            0.069484
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "landform": "playa",
+          "relative_change": 0.0,
+          "s_lifted": 0.0787167934589093,
+          "s_shipped": 0.0787167934589093
+        },
+        {
+          "band": [
+            0.024822,
+            0.051422
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 4.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0,
+          "s_lifted": 0.00780476784689199,
+          "s_shipped": 0.00780476784689199
+        },
+        {
+          "band": [
+            0.025498,
+            0.204042
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0,
+          "s_lifted": 0.0185673265457353,
+          "s_shipped": 0.0185673265457353
+        },
+        {
+          "band": [
+            -0.053279,
+            0.906167
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0,
+          "s_lifted": 0.0404120066459654,
+          "s_shipped": 0.0404120066459654
+        },
+        {
+          "band": [
+            0.065119,
+            0.241373
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "slope",
+          "relative_change": 0.0,
+          "s_lifted": 0.148800194921932,
+          "s_shipped": 0.148800194921932
+        },
+        {
+          "band": [
+            0.185002,
+            0.602442
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "slope",
+          "relative_change": 0.0,
+          "s_lifted": 0.427741604109542,
+          "s_shipped": 0.427741604109542
+        },
+        {
+          "band": [
+            0.520712,
+            1.563218
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "slope",
+          "relative_change": 0.0,
+          "s_lifted": 1.07016194998596,
+          "s_shipped": 1.07016194998596
+        },
+        {
+          "band": [
+            0.096551,
+            0.256095
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "talus",
+          "relative_change": 0.0,
+          "s_lifted": 0.156135692680209,
+          "s_shipped": 0.156135692680209
+        },
+        {
+          "band": [
+            0.310716,
+            0.635862
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "talus",
+          "relative_change": 0.0,
+          "s_lifted": 0.425775795488789,
+          "s_shipped": 0.425775795488789
+        },
+        {
+          "band": [
+            0.93533,
+            1.739614
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "talus",
+          "relative_change": 0.0,
+          "s_lifted": 1.10802764555956,
+          "s_shipped": 1.10802764555956
+        }
+      ],
+      "s_identical": true,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0787 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0186 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0787 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0186 outside [0.0255, 0.204]",
+      "worst_relative_change": 0.0
+    },
+    {
+      "clamp_bites": false,
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "finest_reached_lifted_m": 0.1953125,
+      "finest_reached_shipped_m": 0.1953125,
+      "octaves_shipped": 10,
+      "octaves_wanted": 10,
+      "parent_spacing_m": 200.0,
+      "per_lag": [
+        {
+          "band": [
+            0.005026,
+            0.123404
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "floor",
+          "relative_change": 0.0,
+          "s_lifted": 0.0615111661563787,
+          "s_shipped": 0.0615111661563787
+        },
+        {
+          "band": [
+            0.008768,
+            0.299832
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "floor",
+          "relative_change": 0.0,
+          "s_lifted": 0.15475193422435,
+          "s_shipped": 0.15475193422435
+        },
+        {
+          "band": [
+            0.020649,
+            0.733907
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "floor",
+          "relative_change": 0.0,
+          "s_lifted": 0.390085629554051,
+          "s_shipped": 0.390085629554051
+        },
+        {
+          "band": [
+            0.013333,
+            0.033243
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "playa",
+          "relative_change": 0.0,
+          "s_lifted": 0.0269675535320317,
+          "s_shipped": 0.0269675535320317
+        },
+        {
+          "band": [
+            0.023009,
+            0.048041
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "landform": "playa",
+          "relative_change": 0.0,
+          "s_lifted": 0.0486706983113976,
+          "s_shipped": 0.0486706983113976
+        },
+        {
+          "band": [
+            0.045672,
+            0.069484
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "landform": "playa",
+          "relative_change": 0.0,
+          "s_lifted": 0.0875257268862129,
+          "s_shipped": 0.0875257268862129
+        },
+        {
+          "band": [
+            0.024822,
+            0.051422
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 4.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0,
+          "s_lifted": 0.00717499206210448,
+          "s_shipped": 0.00717499206210448
+        },
+        {
+          "band": [
+            0.025498,
+            0.204042
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0,
+          "s_lifted": 0.0173104160489999,
+          "s_shipped": 0.0173104160489999
+        },
+        {
+          "band": [
+            -0.053279,
+            0.906167
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0,
+          "s_lifted": 0.0433821562560439,
+          "s_shipped": 0.0433821562560439
+        },
+        {
+          "band": [
+            0.065119,
+            0.241373
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "slope",
+          "relative_change": 0.0,
+          "s_lifted": 0.148009057644231,
+          "s_shipped": 0.148009057644231
+        },
+        {
+          "band": [
+            0.185002,
+            0.602442
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "slope",
+          "relative_change": 0.0,
+          "s_lifted": 0.416398795977784,
+          "s_shipped": 0.416398795977784
+        },
+        {
+          "band": [
+            0.520712,
+            1.563218
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "slope",
+          "relative_change": 0.0,
+          "s_lifted": 1.0645122105966,
+          "s_shipped": 1.0645122105966
+        },
+        {
+          "band": [
+            0.096551,
+            0.256095
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "talus",
+          "relative_change": 0.0,
+          "s_lifted": 0.159208543819204,
+          "s_shipped": 0.159208543819204
+        },
+        {
+          "band": [
+            0.310716,
+            0.635862
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "talus",
+          "relative_change": 0.0,
+          "s_lifted": 0.405899049681011,
+          "s_shipped": 0.405899049681011
+        },
+        {
+          "band": [
+            0.93533,
+            1.739614
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "talus",
+          "relative_change": 0.0,
+          "s_lifted": 1.20455943006164,
+          "s_shipped": 1.20455943006164
+        }
+      ],
+      "s_identical": true,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0487 outside [0.023, 0.048] / playa at 16.0 m: 0.0875 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0072 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0173 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0487 outside [0.023, 0.048] / playa at 16.0 m: 0.0875 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0072 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0173 outside [0.0255, 0.204]",
+      "worst_relative_change": 0.0
+    },
+    {
+      "clamp_bites": false,
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "finest_reached_lifted_m": 0.1953125,
+      "finest_reached_shipped_m": 0.1953125,
+      "octaves_shipped": 11,
+      "octaves_wanted": 11,
+      "parent_spacing_m": 400.0,
+      "per_lag": [
+        {
+          "band": [
+            0.005026,
+            0.123404
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "floor",
+          "relative_change": 0.0,
+          "s_lifted": 0.0618720401607789,
+          "s_shipped": 0.0618720401607789
+        },
+        {
+          "band": [
+            0.008768,
+            0.299832
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "floor",
+          "relative_change": 0.0,
+          "s_lifted": 0.168340646920569,
+          "s_shipped": 0.168340646920569
+        },
+        {
+          "band": [
+            0.020649,
+            0.733907
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "floor",
+          "relative_change": 0.0,
+          "s_lifted": 0.396959586456887,
+          "s_shipped": 0.396959586456887
+        },
+        {
+          "band": [
+            0.013333,
+            0.033243
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "playa",
+          "relative_change": 0.0,
+          "s_lifted": 0.0237651332633959,
+          "s_shipped": 0.0237651332633959
+        },
+        {
+          "band": [
+            0.023009,
+            0.048041
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "playa",
+          "relative_change": 0.0,
+          "s_lifted": 0.0438783381699182,
+          "s_shipped": 0.0438783381699182
+        },
+        {
+          "band": [
+            0.045672,
+            0.069484
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "landform": "playa",
+          "relative_change": 0.0,
+          "s_lifted": 0.0788686160695988,
+          "s_shipped": 0.0788686160695988
+        },
+        {
+          "band": [
+            0.024822,
+            0.051422
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 4.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0,
+          "s_lifted": 0.00756137010024815,
+          "s_shipped": 0.00756137010024815
+        },
+        {
+          "band": [
+            0.025498,
+            0.204042
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0,
+          "s_lifted": 0.016379744600755,
+          "s_shipped": 0.016379744600755
+        },
+        {
+          "band": [
+            -0.053279,
+            0.906167
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0,
+          "s_lifted": 0.0407349417432243,
+          "s_shipped": 0.0407349417432243
+        },
+        {
+          "band": [
+            0.065119,
+            0.241373
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "slope",
+          "relative_change": 0.0,
+          "s_lifted": 0.149649301931277,
+          "s_shipped": 0.149649301931277
+        },
+        {
+          "band": [
+            0.185002,
+            0.602442
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "slope",
+          "relative_change": 0.0,
+          "s_lifted": 0.410248270665306,
+          "s_shipped": 0.410248270665306
+        },
+        {
+          "band": [
+            0.520712,
+            1.563218
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "slope",
+          "relative_change": 0.0,
+          "s_lifted": 1.14483298482583,
+          "s_shipped": 1.14483298482583
+        },
+        {
+          "band": [
+            0.096551,
+            0.256095
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "talus",
+          "relative_change": 0.0,
+          "s_lifted": 0.160442846777642,
+          "s_shipped": 0.160442846777642
+        },
+        {
+          "band": [
+            0.310716,
+            0.635862
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "talus",
+          "relative_change": 0.0,
+          "s_lifted": 0.446178292483182,
+          "s_shipped": 0.446178292483182
+        },
+        {
+          "band": [
+            0.93533,
+            1.739614
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "talus",
+          "relative_change": 0.0,
+          "s_lifted": 1.30430506777429,
+          "s_shipped": 1.30430506777429
+        }
+      ],
+      "s_identical": true,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0789 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0164 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0789 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0164 outside [0.0255, 0.204]",
+      "worst_relative_change": 0.0
+    },
+    {
+      "clamp_bites": false,
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "finest_reached_lifted_m": 0.1953125,
+      "finest_reached_shipped_m": 0.1953125,
+      "octaves_shipped": 12,
+      "octaves_wanted": 12,
+      "parent_spacing_m": 800.0,
+      "per_lag": [
+        {
+          "band": [
+            0.005026,
+            0.123404
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "floor",
+          "relative_change": 0.0,
+          "s_lifted": 0.0639135103783701,
+          "s_shipped": 0.0639135103783701
+        },
+        {
+          "band": [
+            0.008768,
+            0.299832
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "floor",
+          "relative_change": 0.0,
+          "s_lifted": 0.1429259093984,
+          "s_shipped": 0.1429259093984
+        },
+        {
+          "band": [
+            0.020649,
+            0.733907
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "floor",
+          "relative_change": 0.0,
+          "s_lifted": 0.412176666554387,
+          "s_shipped": 0.412176666554387
+        },
+        {
+          "band": [
+            0.013333,
+            0.033243
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "playa",
+          "relative_change": 0.0,
+          "s_lifted": 0.0275254983031772,
+          "s_shipped": 0.0275254983031772
+        },
+        {
+          "band": [
+            0.023009,
+            0.048041
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "playa",
+          "relative_change": 0.0,
+          "s_lifted": 0.0465881585958385,
+          "s_shipped": 0.0465881585958385
+        },
+        {
+          "band": [
+            0.045672,
+            0.069484
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "landform": "playa",
+          "relative_change": 0.0,
+          "s_lifted": 0.0796695532457079,
+          "s_shipped": 0.0796695532457079
+        },
+        {
+          "band": [
+            0.024822,
+            0.051422
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 4.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0,
+          "s_lifted": 0.00701463084942588,
+          "s_shipped": 0.00701463084942588
+        },
+        {
+          "band": [
+            0.025498,
+            0.204042
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0,
+          "s_lifted": 0.0161739465460045,
+          "s_shipped": 0.0161739465460045
+        },
+        {
+          "band": [
+            -0.053279,
+            0.906167
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0,
+          "s_lifted": 0.0386349695418176,
+          "s_shipped": 0.0386349695418176
+        },
+        {
+          "band": [
+            0.065119,
+            0.241373
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "slope",
+          "relative_change": 0.0,
+          "s_lifted": 0.1609518731143,
+          "s_shipped": 0.1609518731143
+        },
+        {
+          "band": [
+            0.185002,
+            0.602442
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "slope",
+          "relative_change": 0.0,
+          "s_lifted": 0.442416046329072,
+          "s_shipped": 0.442416046329072
+        },
+        {
+          "band": [
+            0.520712,
+            1.563218
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "slope",
+          "relative_change": 0.0,
+          "s_lifted": 1.21845445080544,
+          "s_shipped": 1.21845445080544
+        },
+        {
+          "band": [
+            0.096551,
+            0.256095
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "talus",
+          "relative_change": 0.0,
+          "s_lifted": 0.16336569816599,
+          "s_shipped": 0.16336569816599
+        },
+        {
+          "band": [
+            0.310716,
+            0.635862
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "talus",
+          "relative_change": 0.0,
+          "s_lifted": 0.476874040984967,
+          "s_shipped": 0.476874040984967
+        },
+        {
+          "band": [
+            0.93533,
+            1.739614
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "talus",
+          "relative_change": 0.0,
+          "s_lifted": 1.25301498817316,
+          "s_shipped": 1.25301498817316
+        }
+      ],
+      "s_identical": true,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0797 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.007 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0162 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0797 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.007 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0162 outside [0.0255, 0.204]",
+      "worst_relative_change": 0.0
+    },
+    {
+      "clamp_bites": true,
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "finest_reached_lifted_m": 0.1953125,
+      "finest_reached_shipped_m": 0.390625,
+      "octaves_shipped": 12,
+      "octaves_wanted": 13,
+      "parent_spacing_m": 1600.0,
+      "per_lag": [
+        {
+          "band": [
+            0.005026,
+            0.123404
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "floor",
+          "relative_change": 0.00174470626750848,
+          "s_lifted": 0.0578501721693101,
+          "s_shipped": 0.0579512801309647
+        },
+        {
+          "band": [
+            0.008768,
+            0.299832
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "floor",
+          "relative_change": 0.00151704221745944,
+          "s_lifted": 0.146985075426073,
+          "s_shipped": 0.147208396778751
+        },
+        {
+          "band": [
+            0.020649,
+            0.733907
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "floor",
+          "relative_change": 0.00114995208062564,
+          "s_lifted": 0.382714520643731,
+          "s_shipped": 0.383155130683463
+        },
+        {
+          "band": [
+            0.013333,
+            0.033243
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "playa",
+          "relative_change": 0.0155610006195138,
+          "s_lifted": 0.0253424916554792,
+          "s_shipped": 0.0249541796504786
+        },
+        {
+          "band": [
+            0.023009,
+            0.048041
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "playa",
+          "relative_change": 0.029540409588652,
+          "s_lifted": 0.04309383703945,
+          "s_shipped": 0.0444055965495522
+        },
+        {
+          "band": [
+            0.045672,
+            0.069484
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "landform": "playa",
+          "relative_change": 0.00409510791187762,
+          "s_lifted": 0.0791843120608746,
+          "s_shipped": 0.0788613662559783
+        },
+        {
+          "band": [
+            0.024822,
+            0.051422
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 4.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0042101613635283,
+          "s_lifted": 0.00749803694610307,
+          "s_shipped": 0.00752973835962223
+        },
+        {
+          "band": [
+            0.025498,
+            0.204042
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.000467019761459094,
+          "s_lifted": 0.0179451204592169,
+          "s_shipped": 0.0179367436454783
+        },
+        {
+          "band": [
+            -0.053279,
+            0.906167
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.00157167851433634,
+          "s_lifted": 0.0416534465989571,
+          "s_shipped": 0.0415880835016651
+        },
+        {
+          "band": [
+            0.065119,
+            0.241373
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "slope",
+          "relative_change": 0.000305249404243257,
+          "s_lifted": 0.158950376438952,
+          "s_shipped": 0.158901871737271
+        },
+        {
+          "band": [
+            0.185002,
+            0.602442
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "slope",
+          "relative_change": 0.003141569948742,
+          "s_lifted": 0.431419016103973,
+          "s_shipped": 0.430067927626624
+        },
+        {
+          "band": [
+            0.520712,
+            1.563218
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "slope",
+          "relative_change": 0.000834315363026293,
+          "s_lifted": 1.27573997470063,
+          "s_shipped": 1.27467649252003
+        },
+        {
+          "band": [
+            0.096551,
+            0.256095
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "talus",
+          "relative_change": 0.00341428471991703,
+          "s_lifted": 0.154794888035667,
+          "s_shipped": 0.155325212535445
+        },
+        {
+          "band": [
+            0.310716,
+            0.635862
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "talus",
+          "relative_change": 0.000586331538209189,
+          "s_lifted": 0.475513620116089,
+          "s_shipped": 0.475792592318612
+        },
+        {
+          "band": [
+            0.93533,
+            1.739614
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "talus",
+          "relative_change": 0.000377337837019496,
+          "s_lifted": 1.32398025781367,
+          "s_shipped": 1.32448003424497
+        }
+      ],
+      "s_identical": false,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0792 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0179 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0789 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0179 outside [0.0255, 0.204]",
+      "worst_relative_change": 0.029540409588652
+    },
+    {
+      "clamp_bites": true,
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "finest_reached_lifted_m": 0.1953125,
+      "finest_reached_shipped_m": 0.78125,
+      "octaves_shipped": 12,
+      "octaves_wanted": 14,
+      "parent_spacing_m": 3200.0,
+      "per_lag": [
+        {
+          "band": [
+            0.005026,
+            0.123404
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "floor",
+          "relative_change": 0.00216306829255725,
+          "s_lifted": 0.0604996364099861,
+          "s_shipped": 0.0606307849384393
+        },
+        {
+          "band": [
+            0.008768,
+            0.299832
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "floor",
+          "relative_change": 0.00304919173620244,
+          "s_lifted": 0.149997796419939,
+          "s_shipped": 0.150456567341735
+        },
+        {
+          "band": [
+            0.020649,
+            0.733907
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "floor",
+          "relative_change": 0.00234355418553809,
+          "s_lifted": 0.411769403939616,
+          "s_shipped": 0.412736674701137
+        },
+        {
+          "band": [
+            0.013333,
+            0.033243
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "playa",
+          "relative_change": 0.018674803683608,
+          "s_lifted": 0.0308138598501273,
+          "s_shipped": 0.0302489663420573
+        },
+        {
+          "band": [
+            0.023009,
+            0.048041
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "landform": "playa",
+          "relative_change": 0.0206984403440178,
+          "s_lifted": 0.0550564937939839,
+          "s_shipped": 0.0539400195178388
+        },
+        {
+          "band": [
+            0.045672,
+            0.069484
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "landform": "playa",
+          "relative_change": 0.0143703616712718,
+          "s_lifted": 0.0932732765337079,
+          "s_shipped": 0.0946331896957417
+        },
+        {
+          "band": [
+            0.024822,
+            0.051422
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 4.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.0162452011348185,
+          "s_lifted": 0.00787526042495301,
+          "s_shipped": 0.00800530826791146
+        },
+        {
+          "band": [
+            0.025498,
+            0.204042
+          ],
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.00430969938369779,
+          "s_lifted": 0.0182118098104951,
+          "s_shipped": 0.0182906369573175
+        },
+        {
+          "band": [
+            -0.053279,
+            0.906167
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "riparian_margin",
+          "relative_change": 0.00472964525986028,
+          "s_lifted": 0.0433195548316689,
+          "s_shipped": 0.0435254146025272
+        },
+        {
+          "band": [
+            0.065119,
+            0.241373
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "slope",
+          "relative_change": 0.00216045425461042,
+          "s_lifted": 0.142269675857278,
+          "s_shipped": 0.142577708474164
+        },
+        {
+          "band": [
+            0.185002,
+            0.602442
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "slope",
+          "relative_change": 0.00381583481954219,
+          "s_lifted": 0.473929184487588,
+          "s_shipped": 0.472127623462711
+        },
+        {
+          "band": [
+            0.520712,
+            1.563218
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "slope",
+          "relative_change": 0.000509440086692626,
+          "s_lifted": 1.24167067720373,
+          "s_shipped": 1.24230355643522
+        },
+        {
+          "band": [
+            0.096551,
+            0.256095
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "landform": "talus",
+          "relative_change": 0.0126913873533992,
+          "s_lifted": 0.15689850480976,
+          "s_shipped": 0.15891536121535
+        },
+        {
+          "band": [
+            0.310716,
+            0.635862
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "landform": "talus",
+          "relative_change": 0.000214837619883319,
+          "s_lifted": 0.509149155021078,
+          "s_shipped": 0.509039794123282
+        },
+        {
+          "band": [
+            0.93533,
+            1.739614
+          ],
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 16.0,
+          "landform": "talus",
+          "relative_change": 0.000360733968746881,
+          "s_lifted": 1.290746745658,
+          "s_shipped": 1.2902812973648
+        }
+      ],
+      "s_identical": false,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0551 outside [0.023, 0.048] / playa at 16.0 m: 0.0933 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0182 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0539 outside [0.023, 0.048] / playa at 16.0 m: 0.0946 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.008 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0183 outside [0.0255, 0.204]",
+      "worst_relative_change": 0.0206984403440178
+    }
+  ],
+  "verdicts_that_moved": [],
+  "vertical_exaggeration": 1.0,
+  "walked_parents_m": [
+    100.0,
+    200.0,
+    400.0,
+    800.0,
+    1600.0,
+    3200.0
+  ]
+}

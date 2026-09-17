@@ -14,14 +14,14 @@
     "acceptance": {
       "scored_at_commit": "c529aa3aaf41210912fe753c6159fab932e7a635",
       "stale_against_replay": {
-        "replayed_at_commit": "cf1dc89d2935f5af87ef0a6fddf4108b71d0804e",
-        "declared_by_the_operator": "Scored at d051f24, replayed at cf1dc89. FOUR files under sim/ changed between those commits -- see `sim_changed_since_scoring`, which is DERIVED at emit time and is authoritative; this prose accounts for all four and you should check it against that list rather than believe it. (1) sim/phase1.py at 33807a8: reads/prior_state_reads DECLARATIONS only, and topological_order was re-measured across the pair and is byte-identical -- the engine executes that order, so an unchanged order is an unchanged trajectory. (2) sim/detail.py at fe63d80 and 0e936e8: the sub-grid detail synthesis, imported by tools/ only -- nothing under sim/ imports it, so it is in neither the engine's build nor its step path. (3) and (4) sim/assemble.py and sim/nutrients.py at d580647: decision 1017's pulse knob, added as the parameters deposition_scale (default None) and sources_live (default False) and threaded through the engine build. tools/build_fixture.py calls build_phase1_engine() with NO ARGUMENTS, so neither parameter can reach this replay and the engine object is identical across the whole range. A PREVIOUS VERSION OF THIS DECLARATION SAID \"exactly two files\" and was stale: it was written at replay commit 2d4b825 and carried verbatim across four re-emissions while the stamp moved, and the client caught it on their side before vendoring. The derived list beside this prose exists so that cannot recur.",
+        "replayed_at_commit": "2f71136047a753fa6fb0389009a727dc135886b5",
+        "declared_by_the_operator": "Scored at d051f24, replayed at 2f711360 (this emission). The DERIVED `sim_changed_since_scoring` list beside this prose is authoritative; check this against it rather than believe it. TWO RANGES, and only the first contains any sim/ change. (a) d051f24..cf1dc89d: the four files the superseded artefact already declared -- sim/phase1.py (reads/prior_state_reads DECLARATIONS only; topological_order re-measured byte-identical, so an unchanged order is an unchanged trajectory), sim/detail.py (sub-grid synthesis, imported by tools/ only, in neither the engine's build nor its step path), sim/assemble.py and sim/nutrients.py (decision 1017's pulse knob: deposition_scale default None, sources_live default False, and build_fixture calls build_phase1_engine() with NO ARGUMENTS, so neither parameter can reach this replay). That reasoning is the previous operator's, is unchanged, and still holds. (b) cf1dc89d..2f711360, new to THIS emission: `git diff --name-only cf1dc89d..2f711360 -- sim/` is EMPTY -- zero files -- so this re-cut adds NO engine drift beyond what was already declared, and the derived list must be identical to the superseded artefact's; if it is not, this prose is wrong and the derived list wins. WHAT IS NEW HERE IS HOW THE DECLARATIONS ARE COUNTED, NOT THE TRAJECTORY: the density block's shipped figures are now DECODED FROM THE EMITTED CLIENT FILE rather than re-derived from the in-memory arrays, because the re-derivation was correct about the encoding and wrong about its input -- it declared any_biomass_cells 3,494 where the bytes carry 3,470. THIS PROSE WAS WRITTEN AT REPLAY COMMIT 2f711360 AND MUST NOT BE CARRIED TO A LATER STAMP. That is not boilerplate: the version before last said \"exactly two files\" and went stale exactly that way across four re-emissions, and the version before THIS one was written at c2276399 and carried by its own author to 2f711360 within the hour, which is how this sentence came to be repeated here.",
         "what_the_equivalence_proof_below_does_not_cover": "the proof compares this verdict's RUN with this fixture's run. Both are state. The verdict's CODE and the replay's code are different here and nothing below compares them."
       },
       "scored_run_dir": "runs/m3-001",
       "sim_changed_since_scoring": {
         "from": "d051f24290c592864ebbc1a5582995aa72d2bfca",
-        "to": "cf1dc89d2935f5af87ef0a6fddf4108b71d0804e",
+        "to": "2f71136047a753fa6fb0389009a727dc135886b5",
         "files": [
           "sim/assemble.py",
           "sim/detail.py",
@@ -65,9 +65,9 @@
   "is_a_display_encoding": "NOT the fixture. Band rows are quantised to 65,534 levels over each row's REALISED range in its own window -- not over the contract's declared bounds, which are a validity range and gave two rows 3 and 12 usable codes when they were used as a dynamic one (\u00a723.837). Every row carries its own `lo`/`hi` beside `contract_lo`/`contract_hi` so both are readable. 2 row-window(s) here are float64 because they reach below float32's floor; the full precision is in fixture_v1.bin.",
   "files": {
     "fixture_client.bin": "995a4a3dd3ee386a4800b951ac5c0030cb30532ca7b5552f48bcb619ff87af6e",
-    "fixture_client.json": "e3bef5389146442571ba99d9479bcfb37e9c1ff86887c1523fedf609b50010cf"
+    "fixture_client.json": "5bb0de93a207e06f6f5693b84a78b903907dec2bb4f080c5f40f72d4a3ad4408"
   },
-  "source_commit": "b6dcb35a67f30c2127751f503be3c5b53ed1a390",
+  "source_commit": "482ef05ec4b9a20095ed4b30bfc49ea4db99ff7c",
   "carried_rows": [
     "band.bare_fraction",
     "band.burned_fraction",
@@ -106,6 +106,6 @@
       }
     }
   },
-  "vendored_against_commit": "b6dcb35a67f30c2127751f503be3c5b53ed1a390",
+  "vendored_against_commit": "f232736a9915bd36145333f55f35271ff0b47eae",
   "_two_commits_note": "`source_commit` is where the artefact's bytes came to rest -- the last commit touching the source directory, and what `cross_repo` checks against. `vendored_against_commit` is the sim tree this vendoring read. They differ whenever the sim moved without the artefact moving, which is most of the time."
 }

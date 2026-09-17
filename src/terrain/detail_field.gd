@@ -133,6 +133,54 @@ var why_absent: String = ""
 ## grid and everything below it is synthesised.
 var parent_spacing_m: float = 0.0
 
+## THE OCTAVE CEILING ACTUALLY APPLIED, defaulting to the shipped `MAX_OCTAVES`.
+##
+## A FIELD SO THE COST BOUND CAN BE MEASURED RATHER THAN ONLY DISCUSSED. The
+## clamp stops the ladder short of the declared 0.25 m band at the two coarsest
+## walked parents (see `band_limit_note`), and until this existed there was no
+## way to ask what the ground would have been WITHOUT it -- the question that
+## separates a declaration defect from a substantive one, and the two have
+## different owners. `tools/measure_octave_clamp.gd` lifts it and re-grades.
+##
+## THE DEFAULT IS THE CONSTANT AND NOTHING IN THE VIEWER SETS THIS. Raising the
+## bound is a cost decision this client does not make; what it can do is price
+## it. A lifted field is a measurement instrument, not a shipped surface.
+##
+## AND IT IS PART OF BEING THE SAME FUNCTION. Two fields whose ladders stop at
+## different octaves draw different ground, so `same_function_as` compares it --
+## without that, a lifted instrument would certify as the same surface as the
+## shipped one, which is the shape of a guard accepting exactly what it exists
+## to catch.
+##
+## SETTING IT DROPS EVERY CACHE DOWNSTREAM OF THE LADDER, which is the whole
+## reason this is a property and not a plain field. There are two of them and
+## the first cut of this cleared one.
+##
+##   * `_residual` -- `residual_rms_for` memoises, and at 1,600 m and 3,200 m no
+##     residual is published so the value is COMPUTED from the ladder.
+##   * `_stencil` -- `_coarse_component64` memoises sixteen `_noise64` values per
+##     cell, and `_noise64` reads `octaves_for`. This one was MISSED, and the
+##     symptom is worth keeping: a field queried at twelve octaves and then
+##     lifted to fourteen computed `f` at fourteen and subtracted a `P[f]` cached
+##     at twelve, giving a residual that matched neither ladder. It was found by
+##     one number disagreeing between a probe and the gate, and the comment
+##     directly below already said the words for the defect it did not prevent.
+##
+## A ceiling changed after the first height query would otherwise leave one
+## ladder's normalisation dividing another ladder's surface, and the comparison
+## would read as an amplitude change rather than a band one. Renormalising is
+## also what makes the measurement honest: a lifted field is not simply the
+## shipped one plus variance.
+var _octave_ceiling: int = MAX_OCTAVES
+
+var octave_ceiling: int:
+    get:
+        return _octave_ceiling
+    set(value):
+        _octave_ceiling = maxi(1, value)
+        _residual.clear()
+        _stencil.clear()
+
 ## THE PARENT LATTICE'S CORNER, AS A FIELD AND NOT A READ THROUGH THE RASTER.
 ##
 ## This file has always said the parent lattice is named separately from the
@@ -298,7 +346,18 @@ func octaves_for(landform: String) -> int:
     var finest := scalar_of(row(landform), "finest_wavelength_m", 1.0)
     if finest <= 0.0 or parent_spacing_m <= 0.0:
         return 1
-    return clampi(int(ceil(log(parent_spacing_m / finest) / log(2.0))), 1, MAX_OCTAVES)
+    return clampi(octaves_wanted(landform), 1, _octave_ceiling)
+
+
+## The count the row ASKS for, before the cost bound is applied. Published as
+## its own function because `band_limit_note` and the clamp measurement both
+## need it and a second copy of the expression is how a disclosure comes to
+## disagree with the arithmetic it describes.
+func octaves_wanted(landform: String) -> int:
+    var finest := scalar_of(row(landform), "finest_wavelength_m", 1.0)
+    if finest <= 0.0 or parent_spacing_m <= 0.0:
+        return 1
+    return int(ceil(log(parent_spacing_m / finest) / log(2.0)))
 
 
 ## The finest wavelength this field ACTUALLY synthesises at its own parent, as
@@ -335,8 +394,8 @@ func band_limit_note(landform: String) -> String:
     return ("at a %s m parent this field reaches %s m, not the %s m its row declares: "
             % [String.num(parent_spacing_m, 0), String.num(reached, 4),
                String.num(declared, 3)]
-            + "the ladder wants %d octaves and MAX_OCTAVES stops it at %d"
-            % [int(ceil(log(parent_spacing_m / declared) / log(2.0))), MAX_OCTAVES])
+            + "the ladder wants %d octaves and the ceiling stops it at %d"
+            % [octaves_wanted(landform), _octave_ceiling])
 
 
 ## THE SAME FUNCTION OVER A DIFFERENT PARENT LATTICE.
@@ -372,6 +431,7 @@ func for_parent(spacing_m: float) -> DetailField:
     df.world_seed = world_seed
     df.parent_origin_x = parent_origin_x
     df.parent_origin_y = parent_origin_y
+    df.octave_ceiling = octave_ceiling
     # THE RESIDUAL IS NOT CARRIED ACROSS. `rms(f - P[f])` is a property of the
     # row, the seed AND THE LATTICE -- a different parent is a different octave
     # ladder and a different subtraction -- so copying it here would apply one
@@ -466,6 +526,7 @@ func same_function_as(other: DetailField) -> bool:
         return false
     return (rows_path == other.rows_path
             and world_seed == other.world_seed
+            and _octave_ceiling == other._octave_ceiling
             and is_equal_approx(calibrated_at_parent_m, other.calibrated_at_parent_m))
 
 

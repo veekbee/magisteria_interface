@@ -185,7 +185,20 @@ func declared_vs_shipped(fl: FixtureLoader) -> Array:
         var n_biomass := 0
         for v in biomass:
             n_biomass += v
-        for pair in [["vegetated_cells", n_cover], ["any_biomass_cells", n_biomass]]:
+        # THE FOUR FIELDS THE RE-CUT ADDED, recomputed the same way. They were
+        # published because this client decoded three of them independently and
+        # the two sides disagreed; a figure that can only agree is not a check,
+        # so they are checked rather than displayed.
+        var dr := _drawable_of(fl, w, day, groups)
+        var pairs: Array = [["vegetated_cells", n_cover], ["any_biomass_cells", n_biomass]]
+        # REFUSED, NOT DEFAULTED. A window whose `band.bare_fraction` did not
+        # decode cannot recompute these, and a sentinel standing in for a count
+        # would be reported as a declaration that disagrees with the bytes.
+        if not dr.is_empty():
+            pairs.append(["not_wholly_bare_cells", int(dr["bare_under_one"])])
+            pairs.append(["drawable_cells", int(dr["drawable"])])
+            pairs.append(["covered_but_wholly_bare_cells", int(dr["cover_but_not_drawable"])])
+        for pair in pairs:
             var field := str(pair[0])
             if not density.has(field):
                 continue
@@ -218,36 +231,92 @@ func declared_vs_shipped(fl: FixtureLoader) -> Array:
 ## the first is a check that cannot fail. Keeping all three visible makes the day
 ## they diverge information rather than a surprise.
 ##
-## Rows are `{window, day, cells, cover, drawable, cover_but_not_drawable}`.
+## THE ARTEFACT NOW DECLARES THE RELATION TOO, as `bare_under_one_implies_cover`
+## with its own "MEASURED, NOT PROVED" beside it. `declared_subset_claim`
+## compares that declaration against this measurement. Neither gates on the
+## relation holding.
+##
+## Rows are `{window, day, cells, cover, drawable, cover_but_not_drawable,
+## bare_under_one, bare_under_one_without_cover, subset_holds}`.
 func drawable_counts(fl: FixtureLoader) -> Array:
     var out: Array = []
     for w in windows:
         var density: Dictionary = (_windows[w] as Dictionary).get("density", {})
         var day := int(density.get("_at_day", 0))
-        var groups := fl.taxon_groups(w, "band.pft_fractions")
-        var bare := fl.day_values(w, "band.bare_fraction", day)
-        if bare.is_empty() or groups.is_empty():
+        var dr := _drawable_of(fl, w, day, fl.taxon_groups(w, "band.pft_fractions"))
+        if dr.is_empty():
             continue
-        var has_cover := PackedInt32Array()
-        var drawable := PackedInt32Array()
-        has_cover.resize(bare.size())
-        drawable.resize(bare.size())
-        for gi in groups.size():
-            var share := fl.day_values(w, "band.pft_fractions", day, gi)
-            for i in mini(share.size(), bare.size()):
-                if is_nan(share[i]) or share[i] <= 0.0:
-                    continue
-                has_cover[i] = 1
-                # THE RENDERER'S OWN FUNCTION. Not `share > 0 and bare < 1`.
-                if VegetationScatter.ground_cover(share[i], bare[i]) > 0.0:
-                    drawable[i] = 1
-        var n_cover := 0
-        var n_draw := 0
-        for i in has_cover.size():
-            n_cover += has_cover[i]
-            n_draw += drawable[i]
-        out.append({"window": w, "day": day, "cells": bare.size(), "cover": n_cover,
-                    "drawable": n_draw, "cover_but_not_drawable": n_cover - n_draw})
+        out.append(dr)
+    return out
+
+
+## ONE PASS OVER A WINDOW'S DAY, shared by the count check and the drawable
+## report so the two cannot drift into two definitions of one population. That
+## drift is the defect the producing side spent this week repairing one repo
+## over: `_window_density` counted from the in-memory arrays while `client_form`
+## decoded the emitted file, two implementations of one encoding, and the
+## earlier fix was correct about the encoding and wrong about its input.
+func _drawable_of(fl: FixtureLoader, w: String, day: int, groups: PackedStringArray) -> Dictionary:
+    var bare := fl.day_values(w, "band.bare_fraction", day)
+    if bare.is_empty() or groups.is_empty():
+        return {}
+    var has_cover := PackedInt32Array()
+    var drawable := PackedInt32Array()
+    has_cover.resize(bare.size())
+    drawable.resize(bare.size())
+    for gi in groups.size():
+        var share := fl.day_values(w, "band.pft_fractions", day, gi)
+        for i in mini(share.size(), bare.size()):
+            if is_nan(share[i]) or share[i] <= 0.0:
+                continue
+            has_cover[i] = 1
+            # THE RENDERER'S OWN FUNCTION. Not `share > 0 and bare < 1`.
+            if VegetationScatter.ground_cover(share[i], bare[i]) > 0.0:
+                drawable[i] = 1
+    var n_cover := 0
+    var n_draw := 0
+    var n_bare_under_one := 0
+    var bare_without_cover := 0
+    for i in has_cover.size():
+        n_cover += has_cover[i]
+        n_draw += drawable[i]
+        if not is_nan(bare[i]) and bare[i] < 1.0:
+            n_bare_under_one += 1
+            if has_cover[i] == 0:
+                bare_without_cover += 1
+    return {"window": w, "day": day, "cells": bare.size(), "cover": n_cover,
+            "drawable": n_draw, "cover_but_not_drawable": n_cover - n_draw,
+            "bare_under_one": n_bare_under_one,
+            "bare_under_one_without_cover": bare_without_cover,
+            "subset_holds": bare_without_cover == 0}
+
+
+## THE SUBSET CLAIM, MEASURED AGAINST THE ONE THE ARTEFACT DECLARES.
+##
+## `bare_under_one_implies_cover` is published as a fact about THIS cutting,
+## reading "MEASURED, NOT PROVED". So what is compared is the declaration
+## against this client's own measurement of it -- never the relation itself.
+## Gating on the relation would be a check that cannot fail today and a red gate
+## on the day a re-cut makes the two populations diverge, which is information
+## and not a defect: on that day both sides move together and this still agrees.
+##
+## Rows are `{window, declared, measured, agrees}`; empty for a window that does
+## not declare it.
+func declared_subset_claim(fl: FixtureLoader) -> Array:
+    var out: Array = []
+    for w in windows:
+        var density: Dictionary = (_windows[w] as Dictionary).get("density", {})
+        if not density.has("bare_under_one_implies_cover"):
+            continue
+        var day := int(density.get("_at_day", 0))
+        var dr := _drawable_of(fl, w, day, fl.taxon_groups(w, "band.pft_fractions"))
+        if dr.is_empty():
+            continue
+        var declared := bool(density["bare_under_one_implies_cover"])
+        var measured := bool(dr["subset_holds"])
+        out.append({"window": w, "declared": declared, "measured": measured,
+                    "agrees": declared == measured,
+                    "bare_under_one_without_cover": int(dr["bare_under_one_without_cover"])})
     return out
 
 

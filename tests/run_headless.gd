@@ -89,6 +89,7 @@ func _initialize() -> void:
     _run(test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence, "test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence")
     _run(test_the_drawn_detail_carries_the_anisotropy_its_row_declares, "test_the_drawn_detail_carries_the_anisotropy_its_row_declares")
     _run(test_the_published_residual_is_reproduced_and_not_merely_believed, "test_the_published_residual_is_reproduced_and_not_merely_believed")
+    _run(test_the_octave_ceiling_is_a_bound_that_can_be_measured_and_not_only_disclosed, "test_the_octave_ceiling_is_a_bound_that_can_be_measured_and_not_only_disclosed")
     _run(test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one, "test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one")
     _run(test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate, "test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate")
     _run(test_the_budget_solve_divides_by_the_floors_measured_multiplier, "test_the_budget_solve_divides_by_the_floors_measured_multiplier")
@@ -4420,31 +4421,64 @@ func test_the_fixture_declares_its_own_provenance_and_absence_is_a_sentence() ->
 
     # ---- THE DECLARED COUNTS, CHECKED AGAINST THE BYTES --------------------
     # A declaration a consumer can recompute is one that cannot quietly stop
-    # describing what it names. Written against a live instance:
-    # `any_biomass_cells` is declared 5,665 and the shipped bytes carry 3,470,
-    # because the count was taken on the float64 payload while this client's
-    # copy is quantised. The producing side has fixed it in code and it arrives
-    # with the next cut.
+    # describing what it names.
     #
-    # THE MECHANISM IS GUARDED BY CONSTRUCTED DECLARATIONS AND NOT BY THAT
-    # DEFECT. Asserting the shipped mismatch still exists would make this gate
-    # depend on somebody else's release schedule and go red on the day they fix
-    # it. The declarations below are synthetic; the recomputation underneath
-    # them is the real loader over the real bytes.
+    # THIS WAS WRITTEN WHILE TWO OF THEM DISAGREED and asserted only the one
+    # that agreed. `any_biomass_cells` was declared 5,665 against 3,470 in the
+    # bytes and `not_wholly_bare_cells` 3,804 against 3,624, both because the
+    # counts were taken upstream of the quantisation this client holds. Only
+    # `vegetated_cells` was asserted; the rest were PRINTED, so that this gate
+    # did not depend on somebody else's release schedule and could not go red on
+    # the day they fixed it.
+    #
+    # THEY ARE ALL ASSERTED NOW, AND THAT IS NOT THE SAME MISTAKE INVERTED.
+    # What was refused before was guarding a MECHANISM with a defect. Checking
+    # that a declaration describes the bytes it ships beside is the consumer
+    # check itself, and its going red IS the information -- the producing side
+    # now decodes these figures out of the emitted payload rather than
+    # re-deriving them from the arrays upstream of it, so agreement is
+    # structural rather than a coincidence to be protected.
+    #
+    # THE MECHANISM IS STILL GUARDED BY CONSTRUCTED DECLARATIONS. The synthetic
+    # pair below is what shows `agrees` can be false at all.
     var rows := ship.declared_vs_shipped(fl)
     check(not rows.is_empty(), "no declared count was checked against the payload at all")
-    var veg_rows := 0
+    var seen_fields := {}
     for r in rows:
         var d: Dictionary = r
-        if str(d["field"]) != "vegetated_cells":
-            continue
-        veg_rows += 1
-        check(bool(d["agrees"]), "%s declares vegetated_cells = %d and the shipped bytes carry "
-                % [str(d["window"]), int(d["declared"])] + "%d" % int(d["shipped"]))
-    check(veg_rows == ship.windows.size(),
-            "vegetated_cells was checked for %d of %d windows" % [veg_rows, ship.windows.size()])
+        check(bool(d["agrees"]), "%s declares %s = %d and the shipped bytes carry %d"
+                % [str(d["window"]), str(d["field"]), int(d["declared"]), int(d["shipped"])])
+        seen_fields[str(d["field"])] = int(seen_fields.get(str(d["field"]), 0)) + 1
+    # EVERY FIELD, EVERY WINDOW. A count checked in one window and absent in the
+    # other reads as green for the window that was never looked at.
+    for field in ["vegetated_cells", "any_biomass_cells", "not_wholly_bare_cells",
+            "drawable_cells", "covered_but_wholly_bare_cells"]:
+        check(int(seen_fields.get(field, 0)) == ship.windows.size(),
+                "%s was recomputed for %d of %d windows"
+                        % [field, int(seen_fields.get(field, 0)), ship.windows.size()])
     for l in ship.declaration_mismatches(fl):
         print("provenance: DECLARED != SHIPPED -- %s" % l)
+    print("provenance: %d declared count(s) across %d window(s) reproduce from the payload"
+            % [rows.size(), ship.windows.size()])
+
+    # THE SUBSET CLAIM, AGAINST THE MEASUREMENT AND NOT AGAINST ITSELF.
+    # `bare_under_one_implies_cover` is a fact about this cutting and the
+    # artefact says so. What is asserted is that the declaration and this
+    # client's measurement of it agree -- the relation itself gates nothing, so
+    # a re-cut in which the two populations diverge stays green with both sides
+    # reading false, and that day is information rather than a red gate.
+    var subset := ship.declared_subset_claim(fl)
+    check(not subset.is_empty(),
+            "the artefact declares bare_under_one_implies_cover for no window, so the "
+            + "measurement has nothing to check itself against")
+    for r in subset:
+        var d: Dictionary = r
+        check(bool(d["agrees"]), "%s declares bare_under_one_implies_cover = %s and this "
+                % [str(d["window"]), str(bool(d["declared"]))]
+                + "client measures %s: %d cell(s) with bare < 1 carry no cover"
+                % [str(bool(d["measured"])), int(d["bare_under_one_without_cover"])])
+        print("provenance: %s bare<1 implies cover>0: declared %s, measured %s"
+                % [str(d["window"]), str(bool(d["declared"])), str(bool(d["measured"]))])
 
     # THE PAIR. A declaration set to what the bytes carry must agree; the same
     # declaration moved by one must not. Without the second, "agrees" could be
@@ -4715,6 +4749,282 @@ func test_the_published_residual_is_reproduced_and_not_merely_believed() -> void
         print("detail: the ladder falls short of the declared 0.25 m band at %d row-parent "
                 % short_at.size() + "pair(s) of %d -- %s"
                 % [wp.as_array().size() * 5, ", ".join(short_at)])
+
+
+func test_the_octave_ceiling_is_a_bound_that_can_be_measured_and_not_only_disclosed() -> void:
+    """`MAX_OCTAVES` stops the ladder short of the declared 0.25 m band at the
+    two coarsest walked parents. `band_limit_note` says so; saying so does not
+    answer whether a VERDICT moves, and until that is measured a declaration
+    defect and a substantive one cannot be told apart -- they have different
+    owners. So the bound is a settable ceiling, defaulting to the constant, and
+    `tools/measure_octave_clamp.gd` lifts it and re-grades.
+
+    WHAT IS ASSERTED IS THAT LIFTING IT CHANGES THE GROUND AND THE ACCOUNTING OF
+    IT, each with the control that shows the absence. A ceiling that silently
+    did nothing would let the measurement report no movement for the wrong
+    reason -- an instrument agreeing with itself -- and that reading would be
+    indistinguishable from the good news it looks like.
+
+    THE DEFAULT IS THE SHIPPED CONSTANT AND NOTHING IN THE VIEWER SETS IT. This
+    does not rule on the bound: 14 octaves per sample against 12 is a cost
+    somebody weighs.
+    """
+    var hf := heightfield()
+    var df := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
+    if not df.is_loaded():
+        print("octaves: the rows did not load, so the ceiling is not being checked")
+        return
+    check(df.octave_ceiling == DetailField.MAX_OCTAVES,
+            "a freshly loaded field's ceiling is %d and the shipped bound is %d"
+                    % [df.octave_ceiling, DetailField.MAX_OCTAVES])
+
+    # THE WANT AND THE CLAMPED COUNT ARE DIFFERENT NUMBERS, and at this parent
+    # they must be: a 3,200 m parent over a declared 0.25 m band wants 14.
+    var bit := false
+    for name in df.landforms():
+        var n := str(name)
+        var declared := DetailField.scalar_of(df.row(n), "finest_wavelength_m", NAN)
+        if is_nan(declared) or declared <= 0.0:
+            continue
+        var want := int(ceil(log(3200.0 / declared) / log(2.0)))
+        check(df.octaves_wanted(n) == want,
+                "%s wants %d octaves under a 3,200 m parent and octaves_wanted says %d"
+                        % [n, want, df.octaves_wanted(n)])
+        check(df.octaves_for(n) == mini(want, DetailField.MAX_OCTAVES),
+                "%s is synthesised at %d octaves against a want of %d and a bound of %d"
+                        % [n, df.octaves_for(n), want, DetailField.MAX_OCTAVES])
+        if want > DetailField.MAX_OCTAVES:
+            bit = true
+    check(bit, "the clamp binds at no row under a 3,200 m parent, so the rest of this test "
+            + "is measuring a bound that is not applied")
+
+    # LIFTED TO THE WANT: the ladder reaches the declared band and the
+    # disclosure goes quiet. Both directions, because a note that fires when the
+    # band IS reached is as useless as one silent when it is not.
+    var lifted := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
+    lifted.octave_ceiling = 14
+    for name in lifted.landforms():
+        var n := str(name)
+        var declared := DetailField.scalar_of(lifted.row(n), "finest_wavelength_m", NAN)
+        if is_nan(declared):
+            continue
+        check(lifted.finest_reached_m(n) <= declared,
+                "%s still reaches only %s m against a declared %s m with the ceiling at 14"
+                        % [n, String.num(lifted.finest_reached_m(n), 4),
+                           String.num(declared, 3)])
+        check(lifted.band_limit_note(n).is_empty(),
+                "%s discloses a band limit that is no longer there: %s"
+                        % [n, lifted.band_limit_note(n)])
+        check(not df.band_limit_note(n).is_empty(),
+                "%s at the shipped bound reaches %s m against a declared %s and says nothing"
+                        % [n, String.num(df.finest_reached_m(n), 4), String.num(declared, 3)])
+        # THE NOTE REPORTS THE CEILING ACTUALLY APPLIED. It read `MAX_OCTAVES`
+        # directly until the bound became settable, which would have had a
+        # lifted field disclosing a limit at a bound it was not using.
+        var tight := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
+        tight.octave_ceiling = 6
+        check(tight.band_limit_note(n).contains("stops it at 6"),
+                "%s's note does not name the ceiling in force: %s"
+                        % [n, tight.band_limit_note(n)])
+        check(tight.finest_reached_m(n) > df.finest_reached_m(n),
+                "%s reaches %s m at 6 octaves and %s m at %d, so the ceiling is not being "
+                        % [n, String.num(tight.finest_reached_m(n), 4),
+                           String.num(df.finest_reached_m(n), 4), DetailField.MAX_OCTAVES]
+                + "applied at all")
+
+    # THE GROUND MOVES. A ceiling that changed no height would make the clamp
+    # measurement report no movement for a reason that has nothing to do with
+    # the clamp.
+    var at := hf.texel_to_world(500.0, 700.0)
+    var moved := 0
+    for name in df.landforms():
+        var n := str(name)
+        if df.octaves_wanted(n) <= DetailField.MAX_OCTAVES:
+            continue
+        if not is_equal_approx(df.detail_at(at, n), lifted.detail_at(at, n)):
+            moved += 1
+    check(moved > 0, "lifting the ceiling from %d to 14 changed the drawn detail at no row, "
+            % DetailField.MAX_OCTAVES + "so the added octaves are not reaching the surface")
+
+    # AND THE NORMALISATION MOVES WITH IT. At 3,200 m no residual is published,
+    # so `rms(f - P[f])` is computed from the running ladder; a cached value
+    # surviving the change would divide one ladder's surface by another's and
+    # the added band would read as an amplitude change.
+    var rdf := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
+    var first := rdf.residual_rms_for("playa")
+    check(rdf.residual_source("playa").contains("recomputed"),
+            "a 3,200 m parent's residual is not recomputed, so this control is measuring a "
+            + "published constant: %s" % rdf.residual_source("playa"))
+    rdf.octave_ceiling = 14
+    var after := rdf.residual_rms_for("playa")
+    # EXACTLY, AND NOT `is_equal_approx`. Measured, the two added octaves move
+    # this by 1.4e-7 to 4.7e-5 relative -- under `is_equal_approx`'s 1e-5 on
+    # four rows of five, so an approximate comparison reads "unchanged" and the
+    # check asserts the opposite of what it means. It failed that way once here.
+    #
+    # THE SIZE IS ITSELF THE POINT. Both are deterministic sums, so any
+    # difference at all is the cache having been dropped -- and the difference
+    # being this small says the normalisation is NOT what moves `S(l)` when the
+    # ladder is lifted. The band is.
+    check(first != after,
+            "the residual is %s before and after the ceiling moved, bit for bit, so the "
+                    % String.num(first, 17) + "cache outlived the ladder it was computed for")
+    # PATH INDEPENDENCE, WHICH IS THE CHECK THAT FOUND THE DEFECT ABOVE.
+    # A field used at one ceiling and then lifted must equal a field born at the
+    # lifted one, BIT FOR BIT. Anything cached from the old ladder shows up here
+    # and nowhere else: `_stencil` memoises `P[f]` per cell, so a field that had
+    # already drawn ground at twelve octaves went on subtracting a twelve-octave
+    # `P[f]` from a fourteen-octave `f`, and the result matched neither ladder.
+    # Asserting only that the value MOVED passed straight through that.
+    var fresh := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
+    fresh.octave_ceiling = 14
+    check(fresh.residual_rms_for("playa") == after,
+            "a field lifted to 14 after use gives %s and one born at 14 gives %s, so a cache "
+                    % [String.num(after, 17),
+                       String.num(fresh.residual_rms_for("playa"), 17)]
+            + "from the shipped ladder survived the change")
+    var used := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
+    used.detail_at(at, "playa")
+    used.octave_ceiling = 14
+    check(used.detail_at(at, "playa") == fresh.detail_at(at, "playa"),
+            "the drawn detail after lifting a used field is %s and at a fresh one %s"
+                    % [String.num(used.detail_at(at, "playa"), 17),
+                       String.num(fresh.detail_at(at, "playa"), 17)])
+
+    # The control: a ceiling change that does not bite must not move it at all.
+    var cdf := DetailField.load_from(hf, DetailField.ROWS_PATH, 400.0, null)
+    var c_first := cdf.residual_rms_for("playa")
+    cdf.octave_ceiling = 14
+    check(c_first == cdf.residual_rms_for("playa"),
+            "a 400 m parent's residual moved from %s to %s when a ceiling that does not bite "
+                    % [String.num(c_first, 17),
+                       String.num(cdf.residual_rms_for("playa"), 17)]
+            + "was raised, so the recompute is not a function of the ladder")
+
+    # SAMENESS. Two ladders stopping at different octaves draw different ground,
+    # so a lifted instrument must not certify as the shipped surface -- the
+    # guard that would otherwise accept exactly what it exists to catch.
+    check(not df.same_function_as(lifted),
+            "a field clamped at %d reports being the same function as one at 14"
+                    % DetailField.MAX_OCTAVES)
+    check(df.same_function_as(DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)),
+            "two fields at the shipped ceiling are not the same function, so the comparison "
+            + "is refusing the re-parented field it was written to accept")
+    # A RE-PARENT CARRIES THE CEILING. `for_parent` shares the rows so that a
+    # change of lattice cannot become a change of function; the bound is part of
+    # the function.
+    check(lifted.for_parent(1600.0).octave_ceiling == 14,
+            "a re-parented field dropped back to the shipped ceiling, so a measurement would "
+            + "silently grade the clamped ladder at every parent but the first")
+    print("octaves: 3,200 m wants 14 and ships %d; lifted to 14 the ladder reaches the "
+            % DetailField.MAX_OCTAVES + "declared band, the detail moves at %d row(s) and the "
+            % moved + "residual is recomputed (%s -> %s, a relative move of %s)"
+            % [String.num(first, 17), String.num(after, 17),
+               String.num_scientific(absf(after - first) / maxf(absf(first), 1e-300))])
+
+    # ---- AND THE PUBLISHED MEASUREMENT'S OWN ARITHMETIC ---------------------
+    # `measurements/octave_clamp.json` is handed across a repo boundary with a
+    # headline -- how many verdicts moved -- and rows underneath it. The same
+    # rule this gate applies to the fixture's declarations applies to its own
+    # artefacts: a summary a reader can recompute is checked, not rendered.
+    #
+    # THE CONTROL IS THE PART THAT MATTERS. At a parent where the ceiling does
+    # not bite the two fields are one ladder, so every `S(l)` must come back
+    # bit-identical. A published run whose control had drifted would report a
+    # movement that is the instrument, and it would read as the ground.
+    # EVERY PUBLISHED RUN, NOT THE DEFAULT ONE. The seed re-draws are evidence
+    # about the same question and are committed beside the first, so an
+    # unchecked one would be the only artefact here nobody reconciles.
+    var clamp_docs := PackedStringArray()
+    var dir := DirAccess.open("res://measurements")
+    if dir != null:
+        for fn in dir.get_files():
+            if str(fn).begins_with("octave_clamp") and str(fn).ends_with(".json"):
+                clamp_docs.append("res://measurements/" + str(fn))
+    clamp_docs.sort()
+    if clamp_docs.is_empty():
+        print("octaves: no measurements/octave_clamp*.json, so no published clamp measurement "
+                + "is being checked. `bash tools/measure_octave_clamp.sh`")
+        return
+    var reconciled := 0
+    for path in clamp_docs:
+        var cf := FileAccess.open(path, FileAccess.READ)
+        if cf == null:
+            continue
+        var cdoc = JSON.parse_string(cf.get_as_text())
+        check(typeof(cdoc) == TYPE_DICTIONARY, "%s is not a JSON object" % path)
+        if typeof(cdoc) != TYPE_DICTIONARY:
+            continue
+        reconciled += 1
+        _reconcile_clamp_doc(path, cdoc as Dictionary)
+    check(reconciled == clamp_docs.size(),
+            "%d of %d published clamp measurement(s) could be read"
+                    % [reconciled, clamp_docs.size()])
+    print("octaves: %d published clamp measurement(s) reconcile" % reconciled)
+
+
+## One published clamp measurement, checked against its own rows.
+##
+## THE CONTROL IS THE PART THAT MATTERS. At a parent where the ceiling does not
+## bite the two fields are one ladder, so every `S(l)` must come back
+## bit-identical. A run whose control had drifted would report a movement that is
+## the instrument, and it would read as the ground. A `--only-clamped` run
+## carries no control by construction and says so in its own parameters, which is
+## why that requirement is read from the artefact rather than assumed.
+func _reconcile_clamp_doc(path: String, doc: Dictionary) -> void:
+    check(int(doc.get("max_octaves_shipped", -1)) == DetailField.MAX_OCTAVES,
+            "%s was taken at a ceiling of %d and this client ships %d"
+                    % [path, int(doc.get("max_octaves_shipped", -1)),
+                       DetailField.MAX_OCTAVES])
+    var only_clamped := bool((doc.get("grading_parameters", {}) as Dictionary)
+            .get("only_clamped_parents", false))
+    var unclamped := 0
+    var clamped := 0
+    var counted_flips := 0
+    for pr in (doc.get("per_parent", []) as Array):
+        var pp: Dictionary = pr
+        var bites := bool(pp.get("clamp_bites", false))
+        if bites:
+            clamped += 1
+        else:
+            unclamped += 1
+        for rr in (pp.get("per_lag", []) as Array):
+            var row: Dictionary = rr
+            if not bites:
+                check(float(row.get("relative_change", 1.0)) == 0.0,
+                        "%s at %s m under a %s m parent moved by %s with a ceiling that does "
+                                % [str(row.get("landform", "?")),
+                                   String.num(float(row.get("lag_m", NAN)), 1),
+                                   String.num(float(pp.get("parent_spacing_m", NAN)), 0),
+                                   String.num(float(row.get("relative_change", NAN)), 9)]
+                        + "not bite, so that run's control failed and its movements are the "
+                        + "instrument")
+            if bool(row.get("in_band_shipped", false)) != bool(row.get("in_band_lifted", false)):
+                counted_flips += 1
+        check(bool(pp.get("verdict_moved", true))
+                        == (str(pp.get("condition_2_shipped", "")) 
+                            != str(pp.get("condition_2_lifted", ""))),
+                "a %s m parent reports verdict_moved = %s beside %s -> %s"
+                        % [String.num(float(pp.get("parent_spacing_m", NAN)), 0),
+                           str(pp.get("verdict_moved", "?")),
+                           str(pp.get("condition_2_shipped", "?")),
+                           str(pp.get("condition_2_lifted", "?"))])
+    check(clamped > 0, "%s covers no clamped parent, so it measures nothing" % path)
+    check(only_clamped or unclamped > 0,
+            "%s covers %d clamped parent(s) and no unclamped one, and does not declare itself "
+                    % [path, clamped] + "--only-clamped, so its control is missing rather "
+            + "than deliberately absent")
+    check((doc.get("verdicts_that_moved", []) as Array).size() == counted_flips,
+            "%s names %d moved verdict(s) in its headline and carries %d in its own rows"
+                    % [path, (doc.get("verdicts_that_moved", []) as Array).size(),
+                       counted_flips])
+    check((doc.get("control_moved", []) as Array).is_empty(),
+            "%s records its own control moving: %s" % [path, str(doc.get("control_moved", []))])
+    print("octaves: %s -- seed %d, %d clamped parent(s), %d unclamped as control, %d verdict(s) "
+            % [path.get_file(),
+               int((doc.get("grading_parameters", {}) as Dictionary).get("seed", -1)),
+               clamped, unclamped,
+               (doc.get("verdicts_that_moved", []) as Array).size()] + "moved")
 
 
 func test_the_scatter_cost_is_a_difference_and_says_when_it_is_not_one() -> void:
