@@ -153,6 +153,47 @@ func _init() -> void:
                    str(per_parent[per_parent.size() - 1]["condition_2"]),
                    ", ".join(PackedStringArray(out_here))])
 
+    # OUTSIDE AT EVERY PARENT, OR ONLY AT SOME -- DERIVED HERE RATHER THAN LEFT
+    # TO A READER TO INTERSECT SIX LISTS.
+    #
+    # THIS EXISTS BECAUSE I GOT IT WRONG READING MY OWN OUTPUT. I reported "three
+    # cells, the same three at every parent" from six printed lines; three are
+    # outside at all six, and a FOURTH -- `playa` at 8 m -- is outside at two of
+    # them. The claim reached a handback and a commit message before the
+    # intersection was taken. A summary a reader has to compute by hand is one
+    # that gets computed wrongly, so it is computed here.
+    #
+    # AND THE INTERMITTENT CELL IS THE INFORMATIVE ONE. `playa`@8m is the same
+    # cell the octave-clamp seed sweep finds crossing its band edge in 11 of 100
+    # seeds. Two instruments that share no sampling -- one varying the parent
+    # lattice, one varying the sample cloud -- both find that cell marginal and
+    # the other three stable. An "outside at every parent" summary hides exactly
+    # the cell that is telling them something.
+    var every := {}
+    var some := {}
+    var first := true
+    for pr in per_parent:
+        var here := {}
+        for cname in ((pr as Dictionary).get("cells_outside", []) as Array):
+            here[str(cname)] = true
+            some[str(cname)] = true
+        if first:
+            every = here.duplicate()
+            first = false
+        else:
+            for k in every.keys():
+                if not here.has(k):
+                    every.erase(k)
+    var every_list := PackedStringArray()
+    for k in every:
+        every_list.append(str(k))
+    every_list.sort()
+    var sometimes := PackedStringArray()
+    for k in some:
+        if not every.has(k):
+            sometimes.append(str(k))
+    sometimes.sort()
+
     var doc := {
         "_what": ("What this client can see about decision 1040's condition-2 UNMET: which cells "
                 + "can fail at all, which do, by how much and in which direction, and whether "
@@ -180,6 +221,13 @@ func _init() -> void:
         "walked_parents_m": wp.as_array(),
         "support": support,
         "cells_that_cannot_fail": unfailable,
+        "_outside_at_every_versus_some": ("A cell outside its band at every walked parent and one "
+                + "outside at two of six are different objects, and a per-parent list reports "
+                + "them alike. The intermittent one is where the lattice is doing something; the "
+                + "invariant ones are properties of the row and the band. Derived here because I "
+                + "read my own six lines as three invariant cells and missed the fourth."),
+        "cells_outside_at_every_parent": every_list,
+        "cells_outside_at_some_parents": sometimes,
         "per_parent": per_parent,
         "cells": cells,
     }
@@ -190,6 +238,8 @@ func _init() -> void:
         return
     w.store_string(JSON.stringify(doc, "  ") + "\n")
     w.close()
+    print("unmet: outside at EVERY parent: %s; outside at SOME: %s"
+            % [", ".join(every_list), ("none" if sometimes.is_empty() else ", ".join(sometimes))])
     print("unmet: %d cell-parent row(s), %d cell(s) that cannot fail -> %s"
             % [cells.size(), unfailable.size(), OUT])
     quit(0)

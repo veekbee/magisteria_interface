@@ -2783,6 +2783,57 @@ func test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconci
     check(outside > 0, "the published read records nothing outside a band, which is not the "
             + "condition-2 UNMET this client has reported for four revs")
 
+    # INVARIANT VERSUS INTERMITTENT, RECOMPUTED FROM THE PER-PARENT LISTS.
+    # I read six printed lines as three invariant cells and missed a fourth that
+    # is outside at two of the six; the claim reached a handback and a commit
+    # message before anyone took the intersection. The artefact derives the split
+    # now, so this checks the derivation rather than trusting the summary that
+    # replaced the mistake.
+    var per_parent: Array = doc.get("per_parent", [])
+    check(per_parent.size() >= 2,
+            "the read covers %d parent(s), so invariant and intermittent cannot be told apart"
+                    % per_parent.size())
+    var every := {}
+    var some := {}
+    var first := true
+    for pr in per_parent:
+        var here := {}
+        for cname in ((pr as Dictionary).get("cells_outside", []) as Array):
+            here[str(cname)] = true
+            some[str(cname)] = true
+        if first:
+            every = here.duplicate()
+            first = false
+        else:
+            for k in every.keys():
+                if not here.has(k):
+                    every.erase(k)
+    var declared_every: Array = doc.get("cells_outside_at_every_parent", [])
+    var declared_some: Array = doc.get("cells_outside_at_some_parents", [])
+    check(declared_every.size() == every.size(),
+            "the read declares %d cell(s) outside at every parent and its own per-parent lists "
+                    % declared_every.size() + "intersect to %d" % every.size())
+    for cname in declared_every:
+        check(every.has(str(cname)),
+                "%s is declared outside at every parent and is not in the intersection"
+                        % str(cname))
+    check(declared_some.size() == some.size() - every.size(),
+            "the read declares %d intermittent cell(s) and its rows carry %d"
+                    % [declared_some.size(), some.size() - every.size()])
+    for cname in declared_some:
+        check(some.has(str(cname)) and not every.has(str(cname)),
+                "%s is declared intermittent and is either absent or outside everywhere"
+                        % str(cname))
+    # THE CONTROL: the two sets must not be the same set. If every outside cell
+    # were invariant the split would be carrying no information, and the summary
+    # that replaced my mistake would be as uninformative as the mistake.
+    check(not declared_some.is_empty(),
+            "no cell is outside at some parents and inside at others, so the invariant/"
+            + "intermittent split names nothing -- if the read has changed shape, say so rather "
+            + "than keeping a check that cannot discriminate")
+    print("unmet: outside at EVERY parent %s; at SOME only %s"
+            % [str(declared_every), str(declared_some)])
+
     # THE CONTROL. `band_can_fail_low` must be a function of the edge and not a
     # constant: a flag that read `true` everywhere would let an unfailable cell
     # be counted as a pass and the disclosure above would name nothing.
