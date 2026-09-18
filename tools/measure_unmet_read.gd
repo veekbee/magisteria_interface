@@ -218,6 +218,26 @@ func _init() -> void:
         "grading_parameters": {"span_m": SPAN_M, "quantile": QUANTILE,
                 "samples_per_lag": SAMPLES, "seed": SEED, "windows": sourced.size(),
                 "lags_m": lags, "_are_the_gate_s": true},
+        # THE BOUND THIS GRADING RAN AT, so the artefact can be caught when it
+        # stops describing the tree. It was graded once at `MAX_OCTAVES` 12,
+        # decision 1073 raised it to 14, and every `S` at the two coarsest
+        # walked parents moved -- while the gate stayed green, because its check
+        # reconciles this file against its own rows and never against a live
+        # re-grade. Three artefacts went stale that way in one day.
+        #
+        # THIS ONE IS BOUND TO THE SYMBOL, and the clamp artefacts beside it are
+        # bound to the number, deliberately. This file is LIVE: it must describe
+        # the current tree, so its check follows the constant and breaks when the
+        # two part. Those are historical: they record a superseded bound as
+        # evidence, so their check pins the number and must NOT follow. A check
+        # on the symbol silently stops testing history; a check on the number
+        # breaks loudly when the constant moves. Which is correct depends on
+        # whether the artefact is meant to age.
+        "max_octaves_shipped": DetailField.MAX_OCTAVES,
+        "_max_octaves_is_the_live_bound": ("the octave ceiling in force when this was graded. "
+                + "It is compared against the constant, not against a number, because this "
+                + "artefact is meant to describe the tree it sits in rather than to record a "
+                + "past one."),
         "walked_parents_m": wp.as_array(),
         "support": support,
         "cells_that_cannot_fail": unfailable,

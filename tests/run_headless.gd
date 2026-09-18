@@ -2799,6 +2799,22 @@ func test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconci
     if typeof(parsed) != TYPE_DICTIONARY:
         return
     var doc: Dictionary = parsed
+    # THE BOUND IT WAS GRADED AT, COMPARED TO THE ONE IN FORCE. This is the
+    # check that was missing: the file was graded at a ceiling of 12, decision
+    # 1073 raised it to 14, every `S` at the two coarsest walked parents moved,
+    # and nothing went red -- because the reconciliation below compares the
+    # artefact to its own rows and an artefact always agrees with itself. The
+    # missing crossing was TIME, and the same shape took `fit_ceiling.json` and
+    # `flight_replay.json` in the same day.
+    #
+    # BOUND TO THE SYMBOL, unlike the clamp artefacts' check two functions down,
+    # which pins the number on purpose. This file is live and must follow the
+    # constant; those are history and must not.
+    check(int(doc.get("max_octaves_shipped", -1)) == DetailField.MAX_OCTAVES,
+            "the published condition-2 read was graded at an octave ceiling of %d and this "
+                    % int(doc.get("max_octaves_shipped", -1))
+            + "client ships %d, so its numbers describe a tree that is no longer here"
+                    % DetailField.MAX_OCTAVES)
     var cells: Array = doc.get("cells", [])
     check(not cells.is_empty(), "the published condition-2 read carries no cells")
     var named: Array = doc.get("cells_that_cannot_fail", [])

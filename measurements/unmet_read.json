@@ -1,6 +1,7 @@
 {
   "_a_band_reaching_below_zero_cannot_fail": "`S` is a second difference and is non-negative by construction, so a band whose lower edge is below zero cannot be failed from below. `cells_that_cannot_fail` names those. They still count as they count -- excluding them would be this client ruling on a band width that is not its own -- but a stratum reported in band there has not passed a test.",
   "_level_or_shape": "A wrong amplitude displaces the curve and the miss is roughly constant across lags; a wrong exponent tilts it and the miss grows or shrinks. `log_slope_gap` is the measurement's log-slope minus the band means', over the graded lags. A candidate placing the fault in a loosely-certified row should say which of the two it produces.",
+  "_max_octaves_is_the_live_bound": "the octave ceiling in force when this was graded. It is compared against the constant, not against a number, because this artefact is meant to describe the tree it sits in rather than to record a past one.",
   "_outside_at_every_versus_some": "A cell outside its band at every walked parent and one outside at two of six are different objects, and a per-parent list reports them alike. The intermittent one is where the lattice is doing something; the invariant ones are properties of the row and the band. Derived here because I read my own six lines as three invariant cells and missed the fourth.",
   "_this_rules_on_nothing": "No disposition of the four candidates and no reading of a band's width as a defect. The bands are the producing side's.",
   "_vertical_exaggeration_is": "the grader samples `Heightfield.height_at_world` and `DetailField` directly; the view's factor does not reach this path.",
@@ -1091,8 +1092,8 @@
       "closure_scatter": 0.471865335527703,
       "closure_scatter_relative": 0.34506902309933,
       "landform": "floor",
-      "log_slope_gap": 0.0851852273649516,
-      "measured_log_slope": 1.36250809444842,
+      "log_slope_gap": 0.0856148736752562,
+      "measured_log_slope": 1.36293774075873,
       "n_windows": 8,
       "parent_spacing_m": 1600.0,
       "per_lag": [
@@ -1108,7 +1109,7 @@
           "in_band": true,
           "lag_m": 4.0,
           "miss_factor": 0.0,
-          "s": 0.0579512801309647
+          "s": 0.0578501721693101
         },
         {
           "band": [
@@ -1122,7 +1123,7 @@
           "in_band": true,
           "lag_m": 8.0,
           "miss_factor": 0.0,
-          "s": 0.147208396778751
+          "s": 0.146985075426073
         },
         {
           "band": [
@@ -1136,7 +1137,7 @@
           "in_band": true,
           "lag_m": 16.0,
           "miss_factor": 0.0,
-          "s": 0.383155130683463
+          "s": 0.382714520643731
         }
       ]
     },
@@ -1145,8 +1146,8 @@
       "closure_scatter": 0.619000729100251,
       "closure_scatter_relative": 0.768348332340728,
       "landform": "playa",
-      "log_slope_gap": 0.177053147716652,
-      "measured_log_slope": 0.830018613956789,
+      "log_slope_gap": 0.168862662120417,
+      "measured_log_slope": 0.821828128360553,
       "n_windows": 6,
       "parent_spacing_m": 1600.0,
       "per_lag": [
@@ -1162,7 +1163,7 @@
           "in_band": true,
           "lag_m": 4.0,
           "miss_factor": 0.0,
-          "s": 0.0249541796504786
+          "s": 0.0253424916554792
         },
         {
           "band": [
@@ -1176,7 +1177,7 @@
           "in_band": true,
           "lag_m": 8.0,
           "miss_factor": 0.0,
-          "s": 0.0444055965495522
+          "s": 0.04309383703945
         },
         {
           "band": [
@@ -1189,8 +1190,8 @@
           "direction": "above",
           "in_band": false,
           "lag_m": 16.0,
-          "miss_factor": 1.13495720246356,
-          "s": 0.0788613662559783
+          "miss_factor": 1.13960497468302,
+          "s": 0.0791843120608746
         }
       ]
     },
@@ -1199,8 +1200,8 @@
       "closure_scatter": 0.826507959114469,
       "closure_scatter_relative": 0.667316515078488,
       "landform": "riparian_margin",
-      "log_slope_gap": -0.509081012210112,
-      "measured_log_slope": 1.23274928115115,
+      "log_slope_gap": -0.504904775236211,
+      "measured_log_slope": 1.23692551812505,
       "n_windows": 5,
       "parent_spacing_m": 1600.0,
       "per_lag": [
@@ -1215,8 +1216,8 @@
           "direction": "below",
           "in_band": false,
           "lag_m": 4.0,
-          "miss_factor": 3.29652888513451,
-          "s": 0.00752973835962223
+          "miss_factor": 3.31046648321741,
+          "s": 0.00749803694610307
         },
         {
           "band": [
@@ -1229,8 +1230,8 @@
           "direction": "below",
           "in_band": false,
           "lag_m": 8.0,
-          "miss_factor": 1.42155123047811,
-          "s": 0.0179367436454783
+          "miss_factor": 1.42088764786774,
+          "s": 0.0179451204592169
         },
         {
           "band": [
@@ -1244,7 +1245,7 @@
           "in_band": true,
           "lag_m": 16.0,
           "miss_factor": 0.0,
-          "s": 0.0415880835016651
+          "s": 0.0416534465989571
         }
       ]
     },
@@ -1253,8 +1254,8 @@
       "closure_scatter": 0.349133776925971,
       "closure_scatter_relative": 0.239239761184174,
       "landform": "slope",
-      "log_slope_gap": 0.119268812381722,
-      "measured_log_slope": 1.50196155998514,
+      "log_slope_gap": 0.119650235479972,
+      "measured_log_slope": 1.50234298308339,
       "n_windows": 10,
       "parent_spacing_m": 1600.0,
       "per_lag": [
@@ -1270,7 +1271,7 @@
           "in_band": true,
           "lag_m": 4.0,
           "miss_factor": 0.0,
-          "s": 0.158901871737271
+          "s": 0.158950376438952
         },
         {
           "band": [
@@ -1284,7 +1285,7 @@
           "in_band": true,
           "lag_m": 8.0,
           "miss_factor": 0.0,
-          "s": 0.430067927626624
+          "s": 0.431419016103973
         },
         {
           "band": [
@@ -1298,7 +1299,7 @@
           "in_band": true,
           "lag_m": 16.0,
           "miss_factor": 0.0,
-          "s": 1.27467649252003
+          "s": 1.27573997470063
         }
       ]
     },
@@ -1307,8 +1308,8 @@
       "closure_scatter": 0.397896882647931,
       "closure_scatter_relative": 0.263947721586724,
       "landform": "talus",
-      "log_slope_gap": 0.0844230271645445,
-      "measured_log_slope": 1.5460310813125,
+      "log_slope_gap": 0.0866178839927179,
+      "measured_log_slope": 1.54822593814068,
       "n_windows": 7,
       "parent_spacing_m": 1600.0,
       "per_lag": [
@@ -1324,7 +1325,7 @@
           "in_band": true,
           "lag_m": 4.0,
           "miss_factor": 0.0,
-          "s": 0.155325212535445
+          "s": 0.154794888035667
         },
         {
           "band": [
@@ -1338,7 +1339,7 @@
           "in_band": true,
           "lag_m": 8.0,
           "miss_factor": 0.0,
-          "s": 0.475792592318612
+          "s": 0.475513620116089
         },
         {
           "band": [
@@ -1352,7 +1353,7 @@
           "in_band": true,
           "lag_m": 16.0,
           "miss_factor": 0.0,
-          "s": 1.32448003424497
+          "s": 1.32398025781367
         }
       ]
     },
@@ -1361,8 +1362,8 @@
       "closure_scatter": 0.471865335527703,
       "closure_scatter_relative": 0.34506902309933,
       "landform": "floor",
-      "log_slope_gap": 0.10622674944296,
-      "measured_log_slope": 1.38354961652643,
+      "log_slope_gap": 0.106096262363225,
+      "measured_log_slope": 1.3834191294467,
       "n_windows": 8,
       "parent_spacing_m": 3200.0,
       "per_lag": [
@@ -1378,7 +1379,7 @@
           "in_band": true,
           "lag_m": 4.0,
           "miss_factor": 0.0,
-          "s": 0.0606307849384393
+          "s": 0.0604996364099861
         },
         {
           "band": [
@@ -1392,7 +1393,7 @@
           "in_band": true,
           "lag_m": 8.0,
           "miss_factor": 0.0,
-          "s": 0.150456567341735
+          "s": 0.149997796419939
         },
         {
           "band": [
@@ -1406,7 +1407,7 @@
           "in_band": true,
           "lag_m": 16.0,
           "miss_factor": 0.0,
-          "s": 0.412736674701137
+          "s": 0.411769403939616
         }
       ]
     },
@@ -1415,8 +1416,8 @@
       "closure_scatter": 0.619000729100251,
       "closure_scatter_relative": 0.768348332340728,
       "landform": "playa",
-      "log_slope_gap": 0.1697647385288,
-      "measured_log_slope": 0.822730204768937,
+      "log_slope_gap": 0.145976727311846,
+      "measured_log_slope": 0.798942193551983,
       "n_windows": 6,
       "parent_spacing_m": 3200.0,
       "per_lag": [
@@ -1432,7 +1433,7 @@
           "in_band": true,
           "lag_m": 4.0,
           "miss_factor": 0.0,
-          "s": 0.0302489663420573
+          "s": 0.0308138598501273
         },
         {
           "band": [
@@ -1445,8 +1446,8 @@
           "direction": "above",
           "in_band": false,
           "lag_m": 8.0,
-          "miss_factor": 1.122791355672,
-          "s": 0.0539400195178388
+          "miss_factor": 1.14603138556616,
+          "s": 0.0550564937939839
         },
         {
           "band": [
@@ -1459,8 +1460,8 @@
           "direction": "above",
           "in_band": false,
           "lag_m": 16.0,
-          "miss_factor": 1.36194216935901,
-          "s": 0.0946331896957417
+          "miss_factor": 1.34237056780997,
+          "s": 0.0932732765337079
         }
       ]
     },
@@ -1469,8 +1470,8 @@
       "closure_scatter": 0.826507959114469,
       "closure_scatter_relative": 0.667316515078488,
       "landform": "riparian_margin",
-      "log_slope_gap": -0.520415705242061,
-      "measured_log_slope": 1.2214145881192,
+      "log_slope_gap": -0.512020853448895,
+      "measured_log_slope": 1.22980943991236,
       "n_windows": 5,
       "parent_spacing_m": 3200.0,
       "per_lag": [
@@ -1485,8 +1486,8 @@
           "direction": "below",
           "in_band": false,
           "lag_m": 4.0,
-          "miss_factor": 3.10069258662989,
-          "s": 0.00800530826791146
+          "miss_factor": 3.15189576732608,
+          "s": 0.00787526042495301
         },
         {
           "band": [
@@ -1499,8 +1500,8 @@
           "direction": "below",
           "in_band": false,
           "lag_m": 8.0,
-          "miss_factor": 1.39404658566574,
-          "s": 0.0182906369573175
+          "miss_factor": 1.4000805117845,
+          "s": 0.0182118098104951
         },
         {
           "band": [
@@ -1514,7 +1515,7 @@
           "in_band": true,
           "lag_m": 16.0,
           "miss_factor": 0.0,
-          "s": 0.0435254146025272
+          "s": 0.0433195548316689
         }
       ]
     },
@@ -1523,8 +1524,8 @@
       "closure_scatter": 0.349133776925971,
       "closure_scatter_relative": 0.239239761184174,
       "landform": "slope",
-      "log_slope_gap": 0.178905949623889,
-      "measured_log_slope": 1.56159869722731,
+      "log_slope_gap": 0.180098496858947,
+      "measured_log_slope": 1.56279124446236,
       "n_windows": 10,
       "parent_spacing_m": 3200.0,
       "per_lag": [
@@ -1540,7 +1541,7 @@
           "in_band": true,
           "lag_m": 4.0,
           "miss_factor": 0.0,
-          "s": 0.142577708474164
+          "s": 0.142269675857278
         },
         {
           "band": [
@@ -1554,7 +1555,7 @@
           "in_band": true,
           "lag_m": 8.0,
           "miss_factor": 0.0,
-          "s": 0.472127623462711
+          "s": 0.473929184487588
         },
         {
           "band": [
@@ -1568,7 +1569,7 @@
           "in_band": true,
           "lag_m": 16.0,
           "miss_factor": 0.0,
-          "s": 1.24230355643522
+          "s": 1.24167067720373
         }
       ]
     },
@@ -1577,8 +1578,8 @@
       "closure_scatter": 0.397896882647931,
       "closure_scatter_relative": 0.263947721586724,
       "landform": "talus",
-      "log_slope_gap": 0.049069512755924,
-      "measured_log_slope": 1.51067756690388,
+      "log_slope_gap": 0.058543171638767,
+      "measured_log_slope": 1.52015122578673,
       "n_windows": 7,
       "parent_spacing_m": 3200.0,
       "per_lag": [
@@ -1594,7 +1595,7 @@
           "in_band": true,
           "lag_m": 4.0,
           "miss_factor": 0.0,
-          "s": 0.15891536121535
+          "s": 0.15689850480976
         },
         {
           "band": [
@@ -1608,7 +1609,7 @@
           "in_band": true,
           "lag_m": 8.0,
           "miss_factor": 0.0,
-          "s": 0.509039794123282
+          "s": 0.509149155021078
         },
         {
           "band": [
@@ -1622,7 +1623,7 @@
           "in_band": true,
           "lag_m": 16.0,
           "miss_factor": 0.0,
-          "s": 1.2902812973648
+          "s": 1.290746745658
         }
       ]
     }
@@ -1656,7 +1657,8 @@
     "span_m": 3000.0,
     "windows": 10
   },
-  "measured_at_utc": "2026-09-18T04:58:59",
+  "max_octaves_shipped": 14,
+  "measured_at_utc": "2026-09-18T21:03:50",
   "per_parent": [
     {
       "cells_outside": [
