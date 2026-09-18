@@ -25,6 +25,10 @@
 #   --no-field      leave the terrain's own albedo on, so relief is the subject
 #   --natural       naturalistic view: the far-field vegetation tint, not the ramp
 #   --sun DEG       aim the hillshade; a lit surface changes and a texture does not
+#   --tag NAME      append NAME to the output filename. The name is otherwise
+#                   window_row_day, which does NOT include --only, --camera or
+#                   --size -- so two shots differing only in those overwrite each
+#                   other. Two pairs in the audit set did exactly that.
 #   --compare PNG   diff the last shot against a frame from an earlier run
 #   --backdrop black  clear to black, so the sky drops out of the measurements
 #   --camera NAME   ortho or fly              (default: whatever the scene starts on)

@@ -19,6 +19,87 @@ measurement that found them.
 
 ---
 
+## Re-taken 2026-09-18, and four things came back — PRODUCED AND JUDGED BY ONE SESSION
+
+**The control this record exists for is not satisfied here.** The shots were taken and read by the
+same session that wrote the shot they were taken to validate. Every finding below is a first pass;
+the owner's eye is outstanding and **T1 is not closed on this reading**. That limit is the point of
+the paragraph at the top of this file: four milestones "appeared correct" to everyone reading data.
+
+Run: `bash tools/audit.sh`, 52 s, 9 invocations, 15 images, on the built-in Retina display (the
+external DX80 was attached and not used; Godot took the primary). Nothing here was ambiguous as to
+whether it rendered — the set produced real frames and one deliberate blank, which is what rules out
+the stub the harness warns about.
+
+### 1. M5's scatter shot renders NOTHING, and has been doing so silently
+
+`state probe=resolved  scatter FAILED: the horizon could not be solved here: nothing priced at this
+cell`, twice, and the two frames come back at **one brightness level, spread 0.000 over 1,024,000
+px, 100% neutral**. Opened: a uniform grey rectangle. The harness caught it itself —
+*"THE TWO FRAMES ARE IDENTICAL. Either the state did not change, or the thing it changes is not
+drawn."*
+
+The gate has been printing the same refusal on every headless run for weeks
+(`main scene scatter: the centre cell refused`), where it reads as one probe declining a cell. On
+screen it is the whole of M5: the milestone's picture is a blank.
+
+### 2. TWO SHOTS WERE OVERWRITING TWO OTHERS, EVERY RUN, AND ONE OF THEM DESTROYED §1's EVIDENCE
+
+The output name is `window_row_day`, and **`--only`, `--camera` and `--size` do not reach it**. So:
+
+| claim | wrote | overwritten by |
+|---|---|---|
+| M5 vegetation scatter | `deepest_winter_band_pft_biomass_day22.png` | verdict banner |
+| M2 field overlay | `deepest_winter_band_wetness_day45.png` | composite |
+
+Eleven files for thirteen shots. **M5's blank frame — the evidence for §1 — was replaced by a
+correctly-rendered banner shot under M5's own name**, and the author of this run opened that file,
+saw a good picture and reported M5 as fine for one message before checking the log. A set whose
+entire purpose is that the next person can re-take a picture and compare had two claims with no
+picture to compare against, and the replacement looked like a pass.
+
+Fixed: `--tag` on `capture.gd`, applied to the five shots that needed discriminating. Fifteen files
+for fifteen images now.
+
+### 3. The harness's own line filter was discarding the tint measurement
+
+`shot()` greps a **whitelist** of line prefixes, and `tint` was not in it. `--natural` is the only
+flag that emits one, so the first run of the T1 shot produced its entire numeric evidence and threw
+it away. Absence reading as a pass, one layer below the shots.
+
+### 4. T1 — the far-field tint is there, covers exactly the drawable cells, and moves with the day
+
+New named shot, `--natural`, ortho, black backdrop, days 22 and 89 of `deepest_winter`.
+
+    tint   3252/5684 cells covered, mean cover 0.712, rebuild 267 ms  (day 22)
+    tint   3252/5684 cells covered, mean cover 0.713, rebuild 235 ms  (day 89)
+    compare: 10.01% of pixels differ; green-minus-red -0.058 -> +0.082
+
+**3,252 is `drawable_cells` for `deepest_winter` exactly** — the count this client recomputes from
+the payload through `VegetationScatter.ground_cover` and checks against the manifest. The tint covers
+precisely the cells a plant can be placed in, which is T1's claim about consuming `fixture_v1`
+reaching the screen.
+
+Opened: an earth-toned basin — olive and khaki over the dry ground, green in the south and along the
+wetter margins, bare grey rock, relief through the tint. **Not the viridis ramp**, which is what
+`--natural` exists to replace. Coverage barely moves between the two days (0.712 → 0.713) while a
+tenth of the pixels change colour and green-minus-red crosses zero, so what the season moves is the
+COLOUR and not the population — consistent with cover being static across a window.
+
+**The cross-reference this shot was framed for could not be taken.** It shares M5's day pair so the
+far field's seasonal movement could be read against the near field's; M5 renders nothing, so there
+is nothing to read it against.
+
+### Flagged and NOT diagnosed
+
+The tinted surface carries a fine light **speckle** over most of its area. It is far finer than the
+5,684-cell grid at this zoom, so it is not cell boundaries. It could be the naturalistic shader's
+own texture, the synthesised micro-relief, or bare ground showing through at sub-cell scale — I
+cannot tell which from one frame and I am not guessing. It is in every tinted frame and it is not a
+stub: the same run produced correctly-rendered ramp, flowline and banner shots.
+
+---
+
 ## Eight findings
 
 Four of them are in one place: the terrain's surface. None was visible to the 1,827 checks that were passing before it,

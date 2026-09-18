@@ -29,13 +29,19 @@ mkdir -p "$OUT"
 LOG="$OUT/audit.log"
 : > "$LOG"
 
+# THE FILTER IS A WHITELIST, SO A NEW MEASURED LINE IS DROPPED BY DEFAULT.
+# `--natural` makes capture.gd print a `tint` line -- cells covered, mean cover,
+# rebuild ms -- and the T1 shot's entire numeric evidence went into the log's
+# bin on its first run because `tint` was not in this alternation. A harness
+# that silently discards the measurement a new shot exists to produce is the
+# absence-reads-as-a-pass shape one layer down from the shots themselves.
 shot() {
   local what="$1"; shift
   echo "" | tee -a "$LOG"
   echo "== $what" | tee -a "$LOG"
   echo "   tools/screenshot.sh $*" | tee -a "$LOG"
   bash tools/screenshot.sh "$@" --out "$OUT" 2>&1 \
-    | grep -E "^(shot|relief|ramp|compare|against|state|verdict|contours|families|fields|terrain) " \
+    | grep -E "^(shot|relief|ramp|compare|against|state|verdict|contours|families|fields|terrain|tint) " \
     | tee -a "$LOG"
 }
 
@@ -48,7 +54,8 @@ shot "M1 hillshade -- is the surface lit, and from where" \
 # M2 -- the overlay. Two days of one row, and the ramp measured against the
 # stops the code declares rather than against an impression of them.
 shot "M2 field overlay -- the ramp, and whether the day moves it" \
-  --only terrain --window "$W" --row band.wetness --days 0,45 --camera ortho --backdrop black
+  --only terrain --window "$W" --row band.wetness --days 0,45 --camera ortho --backdrop black \
+  --tag overlay
 
 # M3 -- flow colour on the reaches, isolated from the ground under them.
 shot "M3 streamflow on the flowlines" \
@@ -63,12 +70,13 @@ shot "M4 contours -- drawn, draped, and moving with the day" \
 # one cell's colour, and a census over that is 99% a statement about the
 # overlay. The plants are the subject, so the plants are what is left in.
 shot "M5 vegetation scatter -- placement and seasonal tint" \
-  --only vegetation --window "$W" --row band.pft.biomass --days 22,89 --scatter
+  --only vegetation --window "$W" --row band.pft.biomass --days 22,89 --scatter \
+  --tag scatter
 
 # Everything at once, which is the only shot that can show one layer eating
 # another: sorting, z-fighting, a legend over the basin.
 shot "composite -- every layer together, as the application runs it" \
-  --window "$W" --row band.wetness --days 45 --camera ortho
+  --window "$W" --row band.wetness --days 45 --camera ortho --tag composite
 
 # THE DISCLAIMER, WHICH IS THE ONE ELEMENT WHOSE JOB IS TO BE IN OTHER
 # PEOPLE'S SCREENSHOTS -- and which had twenty-six headless asserts and no
@@ -78,9 +86,32 @@ shot "composite -- every layer together, as the application runs it" \
 # tall one that puts the basin UNDER the controls rather than beside them,
 # where the headline vanished into the bright end of the ramp.
 shot "verdict banner -- does the whole disclaimer fit the window it is read in" \
-  --window "$W" --row band.pft.biomass --days 22 --camera ortho
+  --window "$W" --row band.pft.biomass --days 22 --camera ortho --tag banner
 shot "verdict banner -- is it legible with the ramp behind it, not beside it" \
-  --window "$W" --row band.bare_fraction --days 22 --camera ortho --size 900x1400
+  --window "$W" --row band.bare_fraction --days 22 --camera ortho --size 900x1400 \
+  --tag banner_tall
+
+# T1 -- the far-field vegetation tint. `--natural` exists for this claim and no
+# shot in this set covered it until now: a named set is built from the claims in
+# hand when it is built, and T1's arrived later, so the set silently stopped
+# covering the milestones as they accumulated. That is a property of named sets,
+# not anyone's mistake, and it is why the absence read as a pass.
+#
+# THE FAILURE THIS IS FRAMED TO CATCH IS A CONSTANT COLOUR -- a tint present,
+# plausible and driven by nothing. Ortho shows the whole basin so spatial
+# variation is visible in one frame; the day pair shows temporal.
+#
+# COMPARABLE TO M5's PAIR, NOT TO M2's. It shares M5's days and row, so the far
+# field's seasonal movement can be read against the near field's. It is not M2
+# with one flag changed -- M2 paints a different row on different days.
+#
+# `--row` IS INERT HERE and is kept for scene-state parity with M5 only: the
+# tint reads (window, day) alone -- `terrain_view.gd`'s `_rebuild_tint` calls
+# `tint.cell_colours(window, day)` -- so no row reaches it. Parity is also why
+# this needs `--tag`: without one it would be a THIRD writer to M5's filenames.
+shot "T1 far-field vegetation tint -- present, varying by place, moving with the day" \
+  --only terrain --window "$W" --row band.pft.biomass --days 22,89 --camera ortho \
+  --backdrop black --natural --tag tint
 
 echo "" | tee -a "$LOG"
 echo "record: measurements/visual_audit.md   shots: $OUT (not committed)" | tee -a "$LOG"

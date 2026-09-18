@@ -338,9 +338,33 @@ func _set_state(view, day: int) -> void:
 
 func _shoot(view, step: Dictionary) -> void:
     var img := get_root().get_texture().get_image()
+    # THE NAME IS WINDOW, ROW AND DAY -- AND THAT IS NOT ENOUGH TO BE UNIQUE.
+    #
+    # `--only`, `--camera` and `--size` are what separate several of the audit
+    # set's shots from each other, and none of them reaches this name. Measured
+    # on the set as it stood: TWO PAIRS COLLIDED. M5's vegetation scatter and the
+    # first verdict-banner shot both wrote
+    # `deepest_winter_band_pft_biomass_day22.png`, and M2's overlay and the
+    # composite both wrote `deepest_winter_band_wetness_day45.png`. The second
+    # writer won, silently, every run.
+    #
+    # WHAT THAT COST IS NOT TIDINESS. M5's frame was the evidence that its
+    # scatter had failed -- a blank frame at one brightness level -- and it was
+    # overwritten by a shot that renders correctly, under M5's own name. A reader
+    # opening the directory would have found a good picture where the failure
+    # was. The author of this run did exactly that and reported M5 as fine for
+    # one message, which is the whole failure in miniature: the set exists so the
+    # next person can re-take a picture and compare, and two of its claims had no
+    # picture to compare against.
+    #
+    # `--tag` is the discriminator. It is optional, so every uncolliding shot
+    # keeps the name it has always had.
+    var img_tag := _arg("--tag", "")
     var name: String = "%s_%s_day%02d" % [
             (window_name if window_name != "" else "window"),
             (row_name if row_name != "" else "row").replace(".", "_"), int(step["day"])]
+    if img_tag != "":
+        name += "_" + img_tag
     if suns.size() > 1:
         name += "_sun%03d" % int(step["sun"])
     var path := "res://%s/%s.png" % [out_dir, name]
