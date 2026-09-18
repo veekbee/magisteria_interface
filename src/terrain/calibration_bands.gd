@@ -94,6 +94,44 @@ func bands_for_grading() -> Dictionary:
     return out
 
 
+## THE SUPPORT EACH BAND RESTS ON, read from the artefact rather than from the
+## dispatch that quoted it.
+##
+## `n_qualifying` is how many windows a stratum actually qualified in, and the
+## exponent's `sd` is the CLOSURE SCATTER decision 1033 grades closure against
+## after the authored `CLOSE_TOL` was withdrawn. Both are the producing side's
+## own figures; this reader does not compute them, it carries them so a client
+## measurement can be read beside the support it rests on instead of beside a
+## number quoted in prose.
+##
+## `exponent_sd_over_mean` IS COMPUTED HERE AND IS NOT THEIRS. The scatter is an
+## absolute spread on an exponent whose mean differs by nearly a factor of two
+## across the strata, so the same `sd` means different things at different means.
+## It is published as a derived figure and named as one.
+##
+## Rows are `landform -> {n, exponent_sd, exponent_mean, exponent_sd_over_mean}`;
+## a refused or absent block contributes nothing.
+func support_figures() -> Dictionary:
+    if not is_loaded():
+        return {}
+    var out := {}
+    for name in (doc["landform_bands"] as Dictionary):
+        var block: Dictionary = (doc["landform_bands"][name] as Dictionary).get(FORM, {})
+        if block.is_empty() or bool(block.get("refused", false)):
+            continue
+        var exp_block: Dictionary = block.get("exponent", {})
+        var sd := float(exp_block.get("sd", NAN))
+        var mean := float(exp_block.get("mean", NAN))
+        out[str(name)] = {
+            "n": int(block.get("n_qualifying", -1)),
+            "exponent_sd": sd,
+            "exponent_mean": mean,
+            "exponent_sd_over_mean": (NAN if is_nan(sd) or is_nan(mean) or mean == 0.0
+                    else sd / absf(mean)),
+        }
+    return out
+
+
 ## Decision 986's cross-stratum clause, as the ARTEFACT measured it.
 ##
 ## NOT `StratumGrade.spread()`, AND THE DIFFERENCE IS THE POINT. That function

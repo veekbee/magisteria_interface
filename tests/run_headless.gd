@@ -70,6 +70,7 @@ func _initialize() -> void:
     _run(test_the_contour_line_stays_broken, "test_the_contour_line_stays_broken")
     _run(test_no_contour_set_is_invented_for_a_window_that_has_none, "test_no_contour_set_is_invented_for_a_window_that_has_none")
     _run(test_the_probe_tells_the_three_absences_apart, "test_the_probe_tells_the_three_absences_apart")
+    _run(test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile, "test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile")
     _run(test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare, "test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare")
     _run(test_the_state_axis_is_read_from_the_key_that_names_it_and_never_from_the_code_one, "test_the_state_axis_is_read_from_the_key_that_names_it_and_never_from_the_code_one")
     _run(test_a_verdict_stale_against_its_replay_is_not_absorbed_into_equivalent, "test_a_verdict_stale_against_its_replay_is_not_absorbed_into_equivalent")
@@ -2697,6 +2698,107 @@ func _declared_stale_manifest() -> Dictionary:
 
 func _declared_stale_verdict() -> AncestorVerdict:
     return AncestorVerdict.read_from(_declared_stale_manifest())
+
+
+func test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile() -> void:
+    """`measurements/unmet_read.json` is this client's read of decision 1040's
+    condition-2 failure, published so the sim side's candidates are tested
+    against the SHAPE of the miss rather than against which names appear.
+
+    THE LOAD-BEARING CLAIM IS THE ONE ABOUT WHAT CANNOT FAIL. `S` is a second
+    difference and is non-negative by construction, so a band whose lower edge
+    is below zero cannot be failed from below, and a stratum reported in band
+    there has not passed a test. `riparian_margin` at 16 m is such a cell at
+    every walked parent, which matters because its other two cells both MISS --
+    so it fails every band that can discriminate and its one pass is an
+    inability to fail. A read that reported that stratum as two-of-three would
+    be describing the band's width as though it were evidence.
+
+    NOTHING HERE EXCLUDES THOSE CELLS FROM THE CONJUNCTION. Excluding them would
+    be this client ruling on a band width that is not its own. They are named.
+    """
+    var f := FileAccess.open("res://measurements/unmet_read.json", FileAccess.READ)
+    if f == null:
+        print("unmet: no measurements/unmet_read.json, so the condition-2 read is not being "
+                + "checked. `bash tools/measure_unmet_read.sh`")
+        return
+    var parsed = JSON.parse_string(f.get_as_text())
+    check(typeof(parsed) == TYPE_DICTIONARY, "unmet_read.json is not a JSON object")
+    if typeof(parsed) != TYPE_DICTIONARY:
+        return
+    var doc: Dictionary = parsed
+    var cells: Array = doc.get("cells", [])
+    check(not cells.is_empty(), "the published condition-2 read carries no cells")
+    var named: Array = doc.get("cells_that_cannot_fail", [])
+    var unfailable := 0
+    var outside := 0
+    var checked := 0
+    for cr in cells:
+        var c: Dictionary = cr
+        for pr in (c.get("per_lag", []) as Array):
+            var l: Dictionary = pr
+            var band: Array = l.get("band", [])
+            if band.size() != 2:
+                continue
+            checked += 1
+            var sv := float(l.get("s", NAN))
+            var lo := float(band[0])
+            var hi := float(band[1])
+            # THE VERDICT IS RECOMPUTED, not read. A published in/out flag that
+            # disagreed with its own numbers would be the defect this whole
+            # artefact exists to make visible in somebody else's.
+            check(bool(l.get("in_band", false)) == (sv >= lo and sv <= hi),
+                    "%s at %s m under a %s m parent records in_band = %s for %s against [%s, %s]"
+                            % [str(c.get("landform", "?")),
+                               String.num(float(l.get("lag_m", NAN)), 1),
+                               String.num(float(c.get("parent_spacing_m", NAN)), 0),
+                               str(l.get("in_band", "?")), String.num(sv, 6),
+                               String.num(lo, 6), String.num(hi, 6)])
+            check(bool(l.get("band_can_fail_low", true)) == (lo > 0.0),
+                    "%s at %s m records band_can_fail_low = %s on a lower edge of %s"
+                            % [str(c.get("landform", "?")),
+                               String.num(float(l.get("lag_m", NAN)), 1),
+                               str(l.get("band_can_fail_low", "?")), String.num(lo, 6)])
+            if lo <= 0.0 and bool(l.get("in_band", false)):
+                unfailable += 1
+            if not bool(l.get("in_band", false)):
+                outside += 1
+                # A MISS IS A FACTOR AND IT IS CHECKED AS ONE. "outside" with an
+                # unreconciled magnitude is how a 3x miss and a 13% one come to
+                # be reported as the same object.
+                var want: float = (lo / sv if sv < lo else sv / hi)
+                check(is_equal_approx(float(l.get("miss_factor", NAN)), want),
+                        "%s at %s m records a miss of %s and its own numbers give %s"
+                                % [str(c.get("landform", "?")),
+                                   String.num(float(l.get("lag_m", NAN)), 1),
+                                   String.num(float(l.get("miss_factor", NAN)), 6),
+                                   String.num(want, 6)])
+    check(checked > 0, "the published read carries no gradeable cell at all")
+    check(named.size() == unfailable,
+            "the read names %d cell(s) that cannot fail and its own rows carry %d"
+                    % [named.size(), unfailable])
+    check(unfailable > 0,
+            "no cell in the published read is unfailable, so this check is asserting a "
+            + "disclosure that never fires -- if that is now true the read has changed shape")
+    check(outside > 0, "the published read records nothing outside a band, which is not the "
+            + "condition-2 UNMET this client has reported for four revs")
+
+    # THE CONTROL. `band_can_fail_low` must be a function of the edge and not a
+    # constant: a flag that read `true` everywhere would let an unfailable cell
+    # be counted as a pass and the disclosure above would name nothing.
+    var seen_true := false
+    var seen_false := false
+    for cr in cells:
+        for pr in ((cr as Dictionary).get("per_lag", []) as Array):
+            if bool((pr as Dictionary).get("band_can_fail_low", true)):
+                seen_true = true
+            else:
+                seen_false = true
+    check(seen_true and seen_false,
+            "every published cell reports band_can_fail_low = %s, so the flag is a constant "
+                    % str(seen_true) + "and names nothing")
+    print("unmet: the published read reconciles -- %d gradeable cell-lag(s), %d outside a band, "
+            % [checked, outside] + "%d in band on an edge below zero and named" % unfailable)
 
 
 func test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare() -> void:
