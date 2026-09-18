@@ -5190,8 +5190,9 @@ func test_the_published_residual_is_reproduced_and_not_merely_believed() -> void
 
 
 func test_the_octave_ceiling_is_a_bound_that_can_be_measured_and_not_only_disclosed() -> void:
-    """`MAX_OCTAVES` stops the ladder short of the declared 0.25 m band at the
-    two coarsest walked parents. `band_limit_note` says so; saying so does not
+    """`MAX_OCTAVES` USED TO stop the ladder short of the declared 0.25 m band at
+    the two coarsest walked parents; decision 1073 raised it to 14 and it no
+    longer does, at any walked parent. `band_limit_note` says so; saying so does not
     answer whether a VERDICT moves, and until that is measured a declaration
     defect and a substantive one cannot be told apart -- they have different
     owners. So the bound is a settable ceiling, defaulting to the constant, and
@@ -5216,9 +5217,22 @@ func test_the_octave_ceiling_is_a_bound_that_can_be_measured_and_not_only_disclo
             "a freshly loaded field's ceiling is %d and the shipped bound is %d"
                     % [df.octave_ceiling, DetailField.MAX_OCTAVES])
 
-    # THE WANT AND THE CLAMPED COUNT ARE DIFFERENT NUMBERS, and at this parent
-    # they must be: a 3,200 m parent over a declared 0.25 m band wants 14.
-    var bit := false
+    # THE EXHIBIT IS A CONSTRUCTED CEILING, NOT THE SHIPPED ONE.
+    #
+    # It was the shipped one until decision 1073 raised the bound to 14, and
+    # that raise turned NINE checks in this test red at once. They were not
+    # wrong about the mechanism; they exhibited it using 14 as "the lifted
+    # value", which had been above the bound and became the bound. I predicted
+    # two of the nine, because I traced the checks naming `MAX_OCTAVES` and
+    # missed the ones spelling 14 as a literal -- the symbol was searchable and
+    # the number was not.
+    #
+    # So the direction is inverted: the shipped ladder is the one that REACHES
+    # the declared band, and a constructed LOW ceiling is what falls short. A
+    # constructed witness cannot be moved by a later ruling, which is the whole
+    # lesson of the nine.
+    const CLAMPED := 6
+    const ABOVE_ANY_WANT := 20
     for name in df.landforms():
         var n := str(name)
         var declared := DetailField.scalar_of(df.row(n), "finest_wavelength_m", NAN)
@@ -5231,134 +5245,113 @@ func test_the_octave_ceiling_is_a_bound_that_can_be_measured_and_not_only_disclo
         check(df.octaves_for(n) == mini(want, DetailField.MAX_OCTAVES),
                 "%s is synthesised at %d octaves against a want of %d and a bound of %d"
                         % [n, df.octaves_for(n), want, DetailField.MAX_OCTAVES])
-        if want > DetailField.MAX_OCTAVES:
-            bit = true
-    check(bit, "the clamp binds at no row under a 3,200 m parent, so the rest of this test "
-            + "is measuring a bound that is not applied")
 
-    # LIFTED TO THE WANT: the ladder reaches the declared band and the
-    # disclosure goes quiet. Both directions, because a note that fires when the
-    # band IS reached is as useless as one silent when it is not.
-    var lifted := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
-    lifted.octave_ceiling = 14
-    for name in lifted.landforms():
+    # THE SHIPPED LADDER REACHES THE BAND AND SAYS NOTHING; THE CONSTRUCTED ONE
+    # FALLS SHORT AND SAYS SO. Both directions, because a note that fires when
+    # the band IS reached is as useless as one silent when it is not.
+    var clamped := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
+    clamped.octave_ceiling = CLAMPED
+    for name in df.landforms():
         var n := str(name)
-        var declared := DetailField.scalar_of(lifted.row(n), "finest_wavelength_m", NAN)
+        var declared := DetailField.scalar_of(df.row(n), "finest_wavelength_m", NAN)
         if is_nan(declared):
             continue
-        check(lifted.finest_reached_m(n) <= declared,
-                "%s still reaches only %s m against a declared %s m with the ceiling at 14"
-                        % [n, String.num(lifted.finest_reached_m(n), 4),
-                           String.num(declared, 3)])
-        check(lifted.band_limit_note(n).is_empty(),
-                "%s discloses a band limit that is no longer there: %s"
-                        % [n, lifted.band_limit_note(n)])
-        check(not df.band_limit_note(n).is_empty(),
-                "%s at the shipped bound reaches %s m against a declared %s and says nothing"
+        check(df.finest_reached_m(n) <= declared,
+                "%s reaches only %s m at the shipped bound against a declared %s m"
                         % [n, String.num(df.finest_reached_m(n), 4), String.num(declared, 3)])
-        # THE NOTE REPORTS THE CEILING ACTUALLY APPLIED. It read `MAX_OCTAVES`
-        # directly until the bound became settable, which would have had a
-        # lifted field disclosing a limit at a bound it was not using.
-        var tight := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
-        tight.octave_ceiling = 6
-        check(tight.band_limit_note(n).contains("stops it at 6"),
+        check(df.band_limit_note(n).is_empty(),
+                "%s discloses a band limit at the shipped bound, which reaches the band: %s"
+                        % [n, df.band_limit_note(n)])
+        check(clamped.finest_reached_m(n) > declared,
+                "%s at a ceiling of %d still reaches %s m against a declared %s"
+                        % [n, CLAMPED, String.num(clamped.finest_reached_m(n), 4),
+                           String.num(declared, 3)])
+        check(not clamped.band_limit_note(n).is_empty(),
+                "%s at a ceiling of %d reaches %s m against a declared %s and says nothing"
+                        % [n, CLAMPED, String.num(clamped.finest_reached_m(n), 4),
+                           String.num(declared, 3)])
+        # THE NOTE REPORTS THE CEILING ACTUALLY APPLIED, not the constant. It
+        # read `MAX_OCTAVES` directly until the bound became settable.
+        check(clamped.band_limit_note(n).contains("stops it at %d" % CLAMPED),
                 "%s's note does not name the ceiling in force: %s"
-                        % [n, tight.band_limit_note(n)])
-        check(tight.finest_reached_m(n) > df.finest_reached_m(n),
-                "%s reaches %s m at 6 octaves and %s m at %d, so the ceiling is not being "
-                        % [n, String.num(tight.finest_reached_m(n), 4),
-                           String.num(df.finest_reached_m(n), 4), DetailField.MAX_OCTAVES]
-                + "applied at all")
+                        % [n, clamped.band_limit_note(n)])
 
     # THE GROUND MOVES. A ceiling that changed no height would make the clamp
-    # measurement report no movement for a reason that has nothing to do with
-    # the clamp.
+    # measurement report no movement for a reason unrelated to the clamp.
     var at := hf.texel_to_world(500.0, 700.0)
     var moved := 0
     for name in df.landforms():
         var n := str(name)
-        if df.octaves_wanted(n) <= DetailField.MAX_OCTAVES:
-            continue
-        if not is_equal_approx(df.detail_at(at, n), lifted.detail_at(at, n)):
+        if not is_equal_approx(df.detail_at(at, n), clamped.detail_at(at, n)):
             moved += 1
-    check(moved > 0, "lifting the ceiling from %d to 14 changed the drawn detail at no row, "
-            % DetailField.MAX_OCTAVES + "so the added octaves are not reaching the surface")
+    check(moved > 0, "dropping the ceiling to %d changed the drawn detail at no row, so the "
+            % CLAMPED + "octaves it removes are not reaching the surface")
 
     # AND THE NORMALISATION MOVES WITH IT. At 3,200 m no residual is published,
-    # so `rms(f - P[f])` is computed from the running ladder; a cached value
-    # surviving the change would divide one ladder's surface by another's and
-    # the added band would read as an amplitude change.
+    # so `rms(f - P[f])` is computed from the running ladder.
     var rdf := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
     var first := rdf.residual_rms_for("playa")
     check(rdf.residual_source("playa").contains("recomputed"),
             "a 3,200 m parent's residual is not recomputed, so this control is measuring a "
             + "published constant: %s" % rdf.residual_source("playa"))
-    rdf.octave_ceiling = 14
+    rdf.octave_ceiling = CLAMPED
     var after := rdf.residual_rms_for("playa")
-    # EXACTLY, AND NOT `is_equal_approx`. Measured, the two added octaves move
-    # this by 1.4e-7 to 4.7e-5 relative -- under `is_equal_approx`'s 1e-5 on
-    # four rows of five, so an approximate comparison reads "unchanged" and the
-    # check asserts the opposite of what it means. It failed that way once here.
-    #
-    # THE SIZE IS ITSELF THE POINT. Both are deterministic sums, so any
-    # difference at all is the cache having been dropped -- and the difference
-    # being this small says the normalisation is NOT what moves `S(l)` when the
-    # ladder is lifted. The band is.
+    # EXACTLY, AND NOT `is_equal_approx`. Its 1e-5 tolerance is larger than the
+    # effect a couple of octaves make, so an approximate comparison reads
+    # "unchanged" and asserts the opposite of what it means. It failed that way
+    # once here.
     check(first != after,
             "the residual is %s before and after the ceiling moved, bit for bit, so the "
                     % String.num(first, 17) + "cache outlived the ladder it was computed for")
-    # PATH INDEPENDENCE, WHICH IS THE CHECK THAT FOUND THE DEFECT ABOVE.
-    # A field used at one ceiling and then lifted must equal a field born at the
-    # lifted one, BIT FOR BIT. Anything cached from the old ladder shows up here
-    # and nowhere else: `_stencil` memoises `P[f]` per cell, so a field that had
-    # already drawn ground at twelve octaves went on subtracting a twelve-octave
-    # `P[f]` from a fourteen-octave `f`, and the result matched neither ladder.
-    # Asserting only that the value MOVED passed straight through that.
+
+    # PATH INDEPENDENCE, WHICH IS THE CHECK THAT FOUND THE STENCIL DEFECT.
+    # A field used at one ceiling and then changed must equal a field born at
+    # the new one, BIT FOR BIT. `_coarse_component64` memoises sixteen
+    # `_noise64` values per cell and `_noise64` reads the octave count, so a
+    # field that had already drawn ground went on subtracting a `P[f]` cached at
+    # the old ladder. Asserting only that the value MOVED passed straight
+    # through that.
     var fresh := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
-    fresh.octave_ceiling = 14
+    fresh.octave_ceiling = CLAMPED
     check(fresh.residual_rms_for("playa") == after,
-            "a field lifted to 14 after use gives %s and one born at 14 gives %s, so a cache "
-                    % [String.num(after, 17),
+            "a field dropped to %d after use gives %s and one born there gives %s, so a cache "
+                    % [CLAMPED, String.num(after, 17),
                        String.num(fresh.residual_rms_for("playa"), 17)]
-            + "from the shipped ladder survived the change")
+            + "from the previous ladder survived the change")
     var used := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
     used.detail_at(at, "playa")
-    used.octave_ceiling = 14
+    used.octave_ceiling = CLAMPED
     check(used.detail_at(at, "playa") == fresh.detail_at(at, "playa"),
-            "the drawn detail after lifting a used field is %s and at a fresh one %s"
+            "the drawn detail after changing a used field is %s and at a fresh one %s"
                     % [String.num(used.detail_at(at, "playa"), 17),
                        String.num(fresh.detail_at(at, "playa"), 17)])
 
-    # The control: a ceiling change that does not bite must not move it at all.
-    var cdf := DetailField.load_from(hf, DetailField.ROWS_PATH, 400.0, null)
+    # The control: a ceiling ABOVE every want cannot bite, so it must move
+    # nothing at all.
+    var cdf := DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)
     var c_first := cdf.residual_rms_for("playa")
-    cdf.octave_ceiling = 14
+    cdf.octave_ceiling = ABOVE_ANY_WANT
     check(c_first == cdf.residual_rms_for("playa"),
-            "a 400 m parent's residual moved from %s to %s when a ceiling that does not bite "
+            "the residual moved from %s to %s when the ceiling was raised to %d, above every "
                     % [String.num(c_first, 17),
-                       String.num(cdf.residual_rms_for("playa"), 17)]
-            + "was raised, so the recompute is not a function of the ladder")
+                       String.num(cdf.residual_rms_for("playa"), 17), ABOVE_ANY_WANT]
+            + "row's want, so the recompute is not a function of the ladder")
 
     # SAMENESS. Two ladders stopping at different octaves draw different ground,
-    # so a lifted instrument must not certify as the shipped surface -- the
-    # guard that would otherwise accept exactly what it exists to catch.
-    check(not df.same_function_as(lifted),
-            "a field clamped at %d reports being the same function as one at 14"
-                    % DetailField.MAX_OCTAVES)
+    # so a constructed instrument must not certify as the shipped surface.
+    check(not df.same_function_as(clamped),
+            "a field at the shipped bound reports being the same function as one at %d"
+                    % CLAMPED)
     check(df.same_function_as(DetailField.load_from(hf, DetailField.ROWS_PATH, 3200.0, null)),
             "two fields at the shipped ceiling are not the same function, so the comparison "
             + "is refusing the re-parented field it was written to accept")
-    # A RE-PARENT CARRIES THE CEILING. `for_parent` shares the rows so that a
-    # change of lattice cannot become a change of function; the bound is part of
-    # the function.
-    check(lifted.for_parent(1600.0).octave_ceiling == 14,
+    check(clamped.for_parent(1600.0).octave_ceiling == CLAMPED,
             "a re-parented field dropped back to the shipped ceiling, so a measurement would "
-            + "silently grade the clamped ladder at every parent but the first")
-    print("octaves: 3,200 m wants 14 and ships %d; lifted to 14 the ladder reaches the "
-            % DetailField.MAX_OCTAVES + "declared band, the detail moves at %d row(s) and the "
-            % moved + "residual is recomputed (%s -> %s, a relative move of %s)"
-            % [String.num(first, 17), String.num(after, 17),
-               String.num_scientific(absf(after - first) / maxf(absf(first), 1e-300))])
+            + "silently grade the wrong ladder at every parent but the first")
+    print("octaves: the shipped bound is %d and reaches the declared band at 3,200 m; a "
+            % DetailField.MAX_OCTAVES + "constructed ceiling of %d falls short, moves the "
+            % CLAMPED + "detail at %d row(s) and recomputes the residual (%s -> %s)"
+            % [moved, String.num(first, 17), String.num(after, 17)])
 
     # ---- AND THE PUBLISHED MEASUREMENT'S OWN ARITHMETIC ---------------------
     # `measurements/octave_clamp.json` is handed across a repo boundary with a
@@ -5537,6 +5530,13 @@ func _reconcile_sweep_doc(path: String, doc: Dictionary) -> void:
             % [moves, seed_of_published, matched])
 
 
+## The bound the octave-clamp artefacts were taken at, before decision 1073
+## raised it. Spelled here rather than read from `DetailField`, because these
+## artefacts describe a superseded state and a check that followed the constant
+## would go green on them the moment the constant moved.
+const CLAMP_MEASURED_AT := 12
+
+
 ## One published clamp measurement, checked against its own rows.
 ##
 ## THE CONTROL IS THE PART THAT MATTERS. At a parent where the ceiling does not
@@ -5546,10 +5546,26 @@ func _reconcile_sweep_doc(path: String, doc: Dictionary) -> void:
 ## carries no control by construction and says so in its own parameters, which is
 ## why that requirement is read from the artefact rather than assumed.
 func _reconcile_clamp_doc(path: String, doc: Dictionary) -> void:
-    check(int(doc.get("max_octaves_shipped", -1)) == DetailField.MAX_OCTAVES,
-            "%s was taken at a ceiling of %d and this client ships %d"
-                    % [path, int(doc.get("max_octaves_shipped", -1)),
-                       DetailField.MAX_OCTAVES])
+    # THESE ARTEFACTS MEASURED A BOUND THIS CLIENT NO LONGER SHIPS, and they are
+    # kept rather than re-cut or deleted. They are the evidence decision 1073
+    # raised the bound ON: 90 in/out-of-band readings at three seeds, plus a
+    # hundred-seed sweep, all taken while `MAX_OCTAVES` was 12. Re-running them
+    # now would measure nothing -- with the bound at 14 no walked parent is
+    # clamped, so there is no clamped parent to contrast against the control and
+    # the tool would refuse. Restamping them to 14 would be a lie about when
+    # they were taken.
+    #
+    # So what is asserted is that they record the bound they were TAKEN at, and
+    # the assertion is against the number rather than against the constant --
+    # which is the whole point: a check that tracked `MAX_OCTAVES` would have
+    # gone quietly green at 14 on artefacts describing 12.
+    check(int(doc.get("max_octaves_shipped", -1)) == CLAMP_MEASURED_AT,
+            "%s records a ceiling of %d; these artefacts were taken at %d and are retained as "
+                    % [path, int(doc.get("max_octaves_shipped", -1)), CLAMP_MEASURED_AT]
+            + "the evidence for decision 1073, not as a description of what ships now")
+    check(DetailField.MAX_OCTAVES != CLAMP_MEASURED_AT,
+            "this client ships the bound these artefacts were taken at, so they are current "
+            + "and should be re-cut rather than kept as history")
     var only_clamped := bool((doc.get("grading_parameters", {}) as Dictionary)
             .get("only_clamped_parents", false))
     var unclamped := 0

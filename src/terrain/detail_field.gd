@@ -44,7 +44,7 @@ const CLASSES := ["playa", "floor", "slope", "talus", "riparian_margin"]
 
 ## The most halvings any row can ask for. Cost is linear in this, and a row
 ## asking for a millimetre under a kilometre parent would ask for twenty.
-const MAX_OCTAVES := 12
+const MAX_OCTAVES := 14
 
 ## Salts, so that three uses of one mixer cannot collide. Published like
 ## everything else `d` reads, and named rather than spelled at the call site.
@@ -373,19 +373,22 @@ func finest_reached_m(landform: String) -> float:
 ## WHERE `MAX_OCTAVES` STOPS THE LADDER SHORT OF THE DECLARED BAND, said rather
 ## than left to be inferred from a constant.
 ##
-## MEASURED ACROSS THE WALKED-PARENT SET. `octaves_for` wants
-## `ceil(log2(parent / finest))` and is clamped at 12, which is a cost bound:
-## every octave is another noise evaluation per sample. At 100, 200, 400 and
-## 800 m the want is 9, 10, 11 and 12 and the clamp does not bite. At 1,600 m it
-## wants 13 and at 3,200 m it wants 14, so the field reaches 0.39 m and 0.78 m
-## against a declared 0.25 -- 1.6 and 3.1 times coarser than the row promises,
-## at two of the six parents decision 1040's conjunction is graded at.
+## AT THE SHIPPED BOUND THIS NOW RETURNS EMPTY AT EVERY WALKED PARENT, and that
+## is the point rather than a defect. `octaves_for` wants
+## `ceil(log2(parent / finest))`; the walked set asks 9, 10, 11, 12, 13 and 14
+## at 100 m through 3,200 m, and decision 1073 raised the bound from 12 to 14 so
+## every one of them is met.
 ##
-## THE CLAMP IS NOT THE DEFECT; ITS SILENCE WAS. A bound on cost is a decision
-## somebody can weigh, and 14 octaves per sample against 12 is a real price.
-## A consumer reading `finest_wavelength_m` and believing the band is present
-## has no way to find out that it is not, which is the part this ends. Whether
-## to raise the bound is a cost question and is not answered here.
+## WHAT IT COST TO GET HERE IS THE REASON THIS FUNCTION STAYS. At 12 the field
+## reached 0.39 m and 0.78 m against a declared 0.25 at the two coarsest walked
+## parents -- ten of thirty row-parent pairs, at two of the six parents decision
+## 1040's conjunction is graded at -- and nothing said so. THE CLAMP WAS NOT THE
+## DEFECT; ITS SILENCE WAS. A consumer reading `finest_wavelength_m` and
+## believing the band was present had no way to find out it was not.
+##
+## The bound can move again, and a lower one is what `octave_ceiling` constructs
+## for measurement, so the disclosure is live rather than historical: it fires
+## whenever the ladder in force falls short of what a row declares.
 func band_limit_note(landform: String) -> String:
     var declared := scalar_of(row(landform), "finest_wavelength_m", NAN)
     var reached := finest_reached_m(landform)

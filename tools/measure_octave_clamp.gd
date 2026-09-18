@@ -341,9 +341,16 @@ func _sourced_windows() -> Array:
 ## rare it is a wording one.
 ##
 ## THE TIGHTEST CELL IS TAKEN OVER `playa`'s THREE LAGS AND NOT AT A CHOSEN ONE.
-## Which lag binds MOVES WITH THE SEED -- 8 m at seed 21, 16 m at seed 47 -- so
-## fixing the lag would sample one cell's distribution and call it the tightest
-## cell's. That is the same error as grading one landform and calling it the set.
+## Which lag binds moves with the seed -- but it is 8 m in 84 of 100 seeds, 4 m
+## in 8 and 16 m in 8, so it moves in ONE DRAW IN SIX and fixing on 8 m would
+## have been right most of the time. That minority is exactly why the max is
+## taken: in sixteen seeds a fixed lag understates the tightest cell.
+##
+## AN EARLIER VERSION OF THIS COMMENT SAID "8 m at seed 21, 16 m at seed 47" and
+## the second half was wrong. Seed 47's tightest RATIO is at 4 m; 16 m is its
+## narrowest MARGIN. Those are different quantities -- distance to the edge
+## against movement as a fraction of that distance -- and the example was read
+## off the wrong column of my own table, then repeated into a handback.
 ##
 ## ONE PARENT, BECAUSE THE ASK NAMES ONE. 1,600 m is where the 0.36 is; 3,200 m's
 ## tightest was 0.20 and is reported in the per-parent artefacts.
