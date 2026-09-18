@@ -89,6 +89,46 @@ quoted.** Re-taking it is not a re-run: the traces were flown at `27ba9b0`, `d48
 against a different fixture and a different horizon, so a re-score answers "what would this path draw
 now", not "what did the flight show".
 
+## A second prediction recorded before its run — `unmet_read.json`, 2026-09-18
+
+**Written at `b2bdf39`, BEFORE the re-grade.** `unmet_read.json` was graded while `MAX_OCTAVES` was
+12; decision 1073 raised it to 14, so the detail field at the 1,600 m and 3,200 m parents now reaches
+the declared band and the artefact's numbers there no longer describe this tree.
+
+**The gate does not see that**, and the reason is the third instance of one shape today: the check
+reconciles the artefact against its own rows and never against a live re-grade. `fit_ceiling.json`
+and `flight_replay.json` were the first two. An artefact and its own rows are one sitting, however
+far apart the two reads are — the missing crossing is TIME.
+
+**THE PREDICTION, and it is exact rather than directional, because an independent artefact already
+holds the answer.** At a bound of 14, `octaves_for` returns `min(want, 14)`, and the walked set wants
+13 at 1,600 m and 14 at 3,200 m — so the ladder in force is now precisely the LIFTED ladder that
+`octave_clamp.json` measured at seed 21. Both were graded at the gate's own span, quantile, sample
+count and seed. So:
+
+1. **At 100, 200, 400 and 800 m every `S` is BIT-IDENTICAL.** The clamp never bit there; those four
+   parents are the control, exactly as they were in the clamp measurement.
+2. **At 1,600 m and 3,200 m every `S` equals `octave_clamp.json`'s `s_lifted` for the same stratum
+   and lag, BIT FOR BIT.** This is the load-bearing half: two artefacts, taken for different
+   questions, must meet on the same numbers.
+3. **No cell changes its in/out verdict, at any parent.** Derived from the lifted column: the cells
+   outside come back `playa@16m, riparian_margin@4m, riparian_margin@8m` at every parent, plus
+   `playa@8m` at 200 m and 3,200 m. Identical to what the artefact already records.
+4. **`cells_that_cannot_fail` stays 6** — `riparian_margin`@16m, one per parent, whose band's lower
+   edge is below zero.
+5. Miss factors at 1,600 m and 3,200 m move with the values in (2).
+
+**What would falsify it:** any difference at the four control parents; any disagreement with
+`s_lifted` at the two that moved; any cell changing verdict.
+
+**AND THE REPAIR IS THE ONE ALREADY BUILT ONE ARTEFACT OVER.** The clamp artefacts record the bound
+they were taken at, and their check compares that to the live constant. `unmet_read.json` will record
+the same stamp — but bound to the SYMBOL rather than the number, because it is a LIVE artefact that
+must describe the current tree, where the clamp artefacts are historical and must not follow the
+constant. Those are the same trap facing opposite directions: a check on the symbol silently stops
+testing history, a check on the number breaks loudly when the constant moves, and which one is
+correct depends on whether the artefact is meant to age.
+
 ## What is here
 
 - `render_cost.json` — per-instance frame cost, and the ladder it was fitted from. It prices an
