@@ -235,11 +235,48 @@ func _place() -> void:
         return
     at_world = probe["world"]
     scene._on_probed(probe)
-    view.focus_on_scatter()
+    # THE RETURN IS READ NOW. `focus_on_scatter` does nothing and says so when
+    # there is no scatter to focus on, and this harness ignored the boolean --
+    # which is how it came to record flights nobody could see.
+    var focused: bool = view.focus_on_scatter()
+    if not focused:
+        print("free_flight: nothing to focus on yet -- this harness places the camera itself, "
+                + "so that is not fatal, but it is why the mode has to be forced below")
     scene.get_node("UI").visible = false
     view.set_naturalistic(true)
     _k_res = VegetationScatter.resolution_k(
             float(get_root().get_visible_rect().size.y), view.rig.fly.fov)
+
+    # THE VIEW MUST ACTUALLY BE THE FLY CAMERA, AND NOTHING HERE MADE IT ONE.
+    #
+    # THIS IS THE DEFECT THE FIRST REAL FLIGHT IN WEEKS FOUND, and it was found
+    # by a person saying "I only saw the top-down map" -- never by the harness,
+    # which recorded 2,998 frames and two marks over a static overview and
+    # reported a successful flight.
+    #
+    # `_using_ortho` is cleared in exactly one place: `CameraRig.focus_on`,
+    # reached only through `TerrainView.focus_on_scatter`, which RETURNS EARLY
+    # when `has_scatter` is false. This harness calls it BEFORE its first
+    # `_build`, so there is never a scatter at that moment; and since the C2
+    # horizon work the build can also refuse outright ("nothing priced at this
+    # cell"), so even a later focus finds nothing. The rig therefore stayed in
+    # the overview while W/A/S/D drove a camera the viewport was not rendering.
+    #
+    # The only tell in the output was `speed p50 0.0 m/s`, which reads exactly
+    # like somebody who did not walk much.
+    #
+    # So the mode is forced through the viewer's own public API -- the same
+    # `using_ortho()`/`toggle()` pair `capture.gd` uses -- rather than by
+    # reaching for the private flag, and it is VERIFIED rather than assumed. An
+    # empty scatter is NOT fatal: walking a far field with nothing standing in
+    # it is a real thing to look at and mark. A top-down map is not.
+    if view.rig.using_ortho():
+        view.rig.toggle()
+    if view.rig.using_ortho():
+        printerr("free_flight: the view is still the overview camera, so a flight from here "
+                + "would be a top-down map with a walk recorded around it. Refusing.")
+        quit(2)
+        return
 
     cam = view.rig.fly
     cam.far = 6000.0
@@ -288,6 +325,19 @@ func _place() -> void:
         "fov_degrees": cam.fov,
         "eye_height_m": _eye_height_m(),
         "asked_speed_m_s": speed_m_s,
+        # WHETHER A PERSON COULD SEE THIS FLIGHT, recorded because for one
+        # afternoon the file could not say. A trace taken over the ortho
+        # overview carries frames, marks, a route and a header claiming a walk
+        # through the far field, and differs from a real one only in that its
+        # MEDIAN SPEED is zero -- which reads exactly like somebody who stood
+        # still a lot. Real flights here sit at a p50 of 4.96 and 5.04 m/s
+        # against an asked 5.0; the broken one sat at 0.0 with a p95 of 5.0,
+        # because the camera moved and the viewport was not rendering it.
+        #
+        # So the definitive fact is stamped rather than inferred from the
+        # statistic. It is read back from the rig AFTER the mode was forced, so
+        # it records what was true and not what was intended.
+        "first_person": not view.rig.using_ortho(),
         "individuation_k": k_fraction * _k_res,
         "k_over_k_res": k_fraction,
         "k_resolution": _k_res,

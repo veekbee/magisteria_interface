@@ -9,6 +9,7 @@
   "counts": {
     "_outside_any_test": 51,
     "test_a_census_is_the_stand_a_headless_replay_can_score": 12,
+    "test_a_committed_flight_trace_says_a_person_could_see_it": 5,
     "test_a_density_schedule_is_finer_than_the_texel_it_thins": 15,
     "test_a_family_is_scored_in_its_own_annulus_or_not_at_all": 232,
     "test_a_flight_trace_round_trips_and_a_pan_cannot_churn": 10,

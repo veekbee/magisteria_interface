@@ -70,6 +70,7 @@ func _initialize() -> void:
     _run(test_the_contour_line_stays_broken, "test_the_contour_line_stays_broken")
     _run(test_no_contour_set_is_invented_for_a_window_that_has_none, "test_no_contour_set_is_invented_for_a_window_that_has_none")
     _run(test_the_probe_tells_the_three_absences_apart, "test_the_probe_tells_the_three_absences_apart")
+    _run(test_a_committed_flight_trace_says_a_person_could_see_it, "test_a_committed_flight_trace_says_a_person_could_see_it")
     _run(test_the_audits_isolated_ortho_shots_all_black_the_backdrop, "test_the_audits_isolated_ortho_shots_all_black_the_backdrop")
     _run(test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile, "test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile")
     _run(test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare, "test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare")
@@ -2699,6 +2700,91 @@ func _declared_stale_manifest() -> Dictionary:
 
 func _declared_stale_verdict() -> AncestorVerdict:
     return AncestorVerdict.read_from(_declared_stale_manifest())
+
+
+func test_a_committed_flight_trace_says_a_person_could_see_it() -> void:
+    """A flight is a person walking and marking what looked wrong. For one
+    afternoon `free_flight` recorded traces over the ORTHO OVERVIEW: the camera
+    it drove was never made current, because the only line that leaves ortho is
+    `CameraRig.focus_on`, reached only via `TerrainView.focus_on_scatter`, which
+    returns early when there is no scatter -- and the harness called it before
+    its first build and ignored the boolean.
+
+    THE FILE COULD NOT SAY. Such a trace carries frames, marks, a route and a
+    header describing a walk through the far field. It differs from a real one
+    only in that its MEDIAN SPEED is zero, which reads like somebody who stood
+    still. Two were recorded and the tell was a person saying "I only saw the
+    top-down map".
+
+    So `first_person` is stamped from the rig after the mode is forced, and this
+    refuses any trace that carries it as false. **ABSENCE IS REPORTED, NEVER
+    DEFAULTED**: the three flights recorded before the stamp existed cannot
+    carry it, and a check that read a missing key as `true` would certify
+    exactly the traces it exists to catch.
+    """
+    var dir := DirAccess.open("res://measurements/flights")
+    if dir == null:
+        print("flights: no measurements/flights, so no trace is being checked")
+        return
+    var stamped := 0
+    var unstamped := PackedStringArray()
+    var scripted := 0
+    for fn in dir.get_files():
+        if not str(fn).ends_with(".json"):
+            continue
+        var f := FileAccess.open("res://measurements/flights/" + str(fn), FileAccess.READ)
+        if f == null:
+            continue
+        var parsed = JSON.parse_string(f.get_as_text())
+        if typeof(parsed) != TYPE_DICTIONARY:
+            continue
+        var hdr: Dictionary = (parsed as Dictionary).get("header", {})
+        # A SYNTHESISED WALK IS NOT A FLIGHT AND DOES NOT CLAIM TO BE. It says
+        # so in `flown_by`, and it is exempt for that reason rather than by name.
+        if hdr.has("flown_by"):
+            scripted += 1
+            continue
+        if not hdr.has("first_person"):
+            unstamped.append(str(fn))
+            continue
+        stamped += 1
+        check(bool(hdr["first_person"]),
+                "%s records first_person = false: the camera was the overview, so nobody saw "
+                        % str(fn) + "what this trace says was walked through")
+        # The statistic that WAS the only tell, reported beside the fact.
+        var sp: Dictionary = hdr.get("speed_m_s_measured", {})
+        if not sp.is_empty():
+            print("flights: %s p50 %s m/s against an asked %s"
+                    % [str(fn), String.num(float(sp.get("p50", NAN)), 2),
+                       String.num(float(hdr.get("asked_speed_m_s", NAN)), 1)])
+    check(scripted <= 1,
+            "%d synthesised walks are exempt here; the exemption is for the one stand-in that "
+                    % scripted + "declares `flown_by`, not for a population of them")
+
+    # THE CONSTRUCTED WITNESS, BECAUSE THE LOOP ABOVE CURRENTLY RUNS ITS
+    # ASSERTION ZERO TIMES. Every committed trace predates the stamp, so nothing
+    # reaches `check(bool(hdr["first_person"]))` -- and a guard that cannot fire
+    # is the exact defect this file has caught twice before. The predicate is
+    # exhibited here against headers built to fail it, so the check is armed on
+    # the day a stamped trace first lands rather than on the day someone notices.
+    var overview := {"first_person": false, "asked_speed_m_s": 5.0}
+    var walked := {"first_person": true, "asked_speed_m_s": 5.0}
+    var legacy := {"asked_speed_m_s": 5.0}
+    var scripted_hdr := {"flown_by": "a script", "first_person": false}
+    check(overview.has("first_person") and not bool(overview["first_person"]),
+            "the constructed overview header does not fail the predicate, so this check cannot "
+            + "catch the trace it was written for")
+    check(walked.has("first_person") and bool(walked["first_person"]),
+            "the constructed walked header does not pass, so the predicate refuses everything")
+    check(not legacy.has("first_person"),
+            "the constructed pre-stamp header carries the key, so the absence branch is not "
+            + "being exercised")
+    check(scripted_hdr.has("flown_by"),
+            "the constructed synthesised header does not declare `flown_by`, so the exemption "
+            + "is keyed on something other than the declaration")
+    print("flights: %d stamped trace(s) say a person could see them, %d predate the stamp (%s), "
+            % [stamped, unstamped.size(), ", ".join(unstamped)]
+            + "%d synthesised" % scripted)
 
 
 func test_the_audits_isolated_ortho_shots_all_black_the_backdrop() -> void:
