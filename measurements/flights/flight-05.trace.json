@@ -1,0 +1,6196 @@
+{
+  "_what": "a recorded camera path over the basin, and the statistics measured along it. Replayable: tools/replay_flight.sh scores it again headlessly.",
+  "header": {
+    "what": "a person walking through the far field at 5.0 m/s, translating and panning",
+    "recorded_at_commit": "7689e99",
+    "scene": {
+      "window": "deepest_winter",
+      "row": "band.pft.biomass",
+      "day": 22,
+      "at_world_epsg5070": [
+        -951136.6875,
+        2162736.75
+      ]
+    },
+    "vertical_exaggeration": 1.0,
+    "shading_exaggeration": 12.0,
+    "viewport": [
+      1280,
+      800
+    ],
+    "fov_degrees": 75.0,
+    "eye_height_m": 1.7,
+    "asked_speed_m_s": 5.0,
+    "first_person": true,
+    "individuation_k": 0.0,
+    "k_over_k_res": 0.0,
+    "k_resolution": 521.290149136482,
+    "scatter_radius_m": 480.0,
+    "recentre_m": 0.0,
+    "recentre_means": "metres the camera may travel before the scatter is rebuilt around it. 0 is one build flown through, which is what ships; above 0 is a population that follows the camera, which is what a per-place instance budget does",
+    "marks_mean": "SPACE, pressed when something looked wrong",
+    "pose_fields": "position is the camera in MESH space; orientation is a quaternion (x, y, z, w)",
+    "frames": 361,
+    "seconds": 3.000176,
+    "marks": 0,
+    "frames_not_drawn": 0,
+    "rebuilds": 0,
+    "blocked_ms_total": 0.0,
+    "blocked_note": "time the main loop spent inside a scatter rebuild, which is time the window was not being redrawn while the flight continued. It is a cost of re-centring, not of drawing: `measurements/scatter_cost.json` prices the frame, and this is what it costs to BUILD one.",
+    "speed_m_s_measured": {
+      "n": 360,
+      "min": 0.0,
+      "p50": 0.0,
+      "p95": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    },
+    "turn_degrees_s_measured": {
+      "n": 360,
+      "min": 0.0,
+      "p50": 0.0,
+      "p95": 0.0,
+      "max": 0.0,
+      "mean": 0.0
+    }
+  },
+  "frames": [
+    {
+      "t_ms": 0.0,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 0.0,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 5.236,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 5.236,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 16.928,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 11.692,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 25.429,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.501,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 29.057,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.628,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 41.919,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 12.862,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 50.154,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.235,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 53.342,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.188,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 66.935,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.593,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 75.136,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.201,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 78.208,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.072,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 91.905,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.697,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 100.216,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.311,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 103.447,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.231,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 116.791,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.344,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 125.004,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.213,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 128.185,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.181,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 141.843,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.658,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 150.242,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.399,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 153.521,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.279,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 166.853,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.332,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 175.121,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.268,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 178.176,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.055,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 191.931,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.755,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 200.174,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.243,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 203.319,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.145,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 216.857,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.538,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 225.247,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.39,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 228.377,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.13,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 241.825,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.448,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 250.202,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.377,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 254.613,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 4.411,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 266.868,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 12.255,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 275.134,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.266,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 278.228,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.094,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 291.873,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.645,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 300.134,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.261,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 303.188,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.054,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 316.902,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.714,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 325.211,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.309,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 328.332,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.121,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 341.814,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.482,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 349.988,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.174,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 353.594,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.606,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 366.805,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.211,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 375.188,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.383,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 378.314,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.126,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 391.869,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.555,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 400.14,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.271,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 403.221,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.081,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 416.889,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.668,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 425.168,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.279,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 428.286,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.118,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 441.85,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.564,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 450.203,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.353,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 453.34,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.137,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 466.827,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.487,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 475.232,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.405,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 478.888,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.656,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 491.886,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 12.998,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 500.168,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.282,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 503.264,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.096,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 516.878,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.614,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 525.141,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.263,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 528.228,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.087,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 541.872,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.644,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 550.197,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.325,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 553.318,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.121,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 566.804,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.486,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 575.214,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.41,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 578.371,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.157,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 591.815,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.444,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 595.361,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.546,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 608.545,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.184,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 616.833,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.288,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 620.719,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.886,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 633.549,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 12.83,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 641.875,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.326,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 645.019,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.144,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 658.45,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.431,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 666.877,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.427,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 670.043,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.166,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 683.504,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.461,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 691.794,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.29,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 694.898,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.104,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 708.573,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.675,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 716.806,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.233,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 720.294,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.488,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 733.564,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.27,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 741.925,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.361,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 744.993,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.068,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 758.478,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.485,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 766.847,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.369,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 769.986,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.139,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 783.448,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.462,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 791.853,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.405,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 794.967,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.114,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 808.537,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.57,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 816.808,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.271,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 819.879,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.071,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 833.558,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.679,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 841.788,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.23,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 844.882,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.094,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 858.532,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.65,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 866.875,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.343,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 871.421,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 4.546,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 883.475,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 12.054,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 891.961,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.486,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 895.11,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.149,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 908.53,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.42,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 916.819,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.289,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 919.905,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.086,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 933.595,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.69,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 941.818,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.223,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 944.88,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.062,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 958.582,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.702,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 966.672,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.09,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 970.486,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.814,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 983.499,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.013,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 991.851,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.352,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 994.974,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.123,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1008.468,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.494,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1016.827,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.359,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1019.954,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.127,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1033.513,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.559,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1041.855,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.342,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1044.959,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.104,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1058.553,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.594,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1066.815,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.262,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1069.9,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.085,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1083.578,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.678,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1091.869,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.291,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1095.06,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.191,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1108.475,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.415,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1116.888,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.413,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1119.987,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.099,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1133.486,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.499,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1141.842,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.356,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1144.941,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.099,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1158.525,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.584,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1166.818,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.293,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1169.947,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.129,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1183.548,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.601,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1191.657,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.109,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1195.201,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.544,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1208.531,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.33,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1216.864,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.333,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1220.404,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.54,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1233.439,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.035,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1241.868,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.429,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1245.036,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.168,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1258.509,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.473,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1266.803,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.294,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1269.904,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.101,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1283.524,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.62,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1291.78,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.256,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1294.824,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.044,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1308.39,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.566,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1312.06,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.67,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1324.952,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 12.892,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1333.5,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.548,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1338.23,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 4.73,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1350.19,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 11.96,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1358.451,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.261,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1361.518,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.067,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1375.265,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.747,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1383.457,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.192,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1386.515,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.058,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1400.168,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.653,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1408.519,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.351,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1411.62,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.101,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1425.118,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.498,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1433.493,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.375,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1437.075,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.582,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1450.159,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.084,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1458.45,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.291,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1461.576,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.126,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1475.208,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.632,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1483.449,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.241,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1486.525,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.076,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1500.228,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.703,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1508.496,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.268,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1511.607,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.111,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1525.188,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.581,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1533.543,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.355,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1536.692,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.149,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1550.118,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.426,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1558.497,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.379,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1561.625,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.128,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1575.192,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.567,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1583.475,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.283,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1586.577,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.102,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1600.218,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.641,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1608.458,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.24,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1611.528,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.07,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1625.256,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.728,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1633.542,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.286,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1636.636,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.094,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1650.127,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.491,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1658.535,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.408,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1661.701,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.166,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1675.169,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.468,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1678.731,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.562,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1691.916,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.185,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1700.19,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.274,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1703.398,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.208,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1716.84,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.442,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1725.194,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.354,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1728.304,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.11,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1741.811,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.507,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1750.18,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.369,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1753.308,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.128,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1766.837,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.529,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1775.122,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.285,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1778.185,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.063,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1791.887,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.702,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1799.962,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.075,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1803.452,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.49,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1816.868,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.416,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1825.166,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.298,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1828.264,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.098,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1841.776,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.512,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1850.214,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.438,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1853.395,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.181,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1866.797,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.402,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1875.204,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.407,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1878.325,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.121,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1891.846,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.521,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1900.138,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.292,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1903.205,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.067,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1916.914,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.709,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1920.072,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.158,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1933.503,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.431,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1941.855,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.352,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1944.968,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.113,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1958.529,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.561,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1966.791,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.262,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1969.852,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.061,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1983.569,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.717,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1991.792,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.223,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 1994.849,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.057,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2008.52,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.671,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2016.848,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.328,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2019.954,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.106,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2033.493,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.539,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2037.081,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.588,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2050.188,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.107,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2058.452,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.264,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2061.568,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.116,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2075.248,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.68,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2083.515,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.267,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2086.632,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.117,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2100.181,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.549,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2108.544,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.363,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2111.64,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.096,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2125.114,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.474,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2133.529,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.415,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2136.671,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.142,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2150.018,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.347,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2153.557,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.539,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2166.71,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.153,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2175.187,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.477,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2178.362,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.175,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2191.788,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.426,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2200.202,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.414,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2203.267,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.065,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2216.825,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.558,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2225.139,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.314,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2228.222,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.083,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2241.847,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.625,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2250.122,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.275,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2253.182,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.06,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2266.906,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.724,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2275.148,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.242,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2278.238,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.09,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2291.864,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.626,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2300.203,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.339,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2303.339,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.136,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2316.795,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.456,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2325.229,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.434,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2328.353,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.124,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2341.835,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.482,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2350.143,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.308,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2353.261,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.118,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2366.849,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.588,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2375.11,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.261,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2378.163,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.053,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2391.842,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.679,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2395.443,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.601,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2408.464,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.021,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2416.85,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.386,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2420.845,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.995,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2433.516,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 12.671,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2441.787,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.271,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2444.853,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.066,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2458.567,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.714,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2466.853,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.286,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2469.977,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.124,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2483.556,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.579,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2491.89,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.334,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2495.047,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.157,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2508.491,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.444,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2516.874,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.383,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2520.484,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.61,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2533.496,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.012,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2541.791,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.295,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2544.842,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.051,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2558.537,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.695,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2566.797,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.26,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2569.859,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.062,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2583.55,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.691,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2591.843,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.293,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2594.947,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.104,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2608.324,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.377,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2611.943,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.619,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2625.184,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.241,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2633.294,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.11,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2636.844,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.55,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2650.019,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.175,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2654.28,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 4.261,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2666.801,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 12.521,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2675.141,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.34,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2678.254,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.113,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2691.677,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.423,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2695.252,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.575,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2708.509,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.257,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2716.836,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.327,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2720.12,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.284,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2733.315,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.195,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2736.861,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.546,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2750.018,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.157,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2753.622,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.604,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2766.839,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.217,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2774.989,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.15,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2778.595,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.606,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2791.868,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.273,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2800.13,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.262,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2803.286,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.156,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2816.717,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.431,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2820.481,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.764,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2833.456,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 12.975,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2841.876,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.42,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2845.063,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.187,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2858.341,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.278,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2861.938,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.597,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2875.233,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.295,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2883.523,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.29,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2887.079,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.556,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2899.991,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 12.912,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2903.749,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.758,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2916.851,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.102,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2925.117,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.266,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2928.187,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.07,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2941.711,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.524,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2945.327,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.616,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2958.442,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.115,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2966.851,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 8.409,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2970.092,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.241,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2983.321,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.229,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 2986.896,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 3.575,
+      "instances": 10977,
+      "in_view_instances": 3228
+    },
+    {
+      "t_ms": 3000.176,
+      "position": [
+        361656.188,
+        2006.985,
+        -546510.5
+      ],
+      "orientation": [
+        -0.052336,
+        0.0,
+        0.0,
+        0.99863
+      ],
+      "frame_ms": 13.28,
+      "instances": 10977,
+      "in_view_instances": 3228
+    }
+  ]
+}
