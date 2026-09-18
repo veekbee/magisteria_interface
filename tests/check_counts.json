@@ -74,6 +74,7 @@
     "test_real_artefact_loads_clean": 8,
     "test_residence_keys_never_land_where_there_is_no_ground": 1,
     "test_the_amplitude_field_has_no_step_on_a_class_boundary": 11,
+    "test_the_audits_isolated_ortho_shots_all_black_the_backdrop": 8,
     "test_the_benchmark_ladder_says_which_rungs_the_timer_could_not_separate": 11,
     "test_the_benchmark_refuses_to_measure_frame_cost_headless": 9,
     "test_the_blend_cannot_break_the_exactness_at_a_parent_node": 3,

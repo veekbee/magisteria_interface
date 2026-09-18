@@ -70,6 +70,7 @@ func _initialize() -> void:
     _run(test_the_contour_line_stays_broken, "test_the_contour_line_stays_broken")
     _run(test_no_contour_set_is_invented_for_a_window_that_has_none, "test_no_contour_set_is_invented_for_a_window_that_has_none")
     _run(test_the_probe_tells_the_three_absences_apart, "test_the_probe_tells_the_three_absences_apart")
+    _run(test_the_audits_isolated_ortho_shots_all_black_the_backdrop, "test_the_audits_isolated_ortho_shots_all_black_the_backdrop")
     _run(test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile, "test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile")
     _run(test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare, "test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare")
     _run(test_the_state_axis_is_read_from_the_key_that_names_it_and_never_from_the_code_one, "test_the_state_axis_is_read_from_the_key_that_names_it_and_never_from_the_code_one")
@@ -2698,6 +2699,77 @@ func _declared_stale_manifest() -> Dictionary:
 
 func _declared_stale_verdict() -> AncestorVerdict:
     return AncestorVerdict.read_from(_declared_stale_manifest())
+
+
+func test_the_audits_isolated_ortho_shots_all_black_the_backdrop() -> void:
+    """A named set's conventions live in the GAPS BETWEEN ITS ENTRIES and are
+    written down nowhere. `audit.sh`'s four isolated-layer ortho shots all carry
+    `--backdrop black`; nothing says they must, and nothing would have noticed
+    the fifth that did not.
+
+    THIS TEST EXISTS BECAUSE I WROTE THAT FIFTH ONE. Proposing a shot for the
+    far-field tint, I read `capture.gd` carefully enough to get the flag's
+    behaviour right and never read the four siblings it was joining, so it came
+    out as the only ortho isolated-layer shot in the set whose frame would
+    include sky. `capture.gd`'s own reason is that the clear colour puts the sky
+    under `FrameProbe`'s threshold -- a grey backdrop is most of the frame, and a
+    spread reported over that frame is measuring sky.
+
+    TWO DISCIPLINES, AND THEY FAIL INDEPENDENTLY. *Does this entry do what it
+    claims* is answered by reading the entry and what it calls. *Does this entry
+    match the set it joins* is answerable only by reading its siblings, and no
+    amount of care spent on the first reveals the second -- a reviewer who
+    re-derives the first perfectly reproduces the author's blind spot exactly.
+    Only the second one is mechanisable, so it is the one that gets a check.
+
+    IT PASSES TODAY ONLY BECAUSE THE NINTH SHOT WAS CAUGHT BEFORE IT LANDED,
+    which is the honest way to state what this is currently worth.
+    """
+    var f := FileAccess.open("res://tools/audit.sh", FileAccess.READ)
+    check(f != null, "tools/audit.sh is missing, so the audit set cannot be checked")
+    if f == null:
+        return
+    # THE CONTINUATIONS ARE JOINED FIRST. Every shot in the file is written
+    # across two or more lines with a trailing backslash, so a per-line scan
+    # would see `--camera ortho` and `--backdrop black` as different entries and
+    # find nothing wrong with any of them.
+    var joined := PackedStringArray()
+    var acc := ""
+    for raw in f.get_as_text().split("\n"):
+        var line := str(raw).strip_edges()
+        if line.ends_with("\\"):
+            acc += line.substr(0, line.length() - 1) + " "
+            continue
+        joined.append(acc + line)
+        acc = ""
+    if acc != "":
+        joined.append(acc)
+
+    var shots := 0
+    var isolated_ortho := 0
+    for line in joined:
+        if not str(line).begins_with("shot "):
+            continue
+        shots += 1
+        if not (str(line).contains("--camera ortho") and str(line).contains("--only ")):
+            continue
+        isolated_ortho += 1
+        check(str(line).contains("--backdrop black"),
+                "an isolated-layer ortho shot does not black its backdrop, so its frame "
+                + "numbers include sky: %s" % str(line).substr(0, 160))
+    check(shots >= 8, "audit.sh carries %d shot(s); the set has had eight since M5" % shots)
+    check(isolated_ortho >= 4,
+            "only %d isolated-layer ortho shot(s) found, so the convention this checks is not "
+                    % isolated_ortho + "the one the set actually has")
+
+    # THE CONTROL. A rule derived by reading four agreeing lines has to be shown
+    # capable of failing, or it is four lines agreeing with themselves.
+    var bad := "shot \"synthetic\" --only terrain --window w --camera ortho --days 0"
+    check(bad.contains("--camera ortho") and bad.contains("--only ")
+                    and not bad.contains("--backdrop black"),
+            "the constructed violation does not violate the rule, so this check cannot fail")
+    print("audit: %d shot(s), %d isolated-layer ortho, all blacking their backdrop"
+            % [shots, isolated_ortho])
 
 
 func test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile() -> void:
