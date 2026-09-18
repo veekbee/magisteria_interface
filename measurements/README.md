@@ -48,6 +48,47 @@ went stale without saying so, and **the stale bytes are the evidence**. They wil
 the re-score is written to a scratch path and compared, and the committed artefact is only restamped
 if the prediction held. Overwriting first and reporting after would destroy the finding.
 
+### The result: **the prediction was WRONG, and the artefact is stale — do not quote it**
+
+Run at `c05a54d`, written to a scratch path and compared. **The scores did not reproduce. The
+committed artefact has NOT been restamped and its bytes are unchanged**, because they are the
+evidence.
+
+| trace | instances, committed | instances, re-scored | factor |
+|---|---:|---:|---:|
+| `flight-01` | 104,685 | **12,942** | 8.1x |
+| `flight-02` | 119,990 | **23,876** | 5.0x |
+| `flight-03` | 119,990 | **23,876** | 5.0x |
+
+In-view counts fall with them — 27,511 to 3,584 and 32,474 to 6,599. `by_heading`,
+`heading_spread`, `per_frame`, `replay_agreement` and `timeline` all move on all three runs.
+
+**WHY THE PREDICTION WAS WRONG, WHICH IS THE PART WORTH KEEPING.** The payload-identity argument was
+sound and answered a question nobody asked. `fixture_client.bin` *is* byte-identical across
+re-vendor #4, so that vendor could not have moved the population — and the artefact does not date
+from re-vendor #4. `replayed_at_commit` is `e3757e8`, **2026-09-07**, about fifty commits back. It
+predates the M3 vendor (`ed37b65`, which drew an emptier basin: priced cells 96.1% to 63.8%) and the
+C2 horizon solve (`e508750`, `4948213`, `9f9a0b1`), which decides how far the scatter individuates
+before dropping to a field layer. Either would move the population; both are in the range.
+
+**I read `replayed_at_commit` as "many commits back" and never resolved it to a date or a diff.**
+The question was *does this artefact still describe this tree*, and I answered *did the most recent
+vendor move it* — a true answer to a smaller question, which is the same shape as reading a pattern
+off the rows already in mind. The prediction being written down first is the only reason the
+difference between those two questions is legible now rather than reconstructable later.
+
+**WHAT IS NOT CLAIMED HERE.** That the NEW numbers are right. They are one run at one commit and
+nothing has validated them; the drop is plausible under M3's emptier basin and a solved horizon that
+drops to a field layer, but which change contributes how much is unmeasured and would need a bisect.
+What is established is only that **the committed artefact stopped describing this tree at some point
+in the last eleven days and said nothing**, which is the class this directory's own header warns
+about: three artefacts have come back complete, plausible and wrong.
+
+**Until it is re-taken deliberately, `flight_replay.json`'s numbers are not current and must not be
+quoted.** Re-taking it is not a re-run: the traces were flown at `27ba9b0`, `d4872e5` and `b31469d`
+against a different fixture and a different horizon, so a re-score answers "what would this path draw
+now", not "what did the flight show".
+
 ## What is here
 
 - `render_cost.json` — per-instance frame cost, and the ladder it was fitted from. It prices an
