@@ -46,6 +46,10 @@ const SPAN_M := 3000.0
 const QUANTILE := 0.5
 const SAMPLES := 300
 const SEED := 21
+## The sweep's target: the cell the three-seed measurement left closest to its edge.
+const SWEEP_OUT := "measurements/octave_clamp_playa_sweep.json"
+const SWEEP_PARENT_M := 1600.0
+const SWEEP_STRATUM := "playa"
 
 
 ## `--seed N` RE-DRAWS THE CLOUD, and it is not a knob for a nicer number.
@@ -60,12 +64,15 @@ func _init() -> void:
     var seed_used := SEED
     var only_clamped := false
     var out_path := OUT
+    var sweep_to := 0
     var args := OS.get_cmdline_user_args()
     for i in args.size():
         if str(args[i]) == "--seed" and i + 1 < args.size():
             seed_used = int(str(args[i + 1]))
         elif str(args[i]) == "--only-clamped":
             only_clamped = true
+        elif str(args[i]) == "--sweep" and i + 1 < args.size():
+            sweep_to = int(str(args[i + 1]))
         elif str(args[i]) == "--out" and i + 1 < args.size():
             out_path = str(args[i + 1])
     if seed_used != SEED and out_path == OUT:
@@ -113,6 +120,10 @@ func _init() -> void:
     if not wp.is_declared():
         printerr("octave_clamp: no walked-parent set (%s)" % wp.why_absent)
         quit(1)
+        return
+
+    if sweep_to > 0:
+        _sweep(hf, layers, bands, lags, sourced, sweep_to)
         return
 
     var per_parent: Array = []
@@ -319,3 +330,170 @@ func _sourced_windows() -> Array:
         if w.size() == 2:
             out.append(Vector2(float(w[0]), float(w[1])))
     return out
+
+
+## IS THE TIGHTEST CELL'S RATIO THE TAIL OR THE MODE?
+##
+## Three seeds put `playa`'s movement at 0.36, 0.01 and 0.16 of its distance to
+## the band edge at a 1,600 m parent. Three samples cannot tell a tail from a
+## mode, and the difference decides what the clamp IS: at 0.36 typical it is a
+## substantive question about a stratum that already fails condition 2; at 0.36
+## rare it is a wording one.
+##
+## THE TIGHTEST CELL IS TAKEN OVER `playa`'s THREE LAGS AND NOT AT A CHOSEN ONE.
+## Which lag binds MOVES WITH THE SEED -- 8 m at seed 21, 16 m at seed 47 -- so
+## fixing the lag would sample one cell's distribution and call it the tightest
+## cell's. That is the same error as grading one landform and calling it the set.
+##
+## ONE PARENT, BECAUSE THE ASK NAMES ONE. 1,600 m is where the 0.36 is; 3,200 m's
+## tightest was 0.20 and is reported in the per-parent artefacts.
+##
+## THE CONTROL IS SEED 21, WHICH IS ALREADY PUBLISHED. It falls inside the swept
+## range, so its `S` values here must reproduce `octave_clamp.json`'s at this
+## parent BIT FOR BIT. A sweep that re-derived them slightly differently would be
+## measuring a different quantity from the one the question is about.
+func _sweep(hf: Heightfield, layers: TerrainLayers, bands: Dictionary, lags: Array,
+            sourced: Array, seeds: int) -> void:
+    var parent_m := SWEEP_PARENT_M
+    var shipped := DetailField.load_from(hf, DetailField.ROWS_PATH, parent_m, layers)
+    var wanted := 1
+    for name in shipped.landforms():
+        wanted = maxi(wanted, shipped.octaves_wanted(str(name)))
+    var lifted := DetailField.load_from(hf, DetailField.ROWS_PATH, parent_m, layers)
+    lifted.octave_ceiling = wanted
+
+    var rows: Array = []
+    var ratios := PackedFloat64Array()
+    var flips := 0
+    var verdict_moves := 0
+    for sd in range(1, seeds + 1):
+        var ms := StratumGrade.over_windows(shipped, hf, sourced, SPAN_M, lags,
+                QUANTILE, SAMPLES, sd)
+        var ml := StratumGrade.over_windows(lifted, hf, sourced, SPAN_M, lags,
+                QUANTILE, SAMPLES, sd)
+        # CONDITION 2 ITSELF, AT EVERY SEED, because a flip in one stratum-lag is
+        # not the conjunction and the difference is the whole question. `playa`
+        # is one of two strata outside their bands here; if the other is out at
+        # the same seed, `playa` crossing its own edge changes nothing that
+        # decision 1040 grades. Measured rather than reasoned.
+        var es := StratumGrade.evidence(ms, StratumGrade.spread(ms, lags), bands)
+        var el := StratumGrade.evidence(ml, StratumGrade.spread(ml, lags), bands)
+        var ok_s: Variant = (es.get("bands", {}) as Dictionary).get("ok", null)
+        var ok_l: Variant = (el.get("bands", {}) as Dictionary).get("ok", null)
+        if ok_s != ok_l:
+            verdict_moves += 1
+        var sh: Dictionary = (ms.get("strata", {}) as Dictionary).get(SWEEP_STRATUM, {})
+        var li: Dictionary = (ml.get("strata", {}) as Dictionary).get(SWEEP_STRATUM, {})
+        var best := -1.0
+        var best_lag := NAN
+        var per_lag: Array = []
+        for lag_raw in lags:
+            var lag := float(lag_raw)
+            var a = sh.get(lag, null)
+            var b = li.get(lag, null)
+            var band: Array = (bands.get(SWEEP_STRATUM, {}) as Dictionary).get(lag, [])
+            if a == null or b == null or band.size() != 2:
+                continue
+            var sa := float(a)
+            var sb := float(b)
+            var move: float = absf(sb - sa) / maxf(absf(sa), 1.0e-300)
+            # THE DISTANCE TO THE NEARER EDGE, SIGNED BY WHICH SIDE IT IS ON.
+            # A cell already outside its band is not at risk of flipping IN by a
+            # movement of this size either, so both are reported as a distance.
+            var margin := 0.0
+            if sa < float(band[0]):
+                margin = (float(band[0]) - sa) / absf(sa)
+            elif sa > float(band[1]):
+                margin = (sa - float(band[1])) / absf(sa)
+            else:
+                margin = minf(sa - float(band[0]), float(band[1]) - sa) / absf(sa)
+            var ratio: float = (INF if margin <= 0.0 else move / margin)
+            var in_s := sa >= float(band[0]) and sa <= float(band[1])
+            var in_l := sb >= float(band[0]) and sb <= float(band[1])
+            if in_s != in_l:
+                flips += 1
+            per_lag.append({"lag_m": lag, "s_shipped": sa, "s_lifted": sb,
+                    "relative_change": move, "margin": margin, "ratio": ratio,
+                    "in_band_shipped": in_s, "in_band_lifted": in_l})
+            if ratio > best:
+                best = ratio
+                best_lag = lag
+        if best < 0.0:
+            continue
+        ratios.append(best)
+        rows.append({"seed": sd, "tightest_ratio": best, "tightest_lag_m": best_lag,
+                "condition_2_shipped": ("not gradeable" if ok_s == null
+                        else ("MET" if bool(ok_s) else "UNMET")),
+                "condition_2_lifted": ("not gradeable" if ok_l == null
+                        else ("MET" if bool(ok_l) else "UNMET")),
+                "verdict_moved": ok_s != ok_l,
+                "why_shipped": str((es.get("bands", {}) as Dictionary).get("why", "")),
+                "why_lifted": str((el.get("bands", {}) as Dictionary).get("why", "")),
+                "per_lag": per_lag})
+        print("sweep: seed %3d  tightest %s at %s m lag" % [sd, String.num(best, 4),
+                String.num(best_lag, 1)])
+
+    var sorted_r := ratios.duplicate()
+    sorted_r.sort()
+    var n := sorted_r.size()
+    var med: float = (NAN if n == 0 else (sorted_r[n / 2] if n % 2 == 1
+            else 0.5 * (sorted_r[n / 2 - 1] + sorted_r[n / 2])))
+    var over_half := 0
+    var over_quarter := 0
+    for r in ratios:
+        if r >= 0.5:
+            over_half += 1
+        if r >= 0.25:
+            over_quarter += 1
+    var doc := {
+        "_what": ("The tightest `playa` cell's movement as a fraction of its distance to the "
+                + "band edge, at a 1,600 m parent, over consecutive seeds. Answers whether the "
+                + "0.36 in the three-seed measurement is the tail or the mode."),
+        "_tightest_is_over_the_three_lags": ("Which lag binds moves with the seed -- 8 m at seed "
+                + "21, 16 m at seed 47 -- so fixing one lag would report a single cell's "
+                + "distribution under the name of the tightest cell's."),
+        "_a_ratio_of_1_is_a_flip": ("The ratio is movement / distance-to-edge, so 1.0 is a cell "
+                + "the clamp could carry across its own band edge. `flips` counts the readings "
+                + "where it actually did."),
+        "_the_control_is_seed_21": ("Seed 21 is inside this range and its S values must "
+                + "reproduce measurements/octave_clamp.json's at this parent bit for bit."),
+        "_this_does_not_rule_on_the_bound": ("Raising `MAX_OCTAVES` is a cost decision and is "
+                + "not made here."),
+        "vertical_exaggeration": 1.0,
+        "_vertical_exaggeration_is": ("the grader samples `Heightfield.height_at_world` and "
+                + "`DetailField` directly; the view's factor does not reach this path."),
+        "measured_at_utc": Time.get_datetime_string_from_system(true),
+        "grading_parameters": {"span_m": SPAN_M, "quantile": QUANTILE,
+                "samples_per_lag": SAMPLES, "windows": sourced.size(), "lags_m": lags,
+                "_are_the_gate_s": true, "seeds": "1..%d" % seeds},
+        "parent_spacing_m": parent_m,
+        "stratum": SWEEP_STRATUM,
+        "octaves_shipped": shipped.octaves_for(SWEEP_STRATUM),
+        "octaves_lifted": lifted.octaves_for(SWEEP_STRATUM),
+        "seeds_measured": n,
+        "flips": flips,
+        "_flips_are_cell_level": ("`flips` counts THIS STRATUM'S in/out-of-band readings that "
+                + "the clamp carried across an edge. It is not decision 1040's verdict: the "
+                + "conjunction is over every stratum, and `condition_2_verdict_moved` is the "
+                + "count that answers what 1040 grades."),
+        "condition_2_verdict_moved": verdict_moves,
+        "ratio_min": (NAN if n == 0 else sorted_r[0]),
+        "ratio_median": med,
+        "ratio_max": (NAN if n == 0 else sorted_r[n - 1]),
+        "seeds_at_or_above_0_5": over_half,
+        "seeds_at_or_above_0_25": over_quarter,
+        "per_seed": rows,
+    }
+    var w := FileAccess.open("res://" + SWEEP_OUT, FileAccess.WRITE)
+    if w == null:
+        printerr("octave_clamp: cannot write %s" % SWEEP_OUT)
+        quit(1)
+        return
+    w.store_string(JSON.stringify(doc, "  ") + "\n")
+    w.close()
+    print("sweep: %d seed(s) at %s m, %s: tightest ratio min %s median %s max %s; %d at or above "
+            % [n, String.num(parent_m, 0), SWEEP_STRATUM, String.num(sorted_r[0], 4),
+               String.num(med, 4), String.num(sorted_r[n - 1], 4), over_quarter]
+            + "0.25, %d at or above 0.5, %d cell-level flip(s), %d condition-2 verdict move(s) "
+            % [over_half, flips, verdict_moves] + "-> %s" % SWEEP_OUT)
+    quit(0)

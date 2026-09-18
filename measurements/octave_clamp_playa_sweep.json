@@ -1,0 +1,4238 @@
+{
+  "_a_ratio_of_1_is_a_flip": "The ratio is movement / distance-to-edge, so 1.0 is a cell the clamp could carry across its own band edge. `flips` counts the readings where it actually did.",
+  "_flips_are_cell_level": "`flips` counts THIS STRATUM'S in/out-of-band readings that the clamp carried across an edge. It is not decision 1040's verdict: the conjunction is over every stratum, and `condition_2_verdict_moved` is the count that answers what 1040 grades.",
+  "_the_control_is_seed_21": "Seed 21 is inside this range and its S values must reproduce measurements/octave_clamp.json's at this parent bit for bit.",
+  "_this_does_not_rule_on_the_bound": "Raising `MAX_OCTAVES` is a cost decision and is not made here.",
+  "_tightest_is_over_the_three_lags": "Which lag binds moves with the seed -- 8 m at seed 21, 16 m at seed 47 -- so fixing one lag would report a single cell's distribution under the name of the tightest cell's.",
+  "_vertical_exaggeration_is": "the grader samples `Heightfield.height_at_world` and `DetailField` directly; the view's factor does not reach this path.",
+  "_what": "The tightest `playa` cell's movement as a fraction of its distance to the band edge, at a 1,600 m parent, over consecutive seeds. Answers whether the 0.36 in the three-seed measurement is the tail or the mode.",
+  "condition_2_verdict_moved": 0,
+  "flips": 11,
+  "grading_parameters": {
+    "_are_the_gate_s": true,
+    "lags_m": [
+      4.0,
+      8.0,
+      16.0
+    ],
+    "quantile": 0.5,
+    "samples_per_lag": 300,
+    "seeds": "1..100",
+    "span_m": 3000.0,
+    "windows": 10
+  },
+  "measured_at_utc": "2026-09-18T01:19:24",
+  "octaves_lifted": 13,
+  "octaves_shipped": 12,
+  "parent_spacing_m": 1600.0,
+  "per_seed": [
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.23432564262256,
+          "ratio": 0.0701969324307261,
+          "relative_change": 0.0164489413019623,
+          "s_lifted": 0.0264891100980691,
+          "s_shipped": 0.0269321148747821
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0595984875348647,
+          "ratio": 0.167582644163942,
+          "relative_change": 0.00998767212926435,
+          "s_lifted": 0.0448860420270023,
+          "s_shipped": 0.0453388718133851
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.160595495499044,
+          "ratio": 0.0104381010549859,
+          "relative_change": 0.00167631201099455,
+          "s_lifted": 0.0826389693696825,
+          "s_shipped": 0.082777730673854
+        }
+      ],
+      "seed": 1,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.167582644163942,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0826 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0084 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0178 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0828 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0084 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0178 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.137316452233137,
+          "ratio": 0.0465597544896393,
+          "relative_change": 0.00639342030336315,
+          "s_lifted": 0.0294162072530071,
+          "s_shipped": 0.029229331849308
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0985530626240135,
+          "ratio": 0.000000505832911480881,
+          "relative_change": 0.0000000498513826024624,
+          "s_lifted": 0.0437311624075392,
+          "s_shipped": 0.0437311602274804
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.197449496386927,
+          "ratio": 0.0189793178928803,
+          "relative_change": 0.00374745675971662,
+          "s_lifted": 0.086903425979429,
+          "s_shipped": 0.0865789750142625
+        }
+      ],
+      "seed": 2,
+      "tightest_lag_m": 4.0,
+      "tightest_ratio": 0.0465597544896393,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0869 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0193 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0866 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0193 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.276800465621214,
+          "ratio": 0.0294752274946965,
+          "relative_change": 0.00815875669482321,
+          "s_lifted": 0.0258237519009299,
+          "s_shipped": 0.0260361747156992
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0125839585841295,
+          "ratio": 0.412409573759438,
+          "relative_change": 0.00518974499588727,
+          "s_lifted": 0.0489057484523983,
+          "s_shipped": 0.0486532504891386
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.0608964139827595,
+          "ratio": 0.0265924498127866,
+          "relative_change": 0.00161938483261521,
+          "s_lifted": 0.0741095256923359,
+          "s_shipped": 0.0739897078816227
+        }
+      ],
+      "seed": 3,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.412409573759438,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0489 outside [0.023, 0.048] / playa at 16.0 m: 0.0741 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0176 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0487 outside [0.023, 0.048] / playa at 16.0 m: 0.074 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0174 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.245815390077965,
+          "ratio": 0.0349138259315993,
+          "relative_change": 0.00858235574049025,
+          "s_lifted": 0.0269127380500436,
+          "s_shipped": 0.0266837287970247
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0090765031917686,
+          "ratio": 0.232002584227124,
+          "relative_change": 0.00210577219623605,
+          "s_lifted": 0.0485831283213543,
+          "s_shipped": 0.0484810382988599
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.191202508536628,
+          "ratio": 0.052314768140633,
+          "relative_change": 0.0100027149020011,
+          "s_lifted": 0.0850509207605086,
+          "s_shipped": 0.0859102565640768
+        }
+      ],
+      "seed": 4,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.232002584227124,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0486 outside [0.023, 0.048] / playa at 16.0 m: 0.0851 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0084 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0202 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0485 outside [0.023, 0.048] / playa at 16.0 m: 0.0859 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0082 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0203 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.326431291595573,
+          "ratio": 0.065193281090701,
+          "relative_change": 0.0212811269497908,
+          "s_lifted": 0.0255953314116653,
+          "s_shipped": 0.0250619841454522
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0295228758752677,
+          "ratio": 0.989999548732974,
+          "relative_change": 0.0292276337938146,
+          "s_lifted": 0.050949294451101,
+          "s_shipped": 0.0495024548294509
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.142678550944338,
+          "ratio": 0.0787580993217164,
+          "relative_change": 0.0112370914863527,
+          "s_lifted": 0.0819585210917495,
+          "s_shipped": 0.0810477797756448
+        }
+      ],
+      "seed": 5,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.989999548732974,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0509 outside [0.023, 0.048] / playa at 16.0 m: 0.082 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0187 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0495 outside [0.023, 0.048] / playa at 16.0 m: 0.081 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0187 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.280418055603313,
+          "ratio": 0.068615578569302,
+          "relative_change": 0.0192410471265,
+          "s_lifted": 0.0254630663225157,
+          "s_shipped": 0.0259626142059801
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.00974917278464124,
+          "ratio": 0.677934114528766,
+          "relative_change": 0.0066092968191437,
+          "s_lifted": 0.0488346143213789,
+          "s_shipped": 0.0485139710865923
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.11820470171295,
+          "ratio": 0.0217974954164812,
+          "relative_change": 0.00257656644379456,
+          "s_lifted": 0.0785953043658196,
+          "s_shipped": 0.0787983335077627
+        }
+      ],
+      "seed": 6,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.677934114528766,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0488 outside [0.023, 0.048] / playa at 16.0 m: 0.0786 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0069 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0186 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0485 outside [0.023, 0.048] / playa at 16.0 m: 0.0788 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.007 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0186 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.223011904321874,
+          "ratio": 0.0659705260243381,
+          "relative_change": 0.0147122126378034,
+          "s_lifted": 0.0267813598539277,
+          "s_shipped": 0.0271812562760232
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0262513930833159,
+          "ratio": 0.220813141154627,
+          "relative_change": 0.00579665256641183,
+          "s_lifted": 0.0490501579923119,
+          "s_shipped": 0.0493361424691727
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.156101551974748,
+          "ratio": 0.0734837223878192,
+          "relative_change": 0.0114709231096201,
+          "s_lifted": 0.0832814016731618,
+          "s_shipped": 0.0823369211812093
+        }
+      ],
+      "seed": 7,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.220813141154627,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0491 outside [0.023, 0.048] / playa at 16.0 m: 0.0833 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0179 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0493 outside [0.023, 0.048] / playa at 16.0 m: 0.0823 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0178 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.207327809091555,
+          "ratio": 0.0831313240988935,
+          "relative_change": 0.0172354352923036,
+          "s_lifted": 0.0270597945136046,
+          "s_shipped": 0.0275343612146344
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0229822168920864,
+          "ratio": 0.13523212083307,
+          "relative_change": 0.00310793393176246,
+          "s_lifted": 0.0471076695745722,
+          "s_shipped": 0.0469617156649633
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.054846857958706,
+          "ratio": 0.000128793804145887,
+          "relative_change": 0.00000706393548195088,
+          "s_lifted": 0.0735166479798437,
+          "s_shipped": 0.0735161286666539
+        }
+      ],
+      "seed": 8,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.13523212083307,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0735 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0083 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.017 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0735 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0083 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.017 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.233028742004258,
+          "ratio": 0.00687130440578856,
+          "relative_change": 0.00160121142160922,
+          "s_lifted": 0.0270036114625896,
+          "s_shipped": 0.0269604420947758
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.113295738986017,
+          "ratio": 0.0852153765661591,
+          "relative_change": 0.00965453906103471,
+          "s_lifted": 0.0435686691437525,
+          "s_shipped": 0.043152055934172
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.0824884757833145,
+          "ratio": 0.211769093825518,
+          "relative_change": 0.0174685097676807,
+          "s_lifted": 0.0770538353652341,
+          "s_shipped": 0.0757309288941315
+        }
+      ],
+      "seed": 9,
+      "tightest_lag_m": 16.0,
+      "tightest_ratio": 0.211769093825518,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0771 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0068 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0197 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0757 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.007 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0195 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.372216687428381,
+          "ratio": 0.0561347361309472,
+          "relative_change": 0.0208942855323275,
+          "s_lifted": 0.0247319457960771,
+          "s_shipped": 0.0242257657296818
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0886390891377793,
+          "ratio": 0.0613137222053989,
+          "relative_change": 0.00543479248793339,
+          "s_lifted": 0.0443692435333816,
+          "s_shipped": 0.0441294093509441
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.138534818479261,
+          "ratio": 0.00340587238556216,
+          "relative_change": 0.00047183191269738,
+          "s_lifted": 0.0806198749771596,
+          "s_shipped": 0.0806579319634722
+        }
+      ],
+      "seed": 10,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.0613137222053989,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0806 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0807 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.281143943637621,
+          "ratio": 0.0662597144769917,
+          "relative_change": 0.0186285174323642,
+          "s_lifted": 0.0264312749345379,
+          "s_shipped": 0.0259479039534085
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.056821995690657,
+          "ratio": 0.181949147412674,
+          "relative_change": 0.0103387136702017,
+          "s_lifted": 0.0459279635940106,
+          "s_shipped": 0.0454579864876905
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.239865871451976,
+          "ratio": 0.0258149344567214,
+          "relative_change": 0.00619212174993712,
+          "s_lifted": 0.0908441602855419,
+          "s_shipped": 0.0914101832695309
+        }
+      ],
+      "seed": 11,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.181949147412674,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0908 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0068 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0199 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0914 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0068 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0199 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.232096272545355,
+          "ratio": 0.0109941268036798,
+          "relative_change": 0.00255169585102507,
+          "s_lifted": 0.0269119992598661,
+          "s_shipped": 0.0269808461731031
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0875665776775783,
+          "ratio": 0.0577729252715782,
+          "relative_change": 0.00505897734845458,
+          "s_lifted": 0.0443963977211439,
+          "s_shipped": 0.0441729278795862
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.148295811251138,
+          "ratio": 0.133480285612629,
+          "relative_change": 0.0197945672409585,
+          "s_lifted": 0.0831972023223955,
+          "s_shipped": 0.08158231568882
+        }
+      ],
+      "seed": 12,
+      "tightest_lag_m": 16.0,
+      "tightest_ratio": 0.133480285612629,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0832 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0163 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0816 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0163 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.296430329854698,
+          "ratio": 0.0424221651119536,
+          "relative_change": 0.0125752163972869,
+          "s_lifted": 0.0253194956376745,
+          "s_shipped": 0.025641948691316
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.00171595126168305,
+          "ratio": 7.15812649771781,
+          "relative_change": 0.0122829961950457,
+          "s_lifted": 0.0475324759919431,
+          "s_shipped": 0.0481235777138949
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.187889263443831,
+          "ratio": 0.0283658269673195,
+          "relative_change": 0.00532963433586483,
+          "s_lifted": 0.0860157625897386,
+          "s_shipped": 0.0855597603531919
+        }
+      ],
+      "seed": 13,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 7.15812649771781,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.086 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0183 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0481 outside [0.023, 0.048] / playa at 16.0 m: 0.0856 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0183 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.248784701600305,
+          "ratio": 0.104099406206889,
+          "relative_change": 0.0258983397099498,
+          "s_lifted": 0.0273097023556375,
+          "s_shipped": 0.0266202812681797
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0319201907017607,
+          "ratio": 0.177381120649674,
+          "relative_change": 0.00566203919802961,
+          "s_lifted": 0.0493440618387808,
+          "s_shipped": 0.0496250407647949
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.202630396127372,
+          "ratio": 0.00344607129001563,
+          "relative_change": 0.000698278790579032,
+          "s_lifted": 0.0870806718230597,
+          "s_shipped": 0.0871415208988822
+        }
+      ],
+      "seed": 14,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.177381120649674,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0493 outside [0.023, 0.048] / playa at 16.0 m: 0.0871 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0166 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0496 outside [0.023, 0.048] / playa at 16.0 m: 0.0871 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0167 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.14116897112306,
+          "ratio": 0.0467588126571224,
+          "relative_change": 0.0066008934737419,
+          "s_lifted": 0.0289383670025245,
+          "s_shipped": 0.0291306553553454
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0404484021650422,
+          "ratio": 0.286395050911751,
+          "relative_change": 0.0115842221973562,
+          "s_lifted": 0.0456384788352864,
+          "s_shipped": 0.0461733613123272
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.181160822280503,
+          "ratio": 0.0277388130894275,
+          "relative_change": 0.00502518618836587,
+          "s_lifted": 0.0844302908849954,
+          "s_shipped": 0.0848567116604215
+        }
+      ],
+      "seed": 15,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.286395050911751,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0844 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0072 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0184 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0849 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0073 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0183 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.279483951529856,
+          "ratio": 0.00645566461744141,
+          "relative_change": 0.001804254657034,
+          "s_lifted": 0.025934691187615,
+          "s_shipped": 0.0259815685536751
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0401556035635357,
+          "ratio": 0.335773417412817,
+          "relative_change": 0.0134831842368027,
+          "s_lifted": 0.0455636196966225,
+          "s_shipped": 0.0461863588826645
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.167293414962925,
+          "ratio": 0.0139152795168093,
+          "relative_change": 0.00232793463053066,
+          "s_lifted": 0.0832493065814361,
+          "s_shipped": 0.0834435577291686
+        }
+      ],
+      "seed": 16,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.335773417412817,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0832 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0071 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0175 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0834 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0072 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0176 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.257552656786215,
+          "ratio": 0.0594762868595035,
+          "relative_change": 0.0153182756964442,
+          "s_lifted": 0.0268396120487182,
+          "s_shipped": 0.0264346783576883
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0599245548758719,
+          "ratio": 0.0619829662715152,
+          "relative_change": 0.00371430166370673,
+          "s_lifted": 0.0451565736576214,
+          "s_shipped": 0.0453249240986082
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.188998200946635,
+          "ratio": 0.014603213785236,
+          "relative_change": 0.00275998113344871,
+          "s_lifted": 0.0859132182079065,
+          "s_shipped": 0.0856767519888422
+        }
+      ],
+      "seed": 17,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.0619829662715152,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0859 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0073 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0857 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0072 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0181 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.32120671580755,
+          "ratio": 0.0319559350706152,
+          "relative_change": 0.0102644609545916,
+          "s_lifted": 0.0254193541962024,
+          "s_shipped": 0.0251610891787521
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.00494277709608549,
+          "ratio": 1.70719799788643,
+          "relative_change": 0.00843829916243605,
+          "s_lifted": 0.0482081024255478,
+          "s_shipped": 0.0478047119646163
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.14132501945979,
+          "ratio": 0.00575421850502365,
+          "relative_change": 0.00081321504219835,
+          "s_lifted": 0.080985829341671,
+          "s_shipped": 0.0809200239609709
+        }
+      ],
+      "seed": 18,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 1.70719799788643,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0482 outside [0.023, 0.048] / playa at 16.0 m: 0.081 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0168 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0809 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0168 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.288710486537667,
+          "ratio": 0.0421393524836092,
+          "relative_change": 0.0121660729579251,
+          "s_lifted": 0.0261093838490751,
+          "s_shipped": 0.0257955532660503
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.000783375587821354,
+          "ratio": 5.66002453986335,
+          "relative_change": 0.00443392505099874,
+          "s_lifted": 0.0477905518549733,
+          "s_shipped": 0.0480033953119801
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.159975116567072,
+          "ratio": 0.0321609755300859,
+          "relative_change": 0.00514495580933624,
+          "s_lifted": 0.0822910240563886,
+          "s_shipped": 0.0827165972941657
+        }
+      ],
+      "seed": 19,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 5.66002453986335,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0823 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0185 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0827 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0184 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.262530433239584,
+          "ratio": 0.0427889259010925,
+          "relative_change": 0.0112333952546703,
+          "s_lifted": 0.0260346739976853,
+          "s_shipped": 0.0263304543991865
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0682417116721276,
+          "ratio": 0.0304843391869484,
+          "relative_change": 0.00208030348531108,
+          "s_lifted": 0.045065587061174,
+          "s_shipped": 0.0449720315871218
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.175981049236394,
+          "ratio": 0.0709180306334944,
+          "relative_change": 0.012480229440661,
+          "s_lifted": 0.0832709292352547,
+          "s_shipped": 0.0843233034089934
+        }
+      ],
+      "seed": 20,
+      "tightest_lag_m": 16.0,
+      "tightest_ratio": 0.0709180306334944,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0833 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0178 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0843 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0177 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.332161604413326,
+          "ratio": 0.0468476802037313,
+          "relative_change": 0.0155610006195138,
+          "s_lifted": 0.0253424916554792,
+          "s_shipped": 0.0249541796504786
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0818681367424267,
+          "ratio": 0.36082914261982,
+          "relative_change": 0.029540409588652,
+          "s_lifted": 0.04309383703945,
+          "s_shipped": 0.0444055965495522
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.118909507927368,
+          "ratio": 0.0344388601320173,
+          "relative_change": 0.00409510791187762,
+          "s_lifted": 0.0791843120608746,
+          "s_shipped": 0.0788613662559783
+        }
+      ],
+      "seed": 21,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.36082914261982,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0792 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0179 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0789 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0179 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.25202382263716,
+          "ratio": 0.0261475156571982,
+          "relative_change": 0.00658979684839209,
+          "s_lifted": 0.0263764433122446,
+          "s_shipped": 0.0265514117215275
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0756185270250688,
+          "ratio": 0.0620507517706045,
+          "relative_change": 0.00469218644969129,
+          "s_lifted": 0.0448731740078188,
+          "s_shipped": 0.0446636040501005
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.187672034122561,
+          "ratio": 0.0254355827697979,
+          "relative_change": 0.00477354755750073,
+          "s_lifted": 0.0859451946887901,
+          "s_shipped": 0.0855368803226497
+        }
+      ],
+      "seed": 22,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.0620507517706045,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0859 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0177 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0855 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0177 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.150705680400014,
+          "ratio": 0.162260628334689,
+          "relative_change": 0.024453598395313,
+          "s_lifted": 0.0281827834701147,
+          "s_shipped": 0.0288892290758866
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0598747103782308,
+          "ratio": 0.0434826465199479,
+          "relative_change": 0.00260351086686087,
+          "s_lifted": 0.050967594706151,
+          "s_shipped": 0.051100635766673
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.176067006950115,
+          "ratio": 0.00522024900893763,
+          "relative_change": 0.000919113618537955,
+          "s_lifted": 0.084409611312239,
+          "s_shipped": 0.0843321005301618
+        }
+      ],
+      "seed": 23,
+      "tightest_lag_m": 4.0,
+      "tightest_ratio": 0.162260628334689,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.051 outside [0.023, 0.048] / playa at 16.0 m: 0.0844 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0082 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0159 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0511 outside [0.023, 0.048] / playa at 16.0 m: 0.0843 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0159 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.291270918664374,
+          "ratio": 0.000679922810375968,
+          "relative_change": 0.000198041741599071,
+          "s_lifted": 0.0257393053757937,
+          "s_shipped": 0.0257444038423671
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0509360190689494,
+          "ratio": 0.353711503290911,
+          "relative_change": 0.0180166558765326,
+          "s_lifted": 0.0497073567039763,
+          "s_shipped": 0.0506193480790103
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.165662215757136,
+          "ratio": 0.0289848880160075,
+          "relative_change": 0.00480170077220424,
+          "s_lifted": 0.0828805310385121,
+          "s_shipped": 0.0832804186892417
+        }
+      ],
+      "seed": 24,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.353711503290911,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0497 outside [0.023, 0.048] / playa at 16.0 m: 0.0829 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0177 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0506 outside [0.023, 0.048] / playa at 16.0 m: 0.0833 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0176 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.268474901309027,
+          "ratio": 0.0164075971951554,
+          "relative_change": 0.00440502803768762,
+          "s_lifted": 0.0260916188556735,
+          "s_shipped": 0.0262070616972352
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.014415832409988,
+          "ratio": 1.05910024190904,
+          "relative_change": 0.0152678115927384,
+          "s_lifted": 0.0479994713987253,
+          "s_shipped": 0.0487436807324855
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.181254025053743,
+          "ratio": 0.0130397913378868,
+          "relative_change": 0.00236351466585291,
+          "s_lifted": 0.0850669543231817,
+          "s_shipped": 0.0848663714097171
+        }
+      ],
+      "seed": 25,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 1.05910024190904,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0851 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0174 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0487 outside [0.023, 0.048] / playa at 16.0 m: 0.0849 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0175 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.187669749883008,
+          "ratio": 0.113144130595668,
+          "relative_change": 0.0212337306896194,
+          "s_lifted": 0.0273957698206004,
+          "s_shipped": 0.0279901041541848
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0213857443975737,
+          "ratio": 1.18644786898873,
+          "relative_change": 0.0253730708672391,
+          "s_lifted": 0.0482285443748651,
+          "s_shipped": 0.04703511896804
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.138755880759373,
+          "ratio": 0.0208806206378893,
+          "relative_change": 0.00289730890741267,
+          "s_lifted": 0.0809123859952336,
+          "s_shipped": 0.0806786350672155
+        }
+      ],
+      "seed": 26,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 1.18644786898873,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0482 outside [0.023, 0.048] / playa at 16.0 m: 0.0809 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0187 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0807 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0186 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.33299639475346,
+          "ratio": 0.0162240425299789,
+          "relative_change": 0.00540254767080978,
+          "s_lifted": 0.0250732837866394,
+          "s_shipped": 0.024938552070239
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0242738628478287,
+          "ratio": 0.116448348747096,
+          "relative_change": 0.00282665124634315,
+          "s_lifted": 0.0467699182660795,
+          "s_shipped": 0.0469024952627706
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.198377444415243,
+          "ratio": 0.0474724406229106,
+          "relative_change": 0.00941746145092735,
+          "s_lifted": 0.0874954957327674,
+          "s_shipped": 0.086679197729552
+        }
+      ],
+      "seed": 27,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.116448348747096,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0875 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0072 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0168 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0867 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0073 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0168 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.159503064466674,
+          "ratio": 0.0894915476462567,
+          "relative_change": 0.0142741760934433,
+          "s_lifted": 0.0290792818657906,
+          "s_shipped": 0.0286700406568485
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0568350802851642,
+          "ratio": 0.113463202838864,
+          "relative_change": 0.00644869024275869,
+          "s_lifted": 0.0457505645203469,
+          "s_shipped": 0.0454574236758276
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.175831129290895,
+          "ratio": 0.0244440983948136,
+          "relative_change": 0.00429803342525783,
+          "s_lifted": 0.0839456061789292,
+          "s_shipped": 0.0843079646289198
+        }
+      ],
+      "seed": 28,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.113463202838864,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0839 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0182 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0843 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0182 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.276746211747632,
+          "ratio": 0.0305136874325595,
+          "relative_change": 0.00844454740341217,
+          "s_lifted": 0.0258174080387903,
+          "s_shipped": 0.0260372810932381
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.056644838401551,
+          "ratio": 0.0174322542549126,
+          "relative_change": 0.000987447225244275,
+          "s_lifted": 0.0454207130945292,
+          "s_shipped": 0.0454656079829761
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.196234782885283,
+          "ratio": 0.0540914660804735,
+          "relative_change": 0.0106146271022484,
+          "s_lifted": 0.0873657446905298,
+          "s_shipped": 0.0864481300266107
+        }
+      ],
+      "seed": 29,
+      "tightest_lag_m": 16.0,
+      "tightest_ratio": 0.0540914660804735,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0874 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0071 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0193 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0864 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0071 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0193 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.158425197810214,
+          "ratio": 0.130634635239435,
+          "relative_change": 0.0206958179286727,
+          "s_lifted": 0.029290618970947,
+          "s_shipped": 0.0286967169419654
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0787785351182222,
+          "ratio": 0.0190539787229509,
+          "relative_change": 0.00150104453196785,
+          "s_lifted": 0.0444659276747501,
+          "s_shipped": 0.0445327733506815
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.140312390650675,
+          "ratio": 0.0594369031855588,
+          "relative_change": 0.00833973397883847,
+          "s_lifted": 0.0801506514399648,
+          "s_shipped": 0.0808247080036324
+        }
+      ],
+      "seed": 30,
+      "tightest_lag_m": 4.0,
+      "tightest_ratio": 0.130634635239435,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0802 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0073 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0191 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0808 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0072 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.019 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.338075570377563,
+          "ratio": 0.0211555032246927,
+          "relative_change": 0.00715215881931236,
+          "s_lifted": 0.0250215757292267,
+          "s_shipped": 0.0248438882944555
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0372914194398382,
+          "ratio": 0.246570564819972,
+          "relative_change": 0.00919496635421937,
+          "s_lifted": 0.0458880346731121,
+          "s_shipped": 0.0463138893272088
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.0889798291340143,
+          "ratio": 0.122218983479582,
+          "relative_change": 0.0108750242669461,
+          "s_lifted": 0.0754410956109837,
+          "s_shipped": 0.0762705395797667
+        }
+      ],
+      "seed": 31,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.246570564819972,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0754 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0082 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0172 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0763 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0172 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.21811738255362,
+          "ratio": 0.158838950915787,
+          "relative_change": 0.0346455362213144,
+          "s_lifted": 0.0282359664620344,
+          "s_shipped": 0.0272904733781161
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0433684971360239,
+          "ratio": 0.0472257881645963,
+          "relative_change": 0.00204811145876277,
+          "s_lifted": 0.0461384385811243,
+          "s_shipped": 0.0460441350604981
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.144803157958991,
+          "ratio": 0.0258046551398491,
+          "relative_change": 0.00373659555429286,
+          "s_lifted": 0.0815527258485247,
+          "s_shipped": 0.0812491307079313
+        }
+      ],
+      "seed": 32,
+      "tightest_lag_m": 4.0,
+      "tightest_ratio": 0.158838950915787,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0816 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0071 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.017 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0812 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.007 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0169 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.350606629194035,
+          "ratio": 0.0418501529630978,
+          "relative_change": 0.0146729410616465,
+          "s_lifted": 0.0242522335610289,
+          "s_shipped": 0.0246133842981635
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0277940932273853,
+          "ratio": 0.394145951226145,
+          "relative_change": 0.0109549293135759,
+          "s_lifted": 0.0462297989003275,
+          "s_shipped": 0.0467418525914525
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.19325111735795,
+          "ratio": 0.0385825593674881,
+          "relative_change": 0.00745612270829653,
+          "s_lifted": 0.0867705958278009,
+          "s_shipped": 0.0861284118205958
+        }
+      ],
+      "seed": 33,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.394145951226145,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0868 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0192 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0861 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0191 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.343643540452375,
+          "ratio": 0.0651708611911827,
+          "relative_change": 0.0223955454740683,
+          "s_lifted": 0.0252950236390461,
+          "s_shipped": 0.0247409368624716
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.00386072973079671,
+          "ratio": 1.01023932960289,
+          "relative_change": 0.00390026101501803,
+          "s_lifted": 0.0476695881642968,
+          "s_shipped": 0.0478562399914608
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.126879980935098,
+          "ratio": 0.0229296216089339,
+          "relative_change": 0.00290930995259055,
+          "s_lifted": 0.0798127966042728,
+          "s_shipped": 0.079581270023354
+        }
+      ],
+      "seed": 34,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 1.01023932960289,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0798 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0195 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0796 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0197 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.202336606714739,
+          "ratio": 0.00423835658348839,
+          "relative_change": 0.000857574689150112,
+          "s_lifted": 0.0276723740835791,
+          "s_shipped": 0.027648663289753
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.077124469947203,
+          "ratio": 0.20526123757606,
+          "relative_change": 0.0158306641487605,
+          "s_lifted": 0.0453072252074662,
+          "s_shipped": 0.044601159234972
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.158241799341302,
+          "ratio": 0.0257103992783707,
+          "relative_change": 0.0040684598435927,
+          "s_lifted": 0.0828821065350809,
+          "s_shipped": 0.0825462703489279
+        }
+      ],
+      "seed": 35,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.20526123757606,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0829 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0186 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0825 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0184 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.212228285874225,
+          "ratio": 0.0511000995398092,
+          "relative_change": 0.010844886533336,
+          "s_lifted": 0.027125652668019,
+          "s_shipped": 0.0274230525614456
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0445787985581582,
+          "ratio": 0.114657984180779,
+          "relative_change": 0.00511131517987943,
+          "s_lifted": 0.0505395448831223,
+          "s_shipped": 0.0502825349987006
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.222328038195904,
+          "ratio": 0.0252817522562457,
+          "relative_change": 0.00562084238128597,
+          "s_lifted": 0.089850942356108,
+          "s_shipped": 0.0893487272433049
+        }
+      ],
+      "seed": 36,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.114657984180779,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0505 outside [0.023, 0.048] / playa at 16.0 m: 0.0899 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.008 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0189 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0503 outside [0.023, 0.048] / playa at 16.0 m: 0.0893 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0189 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.208647791484767,
+          "ratio": 0.0352933737194257,
+          "relative_change": 0.00736388448060469,
+          "s_lifted": 0.0273017521073484,
+          "s_shipped": 0.0275042905254992
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0213928916584371,
+          "ratio": 0.210778621465406,
+          "relative_change": 0.00450916421292414,
+          "s_lifted": 0.0472468774279378,
+          "s_shipped": 0.0470347898368431
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.117413902006186,
+          "ratio": 0.134860779680167,
+          "relative_change": 0.0158345303698449,
+          "s_lifted": 0.077481113340923,
+          "s_shipped": 0.0787277299721154
+        }
+      ],
+      "seed": 37,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.210778621465406,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0775 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.008 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0181 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0787 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0182 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.202507238330924,
+          "ratio": 0.0244180639849928,
+          "relative_change": 0.00494483470298868,
+          "s_lifted": 0.0277814387100079,
+          "s_shipped": 0.0276447400401025
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0659875801029994,
+          "ratio": 0.275829649300287,
+          "relative_change": 0.0182013310779849,
+          "s_lifted": 0.0523712630627671,
+          "s_shipped": 0.051435076211618
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.181175143798271,
+          "ratio": 0.0346399047456863,
+          "relative_change": 0.00627588972345811,
+          "s_lifted": 0.0843256351532204,
+          "s_shipped": 0.0848581958323962
+        }
+      ],
+      "seed": 38,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.275829649300287,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0524 outside [0.023, 0.048] / playa at 16.0 m: 0.0843 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0184 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0514 outside [0.023, 0.048] / playa at 16.0 m: 0.0849 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0184 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.281503738410669,
+          "ratio": 0.0370463423013661,
+          "relative_change": 0.0104286838522759,
+          "s_lifted": 0.02621114533693,
+          "s_shipped": 0.0259406188242792
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0387376204621806,
+          "ratio": 0.323406645474155,
+          "relative_change": 0.0125280038873248,
+          "s_lifted": 0.0456699952237614,
+          "s_shipped": 0.0462494079868065
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.101220811356228,
+          "ratio": 0.0975928281089795,
+          "relative_change": 0.00987842524373983,
+          "s_lifted": 0.0765456169542347,
+          "s_shipped": 0.0773093112056245
+        }
+      ],
+      "seed": 39,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.323406645474155,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0765 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0073 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0177 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0773 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0176 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.302857733369677,
+          "ratio": 0.0549785912348711,
+          "relative_change": 0.0166506915252511,
+          "s_lifted": 0.0259402988313724,
+          "s_shipped": 0.0255154489615848
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.102704899810893,
+          "ratio": 0.126284555480744,
+          "relative_change": 0.012970042618313,
+          "s_lifted": 0.0441315657759134,
+          "s_shipped": 0.0435665063320556
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.129599366356428,
+          "ratio": 0.0666847930026007,
+          "relative_change": 0.00864230691874662,
+          "s_lifted": 0.0791399905784829,
+          "s_shipped": 0.0798299051198228
+        }
+      ],
+      "seed": 40,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.126284555480744,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0791 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0798 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0178 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.134163544000484,
+          "ratio": 0.0730257989972753,
+          "relative_change": 0.00979739999694146,
+          "s_lifted": 0.0295977552317481,
+          "s_shipped": 0.0293105876801008
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0268835969414028,
+          "ratio": 0.79509087592497,
+          "relative_change": 0.0213749026401538,
+          "s_lifted": 0.0483129542925127,
+          "s_shipped": 0.049368194646604
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.165656720013059,
+          "ratio": 0.043970808902474,
+          "relative_change": 0.00728405997910484,
+          "s_lifted": 0.0838864856976897,
+          "s_shipped": 0.0832798701286208
+        }
+      ],
+      "seed": 41,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.79509087592497,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0483 outside [0.023, 0.048] / playa at 16.0 m: 0.0839 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0082 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0187 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0494 outside [0.023, 0.048] / playa at 16.0 m: 0.0833 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0083 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0188 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.265202375929165,
+          "ratio": 0.00369225987592809,
+          "relative_change": 0.000979196091644054,
+          "s_lifted": 0.0262491196793206,
+          "s_shipped": 0.0262748479077004
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0635945673229926,
+          "ratio": 0.083114158072628,
+          "relative_change": 0.00528560892104359,
+          "s_lifted": 0.0449297838950997,
+          "s_shipped": 0.0451685270647033
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.142020590119134,
+          "ratio": 0.0160560616629886,
+          "relative_change": 0.00228029135236683,
+          "s_lifted": 0.0811702972848707,
+          "s_shipped": 0.0809856264611852
+        }
+      ],
+      "seed": 42,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.083114158072628,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0812 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.02 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.081 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0201 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.195453868774448,
+          "ratio": 0.00252396625789347,
+          "relative_change": 0.000493318969761445,
+          "s_lifted": 0.0278215665792345,
+          "s_shipped": 0.0278078484400908
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0426787656069744,
+          "ratio": 0.297018950430891,
+          "relative_change": 0.0126764021662695,
+          "s_lifted": 0.0466586533083841,
+          "s_shipped": 0.0460745932348914
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.19406449843137,
+          "ratio": 0.00921467306452835,
+          "relative_change": 0.00178824090647675,
+          "s_lifted": 0.0860611621325234,
+          "s_shipped": 0.0862153359229865
+        }
+      ],
+      "seed": 43,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.297018950430891,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0861 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0163 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0862 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0163 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.231636942328154,
+          "ratio": 0.012044667765828,
+          "relative_change": 0.00278999001263487,
+          "s_lifted": 0.0269156041222232,
+          "s_shipped": 0.0269909084873348
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.000899592869854091,
+          "ratio": 10.749314279393,
+          "relative_change": 0.00967000648156267,
+          "s_lifted": 0.047533682256983,
+          "s_shipped": 0.0479978215020083
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.19610191606945,
+          "ratio": 0.0193849638066734,
+          "relative_change": 0.0038014285454256,
+          "s_lifted": 0.0861052699622178,
+          "s_shipped": 0.0864338420366266
+        }
+      ],
+      "seed": 44,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 10.749314279393,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0861 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.007 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0864 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.007 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0178 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.113115128507595,
+          "ratio": 0.104303961464758,
+          "relative_change": 0.0117983560049373,
+          "s_lifted": 0.0295124793563559,
+          "s_shipped": 0.0298648353154363
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0829290752939926,
+          "ratio": 0.149862646250801,
+          "relative_change": 0.0124279706746897,
+          "s_lifted": 0.0449134234631003,
+          "s_shipped": 0.044362092676252
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.201886232806179,
+          "ratio": 0.0409446017563716,
+          "relative_change": 0.00826615140234312,
+          "s_lifted": 0.0877799232938514,
+          "s_shipped": 0.087060269921551
+        }
+      ],
+      "seed": 45,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.149862646250801,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0878 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0199 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0871 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.008 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0199 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.250807273872332,
+          "ratio": 0.0632769249299381,
+          "relative_change": 0.015870313040702,
+          "s_lifted": 0.0261554468597751,
+          "s_shipped": 0.0265772359134786
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0125164734748715,
+          "ratio": 0.149016251494526,
+          "relative_change": 0.00186515795915601,
+          "s_lifted": 0.0473586328743067,
+          "s_shipped": 0.0474471292650946
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.143599312276196,
+          "ratio": 0.00263845835788498,
+          "relative_change": 0.000378880805661664,
+          "s_lifted": 0.0811041780345931,
+          "s_shipped": 0.0811349184978809
+        }
+      ],
+      "seed": 46,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.149016251494526,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0811 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0073 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0185 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0811 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0073 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0183 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.251265793455757,
+          "ratio": 0.0522796375360881,
+          "relative_change": 0.0131360846070845,
+          "s_lifted": 0.0262185039429568,
+          "s_shipped": 0.0265674968291023
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.104469137336475,
+          "ratio": 0.00635910374222071,
+          "relative_change": 0.00066433008218295,
+          "s_lifted": 0.0435258111398298,
+          "s_shipped": 0.0434969148308255
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.0932838566744714,
+          "ratio": 0.0406783019807621,
+          "relative_change": 0.00379462889173427,
+          "s_lifted": 0.0769233750908001,
+          "s_shipped": 0.0766325828777639
+        }
+      ],
+      "seed": 47,
+      "tightest_lag_m": 4.0,
+      "tightest_ratio": 0.0522796375360881,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0769 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0189 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0766 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0189 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.353565755195617,
+          "ratio": 0.0266292814999762,
+          "relative_change": 0.00941520202385575,
+          "s_lifted": 0.0243283418723621,
+          "s_shipped": 0.024559575234818
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.00270691739996478,
+          "ratio": 2.43671254536041,
+          "relative_change": 0.00659597958774857,
+          "s_lifted": 0.0482273300564913,
+          "s_shipped": 0.0479113080465936
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.130947123846312,
+          "ratio": 0.0733407331133486,
+          "relative_change": 0.00960375806197294,
+          "s_lifted": 0.0807215641879679,
+          "s_shipped": 0.0799537081190351
+        }
+      ],
+      "seed": 48,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 2.43671254536041,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0482 outside [0.023, 0.048] / playa at 16.0 m: 0.0807 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0188 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.08 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0185 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.284014135211176,
+          "ratio": 0.0073280122357743,
+          "relative_change": 0.00208125905796035,
+          "s_lifted": 0.0258360183080697,
+          "s_shipped": 0.0258899019009107
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0168341556349373,
+          "ratio": 1.56311867971099,
+          "relative_change": 0.0263137831301326,
+          "s_lifted": 0.0475777914913778,
+          "s_shipped": 0.0488635770611268
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.186956191014232,
+          "ratio": 0.0730470310229116,
+          "relative_change": 0.013656594684942,
+          "s_lifted": 0.0866286835305345,
+          "s_shipped": 0.0854615695145355
+        }
+      ],
+      "seed": 49,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 1.56311867971099,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0866 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0069 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0193 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0489 outside [0.023, 0.048] / playa at 16.0 m: 0.0855 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.007 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0194 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.327007903980417,
+          "ratio": 0.0422660371515082,
+          "relative_change": 0.0138213282184731,
+          "s_lifted": 0.0247048547998077,
+          "s_shipped": 0.0250510941949074
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0291918504273323,
+          "ratio": 0.198709333342231,
+          "relative_change": 0.00580069313744134,
+          "s_lifted": 0.0464076050360802,
+          "s_shipped": 0.0466783719479054
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.150376183257522,
+          "ratio": 0.0594533374780574,
+          "relative_change": 0.00894036597187163,
+          "s_lifted": 0.0810509148329146,
+          "s_shipped": 0.0817820765270056
+        }
+      ],
+      "seed": 50,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.198709333342231,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0811 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0088 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0182 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0818 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0087 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.247238990711758,
+          "ratio": 0.052739211894748,
+          "relative_change": 0.013039189519791,
+          "s_lifted": 0.026305734880907,
+          "s_shipped": 0.026653271945122
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.054931428272203,
+          "ratio": 0.0781316320283374,
+          "relative_change": 0.00429188214055477,
+          "s_lifted": 0.0457349027784062,
+          "s_shipped": 0.0455394528141824
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.168406584733369,
+          "ratio": 0.00164123948068086,
+          "relative_change": 0.000276395535671032,
+          "s_lifted": 0.0835783494571274,
+          "s_shipped": 0.08355525515762
+        }
+      ],
+      "seed": 51,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.0781316320283374,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0836 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0172 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0836 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0173 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.190719155042316,
+          "ratio": 0.0943300503416813,
+          "relative_change": 0.0179905474962645,
+          "s_lifted": 0.0284206898218713,
+          "s_shipped": 0.0279184221226529
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0360868813992657,
+          "ratio": 0.221124078374934,
+          "relative_change": 0.00797967839083819,
+          "s_lifted": 0.0494418504642908,
+          "s_shipped": 0.0498395540769678
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.169781001625088,
+          "ratio": 0.0332881466671728,
+          "relative_change": 0.00565169488339545,
+          "s_lifted": 0.0832205692328927,
+          "s_shipped": 0.0836935798096761
+        }
+      ],
+      "seed": 52,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.221124078374934,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0494 outside [0.023, 0.048] / playa at 16.0 m: 0.0832 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0177 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0498 outside [0.023, 0.048] / playa at 16.0 m: 0.0837 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0177 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.285903355458078,
+          "ratio": 0.046561837939734,
+          "relative_change": 0.0133121857032652,
+          "s_lifted": 0.0261960098683574,
+          "s_shipped": 0.0258518650401669
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0159930840479942,
+          "ratio": 1.01566768793044,
+          "relative_change": 0.0162436586979034,
+          "s_lifted": 0.0480528483648612,
+          "s_shipped": 0.0472847706881936
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.188811152392575,
+          "ratio": 0.00302786007235312,
+          "relative_change": 0.000571693749544457,
+          "s_lifted": 0.085608026585092,
+          "s_shipped": 0.0856569961543983
+        }
+      ],
+      "seed": 53,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 1.01566768793044,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0481 outside [0.023, 0.048] / playa at 16.0 m: 0.0856 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0198 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0857 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0198 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.223839651939682,
+          "ratio": 0.0852074687902341,
+          "relative_change": 0.0190728101566674,
+          "s_lifted": 0.0266447998479862,
+          "s_shipped": 0.0271628721518482
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.000586166727663066,
+          "ratio": 15.3718948449217,
+          "relative_change": 0.00901049329922848,
+          "s_lifted": 0.0484454759824615,
+          "s_shipped": 0.0480128564610425
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.133410854381892,
+          "ratio": 0.0428355538002371,
+          "relative_change": 0.00571472783041115,
+          "s_lifted": 0.0797228054387347,
+          "s_shipped": 0.0801810181345388
+        }
+      ],
+      "seed": 54,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 15.3718948449217,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0484 outside [0.023, 0.048] / playa at 16.0 m: 0.0797 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0802 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0178 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.219695801376055,
+          "ratio": 0.0329844314858216,
+          "relative_change": 0.00724654110821114,
+          "s_lifted": 0.0274526621541895,
+          "s_shipped": 0.0272551565418979
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0176620345068018,
+          "ratio": 0.193672795742793,
+          "relative_change": 0.00342065560143799,
+          "s_lifted": 0.0473687040306174,
+          "s_shipped": 0.0472072243741337
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.192416268318748,
+          "ratio": 0.0527074778604267,
+          "relative_change": 0.0101417762023963,
+          "s_lifted": 0.0869119676686978,
+          "s_shipped": 0.0860393755770019
+        }
+      ],
+      "seed": 55,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.193672795742793,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0869 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0066 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0197 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.086 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0067 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0197 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.188299527382847,
+          "ratio": 0.115638179378198,
+          "relative_change": 0.0217746145243276,
+          "s_lifted": 0.027366119181238,
+          "s_shipped": 0.0279752698995139
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0353851221769487,
+          "ratio": 0.051350985808159,
+          "relative_change": 0.00181706090672846,
+          "s_lifted": 0.0463148499527932,
+          "s_shipped": 0.0463991600526299
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.137854066932299,
+          "ratio": 0.0787352530791597,
+          "relative_change": 0.010853974847906,
+          "s_lifted": 0.079719476454656,
+          "s_shipped": 0.0805942443557797
+        }
+      ],
+      "seed": 56,
+      "tightest_lag_m": 4.0,
+      "tightest_ratio": 0.115638179378198,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0797 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0089 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0186 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0806 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.009 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0185 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.239868005918114,
+          "ratio": 0.0530540214745061,
+          "relative_change": 0.0127259623370266,
+          "s_lifted": 0.0264705199887203,
+          "s_shipped": 0.0268117249911484
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.00863548877527506,
+          "ratio": 0.403815279295608,
+          "relative_change": 0.00348714231164179,
+          "s_lifted": 0.0477957858317382,
+          "s_shipped": 0.0476296943094212
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.142474027969509,
+          "ratio": 0.0179360699146738,
+          "relative_change": 0.0025554241266863,
+          "s_lifted": 0.0808213875387054,
+          "s_shipped": 0.0810284495937452
+        }
+      ],
+      "seed": 57,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.403815279295608,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0808 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0073 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0166 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.081 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0073 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0167 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.149828216319421,
+          "ratio": 0.0363572321571799,
+          "relative_change": 0.00544733924442136,
+          "s_lifted": 0.0290687647286063,
+          "s_shipped": 0.0289112752045781
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0667301418843595,
+          "ratio": 0.0790729425179538,
+          "relative_change": 0.00527654867343686,
+          "s_lifted": 0.0512043852157262,
+          "s_shipped": 0.0514760008396706
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.194912027354466,
+          "ratio": 0.00819546483537297,
+          "relative_change": 0.00159739466617478,
+          "s_lifted": 0.086443961077066,
+          "s_shipped": 0.0863060961793707
+        }
+      ],
+      "seed": 58,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.0790729425179538,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0512 outside [0.023, 0.048] / playa at 16.0 m: 0.0864 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0197 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0515 outside [0.023, 0.048] / playa at 16.0 m: 0.0863 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0197 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.254214769145816,
+          "ratio": 0.0421003354695409,
+          "relative_change": 0.0107025270623507,
+          "s_lifted": 0.0262213591339417,
+          "s_shipped": 0.0265050299340999
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0403251206865347,
+          "ratio": 0.398520024750804,
+          "relative_change": 0.016070368094077,
+          "s_lifted": 0.0492551847144398,
+          "s_shipped": 0.0500596619079658
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.139214421777387,
+          "ratio": 0.0251513346830664,
+          "relative_change": 0.00350142851483264,
+          "s_lifted": 0.08043897167056,
+          "s_shipped": 0.0807216126267747
+        }
+      ],
+      "seed": 59,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.398520024750804,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0493 outside [0.023, 0.048] / playa at 16.0 m: 0.0804 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0083 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0204 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0501 outside [0.023, 0.048] / playa at 16.0 m: 0.0807 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0083 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0205 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.160132667862662,
+          "ratio": 0.152842936894865,
+          "relative_change": 0.0244751472489392,
+          "s_lifted": 0.0279531587880797,
+          "s_shipped": 0.0286544814406824
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0262596156854204,
+          "ratio": 0.0514322204171173,
+          "relative_change": 0.00135059034200133,
+          "s_lifted": 0.0492699256004983,
+          "s_shipped": 0.0493365590807002
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.11890172178725,
+          "ratio": 0.0585525656362077,
+          "relative_change": 0.00696200086920607,
+          "s_lifted": 0.0794096974180007,
+          "s_shipped": 0.0788606693693055
+        }
+      ],
+      "seed": 60,
+      "tightest_lag_m": 4.0,
+      "tightest_ratio": 0.152842936894865,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0493 outside [0.023, 0.048] / playa at 16.0 m: 0.0794 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0204 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0493 outside [0.023, 0.048] / playa at 16.0 m: 0.0789 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0203 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.389401151632481,
+          "ratio": 0.0020562794870314,
+          "relative_change": 0.000800717600328275,
+          "s_lifted": 0.023906977265554,
+          "s_shipped": 0.0239261353432312
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0218104795600261,
+          "ratio": 0.0661912015896654,
+          "relative_change": 0.00144366184932497,
+          "s_lifted": 0.0490412584051398,
+          "s_shipped": 0.0491121597565183
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.0813306633551824,
+          "ratio": 0.200781998810499,
+          "relative_change": 0.0163297331530373,
+          "s_lifted": 0.0744003768224388,
+          "s_shipped": 0.0756354840946045
+        }
+      ],
+      "seed": 61,
+      "tightest_lag_m": 16.0,
+      "tightest_ratio": 0.200781998810499,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.049 outside [0.023, 0.048] / playa at 16.0 m: 0.0744 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0086 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0177 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0491 outside [0.023, 0.048] / playa at 16.0 m: 0.0756 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0086 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0177 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.223126981390595,
+          "ratio": 0.0366170158873277,
+          "relative_change": 0.00817024422247089,
+          "s_lifted": 0.0274007555540834,
+          "s_shipped": 0.0271786989460452
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0132438497885857,
+          "ratio": 0.318108055166801,
+          "relative_change": 0.00421297529916824,
+          "s_lifted": 0.0472133183573078,
+          "s_shipped": 0.0474130684435181
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.121541981921342,
+          "ratio": 0.0742141112073209,
+          "relative_change": 0.00902013016266862,
+          "s_lifted": 0.0798111614685553,
+          "s_shipped": 0.0790976900091067
+        }
+      ],
+      "seed": 62,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.318108055166801,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0798 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0184 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0791 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0183 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.30985230191403,
+          "ratio": 0.0492011305059059,
+          "relative_change": 0.0152450835440275,
+          "s_lifted": 0.0257661052799136,
+          "s_shipped": 0.0253791972968429
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.11070032644694,
+          "ratio": 0.211603751750831,
+          "relative_change": 0.0234246043962143,
+          "s_lifted": 0.0422397090043916,
+          "s_shipped": 0.0432528908618224
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.174001579005452,
+          "ratio": 0.0285565012960227,
+          "relative_change": 0.00496887631637918,
+          "s_lifted": 0.083703238215378,
+          "s_shipped": 0.0841212261838677
+        }
+      ],
+      "seed": 63,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.211603751750831,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0837 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0088 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0182 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0841 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0087 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.338450118837176,
+          "ratio": 0.0483290287122845,
+          "relative_change": 0.016356965510958,
+          "s_lifted": 0.0252431929505406,
+          "s_shipped": 0.0248369360442666
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0255425687305322,
+          "ratio": 0.452111236955639,
+          "relative_change": 0.0115480823437853,
+          "s_lifted": 0.0463035080395571,
+          "s_shipped": 0.0468444718579235
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.160372849697877,
+          "ratio": 0.0226874220103351,
+          "relative_change": 0.00363844652009576,
+          "s_lifted": 0.0824546778377595,
+          "s_shipped": 0.0827557803186778
+        }
+      ],
+      "seed": 64,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.452111236955639,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0825 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0188 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0828 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0188 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.238737822453086,
+          "ratio": 0.0130543064451576,
+          "relative_change": 0.00311655669435221,
+          "s_lifted": 0.0269198236218813,
+          "s_shipped": 0.0268361871232514
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0477153008262954,
+          "ratio": 0.0559432960268451,
+          "relative_change": 0.00266935119913541,
+          "s_lifted": 0.0459755033289753,
+          "s_shipped": 0.0458531052873923
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.128038838851836,
+          "ratio": 0.0636926380482929,
+          "relative_change": 0.00815513141911367,
+          "s_lifted": 0.0790371772496457,
+          "s_shipped": 0.0796870354965193
+        }
+      ],
+      "seed": 65,
+      "tightest_lag_m": 16.0,
+      "tightest_ratio": 0.0636926380482929,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.079 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0191 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0797 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0192 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.250082253375833,
+          "ratio": 0.0284582379073608,
+          "relative_change": 0.00711690026297833,
+          "s_lifted": 0.0264033928930871,
+          "s_shipped": 0.0265926501318035
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0396274541340281,
+          "ratio": 0.520811637079782,
+          "relative_change": 0.0206384392608471,
+          "s_lifted": 0.0471635209954826,
+          "s_shipped": 0.046209822382977
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.115421800607954,
+          "ratio": 0.0199297702492857,
+          "relative_change": 0.00230032996787539,
+          "s_lifted": 0.078731124252613,
+          "s_shipped": 0.0785504323391137
+        }
+      ],
+      "seed": 66,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.520811637079782,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0787 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0071 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0183 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0786 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0071 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0183 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.250765227817338,
+          "ratio": 0.0300865278834466,
+          "relative_change": 0.00754465501892518,
+          "s_lifted": 0.0267786521578017,
+          "s_shipped": 0.0265781293408764
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.00199214986907031,
+          "ratio": 4.29420560535171,
+          "relative_change": 0.00855470113446241,
+          "s_lifted": 0.0485486926689447,
+          "s_shipped": 0.0481368959108863
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.212496985019367,
+          "ratio": 0.0558718826132355,
+          "relative_change": 0.0118726066026685,
+          "s_lifted": 0.0892808724026395,
+          "s_shipped": 0.0882333129882795
+        }
+      ],
+      "seed": 67,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 4.29420560535171,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0485 outside [0.023, 0.048] / playa at 16.0 m: 0.0893 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0073 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0181 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0481 outside [0.023, 0.048] / playa at 16.0 m: 0.0882 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0073 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.188295917798636,
+          "ratio": 0.0212685079829702,
+          "relative_change": 0.00400477323086099,
+          "s_lifted": 0.0278633199252454,
+          "s_shipped": 0.027975354877583
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0168947886057432,
+          "ratio": 0.531155306893821,
+          "relative_change": 0.00897375662678974,
+          "s_lifted": 0.0476667879364072,
+          "s_shipped": 0.0472428421684299
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.174171089853808,
+          "ratio": 0.0984891935371497,
+          "relative_change": 0.017153970177188,
+          "s_lifted": 0.0826951838294434,
+          "s_shipped": 0.0841384930296272
+        }
+      ],
+      "seed": 68,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.531155306893821,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0827 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0841 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0179 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.204986824478986,
+          "ratio": 0.118986574733647,
+          "relative_change": 0.0243906801102819,
+          "s_lifted": 0.0269149670039894,
+          "s_shipped": 0.0275878535139782
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0681767225921057,
+          "ratio": 0.221453535749198,
+          "relative_change": 0.015097976273814,
+          "s_lifted": 0.045653795712596,
+          "s_shipped": 0.0449747677363916
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.142446887341921,
+          "ratio": 0.0903902026470541,
+          "relative_change": 0.0128758030132783,
+          "s_lifted": 0.0820691584669646,
+          "s_shipped": 0.0810258851310408
+        }
+      ],
+      "seed": 69,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.221453535749198,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0821 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0089 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0169 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.081 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0087 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0169 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.234343790085543,
+          "ratio": 0.0625069158271243,
+          "relative_change": 0.0146481075614864,
+          "s_lifted": 0.0265372202002681,
+          "s_shipped": 0.0269317189157618
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0257793254447839,
+          "ratio": 0.169304231021995,
+          "relative_change": 0.00436454887069489,
+          "s_lifted": 0.0466292520440135,
+          "s_shipped": 0.0468336598411838
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.130589890867717,
+          "ratio": 0.118708908312687,
+          "relative_change": 0.0155021833815797,
+          "s_lifted": 0.0786819080792469,
+          "s_shipped": 0.0799208558425306
+        }
+      ],
+      "seed": 70,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.169304231021995,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0787 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0192 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0799 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0192 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.256775106095028,
+          "ratio": 0.0432893543361117,
+          "relative_change": 0.0111156285524403,
+          "s_lifted": 0.0261570132958582,
+          "s_shipped": 0.0264510331552401
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.00986853185512136,
+          "ratio": 2.3593072685985,
+          "relative_change": 0.0232828989361837,
+          "s_lifted": 0.0496495014342884,
+          "s_shipped": 0.0485198193831877
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.157188368153106,
+          "ratio": 0.102568312079241,
+          "relative_change": 0.0161225455999544,
+          "s_lifted": 0.0811139031051624,
+          "s_shipped": 0.0824430956745772
+        }
+      ],
+      "seed": 71,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 2.3593072685985,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0496 outside [0.023, 0.048] / playa at 16.0 m: 0.0811 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0158 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0485 outside [0.023, 0.048] / playa at 16.0 m: 0.0824 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0159 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.248480101155754,
+          "ratio": 0.00386989475311322,
+          "relative_change": 0.000961591839715694,
+          "s_lifted": 0.0266523800953848,
+          "s_shipped": 0.0266267760048606
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0469631940383958,
+          "ratio": 0.248008603484892,
+          "relative_change": 0.0116472761686525,
+          "s_lifted": 0.0509954563038946,
+          "s_shipped": 0.0504083364876209
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.0895748021082721,
+          "ratio": 0.0014577268309516,
+          "relative_change": 0.000130575592410408,
+          "s_lifted": 0.0763303488033813,
+          "s_shipped": 0.0763203832241288
+        }
+      ],
+      "seed": 72,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.248008603484892,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.051 outside [0.023, 0.048] / playa at 16.0 m: 0.0763 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.008 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0192 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0504 outside [0.023, 0.048] / playa at 16.0 m: 0.0763 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.008 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0191 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.306771093351426,
+          "ratio": 0.0182615919718127,
+          "relative_change": 0.00560212853553062,
+          "s_lifted": 0.02558155114464,
+          "s_shipped": 0.0254390383818048
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0228600687141588,
+          "ratio": 0.539390481351306,
+          "relative_change": 0.012330503467454,
+          "s_lifted": 0.0463881930033381,
+          "s_shipped": 0.0469673237517156
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.110165095314294,
+          "ratio": 0.0727436060238574,
+          "relative_change": 0.00801380629112372,
+          "s_lifted": 0.0787121644110726,
+          "s_shipped": 0.0780863951662383
+        }
+      ],
+      "seed": 73,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.539390481351306,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0787 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0197 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0781 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0197 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.213079486184562,
+          "ratio": 0.0139562764445025,
+          "relative_change": 0.0029737962138443,
+          "s_lifted": 0.0273223168555177,
+          "s_shipped": 0.0274038102025429
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.00810226097147831,
+          "ratio": 1.69233296220279,
+          "relative_change": 0.0137117233104019,
+          "s_lifted": 0.0483083182976145,
+          "s_shipped": 0.0476548876635832
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.130974890017064,
+          "ratio": 0.0167666714267709,
+          "relative_change": 0.00219601294607356,
+          "s_lifted": 0.0801318477033561,
+          "s_shipped": 0.0799562627153136
+        }
+      ],
+      "seed": 74,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 1.69233296220279,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0483 outside [0.023, 0.048] / playa at 16.0 m: 0.0801 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.08 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0179 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.296076949711054,
+          "ratio": 0.0483841074949844,
+          "relative_change": 0.0143254189616067,
+          "s_lifted": 0.0252815082505435,
+          "s_shipped": 0.0256489400628652
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0121186144127892,
+          "ratio": 1.22712406313197,
+          "relative_change": 0.0148710433577515,
+          "s_lifted": 0.0467599148282716,
+          "s_shipped": 0.0474657805082188
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.104622032674179,
+          "ratio": 0.0843005371023755,
+          "relative_change": 0.00881969354717556,
+          "s_lifted": 0.0769185471687024,
+          "s_shipped": 0.0776029816855157
+        }
+      ],
+      "seed": 75,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 1.22712406313197,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0769 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0776 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0179 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.310032035095159,
+          "ratio": 0.00729854889565588,
+          "relative_change": 0.00226278396736172,
+          "s_lifted": 0.0254331350950565,
+          "s_shipped": 0.0253757153332401
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0143981147557603,
+          "ratio": 0.515940059543567,
+          "relative_change": 0.00742856418440206,
+          "s_lifted": 0.0470073077368625,
+          "s_shipped": 0.0473591179845272
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.133828707750004,
+          "ratio": 0.0233120440466351,
+          "relative_change": 0.00311982072977234,
+          "s_lifted": 0.0799694275210641,
+          "s_shipped": 0.0802196985996915
+        }
+      ],
+      "seed": 76,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.515940059543567,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.08 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0068 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0195 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0802 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0068 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0195 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.162704499224114,
+          "ratio": 0.022269656553932,
+          "relative_change": 0.00362337331750052,
+          "s_lifted": 0.028694695704246,
+          "s_shipped": 0.028591099477282
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.041853331719238,
+          "ratio": 0.37591751310771,
+          "relative_change": 0.015733400375168,
+          "s_lifted": 0.0453856126126198,
+          "s_shipped": 0.0461110969628749
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.133527617748758,
+          "ratio": 0.0968595706153368,
+          "relative_change": 0.0129334277204336,
+          "s_lifted": 0.0791546679538442,
+          "s_shipped": 0.0801918231016998
+        }
+      ],
+      "seed": 77,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.37591751310771,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0792 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0173 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0802 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0173 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.225870037620483,
+          "ratio": 0.0285370876498058,
+          "relative_change": 0.00644567306104067,
+          "s_lifted": 0.0269430897866982,
+          "s_shipped": 0.0271178827932914
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0155178688501211,
+          "ratio": 0.448231719915864,
+          "relative_change": 0.0069556010441186,
+          "s_lifted": 0.048458823640118,
+          "s_shipped": 0.0487982447623381
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.14956515441606,
+          "ratio": 0.0232375905975978,
+          "relative_change": 0.00347553382598689,
+          "s_lifted": 0.0814201186218924,
+          "s_shipped": 0.0817040839293099
+        }
+      ],
+      "seed": 78,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.448231719915864,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0485 outside [0.023, 0.048] / playa at 16.0 m: 0.0814 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0082 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0488 outside [0.023, 0.048] / playa at 16.0 m: 0.0817 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0082 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.281164169127004,
+          "ratio": 0.0166589545122968,
+          "relative_change": 0.00468390110397448,
+          "s_lifted": 0.0260690298161848,
+          "s_shipped": 0.0259474943188991
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.00139915918710126,
+          "ratio": 8.24855279561548,
+          "relative_change": 0.0115410384242752,
+          "s_lifted": 0.048527545266154,
+          "s_shipped": 0.0479738769093814
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.114408557934505,
+          "ratio": 0.0158832796832451,
+          "relative_change": 0.00181718312383049,
+          "s_lifted": 0.0786031366674251,
+          "s_shipped": 0.0784605594628829
+        }
+      ],
+      "seed": 79,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 8.24855279561548,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0485 outside [0.023, 0.048] / playa at 16.0 m: 0.0786 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0083 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0185 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0785 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0084 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0184 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.293985343897284,
+          "ratio": 0.0266102373909691,
+          "relative_change": 0.00782301979057241,
+          "s_lifted": 0.0254894226651459,
+          "s_shipped": 0.0256903991662512
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0078432119126933,
+          "ratio": 1.62839471258075,
+          "relative_change": 0.0127718448082801,
+          "s_lifted": 0.0470583392763615,
+          "s_shipped": 0.0476671365467922
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.134402670436828,
+          "ratio": 0.0666111267730156,
+          "relative_change": 0.00895271331909941,
+          "s_lifted": 0.0809915510802739,
+          "s_shipped": 0.0802728909007442
+        }
+      ],
+      "seed": 80,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 1.62839471258075,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.081 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.017 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0803 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0171 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.200532253268519,
+          "ratio": 0.000894376003211219,
+          "relative_change": 0.000179351235193238,
+          "s_lifted": 0.0276852518842361,
+          "s_shipped": 0.0276902181590657
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0191976227429125,
+          "ratio": 0.914981288126594,
+          "relative_change": 0.0175654655862784,
+          "s_lifted": 0.0479640664787553,
+          "s_shipped": 0.0471360989546952
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.203128849113112,
+          "ratio": 0.036199035554127,
+          "relative_change": 0.00735306843111447,
+          "s_lifted": 0.0865548706542683,
+          "s_shipped": 0.0871960290225928
+        }
+      ],
+      "seed": 81,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.914981288126594,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0866 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0191 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0872 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0191 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.109137893913971,
+          "ratio": 0.144582410733056,
+          "relative_change": 0.0157794198044105,
+          "s_lifted": 0.0304448666282582,
+          "s_shipped": 0.0299719270096261
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.00527317751883725,
+          "ratio": 1.72069280772719,
+          "relative_change": 0.00907351863053194,
+          "s_lifted": 0.0482226145018387,
+          "s_shipped": 0.0477890001189252
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.234424300090897,
+          "ratio": 0.0209620044014303,
+          "relative_change": 0.00491400321030761,
+          "s_lifted": 0.0912064536627213,
+          "s_shipped": 0.0907604564881694
+        }
+      ],
+      "seed": 82,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 1.72069280772719,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0482 outside [0.023, 0.048] / playa at 16.0 m: 0.0912 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0178 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0908 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0177 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.277697216172123,
+          "ratio": 0.0809443385414513,
+          "relative_change": 0.0224780174778549,
+          "s_lifted": 0.0266027320908222,
+          "s_shipped": 0.0260179012517483
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0757475969396823,
+          "ratio": 0.0230644469152557,
+          "relative_change": 0.00174707642857349,
+          "s_lifted": 0.0447362666071598,
+          "s_shipped": 0.0446582452395603
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.160658028782407,
+          "ratio": 0.0528664615031595,
+          "relative_change": 0.0084934214937986,
+          "s_lifted": 0.0834870163795358,
+          "s_shipped": 0.0827838978422619
+        }
+      ],
+      "seed": 83,
+      "tightest_lag_m": 4.0,
+      "tightest_ratio": 0.0809443385414513,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0835 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0083 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0172 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0828 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0082 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0172 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.265005659977105,
+          "ratio": 0.043982906630206,
+          "relative_change": 0.0116557191992492,
+          "s_lifted": 0.0265852336770962,
+          "s_shipped": 0.0262789338038232
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0344911731674623,
+          "ratio": 0.225948619750853,
+          "relative_change": 0.00779323297077576,
+          "s_lifted": 0.0460773436557247,
+          "s_shipped": 0.0464392555935547
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.212504750077558,
+          "ratio": 0.0450167459399568,
+          "relative_change": 0.00956627234527542,
+          "s_lifted": 0.0873901107837014,
+          "s_shipped": 0.0882341830085238
+        }
+      ],
+      "seed": 84,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.225948619750853,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0874 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0071 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0189 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0882 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0072 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0188 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.22808421316278,
+          "ratio": 0.0853051041654765,
+          "relative_change": 0.0194567475623517,
+          "s_lifted": 0.0275956650985165,
+          "s_shipped": 0.027068990581995
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0313101126414039,
+          "ratio": 0.492948674752682,
+          "relative_change": 0.0154342785329372,
+          "s_lifted": 0.0458635295486971,
+          "s_shipped": 0.0465824967787398
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.184943316841739,
+          "ratio": 0.0593074989383187,
+          "relative_change": 0.0109685255672406,
+          "s_lifted": 0.0843154401276678,
+          "s_shipped": 0.0852505125542393
+        }
+      ],
+      "seed": 85,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.492948674752682,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0843 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0191 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0853 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0191 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.243754607887204,
+          "ratio": 0.00234897065771832,
+          "relative_change": 0.000572572421610678,
+          "s_lifted": 0.0267126374964164,
+          "s_shipped": 0.0267279411784216
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.00002750657368804,
+          "ratio": 10.396361728873,
+          "relative_change": 0.000285968289982763,
+          "s_lifted": 0.0480560600601763,
+          "s_shipped": 0.0480423214796559
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.178771451289546,
+          "ratio": 0.05459016350979,
+          "relative_change": 0.0097591627567788,
+          "s_lifted": 0.085435541391206,
+          "s_shipped": 0.0846098203832639
+        }
+      ],
+      "seed": 86,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 10.396361728873,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0481 outside [0.023, 0.048] / playa at 16.0 m: 0.0854 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0206 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.048 outside [0.023, 0.048] / playa at 16.0 m: 0.0846 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0207 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.255235518952811,
+          "ratio": 0.0208618147763029,
+          "relative_change": 0.0053246761207271,
+          "s_lifted": 0.0266244921400585,
+          "s_shipped": 0.0264834762067068
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0419560450400955,
+          "ratio": 0.301491185230523,
+          "relative_change": 0.0126493777467236,
+          "s_lifted": 0.0466897706365899,
+          "s_shipped": 0.0461065514506913
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.186672419616276,
+          "ratio": 0.0490822736338589,
+          "relative_change": 0.00916230677950059,
+          "s_lifted": 0.0846489999063493,
+          "s_shipped": 0.0854317518252827
+        }
+      ],
+      "seed": 87,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.301491185230523,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0846 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0071 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0184 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0854 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0071 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0183 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.257995652783363,
+          "ratio": 0.0537472035637372,
+          "relative_change": 0.0138665448687067,
+          "s_lifted": 0.0267917981087606,
+          "s_shipped": 0.0264253695364118
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0466903362813237,
+          "ratio": 0.0978492467992914,
+          "relative_change": 0.00456861423793315,
+          "s_lifted": 0.0506241388641229,
+          "s_shipped": 0.0503939085360798
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.148112179737185,
+          "ratio": 0.0201582789442117,
+          "relative_change": 0.00298568663417739,
+          "s_lifted": 0.0818082566652834,
+          "s_shipped": 0.0815647299412774
+        }
+      ],
+      "seed": 88,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.0978492467992914,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0506 outside [0.023, 0.048] / playa at 16.0 m: 0.0818 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0163 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0504 outside [0.023, 0.048] / playa at 16.0 m: 0.0816 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.008 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0162 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.177347881384833,
+          "ratio": 0.0217755721253639,
+          "relative_change": 0.00386185158237591,
+          "s_lifted": 0.0283445361050809,
+          "s_shipped": 0.0282354948147514
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0775187268153376,
+          "ratio": 0.114994257716731,
+          "relative_change": 0.00891420844927583,
+          "s_lifted": 0.0449822785274137,
+          "s_shipped": 0.0445848399702413
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.0423886001113602,
+          "ratio": 0.0827603251419484,
+          "relative_change": 0.0035080943275282,
+          "s_lifted": 0.072305158002294,
+          "s_shipped": 0.0725597042893185
+        }
+      ],
+      "seed": 89,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.114994257716731,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0723 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0166 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0726 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0168 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.24568055706022,
+          "ratio": 0.0560762914903335,
+          "relative_change": 0.0137768545312164,
+          "s_lifted": 0.0263189594145956,
+          "s_shipped": 0.0266866170557023
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0264086735749163,
+          "ratio": 0.381161713746661,
+          "relative_change": 0.0100659752775912,
+          "s_lifted": 0.0463338061203729,
+          "s_shipped": 0.0468049435247622
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.152181090809843,
+          "ratio": 0.153462534824171,
+          "relative_change": 0.0233540959479858,
+          "s_lifted": 0.0838701935425945,
+          "s_shipped": 0.0819561810273512
+        }
+      ],
+      "seed": 90,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.381161713746661,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0839 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.018 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.082 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0079 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0181 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.382886861067404,
+          "ratio": 0.0162774136450935,
+          "relative_change": 0.00623240781686558,
+          "s_lifted": 0.0238890230263991,
+          "s_shipped": 0.0240388428987899
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0223844142046992,
+          "ratio": 0.187185772211749,
+          "relative_change": 0.00419004385841426,
+          "s_lifted": 0.0493468952397649,
+          "s_shipped": 0.0491409923266701
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.198595377370237,
+          "ratio": 0.00642231690073578,
+          "relative_change": 0.00127544244849287,
+          "s_lifted": 0.0865921847682785,
+          "s_shipped": 0.0867027691604676
+        }
+      ],
+      "seed": 91,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.187185772211749,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0493 outside [0.023, 0.048] / playa at 16.0 m: 0.0866 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0175 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0491 outside [0.023, 0.048] / playa at 16.0 m: 0.0867 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0175 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.186172411883445,
+          "ratio": 0.0231716535312464,
+          "relative_change": 0.00431392262523969,
+          "s_lifted": 0.0279045372650444,
+          "s_shipped": 0.0280254368310722
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.050326053013044,
+          "ratio": 0.0983798396995417,
+          "relative_change": 0.0049510690281339,
+          "s_lifted": 0.0508372946950431,
+          "s_shipped": 0.0505868357791854
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.189161238614256,
+          "ratio": 0.0113334824347759,
+          "relative_change": 0.00214385557517513,
+          "s_lifted": 0.0858776947734725,
+          "s_shipped": 0.0856939792582807
+        }
+      ],
+      "seed": 92,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.0983798396995417,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0508 outside [0.023, 0.048] / playa at 16.0 m: 0.0859 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0083 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0176 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0506 outside [0.023, 0.048] / playa at 16.0 m: 0.0857 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0084 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0175 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.314731334700769,
+          "ratio": 0.0167794878090711,
+          "relative_change": 0.00528103059374423,
+          "s_lifted": 0.0254185447764002,
+          "s_shipped": 0.0252850138447229
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0531227599379267,
+          "ratio": 0.0208511220280665,
+          "relative_change": 0.00110766914993339,
+          "s_lifted": 0.0456681930760539,
+          "s_shipped": 0.0456176637971737
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.145280835766017,
+          "ratio": 0.0597611838796313,
+          "relative_change": 0.00868215474039948,
+          "s_lifted": 0.0820003502586673,
+          "s_shipped": 0.0812945384958965
+        }
+      ],
+      "seed": 93,
+      "tightest_lag_m": 16.0,
+      "tightest_ratio": 0.0597611838796313,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.082 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0084 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0187 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0813 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0084 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0188 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.263578183207627,
+          "ratio": 0.000196308619315827,
+          "relative_change": 0.0000517426692272634,
+          "s_lifted": 0.0263099826535154,
+          "s_shipped": 0.0263086213752217
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0155453894704241,
+          "ratio": 0.313561045901027,
+          "relative_change": 0.00487442858128501,
+          "s_lifted": 0.0485617387182629,
+          "s_shipped": 0.048799608926771
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.146746208666661,
+          "ratio": 0.0124882600426758,
+          "relative_change": 0.00183260481410603,
+          "s_lifted": 0.081583389865898,
+          "s_shipped": 0.0814341532446292
+        }
+      ],
+      "seed": 94,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.313561045901027,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0486 outside [0.023, 0.048] / playa at 16.0 m: 0.0816 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0082 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.017 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0488 outside [0.023, 0.048] / playa at 16.0 m: 0.0814 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.008 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.017 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.186833283133008,
+          "ratio": 0.00484775923517298,
+          "relative_change": 0.000905722773745727,
+          "s_lifted": 0.0280352004068618,
+          "s_shipped": 0.0280098312647965
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0910222257824924,
+          "ratio": 0.0810481905626271,
+          "relative_change": 0.00737718670065392,
+          "s_lifted": 0.0437081770167538,
+          "s_shipped": 0.0440330168027003
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.0613197424274631,
+          "ratio": 0.163546546826384,
+          "relative_change": 0.0100286321262949,
+          "s_lifted": 0.0732807257534347,
+          "s_shipped": 0.0740230759510041
+        }
+      ],
+      "seed": 95,
+      "tightest_lag_m": 16.0,
+      "tightest_ratio": 0.163546546826384,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.0733 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0073 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0168 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.074 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0074 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0169 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.213641067135057,
+          "ratio": 0.0796787184199482,
+          "relative_change": 0.0170226464311915,
+          "s_lifted": 0.0278573993175115,
+          "s_shipped": 0.0273911297995824
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0360050857358512,
+          "ratio": 0.169816804886174,
+          "relative_change": 0.006114268619315,
+          "s_lifted": 0.0460878668248483,
+          "s_shipped": 0.0463713939839181
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.0999500907789686,
+          "ratio": 0.0317548529383818,
+          "relative_change": 0.00317390043386406,
+          "s_lifted": 0.0769551377014182,
+          "s_shipped": 0.0772001633333161
+        }
+      ],
+      "seed": 96,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.169816804886174,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.077 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0174 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0772 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0078 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0174 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.233999041192738,
+          "ratio": 0.0484492364019719,
+          "relative_change": 0.0113370748645817,
+          "s_lifted": 0.0272446551880847,
+          "s_shipped": 0.0269392429736968
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0127357917493398,
+          "ratio": 0.264103310715287,
+          "relative_change": 0.00336356476558107,
+          "s_lifted": 0.04849705943451,
+          "s_shipped": 0.0486607329613662
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.236204168265307,
+          "ratio": 0.00710423941753099,
+          "relative_change": 0.00167805096277551,
+          "s_lifted": 0.0911246105324039,
+          "s_shipped": 0.0909719549558048
+        }
+      ],
+      "seed": 97,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.264103310715287,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.0485 outside [0.023, 0.048] / playa at 16.0 m: 0.0911 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0191 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0487 outside [0.023, 0.048] / playa at 16.0 m: 0.091 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0076 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0191 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.144536345398809,
+          "ratio": 0.0765375614379831,
+          "relative_change": 0.0110624594159829,
+          "s_lifted": 0.029366257763229,
+          "s_shipped": 0.0290449491915581
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0294557346328755,
+          "ratio": 0.371984710070174,
+          "relative_change": 0.0109570829073142,
+          "s_lifted": 0.0489566653222937,
+          "s_shipped": 0.0494990303011349
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.177129940044079,
+          "ratio": 0.114104456053449,
+          "relative_change": 0.0202113154595097,
+          "s_lifted": 0.0861476999748731,
+          "s_shipped": 0.0844410355672949
+        }
+      ],
+      "seed": 98,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.371984710070174,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.049 outside [0.023, 0.048] / playa at 16.0 m: 0.0861 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.008 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0173 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0495 outside [0.023, 0.048] / playa at 16.0 m: 0.0844 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0081 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0174 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.35244057690858,
+          "ratio": 0.0546815259589924,
+          "relative_change": 0.0192719885552288,
+          "s_lifted": 0.0250537134821798,
+          "s_shipped": 0.0245800078521654
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 8.0,
+          "margin": 0.0420554752409204,
+          "ratio": 0.0638922237193737,
+          "relative_change": 0.00268701783271747,
+          "s_lifted": 0.0500153315123839,
+          "s_shipped": 0.050150085686937
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.158137747164344,
+          "ratio": 0.0357221470893159,
+          "relative_change": 0.00564901986457776,
+          "s_lifted": 0.082069819939079,
+          "s_shipped": 0.0825360678257709
+        }
+      ],
+      "seed": 99,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.0638922237193737,
+      "verdict_moved": false,
+      "why_lifted": "playa at 8.0 m: 0.05 outside [0.023, 0.048] / playa at 16.0 m: 0.0821 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0186 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 8.0 m: 0.0502 outside [0.023, 0.048] / playa at 16.0 m: 0.0825 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0077 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0186 outside [0.0255, 0.204]"
+    },
+    {
+      "condition_2_lifted": "UNMET",
+      "condition_2_shipped": "UNMET",
+      "per_lag": [
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 4.0,
+          "margin": 0.335622149329682,
+          "ratio": 0.0388472519112994,
+          "relative_change": 0.0130379981820219,
+          "s_lifted": 0.0245650147707579,
+          "s_shipped": 0.0248895243439051
+        },
+        {
+          "in_band_lifted": true,
+          "in_band_shipped": true,
+          "lag_m": 8.0,
+          "margin": 0.0776402060989181,
+          "ratio": 0.264620221940149,
+          "relative_change": 0.0205451685693746,
+          "s_lifted": 0.0436639142549211,
+          "s_shipped": 0.0445798140493565
+        },
+        {
+          "in_band_lifted": false,
+          "in_band_shipped": false,
+          "lag_m": 16.0,
+          "margin": 0.162245305077625,
+          "ratio": 0.00176140540278683,
+          "relative_change": 0.000285779756940526,
+          "s_lifted": 0.0829644495481716,
+          "s_shipped": 0.0829407467617216
+        }
+      ],
+      "seed": 100,
+      "tightest_lag_m": 8.0,
+      "tightest_ratio": 0.264620221940149,
+      "verdict_moved": false,
+      "why_lifted": "playa at 16.0 m: 0.083 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0167 outside [0.0255, 0.204]",
+      "why_shipped": "playa at 16.0 m: 0.0829 outside [0.0457, 0.0695] / riparian_margin at 4.0 m: 0.0075 outside [0.0248, 0.0514] / riparian_margin at 8.0 m: 0.0165 outside [0.0255, 0.204]"
+    }
+  ],
+  "ratio_max": 15.3718948449217,
+  "ratio_median": 0.247289584152432,
+  "ratio_min": 0.0465597544896393,
+  "seeds_at_or_above_0_25": 49,
+  "seeds_at_or_above_0_5": 27,
+  "seeds_measured": 100,
+  "stratum": "playa",
+  "vertical_exaggeration": 1.0
+}

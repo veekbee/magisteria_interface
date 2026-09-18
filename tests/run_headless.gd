@@ -70,6 +70,8 @@ func _initialize() -> void:
     _run(test_the_contour_line_stays_broken, "test_the_contour_line_stays_broken")
     _run(test_no_contour_set_is_invented_for_a_window_that_has_none, "test_no_contour_set_is_invented_for_a_window_that_has_none")
     _run(test_the_probe_tells_the_three_absences_apart, "test_the_probe_tells_the_three_absences_apart")
+    _run(test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare, "test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare")
+    _run(test_the_state_axis_is_read_from_the_key_that_names_it_and_never_from_the_code_one, "test_the_state_axis_is_read_from_the_key_that_names_it_and_never_from_the_code_one")
     _run(test_a_verdict_stale_against_its_replay_is_not_absorbed_into_equivalent, "test_a_verdict_stale_against_its_replay_is_not_absorbed_into_equivalent")
     _run(test_the_probe_reads_the_row_that_is_drawn, "test_the_probe_reads_the_row_that_is_drawn")
     _run(test_the_ray_march_lands_on_the_surface_it_marched, "test_the_ray_march_lands_on_the_surface_it_marched")
@@ -2697,6 +2699,217 @@ func _declared_stale_verdict() -> AncestorVerdict:
     return AncestorVerdict.read_from(_declared_stale_manifest())
 
 
+func test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare() -> void:
+    """Decision 1033's settled basin ceiling reaches this client as
+    `_values_landed_at.basin_ceiling_m` in the rows, and `measure_variogram.gd`
+    reads it to decide which lags are EXCLUDED from the fit that `matches_rows`
+    gates on. A smaller ceiling excludes more lags and gates on a narrower fit.
+
+    I TOLD THE PRODUCING SIDE THIS CLIENT WOULD CONSUME A WRONG CEILING
+    SILENTLY, AND THEN LEFT MY OWN HALF OPEN. They closed the production path
+    twice over -- the deriving tool refuses to run bare, and its parent guard is
+    now called before any measurement instead of only by its own tests. Neither
+    of those is a check that the value this client ACTED on is the value its
+    rows declare; a disclosure I raised is not closed by somebody else's repair.
+
+    WHAT IS ASSERTED IS AGREEMENT WITH THE ROWS, NOT WITH 60. Pinning the number
+    would be pinning a quantity this client does not own, and it would go red on
+    the day 1033 is legitimately re-settled -- which is a ruling, not a defect.
+    What cannot be right is a published measurement whose exclusions were taken
+    against a ceiling the rows no longer carry.
+    """
+    var f := FileAccess.open("res://measurements/detail_variogram.json", FileAccess.READ)
+    if f == null:
+        print("variogram: no measurements/detail_variogram.json, so the fit ceiling is not "
+                + "being checked. `bash tools/measure_variogram.sh`")
+        return
+    var parsed = JSON.parse_string(f.get_as_text())
+    check(typeof(parsed) == TYPE_DICTIONARY, "detail_variogram.json is not a JSON object")
+    if typeof(parsed) != TYPE_DICTIONARY:
+        return
+    var doc: Dictionary = parsed
+    var df := detail_field()
+    if not df.is_loaded():
+        return
+    var landed: Dictionary = df.rows.get("_values_landed_at", {})
+    var declared := float(landed.get("basin_ceiling_m", 0.0))
+    var lags: Array = doc.get("lags_m", [])
+    check(not lags.is_empty(), "the published variogram records no lag set")
+    var classes: Dictionary = doc.get("classes", {})
+    check(not classes.is_empty(), "the published variogram records no classes")
+    var checked := 0
+    for name in classes:
+        var c: Dictionary = classes[name]
+        if not c.has("fit_ceiling_m"):
+            continue
+        checked += 1
+        check(is_equal_approx(float(c["fit_ceiling_m"]), declared),
+                "%s's fit excluded lags by a ceiling of %s and the rows this client holds "
+                        % [str(name), String.num(float(c["fit_ceiling_m"]), 4)]
+                + "declare %s" % String.num(declared, 4))
+        # THE EXCLUSION LIST IS THE ARITHMETIC, and it is recomputed rather than
+        # trusted: a ceiling recorded correctly beside a list built from a
+        # different one would pass the check above and gate on the wrong fit.
+        var want := []
+        for lag in lags:
+            if float(c["fit_ceiling_m"]) > 0.0 and float(lag) > float(c["fit_ceiling_m"]):
+                want.append(float(lag))
+        var got: Array = c.get("lags_above_ceiling", [])
+        check(got.size() == want.size(),
+                "%s excludes %d lag(s) above a %s m ceiling and %d follow from it"
+                        % [str(name), got.size(), String.num(float(c["fit_ceiling_m"]), 0),
+                           want.size()])
+        for i in mini(got.size(), want.size()):
+            check(is_equal_approx(float(got[i]), float(want[i])),
+                    "%s excludes %s m and the ceiling implies %s m"
+                            % [str(name), String.num(float(got[i]), 1),
+                               String.num(float(want[i]), 1)])
+    check(checked == classes.size(),
+            "%d of %d classes record a fit ceiling" % [checked, classes.size()])
+
+    # THE CONTROL, AND THE FIRST ONE I CHOSE COULD NOT FAIL.
+    #
+    # I used 35 m -- the value the deriving tool produced from two
+    # pre-settlement defaults, and the case this check exists for. On the
+    # shipped lag set it excludes exactly what 60 m excludes: the lags are
+    # 1, 2, 4, 8, 16, 32, 64 and NOTHING SITS BETWEEN 35 AND 60, so 64 is the
+    # only exclusion either way. The control could not tell the two ceilings
+    # apart and said so, which is the check working on its author.
+    #
+    # WORTH RECORDING RATHER THAN QUIETLY REPLACING: I told the producing side
+    # this client would consume a 35 m ceiling silently. That is still true of
+    # the READ -- nothing on this side would have objected -- but on this lag
+    # set consuming it would have changed no exclusion and therefore no fit. The
+    # exposure was real and its effect here was nil, and those are different
+    # claims. It stops being nil the moment a lag lands between the two.
+    var shipped_excluded := 0
+    var at_35 := 0
+    for lag in lags:
+        if declared > 0.0 and float(lag) > declared:
+            shipped_excluded += 1
+        if float(lag) > 35.0:
+            at_35 += 1
+
+    # So the control uses a ceiling that DOES move the set on the lags actually
+    # published, which is what shows the recomputation reads the ceiling rather
+    # than agreeing with whatever list it was handed.
+    # THE NEAREST DISCRIMINATING CEILING BELOW THE DECLARED ONE, not the first
+    # one found. Sweeping upward picks 0.5 m, which excludes every lag and is a
+    # witness nobody would choose on purpose: it proves the arithmetic reads
+    # SOMETHING while saying nothing about the resolution this check has. The
+    # nearest one is the smallest ceiling change this lag set can still see.
+    var probe := declared
+    var at_probe := shipped_excluded
+    for i in range(lags.size() - 1, -1, -1):
+        var c := float(lags[i]) - 0.5
+        if c >= declared:
+            continue
+        var n := 0
+        for lag in lags:
+            if float(lag) > c:
+                n += 1
+        if n != shipped_excluded:
+            probe = c
+            at_probe = n
+            break
+    check(at_probe != shipped_excluded,
+            "no ceiling over the published lag set %s excludes a different number of lags "
+                    % str(lags) + "than the declared %s m one, so this check cannot fail"
+                    % String.num(declared, 0))
+    print("variogram: the published fit excludes above %s m -- the ceiling the rows declare -- "
+            % String.num(declared, 0) + "across %d class(es), %d lag(s). A %s m ceiling would "
+            % [checked, shipped_excluded, String.num(probe, 1)] + "exclude %d. A 35 m one "
+            % at_probe + "would exclude %d, the SAME as 60: nothing sits between them on this "
+            % at_35 + "lag set, so that specific hazard has no purchase on this fit today.")
+
+
+func test_the_state_axis_is_read_from_the_key_that_names_it_and_never_from_the_code_one() -> void:
+    """The acceptance block carries two commits and they are different axes: the
+    commit the scored TRACE was produced at, which is the only one comparable to
+    `run.base_commit`, and the commit the SCORER ran at, which is what
+    `sim_changed_since_scoring` is derived from.
+
+    `scored_at_commit` holds the first and names the second. The producing side
+    is renaming it ADDITIVELY -- `scored_run_stamp_commit` plus a deprecated
+    alias -- because a cross-boundary rename is not settled until the far side
+    has read it back, and the alias goes on this reader's word rather than on a
+    date. So this reads the new key first and the alias second.
+
+    THE CONTROL THAT MATTERS IS THE THIRD KEY. `scoring_code_commit` is a real
+    key in the same block holding a real commit, so a reader that fell back to
+    it would substitute the code axis for the state one and compare it against
+    `base_commit` -- which is the exact confusion the rename exists to end, and
+    the one that would read as a verdict from a different run. A test that only
+    asserted the three keys are PRESENT would pass on a block that had swapped
+    their values.
+
+    AND THE THREE COMMITS HERE ARE THREE DIFFERENT VALUES ON PURPOSE. The real
+    artefact this reader meets is the M0-era shape where the trace stamp and the
+    scorer's commit COINCIDE, so every assertion below would hold for the wrong
+    reason on it. The witness is constructed.
+    """
+    var trace := "aaaaaaa1111111111111111111111111111111111"
+    var scorer := "bbbbbbb2222222222222222222222222222222222"
+
+    # THE ALIAS ALONE, which is what every artefact carries until the next
+    # re-cut. This path is live, not a legacy courtesy.
+    var old_m := _declared_stale_manifest()
+    old_m["run"]["acceptance"]["scored_at_commit"] = trace
+    var old_v := AncestorVerdict.read_from(old_m)
+    check(old_v.scored_at_commit == trace,
+            "with only the alias present the state axis read %s" % old_v.scored_at_commit)
+    check(old_v.scored_run_stamp_key == "scored_at_commit",
+            "the reader reports reading %s from an artefact that carries only the alias"
+                    % old_v.scored_run_stamp_key)
+
+    # BOTH PRESENT AND DISAGREEING: the new key wins. Equal values would let a
+    # reader that picked either one pass.
+    var both := _declared_stale_manifest()
+    both["run"]["acceptance"]["scored_at_commit"] = scorer
+    both["run"]["acceptance"]["scored_run_stamp_commit"] = trace
+    var both_v := AncestorVerdict.read_from(both)
+    check(both_v.scored_at_commit == trace,
+            "with both keys present and disagreeing the state axis read %s, which is the "
+                    % both_v.scored_at_commit + "deprecated alias")
+    check(both_v.scored_run_stamp_key == "scored_run_stamp_commit",
+            "the reader reports reading %s from an artefact that carries the new key"
+                    % both_v.scored_run_stamp_key)
+
+    # THE CODE AXIS IS NOT A FALLBACK. With the state axis absent entirely, the
+    # state commit must stay EMPTY rather than borrow the scorer's.
+    var code_only := _declared_stale_manifest()
+    code_only["run"]["acceptance"].erase("scored_at_commit")
+    code_only["run"]["acceptance"]["scoring_code_commit"] = scorer
+    var code_v := AncestorVerdict.read_from(code_only)
+    check(code_v.scored_at_commit == "",
+            "with no state axis present the reader took %s, which is the CODE commit, and "
+                    % code_v.scored_at_commit + "would compare it against base_commit")
+    check(code_v.scoring_code_commit == scorer,
+            "the code axis was not carried through: %s" % code_v.scoring_code_commit)
+
+    # AND IT IS CARRIED BESIDE THE STATE ONE WITHOUT DISPLACING IT.
+    var all_three := _declared_stale_manifest()
+    all_three["run"]["acceptance"]["scored_run_stamp_commit"] = trace
+    all_three["run"]["acceptance"]["scoring_code_commit"] = scorer
+    var all_v := AncestorVerdict.read_from(all_three)
+    check(all_v.scored_at_commit == trace and all_v.scoring_code_commit == scorer,
+            "with all three keys the reader holds state %s and code %s"
+                    % [all_v.scored_at_commit, all_v.scoring_code_commit])
+    check(all_v.scored_at_commit != all_v.scoring_code_commit,
+            "the two axes read the same commit, so this whole test cannot fail")
+
+    # THE SHIPPED ARTEFACT, reported rather than asserted either way: which key
+    # it carries is how the alias gets retired on evidence.
+    var live := FixtureLoader.load_from("res://assets/fixture/")
+    var lv := AncestorVerdict.read_from(live.manifest)
+    check(lv.scored_at_commit != "",
+            "the vendored fixture's verdict carries no state commit under either key")
+    print("verdict: the state axis comes from `%s` on the vendored fixture%s"
+            % [lv.scored_run_stamp_key,
+               "" if lv.scoring_code_commit == "" else ", with the code axis at %s"
+                       % lv.scoring_code_commit.substr(0, 7)])
+
+
 func test_a_verdict_stale_against_its_replay_is_not_absorbed_into_equivalent() -> void:
     """`equivalence` proves the verdict's RUN is this fixture's run. That is a
     statement about state, and a replayed payload is stepped forward at today's
@@ -4956,11 +5169,147 @@ func test_the_octave_ceiling_is_a_bound_that_can_be_measured_and_not_only_disclo
         if typeof(cdoc) != TYPE_DICTIONARY:
             continue
         reconciled += 1
-        _reconcile_clamp_doc(path, cdoc as Dictionary)
+        # ROUTED BY SHAPE AND NOT BY FILENAME. The seed sweep shares the prefix
+        # and is a different artefact: per-seed rows at one parent rather than
+        # per-parent rows at one seed. Matching the name alone would hand it to
+        # the wrong reconciler, which would fail for a reason that has nothing
+        # to do with what it says.
+        var one: Dictionary = cdoc
+        if one.has("per_seed"):
+            _reconcile_sweep_doc(path, one)
+        else:
+            _reconcile_clamp_doc(path, one)
     check(reconciled == clamp_docs.size(),
             "%d of %d published clamp measurement(s) could be read"
                     % [reconciled, clamp_docs.size()])
     print("octaves: %d published clamp measurement(s) reconcile" % reconciled)
+
+
+## The seed sweep, checked against its own rows -- and against the artefact it
+## was spun off from.
+##
+## THE HEADLINE IS THE WHOLE POINT OF THIS FILE and it is four summary numbers
+## over a hundred rows: a median, two threshold counts, a cell-level flip count
+## and a verdict-move count. Every one of them is recomputable from the rows
+## underneath, so none of them is taken on trust.
+##
+## AND SEED 21 TIES THE TWO ARTEFACTS TOGETHER. It falls inside the swept range
+## and is also a published per-parent run, so its `S` values must agree BIT FOR
+## BIT across the two files. They are computed by the same grader over the same
+## stencils but through different call paths -- the sweep reuses one field
+## across every seed, so its memoised stencil is warm where the per-parent run's
+## is cold. That the two agree exactly is what makes the memo demonstrably
+## value-neutral here rather than assumed to be.
+func _reconcile_sweep_doc(path: String, doc: Dictionary) -> void:
+    var rows: Array = doc.get("per_seed", [])
+    check(int(doc.get("seeds_measured", -1)) == rows.size(),
+            "%s says %d seeds and carries %d rows"
+                    % [path, int(doc.get("seeds_measured", -1)), rows.size()])
+    check(rows.size() >= 10,
+            "%s swept %d seed(s), which cannot distinguish a tail from a mode"
+                    % [path, rows.size()])
+    var flips := 0
+    var moves := 0
+    var over_half := 0
+    var over_quarter := 0
+    var tight := PackedFloat64Array()
+    for rr in rows:
+        var r: Dictionary = rr
+        if bool(r.get("verdict_moved", false)):
+            moves += 1
+        var best := -1.0
+        for pl in (r.get("per_lag", []) as Array):
+            var l: Dictionary = pl
+            if bool(l.get("in_band_shipped", false)) != bool(l.get("in_band_lifted", false)):
+                flips += 1
+            best = maxf(best, float(l.get("ratio", -1.0)))
+        check(is_equal_approx(best, float(r.get("tightest_ratio", NAN))),
+                "%s seed %d records a tightest ratio of %s and its own lag rows reach %s"
+                        % [path, int(r.get("seed", -1)),
+                           String.num(float(r.get("tightest_ratio", NAN)), 6),
+                           String.num(best, 6)])
+        if best >= 0.5:
+            over_half += 1
+        if best >= 0.25:
+            over_quarter += 1
+        tight.append(best)
+    check(int(doc.get("flips", -1)) == flips,
+            "%s names %d cell-level flip(s) and its rows carry %d"
+                    % [path, int(doc.get("flips", -1)), flips])
+    check(int(doc.get("condition_2_verdict_moved", -1)) == moves,
+            "%s names %d condition-2 verdict move(s) and its rows carry %d"
+                    % [path, int(doc.get("condition_2_verdict_moved", -1)), moves])
+    check(int(doc.get("seeds_at_or_above_0_5", -1)) == over_half,
+            "%s names %d seed(s) at or above 0.5 and its rows carry %d"
+                    % [path, int(doc.get("seeds_at_or_above_0_5", -1)), over_half])
+    check(int(doc.get("seeds_at_or_above_0_25", -1)) == over_quarter,
+            "%s names %d seed(s) at or above 0.25 and its rows carry %d"
+                    % [path, int(doc.get("seeds_at_or_above_0_25", -1)), over_quarter])
+    tight.sort()
+    var n := tight.size()
+    if n > 0:
+        var med: float = (tight[n / 2] if n % 2 == 1
+                else 0.5 * (tight[n / 2 - 1] + tight[n / 2]))
+        check(is_equal_approx(float(doc.get("ratio_median", NAN)), med),
+                "%s names a median of %s and its rows give %s"
+                        % [path, String.num(float(doc.get("ratio_median", NAN)), 6),
+                           String.num(med, 6)])
+        check(is_equal_approx(float(doc.get("ratio_min", NAN)), tight[0])
+                        and is_equal_approx(float(doc.get("ratio_max", NAN)), tight[n - 1]),
+                "%s names a range of %s..%s and its rows give %s..%s"
+                        % [path, String.num(float(doc.get("ratio_min", NAN)), 6),
+                           String.num(float(doc.get("ratio_max", NAN)), 6),
+                           String.num(tight[0], 6), String.num(tight[n - 1], 6)])
+
+    # THE CROSS-ARTEFACT CONTROL.
+    var pf := FileAccess.open("res://measurements/octave_clamp.json", FileAccess.READ)
+    if pf == null:
+        return
+    var pd = JSON.parse_string(pf.get_as_text())
+    if typeof(pd) != TYPE_DICTIONARY:
+        return
+    var stratum := str(doc.get("stratum", ""))
+    var parent := float(doc.get("parent_spacing_m", NAN))
+    var published := {}
+    for pr in ((pd as Dictionary).get("per_parent", []) as Array):
+        var pp: Dictionary = pr
+        if not is_equal_approx(float(pp.get("parent_spacing_m", NAN)), parent):
+            continue
+        for lr in (pp.get("per_lag", []) as Array):
+            var l: Dictionary = lr
+            if str(l.get("landform", "")) == stratum:
+                published[float(l.get("lag_m", NAN))] = l
+    var seed_of_published := int((pd as Dictionary).get("grading_parameters", {})
+            .get("seed", -1))
+    var matched := 0
+    for rr in rows:
+        var r: Dictionary = rr
+        if int(r.get("seed", -1)) != seed_of_published:
+            continue
+        for pl in (r.get("per_lag", []) as Array):
+            var l: Dictionary = pl
+            var q: Dictionary = published.get(float(l.get("lag_m", NAN)), {})
+            if q.is_empty():
+                continue
+            matched += 1
+            check(float(l["s_shipped"]) == float(q["s_shipped"])
+                            and float(l["s_lifted"]) == float(q["s_lifted"]),
+                    "%s at seed %d, %s m lag: the sweep reads %s/%s and the per-parent run "
+                            % [stratum, seed_of_published,
+                               String.num(float(l.get("lag_m", NAN)), 1),
+                               String.num(float(l["s_shipped"]), 17),
+                               String.num(float(l["s_lifted"]), 17)]
+                    + "reads %s/%s, so the two artefacts are not measuring one quantity"
+                    % [String.num(float(q["s_shipped"]), 17),
+                       String.num(float(q["s_lifted"]), 17)])
+    check(matched > 0,
+            "%s shares no seed with the published per-parent run, so nothing ties the two "
+                    % path + "artefacts together")
+    print("octaves: %s -- %d seeds, median tightest ratio %s, %d cell-level flip(s), "
+            % [path.get_file(), rows.size(),
+               String.num(float(doc.get("ratio_median", NAN)), 4), flips]
+            + "%d condition-2 move(s); seed %d agrees with the per-parent run on %d lag(s)"
+            % [moves, seed_of_published, matched])
 
 
 ## One published clamp measurement, checked against its own rows.

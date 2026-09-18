@@ -48,11 +48,34 @@ extends RefCounted
 ## viewer until the names were reconciled. A header that declares a shape
 ## nobody emits is a shape nobody emits.
 ##
-## `scored_at_commit` IS THE RUN'S STAMP, not the commit the score artefact came
-## to rest at. Only a run stamp is comparable to `run.base_commit`, which is the
+## THE STATE AXIS IS THE RUN'S STAMP, not the commit the score artefact came to
+## rest at. Only a run stamp is comparable to `run.base_commit`, which is the
 ## other side of every comparison here; a score-artefact commit would be
 ## compared against a run stamp and would read as stale forever. This header
 ## carried the wrong one of the two until the first real verdict was emitted.
+##
+## SO IT IS READ FROM `scored_run_stamp_commit` FIRST AND `scored_at_commit`
+## ONLY AS A FALLBACK. The producing side is renaming it additively, because a
+## cross-boundary rename is not settled until the far side has read it back --
+## the new key and a deprecated alias ship together and the alias goes on this
+## reader's word. Preferring the new name now means the alias can be dropped
+## without a flag day, and until the next re-cut the fallback is the only key
+## present, so this path is live rather than aspirational.
+##
+## AND THE NAME WAS WORTH MOVING. `scored_at_commit` names the axis it is not:
+## computing `sim_changed_since_scoring` from it yields FIVE changed files where
+## the derived list carries four, adding `sim/seeds.py`, which reads as the
+## operator's declaration under-reporting in the most trajectory-relevant file
+## in the set. This reader has carried the correcting sentence since it was
+## written and its author still built most of that false alarm before reading
+## the emitter. The name is also already taken by the OTHER axis in a sibling
+## artefact of theirs, on a live pair of commits rather than in principle, which
+## is what settled which side moves.
+##
+## `scoring_code_commit` -- the CODE axis, and what the drift list is derived
+## from -- is read when present and is not compared to anything here. It is
+## carried so a reader of this object can see both axes rather than reconstruct
+## the second from prose.
 ##
 ## `scored_run_dir` and `scored_on_run` are both accepted, because this header
 ## declared the second and the emitter wrote the first, and refusing a proof
@@ -132,6 +155,16 @@ var passed: int = -1
 var failed: int = -1
 var not_evaluable: int = -1
 var scored_at_commit: String = ""
+
+## The CODE axis, read when the artefact carries it and compared to nothing.
+## `sim_changed_since_scoring` is derived from this commit, which is the
+## arithmetic a consumer otherwise has to reconstruct from prose.
+var scoring_code_commit: String = ""
+
+## Which key the state axis actually came from, so a report can say whether this
+## artefact has been re-cut since the rename and the alias can be retired on
+## evidence rather than on a date.
+var scored_run_stamp_key: String = "scored_at_commit"
 var scored_on_run: String = ""
 var base_commit: String = ""
 var failed_criteria: Array = []
@@ -162,7 +195,16 @@ static func read_from(manifest: Dictionary) -> AncestorVerdict:
     v.passed = int(acc.get("passed", -1))
     v.failed = int(acc.get("failed", -1))
     v.not_evaluable = int(acc.get("not_evaluable", -1))
-    v.scored_at_commit = str(acc.get("scored_at_commit", ""))
+    # THE NEW KEY FIRST, THE ALIAS SECOND, AND NEITHER DEFAULTED TO THE OTHER
+    # AXIS. `scoring_code_commit` is deliberately not a fallback here: it is a
+    # real key in the same block holding a real commit, so accepting it would
+    # substitute the code axis for the state one and compare it against
+    # `base_commit`, which is exactly the confusion the rename exists to end.
+    v.scored_at_commit = str(acc.get("scored_run_stamp_commit",
+            acc.get("scored_at_commit", "")))
+    v.scoring_code_commit = str(acc.get("scoring_code_commit", ""))
+    v.scored_run_stamp_key = ("scored_run_stamp_commit"
+            if acc.has("scored_run_stamp_commit") else "scored_at_commit")
     v.scored_on_run = str(acc.get("scored_run_dir", acc.get("scored_on_run", "")))
     v.failed_criteria = acc.get("failed_criteria", [])
     v.not_evaluable_criteria = acc.get("not_evaluable_criteria", [])
