@@ -90,6 +90,57 @@ COLOUR and not the population — consistent with cover being static across a wi
 far field's seasonal movement could be read against the near field's; M5 renders nothing, so there
 is nothing to read it against.
 
+### The owner looked, 2026-09-18 — the control is satisfied, and two things came out of it
+
+**The second eye ran and T1's visible claim is CLOSED by it.** Six checks put to the owner; four
+passed as posed, one resolved a condition I had left open, and one produced a finding by being read
+the way a viewer reads it.
+
+**M1's relief is NOT inverted, and the condition attached to that pass resolves true.** The owner
+read the light as arriving *from the south in `sun045` and from the north in `sun225`* and made the
+pass conditional on that being right. Worked through the geometry rather than left hanging: the
+hillshade is a `DirectionalLight3D` at `Vector3(-45, degrees, 0)`, the mesh is +X east and +Z south,
+so `sun045` travels west-and-north and **arrives from the south-east**, `sun225` travels east-and-south
+and **arrives from the north-west**. That is what they described. The surface reads correctly under
+both.
+
+**But `--sun DEG` IS NOT A CARTOGRAPHIC AZIMUTH, AND THE RUN PRINTS THAT IT IS.** `capture.gd` emits
+`state  sun azimuth 45 deg` while the light arrives from the south-east; an azimuth of 45 means light
+from the north-**east**. It is a Y-rotation of the light node, not a compass bearing, and the two
+differ by about 135 degrees. **This is finding 1 of this file, again, one layer out**: that one was a
+comment saying north-west beside light arriving from the north-east. The value is not wrong and
+nothing rendered is wrong; the LABEL names a convention the number does not follow, and the audit's
+own purpose is to read those shots by that label.
+
+**The far-field tint has no snow term, and it is read as snow.** The owner described the speckle
+flagged below as *"texture that communicates partially-snowed areas"*. `VegetationTint.cell_colours`
+composes `band.pft_fractions`, `band.bare_fraction`, the phenology row and `band.pft.biomass` — and
+nothing else. **There is no snowpack anywhere in the tint.** What reads as snow is BARE GROUND showing
+through at sub-cell scale.
+
+That is a finding about the view and not about the reader. The window is named `deepest_winter`, the
+days are in January and March, and white speckle over high tan ground is snow to anyone who looks.
+The naturalistic view offers a viewer no way to tell bare rock from snow cover, and the quantity it
+would need is carried — `band.snowpack_swe` is a row in this fixture and the contour layer keys on
+it. **Not repaired here; a tint that means two things is a design question.**
+
+**The reading was trained by the shot next to it, which is why it is worth recording.** The same
+owner read white marks in the composite as snow too, and THERE THEY ARE: those are the vendored
+contour set at `band.snowpack_swe >= 0.02 m`, in the same positions as M4's isolated frame, closed
+loops over high ground. One shot shows snow as white and the next shows bare ground as white, in the
+same sitting.
+
+**The composite passes for the thing it exists to catch**: no layer eating another, no z-fighting, the
+banner beside the basin rather than over it. Its lack of vegetation is EXPECTED and is not evidence
+about M5 — at ortho with a field ramp painted, individuated plants are sub-pixel and the tint is off.
+Those are two different absences and only one of them is the defect above.
+
+**Passed as posed:** the tint's green sits in the low ground and the tan on the high mountains, which
+is the cross-layer plausibility check against the drainage network; day 89 is visibly greener than
+day 22, so the 10.01% and the green-minus-red crossing are perceptible and not merely measurable; and
+the banner's orange headline is easily legible against the ramp at the narrow-tall size, which is the
+size the original defect needed.
+
 ### Flagged and NOT diagnosed
 
 The tinted surface carries a fine light **speckle** over most of its area. It is far finer than the
@@ -97,6 +148,9 @@ The tinted surface carries a fine light **speckle** over most of its area. It is
 own texture, the synthesised micro-relief, or bare ground showing through at sub-cell scale — I
 cannot tell which from one frame and I am not guessing. It is in every tinted frame and it is not a
 stub: the same run produced correctly-rendered ramp, flowline and banner shots.
+
+**ANSWERED IN PART, above**: whatever its mechanism, it is not snow -- the tint carries no snowpack
+term -- and it is read as snow. The cause of the speckle itself is still undiagnosed.
 
 ---
 
