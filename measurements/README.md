@@ -18,6 +18,36 @@ opposite: a measurement that can only be taken *here*, because the thing being m
 engine. It has no `PIN` and no upstream, and it is not vendored — but it carries the same four
 claims a `PIN` does: what was measured, how, on what, and what it does not cover.
 
+## A prediction recorded before its run — `flight_replay.json`, 2026-09-18
+
+**Written at `53fbec6`, BEFORE the re-score, so the result can be checked against it rather than
+described after the fact.** A prediction that exists only in a message is one the artefact cannot be
+compared with later, which is the defect this file has spent a week on in other people's artefacts.
+
+`flight_replay.json` records `replayed_at_commit` **`e3757e8`**. That is many commits back and, more
+to the point, it is **before re-vendor #4** — the fixture the scatter is built from was replaced at
+`ea10cec`.
+
+**THE PREDICTION: every population score reproduces EXACTLY, bit for bit, on all three traces.**
+
+The reasoning, stated so it can be wrong in a specific way: re-vendor #4 moved the manifest's
+DECLARATIONS and not the payload. `assets/fixture/fixture_client.bin` came back byte-identical —
+same SHA-256 `995a4a3d…` as the M3 vendor, which is why that drop needed no release upload. The
+replay scores *which instances existed and how the set changed*, which is a function of the payload
+bytes, the rows and the trace's own poses. None of those moved. The declared counts that did move
+(`not_wholly_bare_cells`, `any_biomass_cells`, `drawable_cells`, `covered_but_wholly_bare_cells`)
+are read by the provenance reader and by nothing the scatter places from.
+
+**What may legitimately move:** `replayed_at_commit`, and nothing else.
+
+**What would falsify it:** any difference in `frames`, `builds`, `replay_agreement`, `per_frame`,
+`timeline`, `emptiest_run` or `by_heading`, on any of the three runs.
+
+**AND THE FALSIFYING BRANCH IS THE ONE WORTH HAVING.** If the scores do not reproduce, this artefact
+went stale without saying so, and **the stale bytes are the evidence**. They will not be overwritten:
+the re-score is written to a scratch path and compared, and the committed artefact is only restamped
+if the prediction held. Overwriting first and reporting after would destroy the finding.
+
 ## What is here
 
 - `render_cost.json` — per-instance frame cost, and the ladder it was fitted from. It prices an
