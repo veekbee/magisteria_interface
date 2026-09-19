@@ -9,7 +9,7 @@
   "counts": {
     "_outside_any_test": 51,
     "test_a_census_is_the_stand_a_headless_replay_can_score": 12,
-    "test_a_committed_flight_trace_says_a_person_could_see_it": 5,
+    "test_a_committed_flight_trace_says_a_person_could_see_it": 7,
     "test_a_density_schedule_is_finer_than_the_texel_it_thins": 15,
     "test_a_family_is_scored_in_its_own_annulus_or_not_at_all": 232,
     "test_a_flight_trace_round_trips_and_a_pan_cannot_churn": 10,
@@ -45,7 +45,7 @@
     "test_contour_arcs_land_on_the_terrain_they_were_extracted_on": 5,
     "test_contours_index_the_day_the_manifest_says": 21,
     "test_decoded_values_stay_inside_the_contracts_bounds": 1274,
-    "test_every_committed_trace_holds_the_quanta_its_writer_declares": 9,
+    "test_every_committed_trace_holds_the_quanta_its_writer_declares": 11,
     "test_every_keyed_pixel_joins_to_a_cell": 2,
     "test_every_reach_carries_a_node_so_flow_can_be_drawn": 3,
     "test_every_recorded_seam_run_says_which_question_it_answers": 10,

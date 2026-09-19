@@ -141,6 +141,63 @@ day 22, so the 10.01% and the green-minus-red crossing are perceptible and not m
 the banner's orange headline is easily legible against the ramp at the narrow-tall size, which is the
 size the original defect needed.
 
+### W3 flown, 2026-09-18 — the first first-person flights since the C2 work, and two findings
+
+**`flight-04`** (4,297 frames, 36 s, 1 mark) and **`flight-05`** (16,834 frames, 2.3 min, 0 marks),
+both `first_person: true`, both at `--at -1107074.125,2255611.75 --recentre 0`, 11,791 instances
+built with 3,398 in view, medians 4.46 and 4.94 m/s against an asked 5.0.
+
+**They are the first flights recorded since `free_flight` stopped producing a first-person view at
+all** — see `7689e99`. Two earlier attempts this evening produced the ortho overview with a walk
+recorded around them, and a third produced a first-person view over ground with no vegetation
+because the operator sent the owner to a cell that refuses. None of those three is committed.
+
+#### 1. Height and crown width interpolate on different quantities, and it shows
+
+The owner's mark, at 12.7 s of `flight-04`: *"the camera was at the top of the trees and their width
+seemed stretched"*. The replay puts that mark **outside any stall reaction**, so it is a response to
+something drawn rather than to a stutter — unlike all sixteen of `flight-01`'s.
+
+`VegetationScatter.parameters_for` is the mechanism, and it is two lines:
+
+    var t_h := clampf(per_covered / biomass_hi, 0.0, 1.0)   # HEIGHT <- biomass per covered area
+    var t_c := clampf(fraction, 0.0, 1.0)                   # CROWN  <- cover fraction
+
+**Nothing couples them.** Height tracks biomass; width tracks composition share. So wherever cover is
+substantial and biomass is low, a plant is drawn short and full-width. Against the declared ranges,
+a low `t_h` with a high `t_c` puts a tree at about **3.4 m tall and 12.2 m wide** (ranges 1.5-40 m
+and 0.8-15 m) — a height-to-width of **0.28**, and **0.12** for shrubs.
+
+**That is this basin.** Criterion 6 of the shipped verdict records area-weighted cover falling 0.96
+to 0.53 across the run and still moving, which is the low-biomass-with-cover corner the two `t`s
+diverge in. At a 1.7 m eye height the result is a camera at treetop.
+
+**NOT RULED ON HERE.** Whether `t_crown` should track biomass, whether crown should be bounded by
+height, or whether the fixture's biomass is simply low and the drawing honest, is a design question.
+What is established is that the two axes are independent by construction and that the basin sits
+where that is visible.
+
+#### 2. The replay cannot reproduce a flight recorded at its own commit
+
+Both flights, replayed at the commit they were flown at:
+
+    flight-04:  4,297 of  4,297 frames disagree on population
+    flight-05: 16,834 of 16,834 frames disagree on population
+
+The artefact says what that means in its own words — *"a defect: the flight and the replay ran the
+same code and disagree anyway"*, with `same_commit: true` and `ok: false`.
+
+**The magnitude is a factor of ten and it has a shape.** At frame 0 the flight recorded **11,791**
+instances; the replay recomputes **120,006** from the same poses. 120,006 is the CEILING build — the
+figure `flight-02` and `flight-03` carry — while 11,791 is the solved-horizon build the flight
+actually made. So the flight built at the solved horizon and the replay builds at decision 949's
+ceiling, which is the pre-inversion world.
+
+**That is the symptom's shape and not a diagnosis; the cause is not traced.** It is recorded here
+because `replay_flight.gd` is also one of the four callers that discard
+`TerrainView.focus_on_scatter`'s refusal with no other verification route, and because
+`flight_replay.json` — already stale by construction — was produced by this path.
+
 ### Flagged and NOT diagnosed
 
 The tinted surface carries a fine light **speckle** over most of its area. It is far finer than the
