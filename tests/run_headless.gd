@@ -2761,12 +2761,26 @@ func test_a_committed_flight_trace_says_a_person_could_see_it() -> void:
             "%d synthesised walks are exempt here; the exemption is for the one stand-in that "
                     % scripted + "declares `flown_by`, not for a population of them")
 
-    # THE CONSTRUCTED WITNESS, BECAUSE THE LOOP ABOVE CURRENTLY RUNS ITS
-    # ASSERTION ZERO TIMES. Every committed trace predates the stamp, so nothing
-    # reaches `check(bool(hdr["first_person"]))` -- and a guard that cannot fire
+    # THE CONSTRUCTED WITNESS, BUILT WHEN THE LOOP ABOVE RAN ITS ASSERTION ZERO
+    # TIMES. At `7689e99` every committed trace predated the stamp, so nothing
+    # reached `check(bool(hdr["first_person"]))` -- and a guard that cannot fire
     # is the exact defect this file has caught twice before. The predicate is
-    # exhibited here against headers built to fail it, so the check is armed on
-    # the day a stamped trace first lands rather than on the day someone notices.
+    # exhibited here against headers built to fail it, so the check was armed on
+    # the day a stamped trace first landed rather than on the day someone noticed.
+    #
+    # THAT DAY HAS COME, AND THE WITNESS STAYS. Since `ec32766` the loop runs its
+    # assertion once per stamped trace -- two at `d62335f`, which the run prints.
+    # A live trace passing does not retire the witness: this is the negative
+    # control, and it is the only thing here that holds the predicate against a
+    # header that must FAIL. Delete it and the guard has no exhibited failure,
+    # which is precisely where this started.
+    #
+    # THE PIN IS NOT THE RECORD OF THAT. `tests/check_counts.json` read 5 while
+    # the loop was inert and reads 7 now; it was 5 for one commit after the
+    # traces landed, because a pin reports FALLS and lets rises through. Do not
+    # read the pin as evidence about whether this loop fires -- read this comment
+    # and the printed stamped-trace count. Someone already made that mistake in
+    # the other direction, on this exact test.
     var overview := {"first_person": false, "asked_speed_m_s": 5.0}
     var walked := {"first_person": true, "asked_speed_m_s": 5.0}
     var legacy := {"asked_speed_m_s": 5.0}
