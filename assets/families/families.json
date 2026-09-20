@@ -91,7 +91,7 @@
    "file": "family_tree.glb",
    "parameters": {
     "crown_m": {
-     "from": "cover fraction is crown area times count, so crown width is the axis the wire constrains; the span covers a sapling to a mature open-grown crown",
+     "from": "the span covers a sapling to a mature open-grown crown. WHICH FIELD QUANTITY DRIVES THIS AXIS IS NOT DECLARED HERE -- see encoding.json, which is the only place that mapping is chosen. This file declares legal ranges; a second copy of the mapping is how a declaration and its code drift apart",
      "max": 15.0,
      "min": 0.8,
      "unit": "m"

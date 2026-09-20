@@ -71,6 +71,10 @@ func _initialize() -> void:
     _run(test_no_contour_set_is_invented_for_a_window_that_has_none, "test_no_contour_set_is_invented_for_a_window_that_has_none")
     _run(test_the_probe_tells_the_three_absences_apart, "test_the_probe_tells_the_three_absences_apart")
     _run(test_a_committed_flight_trace_says_a_person_could_see_it, "test_a_committed_flight_trace_says_a_person_could_see_it")
+    _run(test_the_shipped_scatter_encoding_is_pinned_and_declares_it_is_not_a_ruling, "test_the_shipped_scatter_encoding_is_pinned_and_declares_it_is_not_a_ruling")
+    _run(test_every_declared_encoding_variant_loads_and_names_rules_this_build_implements, "test_every_declared_encoding_variant_loads_and_names_rules_this_build_implements")
+    _run(test_an_encoding_naming_a_rule_this_build_does_not_implement_refuses_and_says_which, "test_an_encoding_naming_a_rule_this_build_does_not_implement_refuses_and_says_which")
+    _run(test_the_aspect_envelope_refuses_when_no_crown_satisfies_both_the_envelope_and_the_range, "test_the_aspect_envelope_refuses_when_no_crown_satisfies_both_the_envelope_and_the_range")
     _run(test_the_audits_isolated_ortho_shots_all_black_the_backdrop, "test_the_audits_isolated_ortho_shots_all_black_the_backdrop")
     _run(test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile, "test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile")
     _run(test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare, "test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare")
@@ -14592,3 +14596,143 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
             + "every band set and can never pass")
     print("986/1019: window support -- 1019's sourcing grades, `huc10_median_pre_1019` is "
             + "refused by name, undeclared is refused rather than defaulted")
+
+
+func test_the_shipped_scatter_encoding_is_pinned_and_declares_it_is_not_a_ruling() -> void:
+    """WHAT IS DRAWN IS NOW A DECLARATION, SO THE DECLARATION IS PINNED HERE.
+
+    `assets/families/encoding.json` decides which field quantity drives which
+    geometric axis. That makes changing the picture cheap, which is the point --
+    and makes it cheap to change WITHOUT ANYONE NOTICING, which is the cost. So
+    the shipped variant's every field is pinned: a change to what ships shows up
+    as a red check and a committed diff, never as a quiet different picture.
+
+    AND THE FILE MUST KEEP SAYING THAT SHIPPING IS NOT RULING. The encoding
+    question is held for the owner (rev 47). `shipped` records what runs, not
+    what was decided, and a reader who finds `current` shipping must not read it
+    as a verdict. That sentence is load-bearing, so its absence is a failure.
+    """
+    var enc := ScatterEncoding.load_from()
+    check(enc.why_absent == "",
+            "the shipped encoding does not load: %s" % enc.why_absent)
+    if enc.why_absent != "":
+        return
+    check(enc.name == "current",
+            "the shipped variant is %s, not `current` -- if that is intended, re-pin here "
+                    % enc.name + "and let the diff say so")
+    check(enc.height_source == "biomass_per_covered_over_hi",
+            "height is driven by %s" % enc.height_source)
+    check(enc.crown_source == "cover_fraction",
+            "crown is driven by %s" % enc.crown_source)
+    check(enc.joint == "none", "the shipped joint constraint is %s" % enc.joint)
+
+    var f := FileAccess.open("res://assets/families/encoding.json", FileAccess.READ)
+    check(f != null, "no encoding.json to read")
+    if f == null:
+        return
+    var doc = JSON.parse_string(f.get_as_text())
+    check(typeof(doc) == TYPE_DICTIONARY and (doc as Dictionary).has("_shipped_is_not_a_ruling"),
+            "encoding.json no longer says that shipping is not a ruling; that sentence is what "
+                    + "stops `shipped` being cited as a decision the owner has not made")
+
+
+func test_every_declared_encoding_variant_loads_and_names_rules_this_build_implements() -> void:
+    """A VARIANT NOBODY CAN SELECT IS WORSE THAN NO VARIANT, because it reads as
+    an available option in a file offered for adjustment. Every variant the
+    declaration carries is loaded by name, so a source or constraint added to
+    the file and not to `ScatterEncoding` fails here rather than when somebody
+    reaches for it.
+    """
+    var f := FileAccess.open("res://assets/families/encoding.json", FileAccess.READ)
+    if f == null:
+        check(false, "no encoding.json")
+        return
+    var doc = JSON.parse_string(f.get_as_text())
+    var variants: Dictionary = (doc as Dictionary).get("variants", {})
+    check(variants.size() >= 2,
+            "only %d variant(s) declared; the file exists to hold alternatives" % variants.size())
+    for key in variants:
+        var enc := ScatterEncoding.load_from(ScatterEncoding.DIR, str(key))
+        check(enc.why_absent == "",
+                "declared variant %s does not load: %s" % [str(key), enc.why_absent])
+
+
+func test_an_encoding_naming_a_rule_this_build_does_not_implement_refuses_and_says_which() -> void:
+    """ABSENCE IS REFUSED, NEVER DEFAULTED. A variant naming a source this build
+    has no rule for must refuse by name; falling back to a built-in mapping
+    would draw a picture that no declaration describes, which is the whole
+    failure the declaration exists to prevent.
+
+    WITH ITS NEGATIVE CONTROL, because a refusal that fires on every temporary
+    file proves nothing about the source check. The same file, same path, same
+    loader, one field changed, must LOAD.
+    """
+    var dir := "user://_test_encoding/"
+    DirAccess.make_dir_recursive_absolute(dir)
+    var base := {
+        "shipped": "v",
+        "variants": {"v": {
+            "what": "constructed",
+            "height_source": "cover_fraction",
+            "crown_source": "cover_fraction",
+            "joint_constraint": "none"}}}
+
+    # THE CONTROL FIRST, so a failure below cannot be blamed on the fixture.
+    var w := FileAccess.open(dir + "encoding.json", FileAccess.WRITE)
+    check(w != null, "could not write the constructed declaration")
+    if w == null:
+        return
+    w.store_string(JSON.stringify(base))
+    w.close()
+    var good := ScatterEncoding.load_from(dir)
+    check(good.why_absent == "",
+            "the control declaration refused, so the check below tests the fixture and not the "
+                    + "source rule: %s" % good.why_absent)
+
+    var bad: Dictionary = JSON.parse_string(JSON.stringify(base))
+    ((bad["variants"] as Dictionary)["v"] as Dictionary)["height_source"] = "moon_phase"
+    var w2 := FileAccess.open(dir + "encoding.json", FileAccess.WRITE)
+    w2.store_string(JSON.stringify(bad))
+    w2.close()
+    var refused := ScatterEncoding.load_from(dir)
+    check(refused.why_absent != "",
+            "an encoding naming `moon_phase` as a height source was accepted")
+    check(refused.why_absent.contains("moon_phase"),
+            "it refused without naming the source it could not implement: %s" % refused.why_absent)
+
+
+func test_the_aspect_envelope_refuses_when_no_crown_satisfies_both_the_envelope_and_the_range() -> void:
+    """TWO CONSTRAINTS CAN BE UNSATISFIABLE TOGETHER AND THAT IS REPORTED.
+
+    An envelope asks for a crown in `[min_ratio, max_ratio] x height`; the
+    family declares `[c_min, c_max]`. Where those do not overlap there is no
+    legal crown, and silently preferring either one would draw a plant obeying a
+    constraint nobody declared.
+
+    EXHIBITED WITH BOTH OUTCOMES against the same encoding, so the refusal is
+    known to be about the overlap and not about the envelope's mere presence.
+    """
+    var enc := ScatterEncoding.new()
+    enc.name = "witness"
+    enc.joint = "aspect_envelope"
+    enc.min_ratio = 0.33
+    enc.max_ratio = 1.0
+
+    # OVERLAPPING: a 10 m plant may be 3.3-10 m wide; the family allows 0.8-15.
+    # The intersection is 3.3-10, so a 0.8 m crown is lifted to 3.3.
+    var ok := enc.crown_after_joint(10.0, 0.8, 0.8, 15.0)
+    check(bool(ok["ok"]), "the overlapping case refused: %s" % str(ok.get("why", "")))
+    if bool(ok["ok"]):
+        check(is_equal_approx(float(ok["crown_m"]), 3.3),
+                "expected the crown lifted to the envelope floor 3.3 m, got %s"
+                        % String.num(float(ok["crown_m"]), 4))
+
+    # DISJOINT: a 40 m plant wants 13.2-40 m; a family capped at 12 cannot.
+    var no := enc.crown_after_joint(40.0, 5.0, 0.8, 12.0)
+    check(not bool(no["ok"]),
+            "an envelope wanting 13.2-40 m against a range capped at 12 m was satisfied anyway")
+    if not bool(no["ok"]):
+        var why := str(no["why"])
+        check(why.contains("13.2") and why.contains("12"),
+                "the refusal does not carry both intervals, so a reader cannot see which "
+                        + "constraint to move: %s" % why)

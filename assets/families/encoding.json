@@ -1,0 +1,56 @@
+{
+  "_what": "Which field quantity drives which geometric axis of a drawn plant, and any constraint on the pair. This file is the ONLY place that mapping is decided; `families.json` declares each axis's LEGAL RANGE and nothing about its source.",
+  "_why_a_file": "The mapping used to be hardcoded in VegetationScatter.parameters_for() while families.json described it in prose, and nothing bound the two. A comment could go wrong -- and did -- without anything noticing. Changing what is drawn is now editing this declaration.",
+
+  "shipped": "current",
+
+  "_shipped_is_not_a_ruling": "`current` ships because it is what shipped before this file existed. It is NOT a decision that this encoding is right. The question -- whether the pair wants a joint constraint, or whether these are the right channels at all -- is held for the owner's conversation and is on rev 47. Do not cite `shipped` as evidence of a ruling.",
+
+  "_sources_are_a_closed_set": "A variant naming a source not listed here is REFUSED, with the name and the legal set. An unknown source is never defaulted -- a silently-defaulted encoding is an unattributable picture.",
+
+  "sources": {
+    "cover_fraction": "the texel's true ground cover: pft share times (1 - bare). NOT the raw composition; see ground_cover().",
+    "biomass_per_covered_over_hi": "biomass divided by cover, normalised by the row's high bound. Mass packed into the covered footprint.",
+    "biomass_over_hi": "biomass normalised by the row's high bound, with no cover division. Areal density rather than packing.",
+    "constant_min": "t = 0.0 always. A CONTROL: every plant at the bottom of its declared range.",
+    "constant_max": "t = 1.0 always. A CONTROL: every plant at the top of its declared range."
+  },
+
+  "joint_constraints": {
+    "none": "height and crown are independent. Each stays inside its own declared range; the PAIR is unconstrained, so a legal height with a legal crown can be an implausible plant.",
+    "crown_tracks_height": "crown takes height's t instead of its own source. Cover then reaches the picture only through instance count, not through width.",
+    "aspect_envelope": "both axes are computed from their own sources, then crown is clamped into [min_ratio, max_ratio] times height. Declares `min_ratio` and `max_ratio`."
+  },
+
+  "variants": {
+    "current": {
+      "what": "What shipped before this file existed. Height from packing, crown from cover, pair unconstrained.",
+      "height_source": "biomass_per_covered_over_hi",
+      "crown_source": "cover_fraction",
+      "joint_constraint": "none"
+    },
+
+    "crown_from_height": {
+      "what": "One horn of the held question: crown follows height, so a plant's proportions are fixed and cover speaks only through count.",
+      "height_source": "biomass_per_covered_over_hi",
+      "crown_source": "cover_fraction",
+      "joint_constraint": "crown_tracks_height"
+    },
+
+    "envelope_1_to_3": {
+      "what": "The other horn: both axes keep their own sources, but a plant may not be wider than 1x its height nor narrower than a third of it. Ratios are ILLUSTRATIVE and are not fitted to anything.",
+      "height_source": "biomass_per_covered_over_hi",
+      "crown_source": "cover_fraction",
+      "joint_constraint": "aspect_envelope",
+      "min_ratio": 0.33,
+      "max_ratio": 1.0
+    },
+
+    "flat_control": {
+      "what": "A CONTROL, not a candidate. Every plant at the top of both declared ranges, so a picture that looks identical to a real variant proves the encoding is not reaching the screen.",
+      "height_source": "constant_max",
+      "crown_source": "constant_max",
+      "joint_constraint": "none"
+    }
+  }
+}

@@ -576,6 +576,12 @@ var _fs: FamilySet = null
 var _fc: FrameCost = null
 var _tm: TerrainMesh = null
 
+## The encoding declaration, loaded at bind. NULL OR REFUSING IS NOT A
+## FALLBACK: `parameters_for` refuses with the reason rather than reaching for
+## a built-in rule, because a silently-defaulted encoding produces a picture
+## nobody can attribute to a declaration.
+var _enc: ScatterEncoding = null
+
 ## The `k` actually in force, which lags the solved one by
 ## `APPLIED_K_HALF_LIFE_S`. Negative until the first solve, because there is no
 ## honest value to relax FROM before one has been taken -- the first frame at a
@@ -592,6 +598,9 @@ func bind(hf: Heightfield, rl: ResidenceLayer, fl: FixtureLoader,
     _fs = fs
     _fc = fc
     _tm = tm
+    _enc = ScatterEncoding.load_from()
+    if _enc.why_absent != "":
+        push_error("scatter: %s" % _enc.why_absent)
 
 
 func is_bound() -> bool:
@@ -1388,15 +1397,26 @@ func parameters_for(life_form: String, fraction: float, biomass: float,
         return {"ok": false, "why": "%s declares no height or crown range" % life_form}
     if fraction <= 0.0:
         return {"ok": false, "why": "no cover"}
-    var per_covered := biomass / fraction
-    var t_h: float = 0.0 if biomass_hi <= 0.0 else clampf(per_covered / biomass_hi, 0.0, 1.0)
-    var t_c: float = clampf(fraction, 0.0, 1.0)
+    if _enc == null or _enc.why_absent != "":
+        return {"ok": false, "why": "no encoding in force: %s" % (
+                "none is bound" if _enc == null else _enc.why_absent)}
+    var t_h := _enc.t_height(fraction, biomass, biomass_hi)
+    var t_c := _enc.t_crown(fraction, biomass, biomass_hi)
+    var height_m := lerpf(float(h_range["min"]), float(h_range["max"]), t_h)
+    var crown_m := lerpf(float(c_range["min"]), float(c_range["max"]), t_c)
+    var joined := _enc.crown_after_joint(height_m, crown_m,
+            float(c_range["min"]), float(c_range["max"]))
+    if not bool(joined["ok"]):
+        return {"ok": false, "why": str(joined["why"])}
     return {
         "ok": true,
-        "height_m": lerpf(float(h_range["min"]), float(h_range["max"]), t_h),
-        "crown_m": lerpf(float(c_range["min"]), float(c_range["max"]), t_c),
+        "height_m": height_m,
+        "crown_m": float(joined["crown_m"]),
         "t_height": t_h,
         "t_crown": t_c,
+        # STAMPED so a measurement or a screenshot can be attributed to the
+        # declaration that produced it.
+        "encoding": _enc.name,
     }
 
 
