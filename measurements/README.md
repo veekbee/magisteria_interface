@@ -1448,13 +1448,52 @@ EPSG:5070 centroids, `deepest_winter` day 22.
 *cheapest* — 14.6 ms — and the fifth-heaviest is the second cheapest. Ordering by weight was offered
 as the robust half of §23.909 and against measured frame cost it does not hold.
 
-**What does predict the cost is realised plant HEIGHT, and it predicts it exactly.** Succulent drawn
-height across the five: 0.98, 3.34, 8.95, 2.58, 0.90 m; cost at 0.35: 14.6, 49.2, 36.4, 35.7,
-11.9 ms — the same rank order, no exceptions. The mechanism is in the rule itself: `d_f = k × h`, so
-the drawn area goes as `h²` and the count with it. Height enters **squared**, cover enters linearly,
-and a cell with 9 m succulents against 1 m succulents carries ~80× the count from that term alone.
-A weight built from cover and a declared aspect factor cannot see it, because realised height comes
-from biomass per covered area and is not in the formula.
+**What does predict the cost is realised plant HEIGHT — over the cells whose cost is a cost.**
+**[CORRECTED. This paragraph read "and it predicts it exactly … the same rank order, no exceptions".
+That was false as printed, it is my sentence, and §23.913 quoted it faithfully — §23.909's proxy
+claim was withdrawn on its strength. The correction is below; the overstatement is struck rather
+than deleted.]**
+
+Succulent drawn height across the five: 0.98, 3.34, 8.95, 2.58, 0.90 m. ~~Cost at 0.35: 14.6, 49.2,
+36.4, 35.7, 11.9 ms — the same rank order, no exceptions.~~ **The raw ranks do NOT match: positions
+two and three are transposed.** And the two that break the ordering are **exactly the two cells the
+frame budget truncated**, read from `scatter_horizon.json`'s `k_0.35` candidate:
+
+| cell | succulent h | frame p50 | `share_drawn` | `share_bound_by` |
+|---|---:|---:|---:|---|
+| 1502001703 | 0.98 m | 14.4 ms | 1.000 | nothing: the whole implied scatter is drawn |
+| 1502000807 | 3.34 m | 48.9 ms | **0.819** | **the frame budget** |
+| 1502001607 | 8.95 m | 36.3 ms | **0.070** | **the frame budget** |
+| 1502001608 | 2.58 m | 35.7 ms | 1.000 | nothing: the whole implied scatter is drawn |
+| 1505030306 | 0.90 m | 11.9 ms | 1.000 | nothing: the whole implied scatter is drawn |
+
+**Over the three uncensored cells the ordering is perfect: 0.90 → 11.9, 0.98 → 14.4, 2.58 → 35.7.**
+**A truncated cell's cost is censored, so it is a FLOOR and not a value.** The tallest cell drew
+**one plant in fourteen** and still cost 36.3 ms; its undrawn cost is far higher by an amount nobody
+has measured, and **it must not be extrapolated** — the draw is not linear in instance count
+(culling, overdraw, batching), so the censoring states a direction and not a magnitude.
+
+**So the exception exists BECAUSE the rule holds**: the budget truncated hardest exactly where height
+predicted most.
+
+**The weight-proxy finding above is UNAFFECTED and still stands.** `1502001703` is the heaviest cell
+(weight 69.7), the cheapest (14.4 ms), and **uncensored at `share_drawn` 1.000** — so "the heaviest
+cell is the cheapest" is a clean observation, not a censoring artefact. Censoring can only raise the
+two truncated costs, which leaves the weight ordering falsified either way.
+
+**TWO BASES, AND THE FIGURES DIFFER — stated rather than reconciled into whichever is convenient.**
+The costs in the table above (14.4 / 48.9 / 36.3 / 35.7 / 11.9) are read from `scatter_horizon.json`
+in this tree. The figures originally published in this paragraph (14.6 / 49.2 / 36.4 / 35.7 / 11.9)
+are from the sweep run at `magisteria_interface@a7853c8`. **Same order, same conclusion, different
+numbers, and the two have not been reconciled.** A figure quoted without its base is not a weaker
+claim, it is an unverifiable one — which is the discipline that would have kept the overstatement
+above from travelling into a §23 entry.
+
+The mechanism is unchanged and is in the rule itself: `d_f = k × h`, so the drawn area goes as `h²`
+and the count with it. Height enters **squared**, cover enters linearly, and a cell with 9 m
+succulents against 1 m succulents carries ~80× the count from that term alone. A weight built from
+cover and a declared aspect factor cannot see it, because realised height comes from biomass per
+covered area and is not in the formula.
 
 **And no `k` satisfies both bounds at 1502001607.** It is over budget at every value from 0.1 up, and
 0.05 is far below the 0.35 placement-raster floor. The window is empty there. That is not a tuning

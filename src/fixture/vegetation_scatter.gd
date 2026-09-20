@@ -10,9 +10,32 @@ extends RefCounted
 ## axis is named by the fixture's `taxon_groups` and keys a family. Nothing
 ## here decides what grows where.
 ##
-## TWO AXES FROM TWO ROWS, WHICH IS WHY THERE ARE TWO ROWS. §17.8.2 wants
-## height and crown as separate axes for woody forms, deriving from different
-## field quantities, and the wire carries exactly two per group:
+## TWO AXES FROM TWO ROWS. The wire carries exactly two quantities per group and
+## this scheme spends them on two geometric axes:
+##
+## THIS ATTRIBUTION WAS FALSE AND IS CORRECTED. These lines used to say §17.8.2
+## wants height and crown as separate axes for woody forms deriving from
+## different field quantities. IT DOES NOT. §17.8.2 is the knowledge-ladder
+## section -- percept levels and the life-form registry column. Scoped to its
+## own extent it contains no mention of crown, woody forms, two axes, biomass or
+## cover fraction, and `crown_m`/`height_m` appear nowhere in the design
+## document at all. The citation resolved and was the wrong referent.
+##
+## NO NUMBERED SECTION OWNS THIS MAPPING. Its nearest grounds are three §23
+## findings -- on what `unit: "fraction"` refers to, on the instancing horizon's
+## constant, and on what predicts frame cost. Those are findings about a wire
+## field's referent and about cost; NONE of them is a contract saying what the
+## display should communicate. So the rule below is THIS CLIENT'S, and it is
+## stated here as the client's rather than borrowed from an authority.
+##
+## AND IT IS UNDER AN OWNER HOLD, RAISED BY THE OWNER'S OWN EYE ON A FLIGHT.
+## The two axes are each clamped into their family's declared range and the PAIR
+## IS NOT CHECKED, so the combination can be an implausible plant; and because
+## cover sets the crown while instance count divides by crown area, cover enters
+## the count linearly on top and quadratically underneath, so the count FALLS as
+## cover rises above ~0.056. Whether this wants a joint constraint, or a
+## different encoding entirely, is the owner's conversation. DO NOT change the
+## rule here to something that merely looks more physical.
 ##
 ##   * `crown_m`  <- the COVER FRACTION. Cover is crown area times count, so
 ##                   the fraction is the quantity that speaks about width.
