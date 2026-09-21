@@ -1,0 +1,64 @@
+{
+  "_known_wrong_in": [
+    "clumping lengthens real sight-lines (understates)",
+    "porous canopies (understates)",
+    "sub-eye-height families excluded rather than graded (overstates)",
+    "flat ground assumed (sign unknown)",
+    "horizontal ray only; the flights pitch down ~10 degrees (sign unknown)"
+  ],
+  "_model_is": "Poisson-placed independent plants, transmittance exp(-d/lambda), lambda = 1/sum(n_f * w_f) over families drawn taller than eye height, silhouette width taken as crown width",
+  "_rules_on_nothing": "decision 949's `k` is the owner's and its revisit trigger has already fired; this publishes a number for that conversation and takes no position on it",
+  "_vertical_exaggeration_is": "naturalistic, so drawn height equals declared height and the eye-height comparison below is exact. AT ANY OTHER FACTOR THIS TOOL IS WRONG until the comparison is moved to the drawn height: the factor would raise plants over the ray without moving the crowns that occlude it",
+  "_what": "the range at which a stand closes the view, beside the range at which this client stops drawing individuals into it, per cell",
+  "encoding": "current",
+  "eye_height_m": 1.7,
+  "fov_degrees": 75.0,
+  "k_fraction_of_resolvable": 0.35,
+  "transmittance": 0.05,
+  "vertical_exaggeration": 1.0,
+  "viewport_height_px": 800.0,
+  "windows": [
+    {
+      "_no_occluder_means": "every family drawn here is shorter than eye height, so a horizontal ray never closes; these are the places the current rule is already right about",
+      "cells_drawn_past_saturation": 3068,
+      "cells_with_nothing_at_eye_height": 392,
+      "cells_with_vegetation": 3624,
+      "horizon_over_saturation": {
+        "max": 4655.77743711109,
+        "min": 0.0842379728202594,
+        "n": 3232,
+        "p50": 14.9568964300523,
+        "p95": 3496.85935634644
+      },
+      "saturation_m": {
+        "max": 9957.83338364534,
+        "min": 1.38286132927836,
+        "n": 3232,
+        "p50": 37.0634262193649,
+        "p95": 457.12458066191
+      },
+      "window": "largest_fire"
+    },
+    {
+      "_no_occluder_means": "every family drawn here is shorter than eye height, so a horizontal ray never closes; these are the places the current rule is already right about",
+      "cells_drawn_past_saturation": 2608,
+      "cells_with_nothing_at_eye_height": 466,
+      "cells_with_vegetation": 3252,
+      "horizon_over_saturation": {
+        "max": 4588.14128524274,
+        "min": 0.0893676199225,
+        "n": 2786,
+        "p50": 14.8033366463458,
+        "p95": 3646.58397143913
+      },
+      "saturation_m": {
+        "max": 8382.36470535527,
+        "min": 1.40413890987006,
+        "n": 2786,
+        "p50": 37.2530341002298,
+        "p95": 524.06535515522
+      },
+      "window": "deepest_winter"
+    }
+  ]
+}

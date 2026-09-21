@@ -75,6 +75,7 @@ func _initialize() -> void:
     _run(test_every_declared_encoding_variant_loads_and_names_rules_this_build_implements, "test_every_declared_encoding_variant_loads_and_names_rules_this_build_implements")
     _run(test_an_encoding_naming_a_rule_this_build_does_not_implement_refuses_and_says_which, "test_an_encoding_naming_a_rule_this_build_does_not_implement_refuses_and_says_which")
     _run(test_the_aspect_envelope_refuses_when_no_crown_satisfies_both_the_envelope_and_the_range, "test_the_aspect_envelope_refuses_when_no_crown_satisfies_both_the_envelope_and_the_range")
+    _run(test_the_saturation_artefact_carries_the_model_it_is_only_true_under, "test_the_saturation_artefact_carries_the_model_it_is_only_true_under")
     _run(test_the_audits_isolated_ortho_shots_all_black_the_backdrop, "test_the_audits_isolated_ortho_shots_all_black_the_backdrop")
     _run(test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile, "test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile")
     _run(test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare, "test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare")
@@ -14736,3 +14737,56 @@ func test_the_aspect_envelope_refuses_when_no_crown_satisfies_both_the_envelope_
         check(why.contains("13.2") and why.contains("12"),
                 "the refusal does not carry both intervals, so a reader cannot see which "
                         + "constraint to move: %s" % why)
+
+
+func test_the_saturation_artefact_carries_the_model_it_is_only_true_under() -> void:
+    """A NUMBER WHOSE ERROR IS UNKNOWN IN SIGN MUST TRAVEL WITH ITS MODEL.
+
+    `saturation.json` says the view closes at a median of about 37 m while
+    individuals are drawn to about 555 m. That ratio is the whole argument for
+    re-shaping decision 949's horizon rule, and it is true only under a stated
+    model: Poisson placement, opaque crowns, a horizontal ray at eye height,
+    flat ground. Two of its five known errors run one way, one runs the other,
+    and two are of unknown sign.
+
+    THE CAVEATS ARE THE PART A LATER CITATION DROPS, which this file has watched
+    happen twice this week -- so their presence is checked, not assumed. A
+    quoted saturation figure without them is a claim nobody can argue with,
+    which is worse than one nobody believes.
+    """
+    var path := "res://measurements/saturation.json"
+    if not FileAccess.file_exists(path):
+        print("saturation: no artefact, so nothing is being checked")
+        return
+    var doc = JSON.parse_string(FileAccess.open(path, FileAccess.READ).get_as_text())
+    check(typeof(doc) == TYPE_DICTIONARY, "saturation.json is not an object")
+    if typeof(doc) != TYPE_DICTIONARY:
+        return
+    var d: Dictionary = doc
+    check(d.has("_model_is") and str(d["_model_is"]).length() > 40,
+            "the artefact no longer states the model its numbers are true under")
+    var wrong: Array = d.get("_known_wrong_in", [])
+    check(wrong.size() >= 5,
+            "the artefact lists %d known errors; it had five, and dropping one makes the "
+                    % wrong.size() + "figure look better than it is")
+    check(d.has("_rules_on_nothing"),
+            "the artefact no longer says it rules on nothing -- decision 949's k is the owner's")
+    check(d.has("encoding"),
+            "the artefact does not stamp the encoding it measured, so its numbers cannot be "
+                    + "attributed to a declaration")
+
+    # AND THE STATISTICS ARE ORDERED, which is the cheapest way to catch a
+    # quantile picked off an unsorted array -- a defect that reads as plausible
+    # at every single value.
+    for w in d.get("windows", []):
+        var win: Dictionary = w
+        for key in ["saturation_m", "horizon_over_saturation"]:
+            var s: Dictionary = win.get(key, {})
+            if int(s.get("n", 0)) == 0:
+                continue
+            check(float(s["min"]) <= float(s["p50"]) and float(s["p50"]) <= float(s["p95"])
+                            and float(s["p95"]) <= float(s["max"]),
+                    "%s/%s is not ordered: min %s p50 %s p95 %s max %s" % [
+                            str(win.get("window", "?")), key, String.num(float(s["min"]), 3),
+                            String.num(float(s["p50"]), 3), String.num(float(s["p95"]), 3),
+                            String.num(float(s["max"]), 3)])
