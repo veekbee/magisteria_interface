@@ -71,7 +71,7 @@ func _initialize() -> void:
     _run(test_no_contour_set_is_invented_for_a_window_that_has_none, "test_no_contour_set_is_invented_for_a_window_that_has_none")
     _run(test_the_probe_tells_the_three_absences_apart, "test_the_probe_tells_the_three_absences_apart")
     _run(test_a_committed_flight_trace_says_a_person_could_see_it, "test_a_committed_flight_trace_says_a_person_could_see_it")
-    _run(test_the_shipped_scatter_encoding_is_pinned_and_declares_it_is_not_a_ruling, "test_the_shipped_scatter_encoding_is_pinned_and_declares_it_is_not_a_ruling")
+    _run(test_the_shipped_scatter_encoding_is_pinned_and_declares_it_is_against_decision_1111, "test_the_shipped_scatter_encoding_is_pinned_and_declares_it_is_against_decision_1111")
     _run(test_every_declared_encoding_variant_loads_and_names_rules_this_build_implements, "test_every_declared_encoding_variant_loads_and_names_rules_this_build_implements")
     _run(test_an_encoding_naming_a_rule_this_build_does_not_implement_refuses_and_says_which, "test_an_encoding_naming_a_rule_this_build_does_not_implement_refuses_and_says_which")
     _run(test_the_aspect_envelope_refuses_when_no_crown_satisfies_both_the_envelope_and_the_range, "test_the_aspect_envelope_refuses_when_no_crown_satisfies_both_the_envelope_and_the_range")
@@ -14599,7 +14599,7 @@ func test_the_strata_are_the_membership_functions_on_real_ground() -> void:
             + "refused by name, undeclared is refused rather than defaulted")
 
 
-func test_the_shipped_scatter_encoding_is_pinned_and_declares_it_is_not_a_ruling() -> void:
+func test_the_shipped_scatter_encoding_is_pinned_and_declares_it_is_against_decision_1111() -> void:
     """WHAT IS DRAWN IS NOW A DECLARATION, SO THE DECLARATION IS PINNED HERE.
 
     `assets/families/encoding.json` decides which field quantity drives which
@@ -14608,10 +14608,19 @@ func test_the_shipped_scatter_encoding_is_pinned_and_declares_it_is_not_a_ruling
     the shipped variant's every field is pinned: a change to what ships shows up
     as a red check and a committed diff, never as a quiet different picture.
 
-    AND THE FILE MUST KEEP SAYING THAT SHIPPING IS NOT RULING. The encoding
-    question is held for the owner (rev 47). `shipped` records what runs, not
-    what was decided, and a reader who finds `current` shipping must not read it
-    as a verdict. That sentence is load-bearing, so its absence is a failure.
+    AND THE FILE MUST KEEP SAYING THAT WHAT SHIPS IS AGAINST A RULING.
+    **[CORRECTED 2026-09-23. This paragraph read "the encoding question is held
+    for the owner (rev 47)". It was, until decision 1111 ruled on 2026-09-22 --
+    and the test asserting the file said so would have gone on passing while the
+    file said something false, because a pinned sentence is only as true as the
+    day it was pinned.]**
+
+    Decision 1111 binds a plant's axes to age and type and never to local stand
+    density, which rules against BOTH shipped channels. `current` still ships
+    because the replacement source is not buildable until backlog 304's
+    substrate lands. So the file must carry two sentences, and their absence is
+    a failure: that the shipped mapping is ruled against, and WHY a
+    ruled-against mapping is still the honest thing to ship.
     """
     var enc := ScatterEncoding.load_from()
     check(enc.why_absent == "",
@@ -14632,9 +14641,15 @@ func test_the_shipped_scatter_encoding_is_pinned_and_declares_it_is_not_a_ruling
     if f == null:
         return
     var doc = JSON.parse_string(f.get_as_text())
-    check(typeof(doc) == TYPE_DICTIONARY and (doc as Dictionary).has("_shipped_is_not_a_ruling"),
-            "encoding.json no longer says that shipping is not a ruling; that sentence is what "
-                    + "stops `shipped` being cited as a decision the owner has not made")
+    var dd: Dictionary = doc
+    check(dd.has("_shipped_is_against_decision_1111"),
+            "encoding.json no longer records that what it ships is against decision 1111; that "
+                    + "sentence is the only thing stopping a reader treating the shipped mapping "
+                    + "as a default worth keeping")
+    check(dd.has("_why_current_still_ships"),
+            "encoding.json records the ruling but not why a ruled-against mapping still ships; "
+                    + "without it the honest gap reads as an oversight and someone closes it "
+                    + "with a guess")
 
 
 func test_every_declared_encoding_variant_loads_and_names_rules_this_build_implements() -> void:

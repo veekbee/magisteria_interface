@@ -12,11 +12,27 @@ extends RefCounted
 ## noticing, and one did: it cited a design section that says nothing about
 ## crowns. A declaration the code actually reads cannot drift from the code.
 ##
-## THE SHIPPED VARIANT IS NOT A RULING. `current` ships because it is what
-## shipped before this file existed. Whether the pair wants a joint constraint,
-## or whether these are the right channels at all, is held for the owner and is
-## on rev 47. **Nothing here decides it, and `shipped` is not evidence that it
-## was decided.**
+## WHAT SHIPS IS AGAINST A RULING, AND THIS HEADER USED TO SAY THE QUESTION WAS
+## OPEN. It was, until 2026-09-22. **Decision 1111 [OWNER RULING] settles what
+## the vegetation display is for: a viewer reads maturity -- size and shape --
+## type where earned, and rough density, and A PLANT'S GEOMETRIC AXES FOLLOW AGE
+## AND TYPE AND NEVER LOCAL STAND DENSITY.**
+##
+## IT DISSOLVED THE QUESTION THIS CLASS WAS BUILT AROUND RATHER THAN ANSWERING
+## IT. The question was *does the pair want a joint constraint*. 1111 names the
+## defect as the HEIGHT channel's SOURCE -- `biomass / cover` is a stand
+## quantity -- and the CROWN channel is wrong for the same reason, because
+## `cover_fraction` IS local stand density. **Both shipped channels are ruled
+## against, not one**, and the two variants built as the question's horns answer
+## a question that was never the one ruled.
+##
+## `current` STILL SHIPS BECAUSE THE REPLACEMENT IS NOT BUILDABLE. 1111 binds
+## the shape now and defers the substrate -- *shape bound now, spend later*. The
+## source it names is `biomass / stem_density`, and section 23.1175 records a
+## ZERO DENOMINATOR on every non-woody pool once backlog 302 lands. **Backlog
+## 304 is the substrate and gates the repair.** Shipping a third guess to avoid
+## an honest gap is how a wrong encoding acquires users, so the mapping stays
+## declared-and-wrong rather than becoming undeclared-and-new.
 ##
 ## UNKNOWN NAMES REFUSE. A variant naming a source or constraint this class does
 ## not implement is refused with the name and the legal set. It is never

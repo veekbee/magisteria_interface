@@ -4,7 +4,11 @@
 
   "shipped": "current",
 
-  "_shipped_is_not_a_ruling": "`current` ships because it is what shipped before this file existed. It is NOT a decision that this encoding is right. The question -- whether the pair wants a joint constraint, or whether these are the right channels at all -- is held for the owner's conversation and is on rev 47. Do not cite `shipped` as evidence of a ruling.",
+  "_shipped_is_against_decision_1111": "RULED 2026-09-22, AND WHAT SHIPS IS AGAINST THE RULING. Decision 1111 [OWNER RULING] settles what the vegetation display is for: a viewer reads maturity -- size and shape -- type where earned, and rough density, and A PLANT'S GEOMETRIC AXES FOLLOW AGE AND TYPE AND NEVER LOCAL STAND DENSITY. That DISSOLVES the pair question this file was built around rather than answering it: the defect 1111 names is the HEIGHT channel's source, `biomass / cover` being a stand quantity -- and the CROWN channel is wrong for the same reason, because `cover_fraction` IS local stand density. BOTH shipped channels are ruled against, not one.",
+
+  "_why_current_still_ships": "Because the replacement is not buildable yet and shipping a third guess would be worse. 1111 binds the SHAPE now and defers the SUBSTRATE -- its own words, shape bound now, spend later, Phase 4 acceptable. The size source it names is `biomass / stem_density`, and SS23.1175 records that quotient has a ZERO DENOMINATOR on every non-woody pool (PFTs 3, 4, 6 and 11) once SS25 backlog 302 lands. SS25 BACKLOG 304 IS THE SUBSTRATE and gates the repair: per-plant mass across the wire, the stem-structure numbers settled, age persisting. Until then the honest state is a declared wrong mapping, not an undeclared new one.",
+
+  "_do_not_cite_shipped": "`shipped` records what runs. It never recorded a decision, and it now records one that is known wrong. Do not read it as a preference, a default worth keeping, or a ruling.",
 
   "_sources_are_a_closed_set": "A variant naming a source not listed here is REFUSED, with the name and the legal set. An unknown source is never defaulted -- a silently-defaulted encoding is an unattributable picture.",
 
@@ -31,14 +35,14 @@
     },
 
     "crown_from_height": {
-      "what": "One horn of the held question: crown follows height, so a plant's proportions are fixed and cover speaks only through count.",
+      "what": "SUPERSEDED BY DECISION 1111 -- KEPT AS EVIDENCE, NOT AS A CANDIDATE. One horn of the held question: crown follows height, so a plant's proportions are fixed and cover speaks only through count. Built as a horn of a question 1111 dissolved rather than answered; it still derives crown from a stand quantity and so is ruled against too.",
       "height_source": "biomass_per_covered_over_hi",
       "crown_source": "cover_fraction",
       "joint_constraint": "crown_tracks_height"
     },
 
     "envelope_1_to_3": {
-      "what": "The other horn: both axes keep their own sources, but a plant may not be wider than 1x its height nor narrower than a third of it. Ratios are ILLUSTRATIVE and are not fitted to anything.",
+      "what": "SUPERSEDED BY DECISION 1111 -- KEPT AS EVIDENCE, NOT AS A CANDIDATE. The other horn: both axes keep their own sources, but a plant may not be wider than 1x its height nor narrower than a third of it. Ratios are ILLUSTRATIVE and are not fitted to anything. Built as a horn of a question 1111 dissolved rather than answered; it still derives crown from a stand quantity and so is ruled against too.",
       "height_source": "biomass_per_covered_over_hi",
       "crown_source": "cover_fraction",
       "joint_constraint": "aspect_envelope",
