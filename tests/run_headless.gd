@@ -76,6 +76,10 @@ func _initialize() -> void:
     _run(test_an_encoding_naming_a_rule_this_build_does_not_implement_refuses_and_says_which, "test_an_encoding_naming_a_rule_this_build_does_not_implement_refuses_and_says_which")
     _run(test_the_aspect_envelope_refuses_when_no_crown_satisfies_both_the_envelope_and_the_range, "test_the_aspect_envelope_refuses_when_no_crown_satisfies_both_the_envelope_and_the_range")
     _run(test_the_saturation_artefact_carries_the_model_it_is_only_true_under, "test_the_saturation_artefact_carries_the_model_it_is_only_true_under")
+    _run(test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits, "test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits")
+    _run(test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control, "test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control")
+    _run(test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name, "test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name")
+    _run(test_every_pin_kind_refuses_each_required_field_by_name, "test_every_pin_kind_refuses_each_required_field_by_name")
     _run(test_the_audits_isolated_ortho_shots_all_black_the_backdrop, "test_the_audits_isolated_ortho_shots_all_black_the_backdrop")
     _run(test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile, "test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile")
     _run(test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare, "test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare")
@@ -14805,3 +14809,148 @@ func test_the_saturation_artefact_carries_the_model_it_is_only_true_under() -> v
                             str(win.get("window", "?")), key, String.num(float(s["min"]), 3),
                             String.num(float(s["p50"]), 3), String.num(float(s["p95"]), 3),
                             String.num(float(s["max"]), 3)])
+
+
+## --- G-8, the explorer (the dressing arc's DA-9) -------------------------
+
+func test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits() -> void:
+    """THE FORMAT IS NOT OURS AND THE REFUSAL IS NOT OURS EITHER.
+
+    magisteria's emission tool refuses a top-level key outside its
+    `TOP_KEYS` by name -- *pin rows and nothing else*. So the explorer's output
+    is pinned against that set here, where a drift is a red check, rather than
+    at an emission the author has to ask for a run to discover.
+
+    AND `generated_by` IS DELIBERATELY ABSENT. It IS in the tool's set, but the
+    tool strips any it is given and writes its own, so a value from here would
+    not survive and the placed file is always attributed to the tool. Emitting
+    one would be writing a provenance claim that gets overwritten.
+    """
+    var pf := PinFile.over("sha256:" + "a".repeat(64), "sha256:" + "b".repeat(64))
+    check(pf.why_refused == "", "a well-shaped pair was refused: %s" % pf.why_refused)
+    var doc := pf.to_document()
+    var got := doc.keys()
+    got.sort()
+    var want := PinFile.TOP_KEYS.duplicate()
+    want.sort()
+    check(str(got) == str(want),
+            "the document's keys are %s, not the format's %s" % [str(got), str(want)])
+    check(not doc.has("generated_by"),
+            "the explorer emits `generated_by`; the tool overwrites it, so this is a "
+                    + "provenance claim that cannot survive")
+    check(not doc.has("authored_by"),
+            "the explorer emits a FILE-LEVEL `authored_by`; the format has no such key and "
+                    + "the tool refuses it by name -- provenance is per pin")
+
+
+func test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control() -> void:
+    """PROVENANCE IS ON EVERY PIN, AND §22.8.4'S TABLE UNDERSTATES IT.
+
+    The table names `authored_by` on `zone` and `feature` only. The section's
+    prose says *provenance is on every pin*, and the emission tool refuses any
+    pin lacking it whatever its kind. Prose and tool govern, so all seven are
+    checked here -- the two the table happens to name would pass a weaker test
+    and the other five are exactly where a reader of the table alone would be
+    caught out.
+
+    EXHIBITED WITH ITS CONTROL PER KIND: the same pin, one field added, must be
+    ACCEPTED. Without that, a refusal could be firing on anything else in the
+    row and this test would not know.
+    """
+    var base := {
+        "zone": {"polygon": [[0, 0]], "class": "residential", "from": 1900},
+        "feature": {"type": "church", "point": [0, 0], "from": 1900},
+        "route": {"class": "rail", "endpoints": [[0, 0], [1, 1]], "from": 1900},
+        "centre": {"point": [0, 0], "from": 1900},
+        "cap": {"polygon": [[0, 0]], "from": 1900},
+        "renew": {"polygon": [[0, 0]], "from": 1900},
+        "sink": {"type": "landfill", "point": [0, 0], "from": 1900,
+                "classes": ["residential"], "share": 0.5},
+    }
+    for kind in PinFile.KINDS:
+        check(base.has(kind), "no witness row written for kind %s" % str(kind))
+        if not base.has(kind):
+            continue
+        var row: Dictionary = (base[kind] as Dictionary).duplicate(true)
+        row["kind"] = kind
+        row["pin_id"] = "p-%s" % kind
+
+        var without := PinFile.over("sha256:" + "a".repeat(64), "sha256:" + "b".repeat(64))
+        check(not without.add_pin(row),
+                "kind %s was accepted with no `authored_by`" % str(kind))
+        check(without.why_refused.contains("authored_by"),
+                "kind %s refused without naming the missing provenance: %s"
+                        % [str(kind), without.why_refused])
+        check(without.pins.is_empty(),
+                "kind %s was refused and the pin was kept anyway, so a refused file "
+                        % str(kind) + "half-carries it")
+
+        var with_prov := PinFile.over("sha256:" + "a".repeat(64), "sha256:" + "b".repeat(64))
+        row["authored_by"] = "owner"
+        check(with_prov.add_pin(row),
+                "THE CONTROL FAILED: kind %s is refused even with provenance, so the check "
+                        % str(kind) + "above proves nothing about `authored_by`: %s"
+                        % with_prov.why_refused)
+
+
+func test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name() -> void:
+    """THE WEAKER GATE, ON PURPOSE AND STATED AS SUCH.
+
+    `base_dressing` must be the sha256 of a committed manifest's own bytes, and
+    the schedule stamp must be one the tool will accept. NEITHER CAN BE CHECKED
+    HERE: both need magisteria's committed data, and a reader of it in this repo
+    would be a second copy of a bound -- the defect the tool's construal Q4
+    exists to prevent. So the shape is checked and the existence is not, and the
+    author learns the rest from the emission tool's `--check`.
+
+    Four malformed shapes and one good one, so the refusal is known to be about
+    the shape rather than about the call.
+    """
+    var good := "sha256:" + "0123456789abcdef".repeat(4)
+    check(PinFile.over(good, good).why_refused == "",
+            "a correctly shaped digest pair was refused")
+    for bad in [["", "empty"], ["deadbeef", "no `sha256:` prefix"],
+                ["sha256:abc", "too few hex digits"],
+                ["sha256:" + "A".repeat(64), "uppercase, which is not lowercase hex"]]:
+        var pf := PinFile.over(str(bad[0]), good)
+        check(pf.why_refused != "",
+                "a base_dressing that is %s was accepted" % str(bad[1]))
+        check(pf.why_refused.contains("base_dressing"),
+                "the refusal for %s does not name which digest was wrong: %s"
+                        % [str(bad[1]), pf.why_refused])
+        check(pf.to_document().is_empty(),
+                "a refused file still produced a document for %s" % str(bad[1]))
+
+
+func test_every_pin_kind_refuses_each_required_field_by_name() -> void:
+    """A MISSING FIELD IS NAMED, NEVER FILLED IN. A defaulted pin is an authored
+    claim nobody made, and it would reach the emission tool looking deliberate.
+
+    Each kind's required set is dropped one field at a time, so a kind whose
+    requirements drift away from §22.8.4's table fails here rather than at a
+    run somebody has to ask for.
+    """
+    var rows := {
+        "zone": {"polygon": [[0, 0]], "class": "residential", "from": 1900},
+        "feature": {"type": "church", "point": [0, 0], "from": 1900},
+        "route": {"class": "rail", "endpoints": [[0, 0], [1, 1]], "from": 1900},
+        "centre": {"point": [0, 0], "from": 1900},
+        "cap": {"polygon": [[0, 0]], "from": 1900},
+        "renew": {"polygon": [[0, 0]], "from": 1900},
+        "sink": {"type": "landfill", "point": [0, 0], "from": 1900,
+                "classes": ["residential"], "share": 0.5},
+    }
+    var good := "sha256:" + "c".repeat(64)
+    for kind in PinFile.KINDS:
+        for field in PinFile.REQUIRED[kind]:
+            var row: Dictionary = (rows[kind] as Dictionary).duplicate(true)
+            row["kind"] = kind
+            row["pin_id"] = "p-1"
+            row["authored_by"] = "owner"
+            row.erase(str(field))
+            var pf := PinFile.over(good, good)
+            check(not pf.add_pin(row),
+                    "kind %s was accepted without `%s`" % [str(kind), str(field)])
+            check(pf.why_refused.contains(str(field)),
+                    "kind %s refused for a missing `%s` without naming it: %s"
+                            % [str(kind), str(field), pf.why_refused])
