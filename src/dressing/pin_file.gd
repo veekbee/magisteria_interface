@@ -36,6 +36,20 @@ extends RefCounted
 ## -- nothing here promises byte-stability, and whitespace from here does not
 ## matter because the tool re-serialises.
 ##
+## A UI THAT LOADS A `pins.json` MUST NOT RE-EMIT LOADED COORDINATES FROM
+## GODOT DOUBLES. This class is safe for a pin the author CREATES here, whose
+## coordinates are computed doubles with no text in their history. It is NOT
+## safe for a pin read from a file: Godot's decimal-to-double conversion is not
+## correctly rounded (`tools/check_decimals.py`), so a coordinate loaded from
+## text is already one ulp off, and writing it back -- even unmoved -- silently
+## loses the author's value.
+##
+## **THE RULE IS THAT A PIN THE AUTHOR DID NOT MOVE KEEPS ITS SOURCE BYTES.**
+## Re-authoring an existing file is `tools/rewrite_pins.py`'s job, in Python,
+## because Python's parse and repr are correctly rounded both ways. G-8 ships no
+## UI that loads a file; whoever builds one meets this limit here, before they
+## meet the bug.
+##
 ## PROVENANCE IS ON EVERY PIN, AND §22.8.4'S TABLE UNDERSTATES THAT. The table
 ## names `authored_by` on `zone` and `feature` only; the section's prose says
 ## *provenance is on every pin*, and the emission tool refuses any pin without
@@ -65,6 +79,20 @@ const REQUIRED := {
     "renew": ["polygon", "from"],
     "sink": ["type", "point", "from", "classes", "share"],
 }
+
+## THE ONLY INT-TYPED FIELDS AT LOAD, confirmed against the loader rather than
+## inferred: `from` and `to`, and nothing else. Every other number -- the
+## coordinates, `max_density`, `max_storeys`, `share` -- loads through a numeric
+## check that accepts an int or a finite float, so converting it would rewrite
+## `share: 1.0` into `1` and whole-metre coordinates into integers for no reason
+## the loader gives.
+##
+## WHY THIS NEEDS SAYING AT ALL. Godot's JSON parse makes EVERY number a float,
+## so a year read from a rows file arrives as `1877.0` and is written back the
+## same way -- and the loader requires an int. Measured: `JSON.parse_string` on
+## `1877` yields TYPE_FLOAT. So a year that passed through a file needs putting
+## back, and only a year.
+const INT_FIELDS := ["from", "to"]
 
 ## The route classes §22.8.4 names. A route of another class is refused here.
 const ROUTE_CLASSES := ["rail", "road", "canal", "streetcar", "freeway"]
@@ -134,7 +162,14 @@ func add_pin(pin: Dictionary) -> bool:
     if why != "":
         why_refused = why
         return false
-    pins.append(pin.duplicate(true))
+    var row := pin.duplicate(true)
+    # PUT THE YEARS BACK TO INT. See INT_FIELDS: the parse floated them and the
+    # loader requires an int. Done on the way IN, so `pins` holds load-correct
+    # types and `to_document` stays a pure read.
+    for f in INT_FIELDS:
+        if row.has(f) and row[f] != null:
+            row[f] = int(row[f])
+    pins.append(row)
     return true
 
 
@@ -164,6 +199,19 @@ func _pin_problem(pin: Dictionary) -> String:
     for existing in pins:
         if str((existing as Dictionary).get("pin_id", "")) == str(id):
             return "pin %s: a pin with that `pin_id` is already here" % label
+    # A YEAR THAT IS NOT A WHOLE NUMBER IS REFUSED, NEVER TRUNCATED. Truncating
+    # would turn an author's mistake into a plausible pin dated a year they did
+    # not write, and the loader would accept it.
+    for f in INT_FIELDS:
+        if not pin.has(f) or pin[f] == null:
+            continue
+        var v = pin[f]
+        if typeof(v) != TYPE_INT and typeof(v) != TYPE_FLOAT:
+            return "pin %s: `%s` is %s, which is not a number" % [
+                    label, str(f), JSON.stringify(v)]
+        if typeof(v) == TYPE_FLOAT and float(v) != floor(float(v)):
+            return "pin %s: `%s` is %s, which is not a whole year" % [
+                    label, str(f), String.num(float(v), 6)]
     return ""
 
 
@@ -187,4 +235,16 @@ func to_document() -> Dictionary:
 
 func to_json() -> String:
     var doc := to_document()
-    return "" if doc.is_empty() else JSON.stringify(doc, " ", false) + "\n"
+    # `full_precision` IS LOAD-BEARING AND MEASURED. Without it a float64 is
+    # written at ~15 significant digits and does NOT parse back to the same
+    # double: a pin silently moves by ~1e-8 m, which no check here can see and
+    # which a bitwise round trip cannot survive. With it, measured in this
+    # engine, the value round-trips exactly.
+    #
+    # IT DOES NOT GIVE THE SAME BYTES AS ANOTHER WRITER. This engine emits
+    # `-1689313.6678021683` where the committed placeholder has
+    # `-1689313.6678021685` -- the same double, a different repr, because this
+    # is not the shortest round-tripping form. **So never claim byte-equality
+    # with a file another writer produced; claim value fidelity, which is what
+    # the generator reads.**
+    return "" if doc.is_empty() else JSON.stringify(doc, " ", false, true) + "\n"

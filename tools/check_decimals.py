@@ -6,7 +6,32 @@ THE DEFECT THIS EXISTS FOR. Godot's decimal-to-double conversion is not
 correctly rounded, and the error is not a uniform ulp. Measured in this engine
 (4.7.2), a plain-decimal literal is exact through seventeen digits after the
 point and degrades from the eighteenth, monotonically, reaching **35%** by
-1e-17. Subnormals do not survive at all: every subnormal decimal -- `1e-310` as
+1e-17.
+
+**[COUNTEREXAMPLE, MEASURED 2026-11-08: "EXACT THROUGH SEVENTEEN DIGITS AFTER
+THE POINT" IS FALSE AT LARGE MAGNITUDES, AND THE CLAIM ABOVE WAS MEASURED ONLY
+NEAR 1e-17.]** Its own examples sit around 1e-17; nothing in it was taken at
+basin scale. At EPSG:5070 magnitudes a value with TEN digits after the point is
+already wrong:
+
+    -1689313.6678021685   ->  3915f5aae1c639c1   ONE ULP LOW
+                              (3a15f5aae1c639c1 is the correct double)
+     1328912.2044408391   ->  1e3c563410473441   correct
+
+Both are real coordinates of one committed polygon. **The error is
+value-dependent, not magnitude-monotonic**: the same engine, the same call, two
+coordinates from the same ring, one wrong and one right. So a witness value
+cannot be chosen for convenience -- a check witnessed on the second coordinate
+alone passes while the first is silently displaced, which is how this survived
+until an external byte comparison was run against it.
+
+AND ALL THREE TEXT-TO-DOUBLE PATHS FAIL IDENTICALLY on it: `JSON.parse_string`,
+the GDScript compiler's own float literal, and `String.to_float`. That is
+consistent with this file's own note that the fault is "in the source lexer and
+the JSON parser alike". The WRITER is sound -- given the correct double,
+`JSON.stringify(..., full_precision=true)` emits `-1689313.6678021685` exactly.
+**The scientific-notation claim below is UNMEASURED at this magnitude; do not
+lean on it for coordinates.** Subnormals do not survive at all: every subnormal decimal -- `1e-310` as
 readily as `5e-324` -- parses to exactly zero, in the source lexer and the JSON
 parser alike.
 

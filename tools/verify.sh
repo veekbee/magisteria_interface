@@ -32,6 +32,15 @@ echo "== contract pin =="
 python3 tools/check_contract.py --selftest || fail=1
 python3 tools/check_contract.py || fail=1
 
+echo "== the explorer's file path (G-8) =="
+# THE PYTHON HALF IS GATED, NOT MERELY PRESENT. `rewrite_pins.py` exists because
+# no value may reach a Godot float parse: at EPSG:5070 magnitudes a coordinate
+# parses one ulp low in all three of this engine's text-to-double paths. Its
+# selftest witnesses the coordinate the engine gets WRONG, with the one it gets
+# right as the control -- a selftest on the control alone would pass while the
+# case was displaced.
+python3 tools/rewrite_pins.py --selftest || fail=1
+
 echo "== transport (decision 948/972) =="
 python3 tools/fetch_artefacts.py --selftest || fail=1
 # AND THEN ACTUALLY FETCH, which is the step whose absence made CI red for

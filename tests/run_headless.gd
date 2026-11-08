@@ -80,6 +80,8 @@ func _initialize() -> void:
     _run(test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control, "test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control")
     _run(test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name, "test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name")
     _run(test_every_pin_kind_refuses_each_required_field_by_name, "test_every_pin_kind_refuses_each_required_field_by_name")
+    _run(test_a_year_survives_the_file_as_an_integer_and_a_fractional_one_is_refused, "test_a_year_survives_the_file_as_an_integer_and_a_fractional_one_is_refused")
+    _run(test_a_float64_coordinate_survives_the_emission_bit_for_bit, "test_a_float64_coordinate_survives_the_emission_bit_for_bit")
     _run(test_the_audits_isolated_ortho_shots_all_black_the_backdrop, "test_the_audits_isolated_ortho_shots_all_black_the_backdrop")
     _run(test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile, "test_the_unmet_read_names_the_cells_that_cannot_fail_and_its_misses_reconcile")
     _run(test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare, "test_the_published_fit_excludes_by_the_ceiling_the_rows_actually_declare")
@@ -14954,3 +14956,104 @@ func test_every_pin_kind_refuses_each_required_field_by_name() -> void:
             check(pf.why_refused.contains(str(field)),
                     "kind %s refused for a missing `%s` without naming it: %s"
                             % [str(kind), str(field), pf.why_refused])
+
+
+func test_a_year_survives_the_file_as_an_integer_and_a_fractional_one_is_refused() -> void:
+    """GODOT'S JSON PARSE MAKES EVERY NUMBER A FLOAT, AND THE LOADER REQUIRES AN
+    INT. Measured in this engine: `JSON.parse_string('{"from": 1877}')` yields
+    TYPE_FLOAT, and stringify writes it back `1877.0`. magisteria's loader
+    checks `isinstance(y0, int)`, so a year that passed through a file is
+    refused -- and it is reported there as a RANGE failure, *1877.0 lies outside
+    the arc [1877, 2040]*, which names the wrong thing and cost a `--check`
+    round to diagnose.
+
+    FOUND BY THE EMISSION TOOL AND NOT BY ANYTHING HERE, because every check in
+    `PinFile` asks whether a field is PRESENT and this is about whether its
+    VALUE SURVIVES. That is the distinction the whole class of defect lives in.
+
+    ONLY `from` AND `to` ARE CONVERTED, confirmed against the loader: every
+    other number loads through a check accepting an int or a finite float, so
+    converting them would rewrite `share: 1.0` into `1`.
+
+    AND A FRACTIONAL YEAR IS REFUSED, NOT TRUNCATED -- with its control, because
+    a refusal that fires on every year would pass this test while breaking the
+    tool.
+    """
+    var good := "sha256:" + "e".repeat(64)
+    # The year as a file gives it: a float carrying a whole number.
+    var parsed = JSON.parse_string('{"pin_id":"y1","kind":"centre","point":[0,0],'
+            + '"from":1877,"to":1900,"authored_by":"owner"}')
+    check(typeof((parsed as Dictionary)["from"]) == TYPE_FLOAT,
+            "this engine's JSON parse no longer floats an integer, so the conversion below "
+                    + "may be solving a problem that has gone away")
+    var pf := PinFile.over(good, good)
+    check(pf.add_pin(parsed as Dictionary),
+            "a well-formed centre pin from a parsed file was refused: %s" % pf.why_refused)
+    if pf.pins.is_empty():
+        return
+    var stored: Dictionary = pf.pins[0]
+    check(typeof(stored["from"]) == TYPE_INT,
+            "`from` is stored as %s, not an int, so the emitted file will carry `1877.0` and "
+                    % str(typeof(stored["from"])) + "the loader will refuse it")
+    check(typeof(stored["to"]) == TYPE_INT, "`to` is not stored as an int")
+    var text := pf.to_json()
+    check(text.contains("\"from\": 1877") or text.contains("\"from\":1877"),
+            "the emitted text does not carry `from` as an integer: %s" % text.substr(0, 200))
+    check(not text.contains("1877.0"), "the emitted text still carries `1877.0`")
+
+    # A FRACTIONAL YEAR IS REFUSED. The control is the same pin with a whole
+    # year, accepted just above -- so this refusal is known to be about the
+    # fraction and not about the row.
+    var frac: Dictionary = (parsed as Dictionary).duplicate(true)
+    frac["from"] = 1877.5
+    var pf2 := PinFile.over(good, good)
+    check(not pf2.add_pin(frac), "a `from` of 1877.5 was accepted")
+    check(pf2.why_refused.contains("whole year"),
+            "a fractional year was refused without saying why: %s" % pf2.why_refused)
+
+
+func test_a_float64_coordinate_survives_the_emission_bit_for_bit() -> void:
+    """THE REFERENCE IS EXTERNAL BYTES, NEVER A GODOT ROUND TRIP.
+
+    A `parse -> stringify -> parse` test inside this engine CANNOT see this
+    defect, because the value it compares against comes from the parser under
+    question. The first version of this test did exactly that and reported
+    success on a one-ulp error. So the doubles here are built from the bit
+    patterns Python produced, through `hex_decode().to_float64_array()`, and
+    never from a GDScript literal -- **a literal carries the same defect**:
+    measured, `-1689313.6678021685` compiles to 3915f5aae1c639c1, one ulp below
+    the correct 3a15f5aae1c639c1.
+
+    THE CASE IS THE COORDINATE THIS ENGINE GETS WRONG AND THE CONTROL IS THE ONE
+    IT GETS RIGHT. Both are real coordinates of one committed polygon. A test
+    witnessed on the control alone passes while the case is displaced, which is
+    how this survived four probe rounds.
+
+    WHAT IS ASSERTED IS THE WRITER, which is the half that is sound: given the
+    correct double, `full_precision` emits the correct shortest repr. The READER
+    is defective and no value reaches it on the explorer's path -- the file path
+    is `tools/rewrite_pins.py`, in Python, for that reason.
+    """
+    var a := "3a15f5aae1c639c1".hex_decode().to_float64_array()[0]
+    var b := "1e3c563410473441".hex_decode().to_float64_array()[0]
+    # The bytes must survive the trip into a double and back, or the references
+    # themselves are wrong and nothing below means anything.
+    check(PackedFloat64Array([a]).to_byte_array().hex_encode() == "3a15f5aae1c639c1",
+            "the reference double for coordinate A does not rebuild from its bytes")
+    check(PackedFloat64Array([b]).to_byte_array().hex_encode() == "1e3c563410473441",
+            "the reference double for coordinate B does not rebuild from its bytes")
+
+    var good := "sha256:" + "f".repeat(64)
+    var pf := PinFile.over(good, good)
+    check(pf.add_pin({"pin_id": "c1", "kind": "feature", "type": "rail_yard",
+            "from": 1877, "authored_by": "owner", "polygon": [[a, b]]}),
+            "the coordinate witness pin was refused: %s" % pf.why_refused)
+    var text := pf.to_json()
+    # THE ASSERTION IS ON THE EMITTED TEXT, not on a re-parse of it. Re-parsing
+    # would hand the comparison back to the broken reader.
+    check(text.contains("-1689313.6678021685"),
+            "the writer did not emit coordinate A's correct shortest repr; the text has: %s"
+                    % text.substr(text.find("polygon"), 90))
+    check(text.contains("1328912.2044408391"),
+            "the writer did not emit coordinate B's correct repr, so the check above is not "
+                    + "measuring precision")
