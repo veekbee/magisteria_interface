@@ -171,6 +171,7 @@
     "test_the_shipped_scatter_encoding_is_pinned_and_declares_it_is_against_decision_1111": 8,
     "test_the_skin_keys_on_precision_and_dies_with_the_token": 128,
     "test_the_solved_horizon_discriminates_rather_than_returning_its_ceiling": 17,
+    "test_the_stamp_is_the_plan_digest_and_the_old_name_is_emitted_nowhere": 7,
     "test_the_state_axis_is_read_from_the_key_that_names_it_and_never_from_the_code_one": 9,
     "test_the_strata_are_the_membership_functions_on_real_ground": 71,
     "test_the_structure_function_refuses_below_the_spacing_it_declares": 17,

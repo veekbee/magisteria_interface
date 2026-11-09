@@ -77,6 +77,7 @@ func _initialize() -> void:
     _run(test_the_aspect_envelope_refuses_when_no_crown_satisfies_both_the_envelope_and_the_range, "test_the_aspect_envelope_refuses_when_no_crown_satisfies_both_the_envelope_and_the_range")
     _run(test_the_saturation_artefact_carries_the_model_it_is_only_true_under, "test_the_saturation_artefact_carries_the_model_it_is_only_true_under")
     _run(test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits, "test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits")
+    _run(test_the_stamp_is_the_plan_digest_and_the_old_name_is_emitted_nowhere, "test_the_stamp_is_the_plan_digest_and_the_old_name_is_emitted_nowhere")
     _run(test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control, "test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control")
     _run(test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name, "test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name")
     _run(test_every_pin_kind_refuses_each_required_field_by_name, "test_every_pin_kind_refuses_each_required_field_by_name")
@@ -14827,6 +14828,14 @@ func test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits() 
     tool strips any it is given and writes its own, so a value from here would
     not survive and the placed file is always attributed to the tool. Emitting
     one would be writing a provenance claim that gets overwritten.
+
+    THIS CHECK CANNOT WITNESS A RENAME OF A KEY, AND DID NOT WITNESS THE
+    STAMP'S. It draws `want` from `PinFile.TOP_KEYS` -- the very constant a
+    rename edits -- so both sides move together and it stays green whatever the
+    key is called. That is right for what it is for (drift between the two
+    halves of the format) and useless for what it looks like it covers. The
+    stamp's own name is pinned to a LITERAL in
+    `test_the_stamp_is_the_plan_digest_and_the_old_name_is_emitted_nowhere`.
     """
     var pf := PinFile.over("sha256:" + "a".repeat(64), "sha256:" + "b".repeat(64))
     check(pf.why_refused == "", "a well-shaped pair was refused: %s" % pf.why_refused)
@@ -14843,6 +14852,53 @@ func test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits() 
     check(not doc.has("authored_by"),
             "the explorer emits a FILE-LEVEL `authored_by`; the format has no such key and "
                     + "the tool refuses it by name -- provenance is per pin")
+
+
+func test_the_stamp_is_the_plan_digest_and_the_old_name_is_emitted_nowhere() -> void:
+    """EVERY REFERENCE HERE IS A LITERAL, BECAUSE THE CONSTANT IS THE THING
+    UNDER TEST.
+
+    Decision 2128 (ii) renamed the pin file's schedule stamp from
+    `schedule_content_digest` to `schedule_plan_digest`, and magisteria's
+    emission tool now REFUSES the old name on an emitted file rather than
+    reading it as a synonym. So the client's job is to emit the new name and
+    the old name nowhere.
+
+    A KEY-SET CHECK AGAINST `PinFile.TOP_KEYS` CANNOT TEST THAT. Rename the
+    constant and the check's own expectation renames with it -- a control that
+    cannot fail for the change it appears to cover. That is the same shape as
+    the precision probe that compared a parse against the parser under
+    question and reported TRUE on a one-ulp error. Both names below are
+    therefore spelled out as strings and never read from the class.
+
+    AND THE ASSERTION IS ON THE EMITTED BYTES, NOT ONLY THE KEY SET. The old
+    name could survive in `what`, `form` or `ruled_by` -- prose the tool does
+    not parse but a reader does -- and a key check would see nothing. The
+    emitted text is where the old name has to be absent.
+    """
+    var pf := PinFile.over("sha256:" + "a".repeat(64), "sha256:" + "b".repeat(64))
+    check(pf.why_refused == "", "a well-shaped pair was refused: %s" % pf.why_refused)
+    var doc := pf.to_document()
+    check(doc.has("schedule_plan_digest"),
+            "the explorer does not emit `schedule_plan_digest`, the stamp decision 2128 (ii) "
+                    + "names; keys are %s" % str(doc.keys()))
+    check(not doc.has("schedule_content_digest"),
+            "the explorer still emits `schedule_content_digest`, which the emission tool "
+                    + "refuses BY NAME (decision 2128 (ii), §25 backlog 726)")
+    check(str(doc.get("schedule_plan_digest", "")) == "sha256:" + "b".repeat(64),
+            "the stamp the author passed is not the stamp emitted: the explorer must copy it "
+                    + "unchanged, deriving nothing")
+    var text := pf.to_json()
+    check(not text.contains("schedule_content_digest"),
+            "the old stamp name survives somewhere in the emitted BYTES -- a key check would "
+                    + "not see it in `what`, `form` or `ruled_by`")
+    check(text.contains("schedule_plan_digest"),
+            "the emitted bytes carry no `schedule_plan_digest`")
+    # `ruled_by` must lead a reader to the rule for every key in the file, and
+    # the stamp's key is 2128's, not 2075's.
+    check(str(doc.get("ruled_by", "")).contains("2128"),
+            "`ruled_by` is %s: it cites no rule for the stamp's own field"
+                    % str(doc.get("ruled_by", "")))
 
 
 func test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control() -> void:

@@ -59,8 +59,20 @@ extends RefCounted
 
 ## The format's whole top-level set, from the emission tool's own `TOP_KEYS`.
 ## `generated_by` is in the tool's set and is NOT written here, per above.
+##
+## THE STAMP IS `schedule_plan_digest`, RENAMED FROM `schedule_content_digest`
+## BY DECISION 2128 (ii) (§25 backlog 726). The old name is not a synonym the
+## tool tolerates: it is REFUSED BY NAME on an emitted file. The two digests
+## answer different questions -- the content digest names the schedule's
+## REVISION, and it moved on 20 of that file's 35 committed transitions while
+## the events stayed byte-identical; worse, a placed pin file moved it ITSELF
+## through the register row that records the placement, so it could never name
+## the plan a pin was authored against. `plan_digest` is taken over the
+## schedule's `master_seed` and `events` alone, which is what a dressing
+## actually reads, so it holds still when a register byte the schedule never
+## reads moves.
 const TOP_KEYS := ["what", "form", "ruled_by", "base_dressing",
-        "schedule_content_digest", "pins"]
+        "schedule_plan_digest", "pins"]
 
 ## §22.8.4's seven kinds. A kind this class does not know is refused by name
 ## rather than passed through: an unknown kind reaching the tool would be
@@ -102,7 +114,7 @@ const SINK_TYPES := ["landfill", "incinerator", "outfall", "sewage_works",
         "impoundment"]
 
 var base_dressing: String = ""
-var schedule_content_digest: String = ""
+var schedule_plan_digest: String = ""
 var pins: Array = []
 ## Non-empty means REFUSED. Read it before using the file; nothing here throws.
 var why_refused: String = ""
@@ -113,20 +125,22 @@ var why_refused: String = ""
 ## BOTH DIGESTS ARE THE CALLER'S AND ARE COPIED UNCHANGED. `base_dressing` is
 ## the sha256 of a committed `data/dressing/*/manifest.json`'s OWN BYTES at the
 ## magisteria HEAD -- not any value stored inside the manifest, which is a
-## different number. `schedule_content_digest` is the schedule's stamp as the
-## author was given it; **nothing here derives it**, because deriving it would
-## put a second copy of a register value in this repo.
+## different number. `schedule_plan_digest` is the schedule's `plan_digest` as
+## the author was given it; **nothing here derives it**, because deriving it
+## would put a second copy of a register value in this repo -- and the plan
+## digest in particular is derived from the schedule's `master_seed` and
+## `events`, neither of which this repo holds.
 ##
 ## ONLY THEIR SHAPE IS CHECKED, `sha256:` and 64 hex digits, which is the same
 ## check the tool's own `form_problems` runs. Whether either names anything real
 ## is the tool's refusal and cannot be made here.
-static func over(base_dressing: String, schedule_content_digest: String) -> PinFile:
+static func over(base_dressing: String, schedule_plan_digest: String) -> PinFile:
     var pf := PinFile.new()
     pf.base_dressing = base_dressing
-    pf.schedule_content_digest = schedule_content_digest
+    pf.schedule_plan_digest = schedule_plan_digest
     var bad := PackedStringArray()
     for pair in [["base_dressing", base_dressing],
-                 ["schedule_content_digest", schedule_content_digest]]:
+                 ["schedule_plan_digest", schedule_plan_digest]]:
         var why := _digest_shape_problem(str(pair[1]))
         if why != "":
             bad.append("%s %s" % [str(pair[0]), why])
@@ -226,9 +240,9 @@ func to_document() -> Dictionary:
         "what": ("pin rows authored over a committed dressing, in §22.8.4's form"
                 + " -- placed by magisteria's emission tool (§25 backlog 690)"),
         "form": "§22.8.4 pins; the explorer's emission format is §22.8.9 (decision 2075)",
-        "ruled_by": "decision 2075",
+        "ruled_by": "decision 2075; decision 2128 (ii)",
         "base_dressing": base_dressing,
-        "schedule_content_digest": schedule_content_digest,
+        "schedule_plan_digest": schedule_plan_digest,
         "pins": pins.duplicate(true),
     }
 

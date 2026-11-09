@@ -26,7 +26,7 @@ round-tripping form.
 
 Usage:
     python3 tools/rewrite_pins.py --rows <pins.json> --out <out.json> \
-        --base-dressing sha256:<hex> --schedule-digest sha256:<hex>
+        --base-dressing sha256:<hex> --schedule-plan-digest sha256:<hex>
     python3 tools/rewrite_pins.py --selftest
 """
 from __future__ import annotations
@@ -39,8 +39,13 @@ import sys
 #: Exactly the top-level set the emission tool admits, less `generated_by`,
 #: which the tool strips and rewrites -- so emitting one here would be a
 #: provenance claim that cannot survive.
+#:
+#: The stamp was renamed from `schedule_content_digest` by decision 2128 (ii)
+#: (§25 backlog 726); the old name is REFUSED BY NAME on an emitted file, not
+#: accepted as a synonym. See `src/dressing/pin_file.gd` for why the two
+#: digests cannot stand in for each other.
 TOP_KEYS = ("what", "form", "ruled_by", "base_dressing",
-            "schedule_content_digest", "pins")
+            "schedule_plan_digest", "pins")
 
 #: The only int-typed fields at load, confirmed against the loader rather than
 #: inferred. Every other number loads through a check accepting an int or a
@@ -99,7 +104,7 @@ def _dump(doc) -> str:
     return text + "\n"
 
 
-def rewrite(rows_path: str, base_dressing: str, schedule_digest: str) -> str:
+def rewrite(rows_path: str, base_dressing: str, schedule_plan_digest: str) -> str:
     with open(rows_path, encoding="utf-8") as f:
         # `parse_float=_Raw` is the whole mechanism: a coordinate is never a
         # float in this process, so it cannot be rounded by one.
@@ -119,11 +124,53 @@ def rewrite(rows_path: str, base_dressing: str, schedule_digest: str) -> str:
         "what": ("pin rows re-authored over a committed dressing, in §22.8.4's form"
                  " -- placed by magisteria's emission tool (§25 backlog 690)"),
         "form": "§22.8.4 pins; the explorer's emission format is §22.8.9 (decision 2075)",
-        "ruled_by": "decision 2075",
+        "ruled_by": "decision 2075; decision 2128 (ii)",
         "base_dressing": base_dressing,
-        "schedule_content_digest": schedule_digest,
+        "schedule_plan_digest": schedule_plan_digest,
         "pins": out,
     })
+
+
+def _flag_refusal_problems() -> list:
+    """THE OLD FLAG'S REFUSAL, EXERCISED -- WITH A CONTROL THAT SEPARATES IT
+    FROM THE ORDINARY MISSING-ARGUMENT ERROR.
+
+    Both exit 2, so the exit code alone cannot tell the rename refusal from
+    `--schedule-plan-digest is required`. The MESSAGE is the witness, so the
+    control runs the same call without the old flag and requires that the
+    rename text is NOT printed. Without that control this would pass on any
+    refusal at all, which is the defect class it is here to avoid.
+    """
+    import contextlib
+
+    def run(argv):
+        import io as _io
+        keep = sys.argv
+        err = _io.StringIO()
+        sys.argv = argv
+        try:
+            with contextlib.redirect_stderr(err):
+                rc = main()
+        finally:
+            sys.argv = keep
+        return rc, err.getvalue()
+
+    base = ["rewrite_pins.py", "--rows", "nonexistent.json", "--out", "nowhere.json",
+            "--base-dressing", "sha256:" + "a" * 64]
+    out = []
+    rc, err = run(base + ["--schedule-digest", "sha256:" + "b" * 64])
+    if rc != 2:
+        out.append("the old flag --schedule-digest returned %r, not 2" % rc)
+    if "--schedule-plan-digest" not in err or "2128" not in err:
+        out.append("the old flag's refusal does not name the new flag and its ruling: %r" % err)
+    # THE CONTROL: no old flag, and the rename text must not appear. This is
+    # what makes the assertion above mean what it says.
+    rc_c, err_c = run(base)
+    if "plan_digest (decision 2128)" in err_c:
+        out.append("the rename refusal fires when the old flag was never passed: %r" % err_c)
+    if rc_c != 2:
+        out.append("a missing required flag returned %r, not 2" % rc_c)
+    return out
 
 
 def selftest() -> int:
@@ -150,6 +197,26 @@ def selftest() -> int:
     bad = []
     if sorted(doc) != sorted(TOP_KEYS):
         bad.append("top-level keys are %s, not %s" % (sorted(doc), sorted(TOP_KEYS)))
+    # THE STAMP'S NAME, PINNED TO LITERALS -- the check above cannot witness a
+    # rename, because it draws its expectation from `TOP_KEYS`, the constant a
+    # rename edits. Both sides move together and it stays green whatever the
+    # key is called. Decision 2128 (ii) renamed the stamp and the emission tool
+    # refuses the old name BY NAME, so the name itself is spelled out here.
+    # The assertion is on the emitted TEXT, not the parsed keys: the old name
+    # could survive in `what`, `form` or `ruled_by`, prose a key check cannot
+    # see.
+    if "schedule_content_digest" in text:
+        bad.append("the old stamp name `schedule_content_digest` survives in the emitted "
+                   "bytes; the emission tool refuses it by name (decision 2128 (ii))")
+    if '"schedule_plan_digest"' not in text:
+        bad.append("the emitted bytes carry no `schedule_plan_digest` key")
+    if doc.get("schedule_plan_digest") != "sha256:" + "b" * 64:
+        bad.append("the stamp passed in is not the stamp emitted (%r): it is copied "
+                   "unchanged and derived nowhere" % doc.get("schedule_plan_digest"))
+    if "2128" not in str(doc.get("ruled_by")):
+        bad.append("`ruled_by` is %r: it cites no rule for the stamp's own field"
+                   % doc.get("ruled_by"))
+    bad += _flag_refusal_problems()
     pin = doc["pins"][0]
     got_a, got_b = pin["polygon"][0]
     for label, got, want, ref in (("A", got_a, want_a, a), ("B", got_b, want_b, b)):
@@ -178,17 +245,27 @@ def main() -> int:
     ap.add_argument("--rows")
     ap.add_argument("--out")
     ap.add_argument("--base-dressing")
+    ap.add_argument("--schedule-plan-digest")
+    # THE OLD SPELLING REFUSES AND NAMES THE NEW ONE RATHER THAN ALIASING IT.
+    # An alias would accept a *content* digest without comment and defer the
+    # refusal to the emission tool's `--check` -- a run the author has to ask
+    # for on a shared machine. The stamp's meaning changed with its name, so a
+    # silent synonym would be wrong even where the value happened to be right.
     ap.add_argument("--schedule-digest")
     ap.add_argument("--selftest", action="store_true")
     a = ap.parse_args()
     if a.selftest:
         return selftest()
-    for need in ("rows", "out", "base_dressing", "schedule_digest"):
+    if a.schedule_digest is not None:
+        print("rewrite_pins: use --schedule-plan-digest: the stamp is the schedule's "
+              "plan_digest (decision 2128)", file=sys.stderr)
+        return 2
+    for need in ("rows", "out", "base_dressing", "schedule_plan_digest"):
         if getattr(a, need) is None:
             print("rewrite_pins: --%s is required; nothing is defaulted"
                   % need.replace("_", "-"), file=sys.stderr)
             return 2
-    text = rewrite(a.rows, a.base_dressing, a.schedule_digest)
+    text = rewrite(a.rows, a.base_dressing, a.schedule_plan_digest)
     with open(a.out, "w", encoding="utf-8") as f:
         f.write(text)
     print("rewrite_pins: %d pin(s) -> %s" % (len(json.loads(text)["pins"]), a.out))

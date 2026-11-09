@@ -7,7 +7,7 @@ extends SceneTree
 ## `PinFile`, and writes it. It validates FORM only.
 ##
 ##   godot --headless --script res://tools/write_pins.gd -- \
-##       --base-dressing sha256:<64 hex> --schedule-digest sha256:<64 hex> \
+##       --base-dressing sha256:<64 hex> --schedule-plan-digest sha256:<64 hex> \
 ##       --rows <path to a json array of pin rows> --out <path>
 ##
 ## WHAT IT CANNOT TELL YOU, AND IT SAYS SO ON EVERY SUCCESSFUL WRITE. Whether
@@ -34,7 +34,18 @@ func _init() -> void:
             i += 2
         else:
             i += 1
-    for need in ["base-dressing", "schedule-digest", "rows", "out"]:
+    # THE OLD FLAG REFUSES AND NAMES THE NEW ONE. Checked BEFORE the required
+    # list, so an author who passes the old spelling is told what to pass
+    # instead rather than told that the new flag is missing -- which is true
+    # but says nothing about the rename. The stamp's meaning changed with its
+    # name (decision 2128 (ii)), so an alias would be wrong even where the
+    # value happened to be right.
+    if opt.has("schedule-digest"):
+        printerr("write_pins: use --schedule-plan-digest: the stamp is the schedule's "
+                + "plan_digest (decision 2128)")
+        quit(2)
+        return
+    for need in ["base-dressing", "schedule-plan-digest", "rows", "out"]:
         if not opt.has(need):
             printerr("write_pins: --%s is required; nothing is defaulted" % need)
             quit(2)
@@ -51,7 +62,7 @@ func _init() -> void:
         quit(2)
         return
 
-    var pf := PinFile.over(str(opt["base-dressing"]), str(opt["schedule-digest"]))
+    var pf := PinFile.over(str(opt["base-dressing"]), str(opt["schedule-plan-digest"]))
     if pf.why_refused != "":
         printerr("write_pins: %s" % pf.why_refused)
         quit(1)
