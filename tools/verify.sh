@@ -41,6 +41,49 @@ echo "== the explorer's file path (G-8) =="
 # case was displaced.
 python3 tools/rewrite_pins.py --selftest || fail=1
 
+echo "== the pin run's verdict (W2) =="
+# THE RE-PIN USED TO BE GREEN BY CONSTRUCTION. `run_headless.gd:_finish()` wrote
+# the pin and quit 0 under `--pin-counts` before reaching its failure block, so a
+# re-pin over a red suite exited 0, printed no `FAIL:` line, and had already
+# written the broken counts as the new baseline -- the declaration-by-diff
+# mechanism recording the damage as its own expectation.
+#
+# BOTH DIRECTIONS ARE ASSERTED, because one of them is not a control: a fix that
+# refused to write unconditionally would pass a failure-only check while breaking
+# re-pinning entirely. So a planted failure must refuse and exit non-zero, AND a
+# clean run must still write.
+#
+# The two runs skip the suite (that is what the control flags do), so this costs
+# about a second rather than two eight-minute runs. The clean run necessarily
+# overwrites tests/check_counts.json with a near-empty pin, so it is backed up
+# and restored, and the restore is itself asserted. If this script is killed
+# between the two, `git checkout tests/check_counts.json` puts it back.
+cp tests/check_counts.json /tmp/check_counts.backup.json
+before=$(shasum -a 256 tests/check_counts.json | awk '{print $1}')
+"$GODOT" --headless --script res://tests/run_headless.gd -- --pin-counts --control-plant-failure \
+  > /tmp/pin_verdict_fail.log 2>&1
+rc_fail=$?
+after_fail=$(shasum -a 256 tests/check_counts.json | awk '{print $1}')
+"$GODOT" --headless --script res://tests/run_headless.gd -- --pin-counts --control-no-failure \
+  > /tmp/pin_verdict_pass.log 2>&1
+rc_pass=$?
+after_pass=$(shasum -a 256 tests/check_counts.json | awk '{print $1}')
+cp /tmp/check_counts.backup.json tests/check_counts.json
+restored=$(shasum -a 256 tests/check_counts.json | awk '{print $1}')
+probs=""
+[ "$rc_fail" -eq 0 ] && probs="$probs exited-0-over-a-failure"
+grep -q "^FAIL: the planted control failure" /tmp/pin_verdict_fail.log \
+  || probs="$probs did-not-name-the-failing-check"
+[ "$before" != "$after_fail" ] && probs="$probs WROTE-THE-PIN-OVER-A-FAILURE"
+[ "$rc_pass" -ne 0 ] && probs="$probs refused-a-clean-repin"
+[ "$before" = "$after_pass" ] && probs="$probs did-not-write-when-clean"
+[ "$before" != "$restored" ] && probs="$probs DID-NOT-RESTORE-THE-PIN"
+if [ -n "$probs" ]; then
+  echo "-- the pin run's verdict does not hold:$probs"; fail=1
+else
+  echo "ok -- a failure refuses the write and exits non-zero, naming the check; a clean run writes"
+fi
+
 echo "== transport (decision 948/972) =="
 python3 tools/fetch_artefacts.py --selftest || fail=1
 # AND THEN ACTUALLY FETCH, which is the step whose absence made CI red for

@@ -9,6 +9,20 @@ extends SceneTree
 ## file can say that a fixture cannot -- that conditional presence actually
 ## occurs in it, and that the shipped contract loads clean.
 
+## THE TWO CONTROL FLAGS FOR THE `--pin-counts` VERDICT, AND WHY THEY SKIP THE
+## SUITE. The clause being proved is that a re-pin over a failing suite refuses
+## to write. Proving it needs a failing suite, and running 7,500 checks to
+## produce one failure would put eight minutes into the gate twice over. These
+## skip the suite instead: the decision under test is `_finish`'s, and it is the
+## same decision whether 7,547 checks ran or none did.
+##
+## BOTH DIRECTIONS EXIST BECAUSE ONE WOULD NOT BE A CONTROL. A fix that refused
+## to write the pin UNCONDITIONALLY would pass a failure-only check while
+## breaking re-pinning entirely, so `--control-no-failure` asserts the write
+## still happens. Neither flag is for anybody's use but the gate's.
+const CONTROL_FAIL := "--control-plant-failure"
+const CONTROL_PASS := "--control-no-failure"
+
 var _failures: Array[String] = []
 var _checks: int = 0
 var _scene_root: Node = null
@@ -29,6 +43,16 @@ const WINDOW_MIN_H := 800
 
 
 func _initialize() -> void:
+    var args := OS.get_cmdline_user_args()
+    if CONTROL_FAIL in args or CONTROL_PASS in args:
+        if CONTROL_FAIL in args:
+            _current_test = "test_the_planted_control_failure"
+            check(false, "the planted control failure: this check exists to fail, so that the "
+                    + "pin run's refusal to write over it can be witnessed")
+            _per_test[_current_test] = 1
+            _current_test = ""
+        _finish()
+        return
     say_if_the_fixture_is_absent()
     _run(test_real_artefact_loads_clean, "test_real_artefact_loads_clean")
     _run(test_conditional_fields_are_presence_not_empty_string, "test_conditional_fields_are_presence_not_empty_string")
@@ -362,6 +386,27 @@ func _write_check_counts() -> void:
 func _finish() -> void:
     print("")
     if "--pin-counts" in OS.get_cmdline_user_args():
+        # THIS PATH USED TO WRITE THE PIN AND `quit(0)` UNCONDITIONALLY, which
+        # made it green by construction -- a control that cannot fail, in the
+        # tool built to catch exactly that. Two things followed. Its exit code
+        # proved nothing, passing suite or failing. And a re-pin over a RED
+        # suite exited 0, printed no `FAIL:` line at all (the loop below sits
+        # after the early return), and had ALREADY WRITTEN the pin: the broken
+        # counts became the new expectation, and the declaration-by-diff
+        # mechanism recorded the damage as its own baseline.
+        #
+        # A FALL IS STILL NOT A REASON TO REFUSE. Re-pinning is how an intended
+        # fall gets declared, so `_fallen_checks` deliberately does not gate
+        # here; only a real failure does.
+        if not _failures.is_empty():
+            for f in _failures:
+                printerr("FAIL: %s" % f)
+            printerr(("%d of %d checks failed, so tests/check_counts.json was NOT written. "
+                    % [_failures.size(), _checks])
+                    + "Re-pinning over a failing suite would record the damage as the "
+                    + "baseline. Fix the failures, then re-pin.")
+            quit(1)
+            return
         _write_check_counts()
         quit(0)
         return
