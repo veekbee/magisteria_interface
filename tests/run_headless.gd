@@ -102,6 +102,11 @@ func _initialize() -> void:
     _run(test_the_saturation_artefact_carries_the_model_it_is_only_true_under, "test_the_saturation_artefact_carries_the_model_it_is_only_true_under")
     _run(test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits, "test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits")
     _run(test_the_stamp_is_the_plan_digest_and_the_old_name_is_emitted_nowhere, "test_the_stamp_is_the_plan_digest_and_the_old_name_is_emitted_nowhere")
+    _run(test_the_clients_fold_equals_the_reference_at_every_declared_year, "test_the_clients_fold_equals_the_reference_at_every_declared_year")
+    _run(test_a_perturbed_fold_is_caught_and_an_absent_key_is_not_a_null_one, "test_a_perturbed_fold_is_caught_and_an_absent_key_is_not_a_null_one")
+    _run(test_a_reference_stamped_with_another_dressing_is_refused, "test_a_reference_stamped_with_another_dressing_is_refused")
+    _run(test_the_references_route_geometry_is_the_dressings_own_characters, "test_the_references_route_geometry_is_the_dressings_own_characters")
+    _run(test_the_unexercised_fold_branches_do_what_the_rules_say, "test_the_unexercised_fold_branches_do_what_the_rules_say")
     _run(test_the_fetched_dressings_identity_holds_and_both_digests_are_literals_here, "test_the_fetched_dressings_identity_holds_and_both_digests_are_literals_here")
     _run(test_a_perturbed_dressing_fails_identity_and_an_unfetched_one_is_not_a_defect, "test_a_perturbed_dressing_fails_identity_and_an_unfetched_one_is_not_a_defect")
     _run(test_the_dressing_loader_republishes_no_string_from_the_manifest, "test_the_dressing_loader_republishes_no_string_from_the_manifest")
@@ -324,6 +329,12 @@ func _artefacts_seen() -> Dictionary:
         # it the pin taken on a full checkout would tell CI that a test had
         # lost checks, when what happened is that CI never had the bytes.
         "dressing": _pin_first_file_present("res://assets/dressing/da6-compact/"),
+        # 730's REFERENCE IS ON A `file://` HOST TOO, so CI cannot see it and
+        # W2's comparison contributes nothing there. Recorded separately from
+        # `dressing` on purpose: the dressing and the reference are two pins and
+        # two artefacts, and "the dressing is here but the reference is not" has
+        # to be a state the pin can express rather than one it averages away.
+        "reference": _pin_first_file_present("res://assets/dressing_renders/da6-compact/"),
     }
 
 
@@ -650,6 +661,441 @@ func test_the_dressing_loader_republishes_no_string_from_the_manifest() -> void:
         check(not src.contains(forbidden),
                 "the loader names `%s`, a string out of the manifest; this tree is public "
                         % forbidden + "and that one is not (decision 973)")
+
+
+# --------------------------------------------------------------------------
+# G-9 window 2: the client's fold against §25 backlog 730's reference
+# --------------------------------------------------------------------------
+
+const REF_DIR := "res://assets/dressing_renders/da6-compact/"
+const DECLARED_YEARS := [1890, 1940, 1990, 2039]
+
+
+func _ref_fold(year: int) -> Dictionary:
+    var path := REF_DIR + "fold_%d.json" % year
+    if not FileAccess.file_exists(path):
+        return {}
+    var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+    return parsed if typeof(parsed) == TYPE_DICTIONARY else {}
+
+
+## Every way a folded state disagrees with the reference's, as sentences.
+##
+## THE KEY SET IS COMPARED IN BOTH DIRECTIONS, AND AN ABSENT KEY IS NOT A NULL
+## ONE. Each half closes a hole the other leaves open: comparing only the keys
+## the reference carries lets this fold invent extra ones unnoticed, and
+## comparing values alone lets a `cost: null` stand in for a `cost` the
+## reference does not carry at all. The reference's own entries prove the
+## distinction matters -- its features come in FIVE different key sets and its
+## routes in two, because `cost`, `sparse`, `outside_envelope` and
+## `pin_id`-versus-`schedule_row` are each present only sometimes.
+func _state_problems(what: String, mine: Dictionary, theirs: Dictionary) -> PackedStringArray:
+    var out := PackedStringArray()
+    for k in theirs:
+        if not mine.has(k):
+            out.append("%s: the reference carries `%s` and this fold does not" % [what, k])
+    for k in mine:
+        if not theirs.has(k):
+            out.append("%s: this fold carries `%s` and the reference does not -- an absent "
+                    % [what, k] + "key is not a null key")
+    if not out.is_empty():
+        return out
+    for k in theirs:
+        if mine[k] != theirs[k]:
+            out.append("%s.%s: reference %s, this fold %s"
+                    % [what, k, JSON.stringify(theirs[k]), JSON.stringify(mine[k])])
+    return out
+
+
+## A list compared AS THE REFERENCE LISTS IT, in order.
+##
+## ⚠ WHEN THE ENTRIES MATCH AS A SET BUT NOT IN SEQUENCE, THE ORDER IS NAMED AS
+## THE CAUSE. Neither of the reference's lists is in file order and the two sort
+## by DIFFERENT keys -- features by `feature_id` alone, routes by
+## `(calendar_year, route)` -- which was ruled at §25 backlog 730's Q2 and is
+## not written anywhere a reader of the data would look. Without this branch a
+## re-sorted reference would report dozens of unrelated field differences and
+## send the next reader hunting through the fold's rules, which is exactly the
+## hour this check is meant to save. The lists are NOT sorted before comparing:
+## that would buy a quiet pass by making the check blind to a real re-ordering.
+func _list_problems(what: String, mine: Array, theirs: Array) -> PackedStringArray:
+    var out := PackedStringArray()
+    if mine.size() != theirs.size():
+        out.append("%s: %d entries, the reference has %d" % [what, mine.size(), theirs.size()])
+        return out
+    var mine_text := PackedStringArray()
+    var their_text := PackedStringArray()
+    for e in mine:
+        mine_text.append(JSON.stringify(e))
+    for e in theirs:
+        their_text.append(JSON.stringify(e))
+    var ms := mine_text.duplicate()
+    var ts := their_text.duplicate()
+    ms.sort()
+    ts.sort()
+    if mine_text != their_text and ms == ts:
+        out.append("%s: the same entries in a DIFFERENT ORDER. The reference's order is the "
+                % what + "cause, not the entries: features sort by `feature_id` alone and "
+                + "routes by `(calendar_year, route)` (§25 backlog 730 Q2).")
+        return out
+    for i in range(mine.size()):
+        out.append_array(_state_problems("%s[%d]" % [what, i], mine[i], theirs[i]))
+        if not out.is_empty():
+            return out
+    return out
+
+
+## The whole comparison at one year: tiles, then features, then routes.
+func _fold_problems(year: int, tiles: Array, feats: Array, routes: Array,
+        ref: Dictionary) -> PackedStringArray:
+    var out := PackedStringArray()
+    var mine := DressingFold.fold(tiles, year)
+    var theirs := {}
+    for t in ref.get("tiles", []):
+        theirs[DressingFold.tile_key((t as Dictionary)["tile"])] = t
+    for k in theirs:
+        if not mine.has(k):
+            out.append("tile %s is in the reference and not in this fold" % k)
+    for k in mine:
+        if not theirs.has(k):
+            out.append("tile %s is in this fold and not in the reference" % k)
+    if not out.is_empty():
+        out.resize(mini(out.size(), 4))
+        return out
+    for k in theirs:
+        var ref_state: Dictionary = (theirs[k] as Dictionary).duplicate()
+        ref_state.erase("tile")
+        out.append_array(_state_problems("tile %s" % k, mine[k], ref_state))
+        if not out.is_empty():
+            return out
+    out.append_array(_list_problems("features", DressingFold.features_at(feats, year),
+            ref.get("features", [])))
+    if not out.is_empty():
+        return out
+    out.append_array(_list_problems("routes", DressingFold.routes_at(routes, year),
+            ref.get("routes", [])))
+    return out
+
+
+func test_the_clients_fold_equals_the_reference_at_every_declared_year() -> void:
+    """W2's RETIRES: the client's own fold, tile for tile, against §25 backlog
+    730's committed reference at 1890, 1940, 1990 and 2039.
+
+    THE BINDING FIRST. Every reference file names the dressing it is a fold OF,
+    and that must equal the dressing's RECOMPUTED identity -- not the pin's
+    copy of it, and not the other reference files' agreement with each other.
+    Without it this test would happily compare a fold of one dressing against
+    another dressing's tiles and report the mismatch as a defect in the fold,
+    or, if the two happened to agree, report nothing at all.
+
+    WHAT THE GREEN HERE DOES NOT COVER, and it is not a small list. The
+    committed dressing contains no `cleared`, `renewed` or `sink_designated`
+    event and no `removed` row, so four of the fold's branches are never
+    reached at any of these years: `sink` is false on every tile, `since` is
+    only ever set by `built` and `filtered`, the whole-state replacement never
+    runs, and nothing is ever filtered out as removed. The synthetic test below
+    pins what those branches do against the rules as written. It stops them
+    being silently wrong; it cannot make them right, because no reference
+    exists to judge them. Verifying them needs a dressing that exercises them.
+
+    AND IT CANNOT CATCH A RULE THE REFERENCE ITSELF GETS WRONG: a misreading
+    shared by both implementations agrees, and agreement is all this measures.
+    Carried to DA-10's review as a question for design about what §22.8.2's
+    tile record means by `since`.
+    """
+    var d := DressingLoad.load_from()
+    var ref_1890 := _ref_fold(1890)
+    if not d.is_present() or ref_1890.is_empty():
+        print("fold comparison: SKIPPED -- dressing present: %s, reference present: %s"
+                % [d.is_present(), not ref_1890.is_empty()])
+        return
+    check(d.identity_holds(), "the dressing failed its identity, so the fold below would be "
+            + "of unknown bytes: %s" % str(d.identity_problems))
+
+    var tiles := DressingFold.read_rows(DressingFold.DIR + "tiles.jsonl")
+    var feats := DressingFold.read_rows(DressingFold.DIR + "features.jsonl")
+    var routes := DressingFold.read_rows(DressingFold.DIR + "routes.jsonl")
+    check(not tiles.is_empty(), "no tile rows were read, so every comparison below would "
+            + "compare two empty folds and pass")
+
+    for year: int in DECLARED_YEARS:
+        var ref := _ref_fold(year)
+        check(not ref.is_empty(), "no reference fold for %d" % year)
+        if ref.is_empty():
+            continue
+        # THE BINDING, against the RECOMPUTED identity.
+        check(str(ref.get("dressing_sha256", "")) == d.computed_dressing_sha256,
+                ("the %d reference is a fold of %s and the dressing on disk computes to %s; "
+                % [year, str(ref.get("dressing_sha256", "")), d.computed_dressing_sha256])
+                + "comparing them would compare two different dressings")
+        check(int(ref.get("year", -1)) == year,
+                "the reference file for %d declares year %s" % [year, str(ref.get("year"))])
+        var probs := _fold_problems(year, tiles, feats, routes, ref)
+        check(probs.is_empty(), "the fold disagrees with the reference at %d: %s"
+                % [year, "; ".join(probs)])
+
+
+func test_a_perturbed_fold_is_caught_and_an_absent_key_is_not_a_null_one() -> void:
+    """THE NEGATIVE CONTROLS. A comparison is believed only after it has been
+    seen to fail, and this one has three distinct ways of being too weak, so
+    each gets its own planted defect:
+
+      * a VALUE that moves -- the ordinary case;
+      * a key THIS FOLD INVENTS that the reference does not carry, which a
+        comparison looping over the reference's keys would never see;
+      * a `cost: null` where the reference omits `cost` ENTIRELY, which a
+        value-wise comparison reads as two nulls and passes.
+
+    The last two are the halves of absent-is-not-null, and the reference really
+    does omit `cost` on some routes, so this is the live case and not a
+    hypothetical.
+    """
+    var ref := _ref_fold(1890)
+    if ref.is_empty():
+        print("fold controls: SKIPPED -- no reference fold for 1890")
+        return
+
+    # (1) a value that moved
+    var mine := {"class": "residential_low", "density_per_km2": 100.0}
+    var theirs := {"class": "residential_low", "density_per_km2": 101.0}
+    var p1 := _state_problems("tile t", mine, theirs)
+    check(not p1.is_empty(), "a moved density was not reported")
+    check(str(p1).contains("density_per_km2"), "the report does not name the field: %s" % str(p1))
+
+    # (2) a key this fold invents
+    var p2 := _state_problems("tile t", {"class": null, "era": "walking"}, {"class": null})
+    check(not p2.is_empty(), "AN INVENTED KEY WAS NOT REPORTED: a comparison that loops over "
+            + "the reference's keys alone cannot see one")
+    check(str(p2).contains("era"), "the report does not name the invented key: %s" % str(p2))
+
+    # (3) `cost: null` where the reference omits `cost`
+    var p3 := _state_problems("route r", {"route": "x", "cost": null}, {"route": "x"})
+    check(not p3.is_empty(), "A NULL STANDING IN FOR AN ABSENT KEY WAS NOT REPORTED: absent "
+            + "is not null, and the reference omits `cost` on four of its nine routes")
+    check(str(p3).contains("absent"), "the report does not say why: %s" % str(p3))
+
+    # (4) the same entries in a different order are named as an ORDER problem
+    var a := [{"feature_id": "a"}, {"feature_id": "b"}]
+    var b := [{"feature_id": "b"}, {"feature_id": "a"}]
+    var p4 := _list_problems("features", a, b)
+    check(not p4.is_empty(), "a re-ordered list was not reported at all")
+    check(str(p4).contains("DIFFERENT ORDER"), "a re-ordered list was reported as field "
+            + "differences rather than as an order problem: %s" % str(p4))
+
+    # (5) and the comparison still passes on identical input, or (1)-(4) prove nothing
+    check(_state_problems("tile t", mine, mine).is_empty(),
+            "identical states were reported as differing, so every check above would fire "
+            + "on a correct fold too")
+    check(_list_problems("features", a, a).is_empty(), "an identical list was reported as "
+            + "differing")
+
+
+func test_a_reference_stamped_with_another_dressing_is_refused() -> void:
+    """THE BINDING'S OWN CONTROL. The comparison asserts that the reference
+    names the dressing on disk; this plants a reference that names a different
+    one and requires the assertion to fire. Without it, `dressing_sha256ies
+    agree` is a sentence nobody has ever seen be false.
+    """
+    var d := DressingLoad.load_from()
+    var ref := _ref_fold(1890)
+    if not d.is_present() or ref.is_empty():
+        print("binding control: SKIPPED -- dressing or reference absent")
+        return
+    check(str(ref.get("dressing_sha256", "")) == d.computed_dressing_sha256,
+            "the real reference does not name the real dressing, so the control below would "
+            + "prove nothing")
+    var foreign: Dictionary = ref.duplicate()
+    foreign["dressing_sha256"] = "sha256:" + "f".repeat(64)
+    check(str(foreign["dressing_sha256"]) != d.computed_dressing_sha256,
+            "A REFERENCE STAMPED WITH ANOTHER DRESSING'S SHA WAS NOT DISTINGUISHABLE from "
+            + "the real one, so the binding cannot refuse it")
+
+
+## The characters of one route's geometry, as they sit in a file. BOTH FILES
+## ARE COMPACT -- keys sorted, no whitespace -- and within a route object the
+## sorted keys put `geometry` before `route`, so the nearest preceding
+## `"geometry":` belongs to the same object.
+func _geometry_text(text: String, route_name: String) -> String:
+    var at := text.find("\"route\":\"" + route_name + "\"")
+    if at < 0:
+        return ""
+    var gk := text.rfind("\"geometry\":", at)
+    if gk < 0:
+        return ""
+    var open_at := text.find("[[", gk)
+    if open_at < 0:
+        return ""
+    var close_at := text.find("]]", open_at)
+    if close_at < 0:
+        return ""
+    return text.substr(open_at, close_at + 2 - open_at)
+
+
+func test_the_references_route_geometry_is_the_dressings_own_characters() -> void:
+    """⚠ WHY THIS EXISTS, AND IT IS NOT A CLAIM THAT THE GEOMETRY IS CORRECT.
+
+    The routes carry EPSG:5070 coordinates like `-1689363.6678021685`, and this
+    engine's decimal-to-double conversion IS NOT CORRECTLY ROUNDED at that
+    magnitude: G-8 measured that value reading one ulp low through the JSON
+    parser, the script lexer and `String.to_float` alike. So the fold
+    comparison's route geometry compares PARSED VALUES AND NOT DECIMALS.
+
+    That comparison is still sound, for a reason narrow enough to write down:
+    both sides are parsed by the same defective parser, so two identically
+    wrong parses are equal, and equality is what is being asked. BUT IT IS
+    SOUND ONLY WHILE BOTH SIDES CARRY THE SAME CHARACTERS. The reference was
+    produced by copying the dressing's own text rather than re-serialising it --
+    measured at W2, not assumed -- and if that ever changes, even to a
+    mathematically equivalent shortest round-trip form, this engine can map the
+    two spellings to two different doubles.
+
+    So the property is ENFORCED here rather than relied on. If a future
+    reference re-serialises, this goes loudly red and names re-serialisation as
+    the cause, instead of the geometry comparison failing by an invisible ulp
+    somewhere inside a 74-point polyline. A loud red is the safe direction.
+
+    There is deliberately NO EPSILON in the geometry comparison anywhere. The
+    error in question is about 1.4e-10 metres, far below anything a drawing
+    could show, so a tolerance would hide exactly this class of defect while
+    looking prudent.
+
+    AND THE EXTRACTION IS ASSERTED NON-EMPTY, because two FAILED extractions
+    would both return "" and compare equal -- a check that passes by finding
+    nothing, which is the shape this suite keeps catching.
+    """
+    var routes_raw := FileAccess.get_file_as_string(DressingFold.DIR + "routes.jsonl")
+    var ref_raw := FileAccess.get_file_as_string(REF_DIR + "fold_2039.json")
+    if routes_raw.is_empty() or ref_raw.is_empty():
+        print("geometry text: SKIPPED -- routes.jsonl or the 2039 reference is absent")
+        return
+    var ref := _ref_fold(2039)
+    var names := PackedStringArray()
+    for r in ref.get("routes", []):
+        names.append(str((r as Dictionary)["route"]))
+    check(names.size() > 0, "no routes in the reference, so nothing below was enforced")
+    if names.is_empty():
+        return
+    var compared := 0
+    var mismatched := PackedStringArray()
+    for n: String in names:
+        var a := _geometry_text(routes_raw, n)
+        var b := _geometry_text(ref_raw, n)
+        if a.is_empty() or b.is_empty():
+            mismatched.append("%s: geometry text not found (dressing %d chars, reference %d)"
+                    % [n, a.length(), b.length()])
+            continue
+        compared += 1
+        if a != b:
+            mismatched.append(("%s: the reference's geometry characters differ from the "
+                    % n) + "dressing's. THE REFERENCE HAS BEEN RE-SERIALISED, and the fold "
+                    + "comparison's exact float equality is no longer sound on this route.")
+    check(compared == names.size(),
+            "only %d of %d routes had their geometry text located; an unlocated geometry is "
+            % [compared, names.size()] + "not a passing comparison")
+    check(mismatched.is_empty(), "%s" % "; ".join(mismatched))
+    # THE CONTROL: the comparison must be able to tell two spellings apart.
+    var one := _geometry_text(routes_raw, names[0])
+    check(one != one.replace("1685", "1686"),
+            "the geometry text comparison cannot distinguish two different spellings, so the "
+            + "checks above would pass on a re-serialised reference")
+
+
+func test_the_unexercised_fold_branches_do_what_the_rules_say() -> void:
+    """THE FOUR BRANCHES THE COMMITTED DRESSING NEVER REACHES, on rows built
+    here by hand.
+
+    `cleared`, `renewed` and `sink_designated` appear ZERO times in this
+    dressing's 49,929 tile rows, and no features or routes row carries
+    `removed`. So the reference comparison -- which is otherwise the whole of
+    W2's evidence -- says nothing whatever about them.
+
+    THIS TEST STOPS THEM BEING SILENTLY WRONG. IT CANNOT MAKE THEM RIGHT. Its
+    expectations come from the rules as written, not from any committed
+    artefact, so it pins this implementation's reading and would catch a later
+    edit that changed it. It is not a second opinion: if the reading itself is
+    wrong, this test is wrong with it in exactly the same way. Genuinely
+    verifying these needs a dressing that exercises them, which is the
+    simulation's to produce and not this window's.
+    """
+    var rows: Array = [
+        {"tile": [1, 0, 0], "calendar_year": 1900, "event": "built", "class": "warehouse",
+                "era": "rail_streetcar", "by": "rule", "stratum": "s1", "storeys": 2,
+                "density_per_km2": 50.0},
+        {"tile": [1, 0, 0], "calendar_year": 1910, "event": "cleared", "class": "warehouse",
+                "era": "rail_streetcar", "by": "rule"},
+    ]
+    var cleared: Dictionary = DressingFold.fold(rows, 1910)["1,0,0"]
+    check(cleared["class"] == null, "`cleared` left the class as %s" % str(cleared["class"]))
+    check(cleared["stratum"] == null, "`cleared` kept the stratum")
+    check(cleared["storeys"] == 0 and cleared["density_per_km2"] == 0.0,
+            "`cleared` kept storeys or density")
+    check(int(cleared["since"]) == 1910,
+            "`cleared` must set `since` to the clearing year, not %s" % str(cleared["since"]))
+    # and before the clearing year the tile is still built
+    var before: Dictionary = DressingFold.fold(rows, 1905)["1,0,0"]
+    check(str(before["class"]) == "warehouse",
+            "the control failed: the tile was not built before it was cleared")
+
+    # `renewed` resets `since` and must NOT touch the class
+    var renewed_rows: Array = [
+        {"tile": [2, 0, 0], "calendar_year": 1900, "event": "built", "class": "warehouse",
+                "era": "rail_streetcar", "by": "rule", "stratum": "s1"},
+        {"tile": [2, 0, 0], "calendar_year": 1950, "event": "renewed", "class": "commercial",
+                "era": "automobile", "by": "rule"},
+    ]
+    var renewed: Dictionary = DressingFold.fold(renewed_rows, 1950)["2,0,0"]
+    check(str(renewed["class"]) == "warehouse",
+            "`renewed` changed the class to %s; it must reset `since` alone" % str(renewed["class"]))
+    check(int(renewed["since"]) == 1950, "`renewed` did not reset `since`")
+
+    # `sink_designated` sets `sink` and nothing else about the class
+    var sink_rows: Array = [
+        {"tile": [3, 0, 0], "calendar_year": 1960, "event": "sink_designated", "class": "reserved",
+                "era": "freeway", "by": "rule"},
+    ]
+    var sink: Dictionary = DressingFold.fold(sink_rows, 1960)["3,0,0"]
+    check(bool(sink["sink"]), "`sink_designated` did not set `sink`")
+    check(sink["class"] == null,
+            "`sink_designated` set the class to %s; it is not a class-setting event"
+            % str(sink["class"]))
+
+    # `densified` must NOT move `since` -- the asymmetry the manager confirmed
+    var dens_rows: Array = [
+        {"tile": [4, 0, 0], "calendar_year": 1900, "event": "built", "class": "residential_low",
+                "era": "rail_streetcar", "by": "rule", "stratum": "s1"},
+        {"tile": [4, 0, 0], "calendar_year": 1930, "event": "densified",
+                "class": "residential_middle", "era": "automobile", "by": "rule",
+                "stratum": "s1", "density_per_km2": 900.0},
+    ]
+    var dens: Dictionary = DressingFold.fold(dens_rows, 1930)["4,0,0"]
+    check(int(dens["since"]) == 1900,
+            "`densified` moved `since` to %s; `since` is the year the STRATUM began and "
+            % str(dens["since"]) + "densifying keeps the stratum it has")
+    check(str(dens["class"]) == "residential_middle", "`densified` did not set the class")
+
+    # `zoned` sets the zone and NEVER the class (decision 2097)
+    var zoned_rows: Array = [
+        {"tile": [5, 0, 0], "calendar_year": 1900, "event": "zoned", "class": "industrial",
+                "era": "rail_streetcar", "by": "rule"},
+    ]
+    var zoned: Dictionary = DressingFold.fold(zoned_rows, 1900)["5,0,0"]
+    check(str(zoned["zone"]) == "industrial", "`zoned` did not set the zone")
+    check(zoned["class"] == null,
+            "`zoned` set the class to %s: an unbuilt tile under a label stays unbuilt "
+            % str(zoned["class"]) + "(decision 2097)")
+
+    # the `removed` clause: a row removed by the year is not standing
+    var feat_rows: Array = [
+        {"feature_id": "a", "calendar_year": 1900, "type": "t", "by": "rule", "tiles": []},
+        {"feature_id": "b", "calendar_year": 1900, "type": "t", "by": "rule", "tiles": [],
+                "removed": 1950},
+    ]
+    check(DressingFold.features_at(feat_rows, 1940).size() == 2,
+            "a feature removed in 1950 was dropped at 1940")
+    check(DressingFold.features_at(feat_rows, 1950).size() == 1,
+            "the `removed` clause did not drop a feature removed in that year")
+
+
 
 # --------------------------------------------------------------------------
 # the real artefact

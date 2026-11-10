@@ -1,0 +1,75 @@
+{
+  "_form": "The claim about §25 backlog 730's reference: the humans lane's own fold of DA-6's compact dressing at the declared four years, and the renderer's palette. Same discipline as contract/PIN -- the files are DATA, this is the CLAIM about them -- in the shape tools/fetch_artefacts.py reads (`files` plus `fetched`).",
+  "_why_this_is_a_SEPARATE_pin_from_the_dressing": "THE REFERENCE MUST NOT BE ABLE TO MOVE WITH THE THING IT CHECKS. assets/dressing/da6-compact/PIN describes the artefact under test; these files are what judges it. One pin for both would mean a single re-stage could move the dressing and its own expected answer together -- and a reference that moves with the thing it checks is a control that cannot fail, which is the defect class this project keeps meeting: it is why decision 2128's rename went unwitnessed by a key-set check drawing its expectation from the renamed constant, and it is why the client was told not to derive this comparison's expected table from its own fold. Two pins are two separately visible claims, with separate `--require` and separate rows in the check-count pin's `artefacts_seen`, so that `the dressing is here but the reference is not` is a sayable state. It also follows magisteria's own structure: 730's outputs are committed BESIDE and not INSIDE data/dressing/ precisely so that the dressing's four files and its `dressing_sha256` stay untouched (decision 2118's rejection honoured). `the reference crosses as the dressing did` is AS, not WITH.",
+  "artefact": "the viewer's reference: DA-6 compact folded to 1890, 1940, 1990 and 2039, with the renderer's palette",
+  "ruled_by": [
+    "decision 2129",
+    "owner ruling 2130",
+    "§25 backlog 730",
+    "decision 972",
+    "decision 973",
+    "§23.1745"
+  ],
+  "source": {
+    "repo": "git@github.com:veekbee/magisteria.git",
+    "path": "data/dressing_renders/da6-compact"
+  },
+  "artefact_committed_at": "a32ccf078a916281c13ad596a3fd41df78baafd7",
+  "_artefact_committed_at_note": "The simulation-repo commit these bytes come from -- the last commit to touch that path, contract/PIN's definition of this field, measured per file and true of all six separately rather than only of the directory. Not `source_commit`, which in the four asset pins means the commit a VENDOR TOOL READ to produce derived bytes; nothing is derived here, these are the committed bytes staged unchanged.",
+  "files": {
+    "fold_1890.json": "88b27059800b1a04b743ad695b207e4891e414239e4b2e3df6f6f7000c8d73ab",
+    "fold_1940.json": "6c9f4b03ee4f392b375c498533fe675f15ceb92a8c5e438bb9f2dd2372438303",
+    "fold_1990.json": "a6ea4fde1ff5d71c188322d2dadd1aee65abcefbfaf8b44e34a8643846342709",
+    "fold_2039.json": "5cfe107ce874f30183c87c32221db8823c56753f7ef815beee6d44d052b50801",
+    "palette.json": "c13632ddc66a8d3275cdbbab38937d586ac0356df61b2de9d9818172f8fc5601",
+    "render.json": "e9a23706fed3c08fa3677c3ef082d18f039504eb5ed76803eb9fa5ae2ed370a4"
+  },
+  "reference_for_dressing_sha256": "sha256:194f2f19e35d4799914fa01a2b45e7768d031a9d258fa5b397ca24d610647d4a",
+  "_reference_for_dressing_sha256_note": "WHICH DRESSING THIS IS A FOLD OF, AND THE BINDING THE LOADER MUST ENFORCE. Every one of the four folds, and palette.json, carries this same value in its own `dressing_sha256` field. The client asserts all of them equal the dressing's RECOMPUTED identity -- not this field, and not each other alone -- because that is what stops a fold of one dressing being compared against another dressing's tiles and reported as a disagreement, or worse as an agreement. A reference stamped with a different dressing's sha256 is refused by name.",
+  "_what_this_pin_deliberately_does_not_carry": "ANY `generated_by` OR `what` STRING FROM THESE FILES, for the reason the dressing's pin carries none from the manifest: the simulation's tool paths and its prose are not this public tree's to republish (decision 973). The palette's CLASS and ROUTE-class names are the exception and are not republished here either, but they do legitimately reach the viewer as data (decision 2129 (b) and (f): the palette and class list come from the committed reference and are never re-declared), which is exactly why they are read from the fetched file rather than copied into this pin or into any source file.",
+  "_the_four_renders_are_NOT_fetched": "render_1890.png, render_1940.png, render_1990.png and render_2039.png exist beside these files in the simulation repo and are deliberately absent from this pin. They are the owner's render under §22.7, not the client's reference: the fold and the palette are what the comparison reads, and the owner's look at DA-9 is at the explorer's own drawing rather than at a committed image. CONSEQUENCE, STATED RATHER THAN LEFT IMPLIED: render.json below names an `images` digest for each of the four, and those four rows are UNCHECKED here because the bytes are not fetched. Everything else render.json names is checked and agrees.",
+  "cross_check_against_render_json": {
+    "_what": "render.json is the humans lane's own manifest of this artefact, and it carries a sha256 for each fold, for the palette and for each image. That makes it a SECOND OPINION on the staged bytes, written by the producing lane and independent of the digests in `files` above, which this client computed itself.",
+    "_result": "AGREES on all five fetched files it describes: the four folds and palette.json. The four `images` rows are unchecked because the renders are not fetched. render.json does not describe its own bytes, so nothing cross-checks the `render.json` row in `files` -- that digest is this client's computation alone, and no second opinion exists for it.",
+    "_if_it_ever_disagrees": "report it and stop. A disagreement means the staged bytes and the producing lane's record of them have diverged, and reconciling it here -- by preferring either number -- would destroy the only evidence of which one moved."
+  },
+  "fetched": {
+    "_what": "All six files. None of these bytes is committed; tools/fetch_artefacts.py is the only sanctioned way they arrive, and a clone with none of them is a working clone.",
+    "_why_fetched_is_NOT_decision_948": "THESE FILES ARE UNDER 948's LINE AND ARE FETCHED ANYWAY, as the dressing's are. The largest is fold_2039.json at 3,123,353 bytes and the six total 9,001,660, against a 10,485,760-byte threshold. 948 partitions HOW A LARGE ARTEFACT IS HOSTED, not WHETHER A PUBLIC TREE MAY CARRY A SIMULATION ARTEFACT'S CONTENT; the second question is decision 973's and was answered *fetched by PIN* (decision 2129 (a), owner ruling 2130). `threshold_bytes` is deliberately absent: nothing in the fetcher reads it, and here it would assert the wrong reason.",
+    "_host_is_not_authoritative": "the sha256 in `files` is the whole of the check. A move of hosting is a one-field edit here and changes no contract (decision 948, decision 972).",
+    "host_base": "file:///Users/victoriabarnes/project_magisteria/artefact_host/da6-compact-renders-v1/",
+    "total_bytes": 9001660,
+    "files": {
+      "fold_1890.json": {
+        "bytes": 64586
+      },
+      "fold_1940.json": {
+        "bytes": 2766378
+      },
+      "fold_1990.json": {
+        "bytes": 3045516
+      },
+      "fold_2039.json": {
+        "bytes": 3123353
+      },
+      "palette.json": {
+        "bytes": 746
+      },
+      "render.json": {
+        "bytes": 1081
+      }
+    }
+  },
+  "cross_repo": {
+    "_what": "how each file above is checkable against `artefact_committed_at` in a simulation checkout. `bytes` for all six, and that is a measured answer rather than a default: these are the committed bytes staged unchanged, with no vendor tool, no projection and no re-encoding between the repository and the host.",
+    "files": {
+      "fold_1890.json": {"upstream": "data/dressing_renders/da6-compact/fold_1890.json", "how": "bytes"},
+      "fold_1940.json": {"upstream": "data/dressing_renders/da6-compact/fold_1940.json", "how": "bytes"},
+      "fold_1990.json": {"upstream": "data/dressing_renders/da6-compact/fold_1990.json", "how": "bytes"},
+      "fold_2039.json": {"upstream": "data/dressing_renders/da6-compact/fold_2039.json", "how": "bytes"},
+      "palette.json": {"upstream": "data/dressing_renders/da6-compact/palette.json", "how": "bytes"},
+      "render.json": {"upstream": "data/dressing_renders/da6-compact/render.json", "how": "bytes"}
+    },
+    "_maintained": "HAND-WRITTEN. No vendor tool produced this pin, because nothing is derived: staging is a copy of committed bytes. If a vendor tool is ever written it takes this over, and assets/terrain/PIN's lesson applies -- a hand-added block did not survive the first re-vendor of the contours."
+  }
+}

@@ -41,6 +41,84 @@ echo "== the explorer's file path (G-8) =="
 # case was displaced.
 python3 tools/rewrite_pins.py --selftest || fail=1
 
+echo "== transport (decision 948/972) =="
+python3 tools/fetch_artefacts.py --selftest || fail=1
+# AND THEN ACTUALLY FETCH, which is the step whose absence made CI red for
+# thirty commits. `fce9bd8` moved the 28 MB fixture binary out of the tree and
+# onto a release asset; nothing taught either gate to bring it back, so every
+# run since has been decoding an artefact that was not there. 38 failing
+# checks, all of them one missing file.
+#
+# A no-op when the bytes are present, and it is `--require`d for the fixture
+# alone. The tile pyramid is genuinely optional -- 141 MB of near-field
+# detail, hosted locally, and the checks that need it skip and say so. The
+# fixture binary is not optional in the same way: it is the artefact this
+# client exists to display, and 1,526 of the suite's checks read it. A gate
+# that let those skip would go green having run half of itself.
+python3 tools/fetch_artefacts.py --quiet --require assets/fixture/PIN || fail=1
+# THE DRESSING IS REQUIRED TOO, and for the fixture's reason rather than the
+# pyramid's. G-9's identity check is the whole of window 1: if the bytes are
+# absent it SKIPS AND SAYS SO, which is correct behaviour for a clone and
+# useless in a gate -- the gate would go green having never recomputed a
+# digest. 7.6 MB off a local host, so requiring it costs a fraction of a second.
+python3 tools/fetch_artefacts.py --quiet --require assets/dressing/da6-compact/PIN || fail=1
+# AND 730's REFERENCE, for the same reason: W2's comparison is the whole of that
+# window, and if the reference is absent it SKIPS AND SAYS SO -- right for a
+# clone, useless in a gate, which would then go green having compared nothing.
+python3 tools/fetch_artefacts.py --quiet --require assets/dressing_renders/da6-compact/PIN \
+  || fail=1
+# THE BYTES MUST NOT BE COMMITTABLE BY ACCIDENT. 141 MB of tile pyramid and
+# 437 MB of derived layers sit under assets/terrain/ once fetched, against a
+# ~10 MB threshold. The .gitignore keeps them out; this is the check that the
+# .gitignore still does, because a rule nobody verifies is a rule that survives
+# exactly until someone adds a negation to it -- and the layers arrived by
+# adding three negations to it.
+#
+# AND DA-6's DRESSING JOINS THEM UNDER A DIFFERENT RULE. Its four files are
+# 7.6 MB in total and UNDER the threshold, so the size argument above does not
+# reach them: they are fetched because decision 2129 answered decision 973's
+# question that way (owner ruling 2130). Same guard, because the reason bytes
+# must not be committable by accident does not depend on why they are fetched.
+allow='^assets/(terrain/(tiles|layers)|dressing/da6-compact|dressing_renders/da6-compact)/(PIN|README\.md|\.gdignore)$'
+tracked=$(git ls-files assets/terrain/tiles assets/terrain/layers assets/dressing \
+  assets/dressing_renders | grep -vE "$allow" || true)
+# A FILTER THAT CANNOT FIRE IS NOT A FILTER -- the lesson the engine-error awk
+# below already learned. If the allow-list ever widens to swallow a data file,
+# this guard goes silent and reports the swallowing as a pass, so the pattern is
+# asserted against a path it MUST report and one it must NOT.
+ctl_bad=$(printf 'assets/dressing/da6-compact/tiles.jsonl\nassets/dressing_renders/da6-compact/fold_1890.json\n' \
+  | grep -vE "$allow" | tr '\n' ' ')
+ctl_ok=$(printf 'assets/dressing/da6-compact/PIN\nassets/dressing_renders/da6-compact/PIN\n' \
+  | grep -vE "$allow" || true)
+want_bad='assets/dressing/da6-compact/tiles.jsonl assets/dressing_renders/da6-compact/fold_1890.json '
+if [ "$ctl_bad" != "$want_bad" ] || [ -n "$ctl_ok" ]; then
+  echo "-- the tracked-bytes allow-list does not discriminate: a fetched data file"
+  echo "   was reported as [$ctl_bad] and the pin as [$ctl_ok]"; fail=1
+fi
+if [ -n "$tracked" ]; then
+  echo "fetched bytes are tracked by git:"; echo "$tracked" | head -5; fail=1
+else echo "ok -- only the pins, READMEs and .gdignores are tracked"; fi
+
+echo "== no addons =="
+[ -d addons ] && { echo "addons/ exists"; fail=1; } || echo "ok"
+
+echo "== project imports =="
+"$GODOT" --headless --import 2>&1 | tee /tmp/import.log >/dev/null
+if grep -qE "SCRIPT ERROR|Parse Error|Failed to load" /tmp/import.log; then
+  echo "import produced script or parse errors"; grep -E "SCRIPT ERROR|Parse Error" /tmp/import.log | head -5; fail=1
+else echo "ok"; fi
+
+echo "== every script compiles =="
+# A SCRIPT THAT FAILS TO COMPILE DOES NOT SAY SO WHERE YOU LOOK. `--import` does
+# not compile GDScript, and a broken `class_name` script resolves at runtime to
+# a bare GDScript with none of its statics -- so the symptom is "Nonexistent
+# function 'load_from' in base 'GDScript'" a thousand lines into a test log,
+# pointing at the caller rather than at the file with the error in it. Measured:
+# a single inferred-Variant warning in `detail_field.gd` took four runs to
+# locate that way. Loading every script names the file and the line.
+"$GODOT" --headless --script res://tools/compile_check.gd 2>&1 | tee /tmp/compile.log
+grep -q "^compile: all " /tmp/compile.log || { echo "-- not every script compiles"; fail=1; }
+
 echo "== the pin run's verdict (W2) =="
 # THE RE-PIN USED TO BE GREEN BY CONSTRUCTION. `run_headless.gd:_finish()` wrote
 # the pin and quit 0 under `--pin-counts` before reaching its failure block, so a
@@ -70,7 +148,23 @@ rc_pass=$?
 after_pass=$(shasum -a 256 tests/check_counts.json | awk '{print $1}')
 cp /tmp/check_counts.backup.json tests/check_counts.json
 restored=$(shasum -a 256 tests/check_counts.json | awk '{print $1}')
+# A PARSE FAILURE IS NOT A VERDICT FAILURE, AND MUST NOT BE REPORTED AS ONE.
+# This step first ran BEFORE `== project imports ==`, where a newly added
+# `class_name` is not yet a registered global -- so both runs failed to parse
+# the test script, executed nothing, and GODOT STILL EXITED 0. The control duly
+# reported all three of its assertions failing and blamed the verdict, sending
+# a reader to the wrong file. Godot's exit code does not see a parse error,
+# which is why this script greps logs rather than trusting exits; this control
+# has to do the same, and name the real cause.
 probs=""
+for lg in /tmp/pin_verdict_fail.log /tmp/pin_verdict_pass.log; do
+  if grep -qE "SCRIPT ERROR|Parse Error" "$lg"; then
+    echo "-- a control run did not execute: $lg carries a script or parse error, so the"
+    echo "   assertions below would measure nothing. First error:"
+    grep -m1 -E "SCRIPT ERROR|Parse Error" "$lg" | sed 's/^/     /'
+    probs="$probs CONTROL-RUN-DID-NOT-EXECUTE"
+  fi
+done
 [ "$rc_fail" -eq 0 ] && probs="$probs exited-0-over-a-failure"
 grep -q "^FAIL: the planted control failure" /tmp/pin_verdict_fail.log \
   || probs="$probs did-not-name-the-failing-check"
@@ -83,76 +177,6 @@ if [ -n "$probs" ]; then
 else
   echo "ok -- a failure refuses the write and exits non-zero, naming the check; a clean run writes"
 fi
-
-echo "== transport (decision 948/972) =="
-python3 tools/fetch_artefacts.py --selftest || fail=1
-# AND THEN ACTUALLY FETCH, which is the step whose absence made CI red for
-# thirty commits. `fce9bd8` moved the 28 MB fixture binary out of the tree and
-# onto a release asset; nothing taught either gate to bring it back, so every
-# run since has been decoding an artefact that was not there. 38 failing
-# checks, all of them one missing file.
-#
-# A no-op when the bytes are present, and it is `--require`d for the fixture
-# alone. The tile pyramid is genuinely optional -- 141 MB of near-field
-# detail, hosted locally, and the checks that need it skip and say so. The
-# fixture binary is not optional in the same way: it is the artefact this
-# client exists to display, and 1,526 of the suite's checks read it. A gate
-# that let those skip would go green having run half of itself.
-python3 tools/fetch_artefacts.py --quiet --require assets/fixture/PIN || fail=1
-# THE DRESSING IS REQUIRED TOO, and for the fixture's reason rather than the
-# pyramid's. G-9's identity check is the whole of window 1: if the bytes are
-# absent it SKIPS AND SAYS SO, which is correct behaviour for a clone and
-# useless in a gate -- the gate would go green having never recomputed a
-# digest. 7.6 MB off a local host, so requiring it costs a fraction of a second.
-python3 tools/fetch_artefacts.py --quiet --require assets/dressing/da6-compact/PIN || fail=1
-# THE BYTES MUST NOT BE COMMITTABLE BY ACCIDENT. 141 MB of tile pyramid and
-# 437 MB of derived layers sit under assets/terrain/ once fetched, against a
-# ~10 MB threshold. The .gitignore keeps them out; this is the check that the
-# .gitignore still does, because a rule nobody verifies is a rule that survives
-# exactly until someone adds a negation to it -- and the layers arrived by
-# adding three negations to it.
-#
-# AND DA-6's DRESSING JOINS THEM UNDER A DIFFERENT RULE. Its four files are
-# 7.6 MB in total and UNDER the threshold, so the size argument above does not
-# reach them: they are fetched because decision 2129 answered decision 973's
-# question that way (owner ruling 2130). Same guard, because the reason bytes
-# must not be committable by accident does not depend on why they are fetched.
-allow='^assets/(terrain/(tiles|layers)|dressing/da6-compact)/(PIN|README\.md|\.gdignore)$'
-tracked=$(git ls-files assets/terrain/tiles assets/terrain/layers assets/dressing \
-  | grep -vE "$allow" || true)
-# A FILTER THAT CANNOT FIRE IS NOT A FILTER -- the lesson the engine-error awk
-# below already learned. If the allow-list ever widens to swallow a data file,
-# this guard goes silent and reports the swallowing as a pass, so the pattern is
-# asserted against a path it MUST report and one it must NOT.
-ctl_bad=$(printf 'assets/dressing/da6-compact/tiles.jsonl\n' | grep -vE "$allow" || true)
-ctl_ok=$(printf 'assets/dressing/da6-compact/PIN\n' | grep -vE "$allow" || true)
-if [ "$ctl_bad" != "assets/dressing/da6-compact/tiles.jsonl" ] || [ -n "$ctl_ok" ]; then
-  echo "-- the tracked-bytes allow-list does not discriminate: a fetched data file"
-  echo "   was reported as [$ctl_bad] and the pin as [$ctl_ok]"; fail=1
-fi
-if [ -n "$tracked" ]; then
-  echo "fetched bytes are tracked by git:"; echo "$tracked" | head -5; fail=1
-else echo "ok -- only the pins, READMEs and .gdignores are tracked"; fi
-
-echo "== no addons =="
-[ -d addons ] && { echo "addons/ exists"; fail=1; } || echo "ok"
-
-echo "== project imports =="
-"$GODOT" --headless --import 2>&1 | tee /tmp/import.log >/dev/null
-if grep -qE "SCRIPT ERROR|Parse Error|Failed to load" /tmp/import.log; then
-  echo "import produced script or parse errors"; grep -E "SCRIPT ERROR|Parse Error" /tmp/import.log | head -5; fail=1
-else echo "ok"; fi
-
-echo "== every script compiles =="
-# A SCRIPT THAT FAILS TO COMPILE DOES NOT SAY SO WHERE YOU LOOK. `--import` does
-# not compile GDScript, and a broken `class_name` script resolves at runtime to
-# a bare GDScript with none of its statics -- so the symptom is "Nonexistent
-# function 'load_from' in base 'GDScript'" a thousand lines into a test log,
-# pointing at the caller rather than at the file with the error in it. Measured:
-# a single inferred-Variant warning in `detail_field.gd` took four runs to
-# locate that way. Loading every script names the file and the line.
-"$GODOT" --headless --script res://tools/compile_check.gd 2>&1 | tee /tmp/compile.log
-grep -q "^compile: all " /tmp/compile.log || { echo "-- not every script compiles"; fail=1; }
 
 echo "== decimals survive the reader =="
 # Godot's decimal-to-double conversion is not correctly rounded, and its own

@@ -96,3 +96,19 @@ assets/fixture/fixture_client.bin
 /assets/dressing/da6-compact/**
 !/assets/dressing/da6-compact/PIN
 !/assets/dressing/da6-compact/.gdignore
+
+# §25 backlog 730's reference: the humans lane's own fold of DA-6 compact at the
+# declared four years, and the renderer's palette (decision 2129, owner ruling
+# 2130). FETCHED AND NEVER COMMITTED, on the same footing as the dressing's own
+# bytes and for the same reason -- decision 973's question, not decision 948's
+# size line, which these are under (largest 3.1 MB, six totalling 9.0 MB).
+#
+# A SEPARATE DIRECTORY AND A SEPARATE PIN FROM THE DRESSING, deliberately: this
+# is the reference that judges the dressing, and a reference able to move with
+# the thing it checks is a control that cannot fail. Same level rule as the
+# dressing's and the pyramid's -- the pattern ends at the directory HOLDING the
+# files, because excluding `dressing_renders/` itself would take the pin with
+# the bytes and git cannot re-include a file whose parent is excluded.
+/assets/dressing_renders/da6-compact/**
+!/assets/dressing_renders/da6-compact/PIN
+!/assets/dressing_renders/da6-compact/.gdignore
