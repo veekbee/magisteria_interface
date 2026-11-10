@@ -112,3 +112,19 @@ assets/fixture/fixture_client.bin
 /assets/dressing_renders/da6-compact/**
 !/assets/dressing_renders/da6-compact/PIN
 !/assets/dressing_renders/da6-compact/.gdignore
+
+# The dressing's pin file: the rows the generator respected, and what the owner
+# re-pins in the explorer (decision 2129, owner ruling 2130). FETCHED AND NEVER
+# COMMITTED. At 2,077 bytes this is the clearest case that decision 948's size
+# line is not the reason for any of these three fetches: it is five thousand
+# times under the threshold. 948 says how a large artefact is hosted; decision
+# 973 governs whether a public tree may carry a simulation artefact's CONTENT,
+# and the owner answered that "Fetched by PIN".
+#
+# A THIRD directory and a THIRD pin, beside the dressing's and the reference's:
+# this one is the EDIT TARGET, with a different lifecycle from either, and it is
+# not part of `dressing_sha256`. Same level rule as the others -- the pattern
+# ends at the directory holding the file, or the pin would go out with it.
+/assets/dressing_pins/**
+!/assets/dressing_pins/PIN
+!/assets/dressing_pins/.gdignore

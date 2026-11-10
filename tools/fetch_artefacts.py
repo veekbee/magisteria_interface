@@ -61,7 +61,7 @@ PINS = ("contract/PIN", "assets/fixture/PIN", "assets/terrain/PIN",
         "assets/terrain/tiles/PIN", "assets/terrain/layers/PIN",
         "assets/contours/PIN", "assets/detail/PIN",
         "assets/dressing/da6-compact/PIN",
-        "assets/dressing_renders/da6-compact/PIN")
+        "assets/dressing_renders/da6-compact/PIN", "assets/dressing_pins/PIN")
 #: `assets/detail/PIN` WAS MISSING FROM THE TUPLE UNTIL `unlisted_pins` BELOW
 #: WENT LOOKING. It declares no `fetched` block -- its three files are
 #: committed -- so it yields no rows and its absence changed nothing that ran.

@@ -57,9 +57,29 @@ extends RefCounted
 ## its tool and record paths, its seed and its settlement identifiers are the
 ## simulation's to hold and not this tree's to republish (decision 973, with the
 ## manifest's prose read and reported before a byte was staged). This class
-## reads digests and byte counts. It deliberately does not surface the
-## manifest's fields, and the window that draws will take what it needs through
-## the reference the humans lane emits rather than by naming them here.
+## reads digests and byte counts.
+##
+## [AMENDED at G-9 W3, 2026-11-09] IT NOW SURFACES EXACTLY TWO MANIFEST FIELDS,
+## and the sentence that stood here said it surfaced none and that the drawing
+## window would take what it needed through the reference instead. That was
+## written at W1 and is no longer true, so it is corrected rather than left to
+## be read as a rule this file breaks:
+##
+##   `pins_digest()`  the manifest's `pins` field, which is the digest of the
+##                    committed pin file. The binding the explorer enforces
+##                    before drawing a pin over this dressing lives there, in
+##                    the data, and reading it anywhere else would be a second
+##                    copy of it.
+##   `era_starts()`   the eras and their first years, which are the viewer's
+##                    slider ticks and no second set of years (decision 2129
+##                    (c)). Era NAMES are interface and may be shown as tick
+##                    labels, ruled at W3's construal Q4 on the same line as the
+##                    palette's class names (decision 2129 (b), (f)).
+##
+## THE RULE THAT DID NOT CHANGE is the one that matters: these are VALUES READ
+## AT RUNTIME from a fetched file, not strings written into this public tree. No
+## `generated_by`, no `what`, no `readings`, no record path, no seed, no
+## settlement or plant identifier is surfaced, named or republished here.
 
 ## The pin is the manifest: nothing here walks a directory, because a walk
 ## answers "what is on this disk" and the question is "what did the producing
@@ -189,3 +209,71 @@ func is_present() -> bool:
 ## True only when the bytes are here AND they are the dressing the pin names.
 func identity_holds() -> bool:
     return state == PRESENT and identity_problems.is_empty()
+
+
+## The manifest's `pins` field: the committed pin file's digest, in the
+## recorder's prefixed form. "" when absent, which a caller must treat as a
+## refusal to bind rather than as a pin file that matches.
+func pins_digest() -> String:
+    if pin.is_empty() or state != PRESENT:
+        return ""
+    var man := _manifest()
+    return str(man.get("pins", ""))
+
+
+## The eras and the first year of each, for the slider's ticks. {} when absent.
+func era_starts() -> Dictionary:
+    if state != PRESENT:
+        return {}
+    var man := _manifest()
+    var e = man.get("era_starts", {})
+    return e if typeof(e) == TYPE_DICTIONARY else {}
+
+
+## The manifest, parsed from the fetched bytes on demand.
+##
+## NOT CACHED AT LOAD, deliberately. The load's job is presence and identity,
+## and parsing a 319 KB document to answer a question nobody asked would make
+## every identity check pay for the drawing window's needs. Callers that want
+## several fields can hold the result themselves.
+func _manifest() -> Dictionary:
+    var parsed = JSON.parse_string(
+            FileAccess.get_file_as_string(DIR + "manifest.json"))
+    return parsed if typeof(parsed) == TYPE_DICTIONARY else {}
+
+
+## The slider's ticks: the eras' first years, grouped, sorted, clamped to
+## [lo, hi]. Derived from the manifest's own `era_starts` and NO SECOND SET OF
+## YEARS (decision 2129 (c); owner ruling 2059 Q3 rejected *different years*).
+##
+## ⚠ TWO ERAS SHARE A YEAR IN THIS DRESSING, AND A TICK LIST KEYED BY YEAR
+## SILENTLY LOSES ONE. `walking` and `rail_streetcar` both begin at 1877, so
+## five eras yield FOUR distinct positions. A Dictionary keyed on the year --
+## the obvious shape, and the one this returned first -- keeps whichever era is
+## read last and drops the other with no error anywhere: the slider would show
+## four ticks, look entirely reasonable, and the owner would never be shown that
+## an era existed. So a tick carries a LIST of era names, and a year with two
+## eras names both.
+##
+## Era names are interface and may be shown as labels (W3's construal Q4, on the
+## same line as the palette's class names: decision 2129 (b), (f)). They are
+## read from the fetched manifest as data and declared nowhere in this tree.
+static func era_ticks(era_starts: Dictionary, lo: int, hi: int) -> Array:
+    var by_year := {}
+    for name in era_starts:
+        var y := int(era_starts[name])
+        if y < lo or y > hi:
+            continue
+        if not by_year.has(y):
+            by_year[y] = PackedStringArray()
+        var names: PackedStringArray = by_year[y]
+        names.append(str(name))
+        by_year[y] = names
+    var years: Array = by_year.keys()
+    years.sort()
+    var out: Array = []
+    for y: int in years:
+        var names: PackedStringArray = by_year[y]
+        names.sort()
+        out.append({"year": y, "eras": names})
+    return out

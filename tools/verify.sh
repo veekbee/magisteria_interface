@@ -67,6 +67,10 @@ python3 tools/fetch_artefacts.py --quiet --require assets/dressing/da6-compact/P
 # clone, useless in a gate, which would then go green having compared nothing.
 python3 tools/fetch_artefacts.py --quiet --require assets/dressing_renders/da6-compact/PIN \
   || fail=1
+# AND THE PIN FILE, the third of the three artefacts. W3's binding test needs
+# it; absent, that test skips and says so, which is right for a clone and
+# useless in a gate.
+python3 tools/fetch_artefacts.py --quiet --require assets/dressing_pins/PIN || fail=1
 # THE BYTES MUST NOT BE COMMITTABLE BY ACCIDENT. 141 MB of tile pyramid and
 # 437 MB of derived layers sit under assets/terrain/ once fetched, against a
 # ~10 MB threshold. The .gitignore keeps them out; this is the check that the
@@ -79,18 +83,18 @@ python3 tools/fetch_artefacts.py --quiet --require assets/dressing_renders/da6-c
 # reach them: they are fetched because decision 2129 answered decision 973's
 # question that way (owner ruling 2130). Same guard, because the reason bytes
 # must not be committable by accident does not depend on why they are fetched.
-allow='^assets/(terrain/(tiles|layers)|dressing/da6-compact|dressing_renders/da6-compact)/(PIN|README\.md|\.gdignore)$'
+allow='^assets/(terrain/(tiles|layers)|dressing/da6-compact|dressing_renders/da6-compact|dressing_pins)/(PIN|README\.md|\.gdignore)$'
 tracked=$(git ls-files assets/terrain/tiles assets/terrain/layers assets/dressing \
-  assets/dressing_renders | grep -vE "$allow" || true)
+  assets/dressing_renders assets/dressing_pins | grep -vE "$allow" || true)
 # A FILTER THAT CANNOT FIRE IS NOT A FILTER -- the lesson the engine-error awk
 # below already learned. If the allow-list ever widens to swallow a data file,
 # this guard goes silent and reports the swallowing as a pass, so the pattern is
 # asserted against a path it MUST report and one it must NOT.
-ctl_bad=$(printf 'assets/dressing/da6-compact/tiles.jsonl\nassets/dressing_renders/da6-compact/fold_1890.json\n' \
+ctl_bad=$(printf 'assets/dressing/da6-compact/tiles.jsonl\nassets/dressing_renders/da6-compact/fold_1890.json\nassets/dressing_pins/pins.json\n' \
   | grep -vE "$allow" | tr '\n' ' ')
-ctl_ok=$(printf 'assets/dressing/da6-compact/PIN\nassets/dressing_renders/da6-compact/PIN\n' \
+ctl_ok=$(printf 'assets/dressing/da6-compact/PIN\nassets/dressing_renders/da6-compact/PIN\nassets/dressing_pins/PIN\n' \
   | grep -vE "$allow" || true)
-want_bad='assets/dressing/da6-compact/tiles.jsonl assets/dressing_renders/da6-compact/fold_1890.json '
+want_bad='assets/dressing/da6-compact/tiles.jsonl assets/dressing_renders/da6-compact/fold_1890.json assets/dressing_pins/pins.json '
 if [ "$ctl_bad" != "$want_bad" ] || [ -n "$ctl_ok" ]; then
   echo "-- the tracked-bytes allow-list does not discriminate: a fetched data file"
   echo "   was reported as [$ctl_bad] and the pin as [$ctl_ok]"; fail=1

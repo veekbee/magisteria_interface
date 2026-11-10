@@ -1,0 +1,49 @@
+{
+  "_form": "The claim about the committed pin file the explorer draws and the owner moves. Same discipline as contract/PIN; the shape is assets/terrain/tiles/PIN's, which is what tools/fetch_artefacts.py reads.",
+  "_why_a_THIRD_pin": "THREE ARTEFACTS, THREE CLAIMS. assets/dressing/da6-compact/PIN is the dressing under test; assets/dressing_renders/da6-compact/PIN is the reference that judges the client's fold; this is the file the OWNER EDITS. Keeping it separate is not symmetry for its own sake. (a) It has a different lifecycle from both: the dressing and the reference are read-only inputs, and this is the edit target, re-emitted by the explorer and checked by the simulation's emission tool. (b) It would otherwise break a useful invariant of the dressing's pin -- that every file in its `files` contributes to `dressing_sha256`. This file does NOT: the dressing's identity is its four files, and the pin file is named by the manifest instead (see the binding below). (c) A separate `--require` and a separate row in the check-count pin's `artefacts_seen` make `the dressing is here but the pins are not` a state the suite can express rather than one it averages away.",
+  "artefact": "the dressing's pin file: the rows the generator's rules respected, and what the owner re-pins in the explorer",
+  "ruled_by": [
+    "decision 2129",
+    "owner ruling 2130",
+    "decision 2068",
+    "§22.8.4",
+    "decision 972",
+    "decision 973"
+  ],
+  "source": {
+    "repo": "git@github.com:veekbee/magisteria.git",
+    "path": "data/dressing/pins.json"
+  },
+  "artefact_committed_at": "f75f9cba65150ed5612bb80c8e9ebe71b723da57",
+  "_artefact_committed_at_note": "The simulation-repo commit these bytes come from -- the last commit to touch that path, contract/PIN's definition of this field. Not `source_commit`, which in the four asset pins means the commit a vendor tool read to produce derived bytes; nothing is derived here.",
+  "files": {
+    "pins.json": "3acd55ce80ffac82560fea9e3dee7d6fa8138d0e11a218247e0ea58aa53ada1e"
+  },
+  "bound_to_manifest_pins": "sha256:3acd55ce80ffac82560fea9e3dee7d6fa8138d0e11a218247e0ea58aa53ada1e",
+  "_bound_to_manifest_pins_note": "THE BINDING, AND IT WAS ALREADY IN THE DATA RATHER THAN INVENTED HERE. DA-6 compact's manifest carries a `pins` field holding this file's sha256, so the dressing itself declares which pin file it was built against. The client asserts the FETCHED bytes' digest equals that field, read from the fetched manifest -- not this pin's copy of it, which is recorded for a reader and is not the check. That is what stops one dressing's tiles being drawn under another dressing's pins. A pin file whose digest the manifest does not name is refused, and the refusal says which two digests disagreed.",
+  "_this_file_is_NOT_part_of_dressing_sha256": "The dressing's identity is its FOUR files -- manifest.json, tiles.jsonl, features.jsonl, routes.jsonl -- prefix-hashed in that order (§23.1745). This file is not among them and does not change that digest. It is bound to the dressing by the manifest's `pins` field instead, which is a different mechanism and a weaker one: the manifest names this file, so a changed pin file invalidates the manifest's claim without changing `dressing_sha256` at all. Anyone reasoning about what a dressing IS should not expect this file's bytes to be inside that number.",
+  "_what_this_pin_deliberately_does_not_carry": "ANY FREE TEXT FROM THE FILE. pins.json carries four prose fields -- `what`, `form`, `ruled_by` and the pin's own `note` -- and between them they name a simulation register row, a simulation module path, decision numbers and a quoted instruction. None is this public tree's to republish (decision 973, and the client's C3 as confirmed at W2). What the client reads and may draw is the pin's IDENTITY and GEOMETRY: `pin_id`, `kind`, `type`, `from`, `authored_by`, `polygon`. The seven pin kinds are NOT retyped anywhere client-side either: a pin is drawn by the `kind` its own row carries, and a kind this build has no marker for draws as UNKNOWN rather than being silently skipped -- the same rule the palette's classes follow (decision 2129 (b), (f)).",
+  "_base_dressing_in_the_committed_file_is_null": "Deliberate, and not a missing value. The committed file is the dressing's INPUT -- rows the generator respected -- so it was authored against no base. An emitted file from the explorer is a different thing and carries `base_dressing` sha256:5530e5b3e83de47994f4bc5d2c5e1657cffbedcfd5a5273b070b29acb560b926, the committed manifest file's own bytes (§22.8.9 as amended at §23.1745), together with the schedule's `schedule_plan_digest` under decision 2128 (ii)'s name.",
+  "fetched": {
+    "_what": "pins.json. The bytes are not committed; tools/fetch_artefacts.py is the only sanctioned way they arrive, and a clone without them is a working clone.",
+    "_why_fetched_is_NOT_decision_948": "AT 2,077 BYTES THIS IS THE CLEAREST CASE YET THAT THE SIZE LINE IS NOT THE REASON. Decision 948's threshold is 10,485,760; this file is five thousand times smaller and is still fetched rather than committed, because 948 partitions HOW A LARGE ARTEFACT IS HOSTED and decision 973 governs WHETHER A PUBLIC TREE MAY CARRY A SIMULATION ARTEFACT'S CONTENT. The owner answered the second question *fetched by PIN* (decision 2129 (a), owner ruling 2130), and that answer is about the content and not its weight. `threshold_bytes` is deliberately absent.",
+    "_host_is_not_authoritative": "the sha256 in `files` is the whole of the check. A move of hosting is a one-field edit here and changes no contract (decision 948, decision 972).",
+    "host_base": "file:///Users/victoriabarnes/project_magisteria/artefact_host/dressing-pins-v1/",
+    "total_bytes": 2077,
+    "files": {
+      "pins.json": {
+        "bytes": 2077
+      }
+    }
+  },
+  "cross_repo": {
+    "_what": "how the file above is checkable against `artefact_committed_at` in a simulation checkout. `bytes`: these are the committed bytes staged unchanged, with no vendor tool and no re-encoding.",
+    "files": {
+      "pins.json": {
+        "upstream": "data/dressing/pins.json",
+        "how": "bytes"
+      }
+    },
+    "_maintained": "HAND-WRITTEN. Nothing derives this pin. If a vendor tool is ever written it takes this over, and assets/terrain/PIN's lesson applies -- a hand-added block did not survive the first re-vendor of the contours."
+  }
+}

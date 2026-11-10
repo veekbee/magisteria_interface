@@ -102,6 +102,16 @@ func _initialize() -> void:
     _run(test_the_saturation_artefact_carries_the_model_it_is_only_true_under, "test_the_saturation_artefact_carries_the_model_it_is_only_true_under")
     _run(test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits, "test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits")
     _run(test_the_stamp_is_the_plan_digest_and_the_old_name_is_emitted_nowhere, "test_the_stamp_is_the_plan_digest_and_the_old_name_is_emitted_nowhere")
+    _run(test_a_year_is_checked_for_being_whole_and_not_for_being_TYPE_INT, "test_a_year_is_checked_for_being_whole_and_not_for_being_TYPE_INT")
+    _run(test_the_centres_bind_to_the_lattice_the_dressing_and_their_own_count, "test_the_centres_bind_to_the_lattice_the_dressing_and_their_own_count")
+    _run(test_a_tile_with_no_centre_refuses_the_draw_and_names_it, "test_a_tile_with_no_centre_refuses_the_draw_and_names_it")
+    _run(test_the_shading_follows_density_and_an_unknown_class_is_reported, "test_the_shading_follows_density_and_an_unknown_class_is_reported")
+    _run(test_a_footprint_outline_is_its_boundary_even_across_a_patch_edge, "test_a_footprint_outline_is_its_boundary_even_across_a_patch_edge")
+    _run(test_the_committed_centres_place_every_tile_at_the_declared_years, "test_the_committed_centres_place_every_tile_at_the_declared_years")
+    _run(test_the_pin_file_is_bound_to_the_dressing_the_manifest_names, "test_the_pin_file_is_bound_to_the_dressing_the_manifest_names")
+    _run(test_a_pin_file_the_manifest_does_not_name_is_refused, "test_a_pin_file_the_manifest_does_not_name_is_refused")
+    _run(test_two_eras_sharing_a_year_both_survive_the_slider_ticks, "test_two_eras_sharing_a_year_both_survive_the_slider_ticks")
+    _run(test_a_moved_pins_coordinates_leave_as_float64_bit_patterns, "test_a_moved_pins_coordinates_leave_as_float64_bit_patterns")
     _run(test_the_clients_fold_equals_the_reference_at_every_declared_year, "test_the_clients_fold_equals_the_reference_at_every_declared_year")
     _run(test_a_perturbed_fold_is_caught_and_an_absent_key_is_not_a_null_one, "test_a_perturbed_fold_is_caught_and_an_absent_key_is_not_a_null_one")
     _run(test_a_reference_stamped_with_another_dressing_is_refused, "test_a_reference_stamped_with_another_dressing_is_refused")
@@ -335,6 +345,11 @@ func _artefacts_seen() -> Dictionary:
         # two artefacts, and "the dressing is here but the reference is not" has
         # to be a state the pin can express rather than one it averages away.
         "reference": _pin_first_file_present("res://assets/dressing_renders/da6-compact/"),
+        # THE PIN FILE IS A THIRD ARTEFACT on a `file://` host, so CI cannot see
+        # it and W3's pin tests contribute nothing there. Its own row for the
+        # same reason the reference has one: three pins, three artefacts, and
+        # "the dressing is here but the pins are not" has to be sayable.
+        "pins": _pin_first_file_present("res://assets/dressing_pins/"),
     }
 
 
@@ -1094,6 +1109,477 @@ func test_the_unexercised_fold_branches_do_what_the_rules_say() -> void:
             "a feature removed in 1950 was dropped at 1940")
     check(DressingFold.features_at(feat_rows, 1950).size() == 1,
             "the `removed` clause did not drop a feature removed in that year")
+
+
+
+
+# --------------------------------------------------------------------------
+# G-9 window 3: the pin file, the era ticks, the edit list
+# --------------------------------------------------------------------------
+
+func test_the_pin_file_is_bound_to_the_dressing_the_manifest_names() -> void:
+    """THE BINDING, AND IT WAS ALREADY IN THE DATA RATHER THAN INVENTED.
+
+    DA-6 compact's manifest carries a `pins` field holding the committed pin
+    file's sha256, so the dressing declares which pin file it was built
+    against. The explorer computes the fetched file's digest and compares.
+    Without this it would draw one dressing's pins over another dressing's
+    tiles and ask the owner to rule on the result.
+
+    THE EXPECTATION COMES FROM THE FETCHED MANIFEST, not from the pin file's
+    own neighbouring `PIN`. The pin records the same value for a reader, and
+    reading the expectation there would compare the transport against itself.
+    """
+    var d := DressingLoad.load_from()
+    if not d.is_present():
+        print("pin binding: SKIPPED -- %s" % d.why_absent)
+        return
+    var want := d.pins_digest()
+    check(want != "", "the manifest names no `pins` digest, so nothing below is bound")
+    var ps := DressingPins.load_from(want)
+    if not ps.is_present():
+        print("pin binding: SKIPPED -- %s" % ps.why_absent)
+        return
+    check(ps.is_bound(), "the committed pin file is not bound: %s" % str(ps.problems))
+    check(ps.computed_sha256 == want,
+            "the pin file computes to %s and the manifest names %s"
+                    % [ps.computed_sha256, want])
+    check(ps.computed_sha256
+                    == "sha256:3acd55ce80ffac82560fea9e3dee7d6fa8138d0e11a218247e0ea58aa53ada1e",
+            "the pin file's digest is %s, not the value the dressing was built against"
+                    % ps.computed_sha256)
+    check(ps.pins.size() == 1, "the committed file holds %d pins, not the one placeholder"
+            % ps.pins.size())
+    check(ps.at(1877).size() == 1, "the 1877 pin does not stand at 1877")
+    check(ps.at(1876).size() == 0, "a pin dated 1877 stands at 1876")
+    check(str(ps.kinds()).contains("feature"),
+            "the pin's kind was not read from the row: kinds are %s" % str(ps.kinds()))
+    check(ps.emitter_warnings.is_empty(),
+            "the committed pin file's `from` is written with a decimal point, which the "
+            + "emission tool refuses: %s" % str(ps.emitter_warnings))
+
+
+func test_a_pin_file_the_manifest_does_not_name_is_refused() -> void:
+    """THE BINDING'S CONTROL. `the digests agree` is a sentence nobody has seen
+    be false until a wrong one is tried, so this passes a foreign digest and
+    requires the refusal, then passes "" and requires a refusal rather than a
+    pin file bound to nothing.
+    """
+    var foreign := DressingPins.load_from("sha256:" + "e".repeat(64))
+    if not foreign.is_present():
+        print("pin binding control: SKIPPED -- the pin file is not fetched")
+        return
+    check(not foreign.is_bound(),
+            "A PIN FILE THE MANIFEST DOES NOT NAME WAS ACCEPTED, so the binding cannot refuse")
+    check(str(foreign.problems).contains("not the one this dressing was built against"),
+            "the refusal does not say what is wrong: %s" % str(foreign.problems))
+    check(str(foreign.problems).contains(foreign.computed_sha256),
+            "the refusal does not print the digest that was computed, so a reader cannot "
+            + "tell which file they have: %s" % str(foreign.problems))
+    var unbound := DressingPins.load_from("")
+    check(not unbound.is_bound(),
+            "a pin file was accepted with NO digest to bind it to; an absent expectation is "
+            + "not a satisfied one")
+    check(str(unbound.problems).contains("unbound"),
+            "the refusal for a missing digest does not name the reason: %s"
+                    % str(unbound.problems))
+
+
+func test_two_eras_sharing_a_year_both_survive_the_slider_ticks() -> void:
+    """⚠ THE DROP THIS EXISTS TO CATCH, AND IT IS SILENT.
+
+    `walking` and `rail_streetcar` both begin in 1877, so this dressing's five
+    eras yield FOUR distinct tick positions. A tick list keyed by year -- the
+    obvious shape -- keeps whichever era is read last and drops the other with
+    no error: the slider shows four ticks, looks entirely reasonable, and the
+    owner is never shown that an era existed.
+
+    So a tick carries a LIST of era names. The control below is the whole point:
+    it asserts the 1877 tick names BOTH, which is the assertion a year-keyed
+    implementation fails and a count of ticks does not.
+    """
+    var ticks := DressingLoad.era_ticks(
+            {"walking": 1877, "rail_streetcar": 1877, "automobile": 1930,
+            "freeway": 1950, "height": 2030}, 1877, 2039)
+    check(ticks.size() == 4, "five eras over four distinct years gave %d ticks" % ticks.size())
+    var first: Dictionary = ticks[0]
+    check(int(first["year"]) == 1877, "the first tick is %s" % str(first["year"]))
+    var names: PackedStringArray = first["eras"]
+    check(names.size() == 2,
+            "THE 1877 TICK NAMES %d ERA(S), NOT 2: an era has been dropped where two share a "
+            % names.size() + "year, and no count of ticks would show it")
+    check(str(names).contains("walking") and str(names).contains("rail_streetcar"),
+            "the 1877 tick does not name both eras: %s" % str(names))
+    check(int((ticks[3] as Dictionary)["year"]) == 2030, "the last tick is not 2030")
+    # clamped, and an era outside the range is dropped rather than drawn off-slider
+    var clamped := DressingLoad.era_ticks({"a": 1800, "b": 1900, "c": 2500}, 1877, 2039)
+    check(clamped.size() == 1, "a tick outside [1877, 2039] was kept: %s" % str(clamped))
+    check(int((clamped[0] as Dictionary)["year"]) == 1900, "the kept tick is not 1900")
+    # and the real manifest's eras, read as data
+    var d := DressingLoad.load_from()
+    if not d.is_present():
+        return
+    var real := DressingLoad.era_ticks(d.era_starts(), 1877, 2039)
+    check(real.size() == 4,
+            "the committed manifest's eras give %d ticks, not the four measured" % real.size())
+    check(int((real[0] as Dictionary)["year"]) == 1877,
+            "the manifest's first era tick is not 1877")
+
+
+func test_a_moved_pins_coordinates_leave_as_float64_bit_patterns() -> void:
+    """WHY THE MOVE CROSSES AS BITS AND NEVER AS TEXT.
+
+    At EPSG:5070 magnitudes this engine's decimal-to-double conversion is not
+    correctly rounded -- G-8 measured one coordinate reading one ulp low through
+    the JSON parser, the script lexer and `String.to_float` alike, which is why
+    the emitter lives in Python and why no value may reach a Godot float parse
+    on the WRITE path. The bit representation is not in question, so a moved
+    coordinate leaves as bits and the emitter reassembles the double exactly.
+
+    This asserts the round trip is exact and the width is right. It does NOT
+    re-measure the parse defect: both of this engine's spellings of the value
+    are wrong in the same way, so it has no correct reference to compare
+    against, and G-8 settled it with the emitter's own selftest.
+    """
+    var x := -1689313.6678021685
+    var y := 1328912.2044408391
+    var out := DressingPins.edit_list({"yard-placeholder-1877": [[x, y]]})
+    check(out.has("yard-placeholder-1877"), "the edit list is not keyed by pin_id: %s"
+            % str(out.keys()))
+    var rows: Array = out["yard-placeholder-1877"]
+    check(rows.size() == 1, "one vertex gave %d rows" % rows.size())
+    var hex := str(rows[0])
+    check(hex.length() == 32,
+            "a vertex is two float64s, so 16 bytes and 32 hex characters, not %d"
+                    % hex.length())
+    var back := PackedByteArray()
+    back.resize(16)
+    for i in range(16):
+        back.encode_u8(i, ("0x" + hex.substr(i * 2, 2)).hex_to_int())
+    # ⚠ THE MESSAGE REPORTS THE BIT PATTERN, NOT A DECIMAL, and that is a fix
+    # rather than a flourish. These two lines read `%.17g` and **GDScript does
+    # not support `g`**: the engine raised `String formatting error: unsupported
+    # format character` twice on a run where both checks PASSED, because
+    # `check()` evaluates its message eagerly. So the fault was invisible in the
+    # checks and visible only to verify.sh's engine-error filter -- and on a
+    # REAL failure the message would have been garbled instead of naming the
+    # numbers, which is the worst moment for a diagnostic to fail. A decimal
+    # could not have said it anyway: a double's shortest repr hides the very ulp
+    # under test, where the hex is exact and is the subject.
+    check(back.decode_double(0) == x,
+            "x did not survive the bit pattern: wrote %s, read back %s"
+                    % [hex.substr(0, 16), _double_hex(back.decode_double(0))])
+    check(back.decode_double(8) == y,
+            "y did not survive the bit pattern: wrote %s, read back %s"
+                    % [hex.substr(16, 16), _double_hex(back.decode_double(8))])
+    # ⚠ THE CONTROL, AND IT CAUGHT A DEFECT IN THIS VERY FUNCTION'S SIGNATURE.
+    # `edit_list` first took a `Vector2`. GDScript's `float` is a double but
+    # **Vector2's components are 32-bit**, so a coordinate at this magnitude is
+    # already damaged before any encoding happens -- and the bit pattern then
+    # round-trips perfectly for the WRONG number, which is invisible: the
+    # emitter accepts the file and the pin has silently moved. This measures the
+    # loss instead of asserting it in a comment.
+    var as_v2 := Vector2(x, y)
+    var lost: float = absf(float(as_v2.x) - x)
+    check(lost > 0.0,
+            "a Vector2 did not lose this coordinate, so either this build is double-precision "
+            + "or the control is measuring nothing: either way the comment above is wrong")
+    check(lost < 1.0,
+            "a Vector2 lost %f m, which is more than a float32 should at this magnitude -- "
+            % lost + "the control itself is suspect")
+    check(back.decode_double(0) != float(as_v2.x),
+            "the float64 bit pattern and the Vector2 route agree, so this test cannot tell "
+            + "the damaged path from the sound one")
+
+
+
+
+
+func test_a_year_is_checked_for_being_whole_and_not_for_being_TYPE_INT() -> void:
+    """⚠ THE CHECK THAT FAILED A CORRECT FILE, AND WHY ITS SHAPE WAS WRONG.
+
+    `DressingPins` first tested `typeof(row["from"]) != TYPE_INT`. The committed
+    pin file carries `"from": 1877` -- an integer literal, no decimal point --
+    and the pin run REFUSED IT. **Godot's JSON parser returns every number as a
+    float**, so the parsed value is `1877.0` whatever the file says: the test
+    reported a property of the PARSER and called it a property of the artefact.
+    It failed a correct file, and it would have passed a file written `1877.0`
+    just as readily, which is both halves of being the wrong check.
+
+    Worse than the false refusal: the same test in `at()` meant a correct file
+    yielded NO PINS AT ALL. Nothing would have been drawn and nothing would have
+    said why -- the owner would have been shown a city with no pin on it.
+
+    So the parsed value is checked for being WHOLE, which is the property that
+    survives parsing, and the `1877.0` SPELLING -- which is what §25 backlog
+    724's refusal is actually about -- is checked in the TEXT, reported, and
+    does not stop the drawing. This test pins both halves and the parser
+    behaviour they turn on.
+    """
+    var dir := "user://t_pins_year/"
+    DirAccess.make_dir_recursive_absolute(dir)
+
+    # THE PARSER'S OWN BEHAVIOUR, asserted rather than assumed: an integer
+    # literal does not come back as TYPE_INT.
+    var parsed = JSON.parse_string('{"n": 1877}')
+    var n = (parsed as Dictionary)["n"]
+    check(typeof(n) != TYPE_INT,
+            "this engine's JSON parser DID return TYPE_INT for an integer literal, so the "
+            + "reasoning behind the whole-year check no longer holds and it should be revisited")
+    check(absf(float(n) - 1877.0) < 1e-9, "the parsed value is not 1877")
+
+    # an integer-literal year is accepted and the pin stands
+    _write_pin_file(dir, "1877")
+    var ok := DressingPins.load_from(_digest_of(dir + "pins.json"), dir)
+    check(ok.is_bound(), "an integer-literal year was refused: %s" % str(ok.problems))
+    check(ok.at(1877).size() == 1,
+            "A CORRECT FILE YIELDED NO PINS: `at()` is testing the parser's type again, and "
+            + "nothing would be drawn or said")
+    check(ok.emitter_warnings.is_empty(), "an integer literal was reported as a spelling the "
+            + "emitter refuses: %s" % str(ok.emitter_warnings))
+
+    # the `1877.0` spelling draws, and is reported as what the emitter refuses
+    _write_pin_file(dir, "1877.0")
+    var dotted := DressingPins.load_from(_digest_of(dir + "pins.json"), dir)
+    check(dotted.is_bound(),
+            "a `from` written 1877.0 stopped the DRAWING; the pin is placeable and only the "
+            + "emission tool refuses the spelling: %s" % str(dotted.problems))
+    check(dotted.at(1877).size() == 1, "the 1877.0 pin does not stand at 1877")
+    check(dotted.emitter_warnings.size() == 1,
+            "the 1877.0 spelling was not reported, so an author would learn it from the "
+            + "emission tool instead of here: %s" % str(dotted.emitter_warnings))
+    check(str(dotted.emitter_warnings).contains("724"),
+            "the warning does not cite the finding it comes from: %s"
+                    % str(dotted.emitter_warnings))
+
+    # a FRACTIONAL year is not a year, and that IS a refusal
+    _write_pin_file(dir, "1877.5")
+    var frac := DressingPins.load_from(_digest_of(dir + "pins.json"), dir)
+    check(not frac.is_bound(), "A FRACTIONAL YEAR WAS ACCEPTED; it cannot be placed")
+    check(str(frac.problems).contains("fractional"),
+            "the refusal does not name the reason: %s" % str(frac.problems))
+    DirAccess.remove_absolute(dir + "pins.json")
+    DirAccess.remove_absolute(dir)
+
+
+## A one-pin file whose `from` is written exactly as `spelling`.
+func _write_pin_file(dir: String, spelling: String) -> void:
+    var f := FileAccess.open(dir + "pins.json", FileAccess.WRITE)
+    f.store_string('{"pins": [{"pin_id": "p", "kind": "feature", "from": ' + spelling
+            + ', "polygon": [[0.0, 0.0], [1.0, 0.0], [1.0, 1.0]]}]}')
+    f.close()
+
+
+## A float64's bit pattern as hex: exact where a decimal is not.
+func _double_hex(v: float) -> String:
+    var b := PackedByteArray()
+    b.resize(8)
+    b.encode_double(0, v)
+    return b.hex_encode()
+
+
+func _digest_of(path: String) -> String:
+    var ctx := HashingContext.new()
+    ctx.start(HashingContext.HASH_SHA256)
+    ctx.update(FileAccess.get_file_as_bytes(path))
+    return "sha256:" + ctx.finish().hex_encode()
+
+
+# --------------------------------------------------------------------------
+# G-9 window 3: the tile centres and the drawing layer
+# --------------------------------------------------------------------------
+
+const LAT_SHA := "sha256:f02f6d7cc4f54fe49bad54f7a51c05f70b54e41d4b4b1ee53d9b832aa5d43439"
+const DRESS_SHA := "sha256:194f2f19e35d4799914fa01a2b45e7768d031a9d258fa5b397ca24d610647d4a"
+
+
+## Write a synthetic centres.json and return its directory.
+func _synth_centres(dir: String, rows: Dictionary, over: Dictionary = {}) -> String:
+    DirAccess.make_dir_recursive_absolute(dir)
+    var doc := {"centres": rows, "tile_m": 100.0, "tile_m_row": "a.row",
+            "lattice_sha256": LAT_SHA, "dressing_sha256": DRESS_SHA,
+            "n_centres": rows.size(), "crs": "EPSG:5070"}
+    for k in over:
+        doc[k] = over[k]
+    var f := FileAccess.open(dir + "centres.json", FileAccess.WRITE)
+    f.store_string(JSON.stringify(doc))
+    f.close()
+    return dir
+
+
+func test_the_centres_bind_to_the_lattice_the_dressing_and_their_own_count() -> void:
+    """FOUR BINDINGS, AND EACH GETS A PLANTED FAILURE, because each stops a
+    different wrong drawing and none of them is visible on screen:
+
+      * a foreign `lattice_sha256` places this city's tiles at another basin's
+        coordinates, and every tile still looks plausible;
+      * a foreign `dressing_sha256` draws one dressing's tiles at another's
+        positions;
+      * an `n_centres` that disagrees with the entries parsed is a truncated
+        file, which otherwise draws a SMALLER CITY with no error anywhere;
+      * a `crs` that is not EPSG:5070 misplaces everything by kilometres while
+        every digest still agrees -- a digest says what the bytes ARE, not what
+        they MEAN.
+
+    All four are planted on synthetic files, so this runs on a clone that has
+    fetched nothing.
+    """
+    var ok := _synth_centres("user://c_ok/", {"1,0,0": [100.0, 200.0]})
+    var good := DressingCentres.load_from(LAT_SHA, DRESS_SHA, ok)
+    check(good.is_bound(), "the synthetic centres failed their own bindings, so every "
+            + "control below would prove nothing: %s" % str(good.problems))
+    check(good.tile_m == 100.0, "tile_m did not survive the load")
+    check(good.has_centre("1,0,0"), "a centre that is present was not found")
+
+    var bad_lat := DressingCentres.load_from("sha256:" + "a".repeat(64), DRESS_SHA, ok)
+    check(not bad_lat.is_bound(), "CENTRES FROM A FOREIGN LATTICE WERE ACCEPTED")
+    check(str(bad_lat.problems).contains("another basin"),
+            "the lattice refusal does not say what goes wrong: %s" % str(bad_lat.problems))
+
+    var bad_dr := DressingCentres.load_from(LAT_SHA, "sha256:" + "b".repeat(64), ok)
+    check(not bad_dr.is_bound(), "CENTRES FOR ANOTHER DRESSING WERE ACCEPTED")
+
+    var short_dir := _synth_centres("user://c_short/", {"1,0,0": [1.0, 2.0]},
+            {"n_centres": 99})
+    var short := DressingCentres.load_from(LAT_SHA, DRESS_SHA, short_dir)
+    check(not short.is_bound(),
+            "A TRUNCATED FILE WAS ACCEPTED: it declares 99 centres and carries 1, which "
+            + "would draw a smaller city with nothing to say so")
+    check(str(short.problems).contains("truncated"),
+            "the count refusal does not name the risk: %s" % str(short.problems))
+
+    var wrong_crs := _synth_centres("user://c_crs/", {"1,0,0": [1.0, 2.0]},
+            {"crs": "EPSG:4326"})
+    var crs := DressingCentres.load_from(LAT_SHA, DRESS_SHA, wrong_crs)
+    check(not crs.is_bound(), "CENTRES IN ANOTHER PROJECTION WERE ACCEPTED")
+    check(str(crs.problems).contains("MEAN"),
+            "the crs refusal does not say why a digest cannot catch it: %s" % str(crs.problems))
+
+
+func test_a_tile_with_no_centre_refuses_the_draw_and_names_it() -> void:
+    """THE REFUSAL, AND WHY IT IS NOT A SKIP.
+
+    A viewer that skipped an unplaced tile would show a city at the plausible
+    scale with pieces missing, and nothing on screen or in the log would say a
+    piece was absent -- while the one thing the owner is there to do is look at
+    it. This is the tile pyramid's lesson again: measured absence and missing
+    data are different answers, and rendering them identically destroys the
+    difference. The names are returned rather than a count, because a count
+    turns a findable defect into a number nobody can act on.
+    """
+    var dir := _synth_centres("user://c_miss/", {"1,0,0": [0.0, 0.0], "1,0,1": [100.0, 0.0]})
+    var c := DressingCentres.load_from(LAT_SHA, DRESS_SHA, dir)
+    check(c.is_bound(), "the synthetic centres are not bound: %s" % str(c.problems))
+    var missing := c.missing(["1,0,0", "1,0,1", "9,9,9", "7,7,7"])
+    check(missing.size() == 2, "%d tiles reported missing, not the two absent" % missing.size())
+    check(str(missing).contains("9,9,9") and str(missing).contains("7,7,7"),
+            "the missing tiles are not named: %s" % str(missing))
+    check(c.missing(["1,0,0"]).is_empty(),
+            "a tile that IS placed was reported missing, so every clone would refuse")
+    check(c.centre_of("9,9,9").is_empty(),
+            "an unknown tile returned a centre; an absent position must not read as the "
+            + "origin, which is a real place on the map")
+
+
+func test_the_shading_follows_density_and_an_unknown_class_is_reported() -> void:
+    """The palette is DATA and is never retyped (decision 2129 (b), (f)): the
+    classes, the route classes, the outline and the density reference all come
+    from the committed file. A class the palette does not name draws as its own
+    UNKNOWN -- the renderer's magenta, which announces itself -- AND is
+    collected, so a class this build has never seen is visible rather than
+    silently drawn as something else.
+    """
+    var pal := {"PALETTE": {"residential_low": [200, 100, 50]}, "UNKNOWN": [255, 0, 255],
+            "FEATURE_EDGE": [30, 30, 30], "BACKGROUND": [1, 2, 3], "density_ref": 1000.0}
+    var zero := DressingDraw.shade([200, 100, 50], 0.0)
+    var full := DressingDraw.shade([200, 100, 50], 1.0)
+    check(is_equal_approx(zero.r, 200.0 / 255.0), "zero density did not leave the hue alone")
+    check(full.r < zero.r, "a dense tile is not darker than an empty one")
+    check(is_equal_approx(full.r, 200.0 / 255.0 * (1.0 - 0.55)),
+            "the darkening factor is not the renderer's 0.55: %f" % full.r)
+    check(DressingDraw.shade([200, 100, 50], 5.0).r == full.r,
+            "a density above the reference was not clamped, so a tile can go black or negative")
+
+    var unknown := {}
+    var fold := {"1,0,0": {"class": "residential_low", "density_per_km2": 500.0},
+            "1,0,1": {"class": "chemical_plant", "density_per_km2": 0.0},
+            "1,0,2": {"class": null, "density_per_km2": 0.0}}
+    var rows := DressingDraw.tile_rows(fold, pal, 1000.0, unknown)
+    check(rows.size() == 2,
+            "%d tiles drawn: a null class is ground the dressing touched and did not build "
+            % rows.size() + "on, and is not drawn -- but it is not a defect either")
+    check(unknown.has("chemical_plant"),
+            "a class the palette does not name was not reported: %s" % str(unknown.keys()))
+    check(not unknown.has("residential_low"),
+            "a class the palette DOES name was reported unknown, so the report is noise")
+    check(DressingDraw.edge_color(pal).r8 == 30,
+            "the feature outline is not the palette's FEATURE_EDGE")
+    check(DressingDraw.background_color(pal).b8 == 3, "the background is not the palette's")
+
+
+func test_a_footprint_outline_is_its_boundary_even_across_a_patch_edge() -> void:
+    """⚠ THE CASE INDEX ARITHMETIC GETS WRONG, AND IT LOOKS LIKE REAL GEOMETRY.
+
+    Two tiles are neighbours when their centres are one `tile_m` apart. They are
+    NOT reliably neighbours when their `i`/`j` differ by one: a footprint
+    crossing a patch boundary jumps in index space -- `(p, i, 19)` and
+    `(p+1, i, 0)` are adjacent on the ground -- while the metres run straight
+    through. An outline computed on indices draws a seam exactly where a patch
+    ends, and a seam is indistinguishable from a real edge by looking at it.
+
+    So adjacency is decided on the centres. This plants a 2x2 footprint whose
+    right-hand column sits in the NEXT patch, with contiguous centres, and
+    requires all four tiles to be boundary (a 2x2 block has no interior) and no
+    interior tile of a 3x3 to be.
+    """
+    var rows := {}
+    # a 3x3 block of contiguous centres, the right column in another patch
+    var keys: Array = []
+    for gy in range(3):
+        for gx in range(3):
+            var patch := 1 if gx < 2 else 2
+            var k := "%d,%d,%d" % [patch, gy, gx]
+            rows[k] = [float(gx) * 100.0, float(gy) * 100.0]
+            keys.append(k)
+    var dir := _synth_centres("user://c_edge/", rows)
+    var c := DressingCentres.load_from(LAT_SHA, DRESS_SHA, dir)
+    check(c.is_bound(), "the synthetic centres are not bound: %s" % str(c.problems))
+    var outline := DressingDraw.outline_keys(keys, c)
+    check(outline.size() == 8,
+            "a 3x3 block has eight boundary tiles and one interior; %d were reported, so "
+            % outline.size() + "adjacency is being decided on indices rather than centres")
+    # the centre tile is (gx 1, gy 1) -> patch 1, key "1,1,1"
+    check(not str(outline).contains("\"1,1,1\""),
+            "the interior tile was reported as boundary: %s" % str(outline))
+    # and the tile across the patch edge is interior-adjacent, not a seam
+    check(str(outline).contains("2,1,2"),
+            "the far column's middle tile should be boundary: %s" % str(outline))
+
+
+func test_the_committed_centres_place_every_tile_at_the_declared_years() -> void:
+    """COVERAGE ON THE REAL ARTEFACT: every tile in the fold at each declared
+    year has a centre. SKIPS until §25 backlog 732 is fetched, and says so --
+    a clone that has not fetched the centres is a valid clone, and asserting
+    presence here would turn every reduced run red for the one reason that is
+    not a regression.
+    """
+    var d := DressingLoad.load_from()
+    var c := DressingCentres.load_from(LAT_SHA, d.computed_dressing_sha256
+            if d.is_present() else "")
+    if not d.is_present() or not c.is_present():
+        print("centres coverage: SKIPPED -- dressing present: %s, centres present: %s"
+                % [d.is_present(), c.is_present()])
+        return
+    check(c.is_bound(), "the committed centres are not bound: %s" % str(c.problems))
+    check(c.declared_n == 17529,
+            "the centres declare %d entries, not the 17,529 measured" % c.declared_n)
+    var tiles := DressingFold.read_rows(DressingFold.DIR + "tiles.jsonl")
+    for year: int in DECLARED_YEARS:
+        var fold := DressingFold.fold(tiles, year)
+        var missing := c.missing(fold.keys())
+        check(missing.is_empty(), "%d of %d tiles at %d have no centre: %s"
+                % [missing.size(), fold.size(), year,
+                ", ".join(missing.slice(0, mini(3, missing.size())))])
 
 
 
