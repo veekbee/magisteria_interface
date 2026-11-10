@@ -78,6 +78,9 @@ func _initialize() -> void:
     _run(test_the_saturation_artefact_carries_the_model_it_is_only_true_under, "test_the_saturation_artefact_carries_the_model_it_is_only_true_under")
     _run(test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits, "test_the_explorer_emits_only_the_top_level_keys_the_emission_tool_admits")
     _run(test_the_stamp_is_the_plan_digest_and_the_old_name_is_emitted_nowhere, "test_the_stamp_is_the_plan_digest_and_the_old_name_is_emitted_nowhere")
+    _run(test_the_fetched_dressings_identity_holds_and_both_digests_are_literals_here, "test_the_fetched_dressings_identity_holds_and_both_digests_are_literals_here")
+    _run(test_a_perturbed_dressing_fails_identity_and_an_unfetched_one_is_not_a_defect, "test_a_perturbed_dressing_fails_identity_and_an_unfetched_one_is_not_a_defect")
+    _run(test_the_dressing_loader_republishes_no_string_from_the_manifest, "test_the_dressing_loader_republishes_no_string_from_the_manifest")
     _run(test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control, "test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control")
     _run(test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name, "test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name")
     _run(test_every_pin_kind_refuses_each_required_field_by_name, "test_every_pin_kind_refuses_each_required_field_by_name")
@@ -291,6 +294,12 @@ func _artefacts_seen() -> Dictionary:
         "fixture_bin": FileAccess.file_exists("res://assets/fixture/fixture_client.bin"),
         "tiles": _pin_first_file_present("res://assets/terrain/tiles/"),
         "layers": _pin_first_file_present("res://assets/terrain/layers/"),
+        # DA-6's DRESSING IS ON A `file://` HOST TOO (decision 2129), so CI
+        # cannot see it either and G-9's identity test contributes nothing
+        # there. Recorded here for the same reason as the other three: without
+        # it the pin taken on a full checkout would tell CI that a test had
+        # lost checks, when what happened is that CI never had the bytes.
+        "dressing": _pin_first_file_present("res://assets/dressing/da6-compact/"),
     }
 
 
@@ -416,6 +425,186 @@ func check(cond: bool, what: String) -> void:
     if not cond:
         _failures.append(what)
 
+
+
+# --------------------------------------------------------------------------
+# G-9 window 1: the dressing's load and its identity (decision 2129)
+# --------------------------------------------------------------------------
+
+func test_the_fetched_dressings_identity_holds_and_both_digests_are_literals_here() -> void:
+    """THE EXPECTED DIGESTS ARE SPELLED OUT, NOT READ FROM THE PIN OR THE CLASS.
+
+    `DressingLoad` already compares what it computes against what the pin
+    claims, so asserting `identity_holds()` alone would pass on ANY dressing
+    whose pin agrees with its own bytes -- including a different dressing
+    substituted wholesale. The values below are the ones an owner's ruling and
+    §23.1745 name, written as strings, so that a substitution is a failure here
+    rather than a silent success.
+
+    AND THE TWO DIGESTS ARE ASSERTED TO BE DIFFERENT NUMBERS. They are
+    different domains -- the manifest FILE's bytes against the four files'
+    CONTENT -- and the cheapest wrong simplification of this class is to
+    compute one and copy it to the other, which no single-digest check would
+    catch.
+    """
+    var d := DressingLoad.load_from()
+    if not d.is_present():
+        # SKIP, AND SAY SO -- NOT A FAILURE. A clone that cannot reach decision
+        # 972's host is a valid clone, and CI is one of them. Asserting
+        # presence here would turn every reduced run red for the one reason
+        # that is not a regression; `_artefacts_seen` is what keeps the pin
+        # honest about it instead.
+        print("dressing identity: SKIPPED -- %s" % d.why_absent)
+        return
+    check(d.identity_holds(),
+            "the fetched dressing failed its identity: %s" % str(d.identity_problems))
+    check(d.computed_manifest_sha256
+                    == "sha256:5530e5b3e83de47994f4bc5d2c5e1657cffbedcfd5a5273b070b29acb560b926",
+            "the manifest file's digest is %s, not the value §22.8.9 calls base_dressing"
+                    % d.computed_manifest_sha256)
+    check(d.computed_dressing_sha256
+                    == "sha256:194f2f19e35d4799914fa01a2b45e7768d031a9d258fa5b397ca24d610647d4a",
+            "the dressing's content digest is %s, not the value the owner's rulings name"
+                    % d.computed_dressing_sha256)
+    check(d.computed_manifest_sha256 != d.computed_dressing_sha256,
+            "the two digests came out equal, so one is being copied from the other; they "
+                    + "are different domains (§23.1745)")
+    check(d.pinned_manifest_sha256 == d.computed_manifest_sha256,
+            "the pin's manifest_sha256 is not what the bytes compute to")
+    check(d.pinned_dressing_sha256 == d.computed_dressing_sha256,
+            "the pin's dressing_sha256 is not what the bytes compute to")
+    check(int(d.per_file.size()) == 4,
+            "the load accounted for %d files, not the four a dressing is" % d.per_file.size())
+
+
+func test_a_perturbed_dressing_fails_identity_and_an_unfetched_one_is_not_a_defect() -> void:
+    """THE NEGATIVE CONTROL, AND THE TWO ABSENCES KEPT APART.
+
+    A digest check is believed only after it has been seen to fail, so this
+    builds a small dressing of its own, confirms the identity holds on it,
+    flips ONE BYTE and requires the failure to name the file that moved. The
+    expected digests for the synthetic pin are computed INLINE here with
+    `HashingContext` directly rather than through `DressingLoad`'s own helper:
+    an expectation drawn from the code under test is not an expectation.
+
+    AND A CLONE THAT NEVER FETCHED IS A VALID STATE, not a mismatch. The last
+    block pins that: no bytes means NOT_FETCHED with a reason, and an EMPTY
+    problem list -- a loader that reported an unfetched clone as a broken
+    dressing would make every fresh checkout look corrupt.
+    """
+    var dir := "user://t_dressing/"
+    DirAccess.make_dir_recursive_absolute(dir)
+    var body := {"manifest.json": "{\"a\":1}", "tiles.jsonl": "{\"t\":1}\n",
+            "features.jsonl": "{\"f\":1}\n", "routes.jsonl": "{\"r\":1}\n"}
+    for name in DressingLoad.FILES:
+        var w := FileAccess.open(dir + name, FileAccess.WRITE)
+        w.store_string(str(body[name]))
+        w.close()
+
+    # The expectation, built here and not borrowed from the class.
+    var nul := PackedByteArray([0])
+    var chain := HashingContext.new()
+    chain.start(HashingContext.HASH_SHA256)
+    var files := {}
+    var man_hex := ""
+    for name in DressingLoad.FILES:
+        var b := FileAccess.get_file_as_bytes(dir + name)
+        var one := HashingContext.new()
+        one.start(HashingContext.HASH_SHA256)
+        one.update(b)
+        var hex := one.finish().hex_encode()
+        files[name] = hex
+        if name == "manifest.json":
+            man_hex = hex
+        chain.update(name.to_utf8_buffer())
+        chain.update(nul)
+        chain.update(str(b.size()).to_utf8_buffer())
+        chain.update(nul)
+        chain.update(b)
+    var want_dressing := "sha256:" + chain.finish().hex_encode()
+
+    var pin_path := dir + "PIN"
+    var pw := FileAccess.open(pin_path, FileAccess.WRITE)
+    pw.store_string(JSON.stringify({"files": files, "manifest_sha256": "sha256:" + man_hex,
+            "dressing_sha256": want_dressing}))
+    pw.close()
+
+    var good := DressingLoad.load_from(pin_path, dir)
+    check(good.identity_holds(),
+            "the synthetic dressing failed its own identity, so the control below would "
+                    + "prove nothing: %s" % str(good.identity_problems))
+    check(good.computed_dressing_sha256 == want_dressing,
+            "the class computed %s where an independent chain gives %s -- the prefix rule "
+                    % [good.computed_dressing_sha256, want_dressing] + "disagrees")
+
+    # THE PREFIX IS LOAD-BEARING. A plain concatenation of the same files in
+    # the same order must NOT produce the same digest, or the names and lengths
+    # are decoration and two different dressings could collide.
+    var plain := HashingContext.new()
+    plain.start(HashingContext.HASH_SHA256)
+    for name in DressingLoad.FILES:
+        plain.update(FileAccess.get_file_as_bytes(dir + name))
+    check(("sha256:" + plain.finish().hex_encode()) != good.computed_dressing_sha256,
+            "name-and-length prefixes change nothing in the digest, so they are not being "
+                    + "applied")
+
+    # ONE BYTE.
+    var t := FileAccess.open(dir + "tiles.jsonl", FileAccess.WRITE)
+    t.store_string("{\"t\":2}\n")
+    t.close()
+    var bad := DressingLoad.load_from(pin_path, dir)
+    check(bad.is_present(), "the perturbed dressing was read as absent, not as present")
+    check(not bad.identity_holds(),
+            "ONE BYTE CHANGED AND THE IDENTITY STILL HELD: this check cannot fail")
+    check(str(bad.identity_problems).contains("tiles.jsonl"),
+            "the failure does not name the file that moved: %s" % str(bad.identity_problems))
+    check(str(bad.identity_problems).contains("dressing_sha256"),
+            "a per-file digest moved but the dressing's own identity was not reported: %s"
+                    % str(bad.identity_problems))
+    check(bool(bad.per_file["manifest.json"]["agrees"]),
+            "an untouched file was reported as disagreeing, so the check does not localise")
+
+    # AN UNFETCHED CLONE IS NOT A DEFECT.
+    for name in DressingLoad.FILES:
+        DirAccess.remove_absolute(dir + name)
+    var gone := DressingLoad.load_from(pin_path, dir)
+    check(not gone.is_present(), "a dressing with no files was reported as present")
+    check(gone.why_absent != "", "an unfetched dressing gives no reason for its absence")
+    check(gone.identity_problems.is_empty(),
+            "an unfetched clone was reported as having identity problems, which would make "
+                    + "every fresh checkout look corrupt: %s" % str(gone.identity_problems))
+    DirAccess.remove_absolute(pin_path)
+    DirAccess.remove_absolute(dir)
+
+
+func test_the_dressing_loader_republishes_no_string_from_the_manifest() -> void:
+    """DECISION 973's SURFACE IS COMMENT PROSE, AND THIS IS THE CHECK ON IT.
+
+    The manifest carries the simulation's own tool paths, a record path, a seed
+    and settlement identifiers. None of them is this public tree's to
+    republish, and the place they would leak is not the data -- which is
+    fetched and git-ignored -- but a comment, a test name or an error message,
+    all of which commit. So the loader's own source text is read back here and
+    required not to contain them.
+
+    WITH A CONTROL, because a reader that silently failed to open the file
+    would report every forbidden string as absent and pass. A string that IS
+    in the file must be found first.
+    """
+    var f := FileAccess.open("res://src/dressing/dressing_load.gd", FileAccess.READ)
+    check(f != null, "the loader's source could not be read, so nothing below was checked")
+    if f == null:
+        return
+    var src := f.get_as_text()
+    f.close()
+    check(src.contains("dressing_sha256"),
+            "the control failed: the source was read but does not contain a string it "
+                    + "certainly holds, so the absences below are not evidence")
+    for forbidden in ["build_dressing", "dressing_fields", "r_v_output", "layer1_annual",
+            "plant_set", "cement_plant", "power_plant_coal", "dem_clip_bilinear"]:
+        check(not src.contains(forbidden),
+                "the loader names `%s`, a string out of the manifest; this tree is public "
+                        % forbidden + "and that one is not (decision 973)")
 
 # --------------------------------------------------------------------------
 # the real artefact

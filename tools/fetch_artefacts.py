@@ -59,7 +59,37 @@ from typing import Optional, Sequence
 ROOT = Path(__file__).resolve().parents[1]
 PINS = ("contract/PIN", "assets/fixture/PIN", "assets/terrain/PIN",
         "assets/terrain/tiles/PIN", "assets/terrain/layers/PIN",
-        "assets/contours/PIN")
+        "assets/contours/PIN", "assets/detail/PIN",
+        "assets/dressing/da6-compact/PIN")
+#: `assets/detail/PIN` WAS MISSING FROM THE TUPLE UNTIL `unlisted_pins` BELOW
+#: WENT LOOKING. It declares no `fetched` block -- its three files are
+#: committed -- so it yields no rows and its absence changed nothing that ran.
+#: It is listed anyway, because the tuple is meant to be the inventory of this
+#: repo's pins and not of the fetched ones: the day a `fetched` block is added
+#: to a pin nobody listed is the day an artefact goes missing in silence, and
+#: that day would have arrived with no check to meet it.
+
+
+def unlisted_pins(root: Path) -> list:
+    """Every file named `PIN` in the tree that `PINS` above does not name.
+
+    WHY THIS EXISTS. `PINS` IS HAND-WRITTEN, AND A PIN THAT IS NOT IN IT IS
+    NOT MERELY UNFETCHED -- IT IS SILENTLY UNFETCHED. `main` walks `PINS` and
+    nothing else, so an artefact whose pin was added to the tree without being
+    added to this tuple produces no row, no fetch and no error; and when the
+    tuple's rows are all present, the run prints a tally and exits 0. The
+    failure mode is a clone that is missing an entire artefact while the
+    transport reports success, which is the same shape of defect as the
+    `no fetched artefacts declared` line below: AN ABSENCE READ AS A PASS.
+
+    Measured: adding `assets/dressing/da6-compact/PIN` for decision 2129 was
+    one tuple entry away from exactly that, and nothing in the gate would have
+    said so -- which is why this function is called unconditionally rather
+    than behind a flag.
+    """
+    found = sorted(str(q.relative_to(root)) for q in root.rglob("PIN")
+                   if q.is_file() and ".git" not in q.parts)
+    return [q for q in found if q not in PINS]
 
 
 def sha256_file(p: Path) -> str:
@@ -232,11 +262,34 @@ def selftest() -> int:
         if missing_required(rows_list, {here / "PIN"}):
             problems.append("a required row that is PRESENT was reported missing")
 
+        # `unlisted_pins` AGAINST A PLANTED PIN, AND ITS CONTROL. A walker that
+        # found nothing would pass this check by doing nothing at all, so the
+        # positive case is a pin deliberately planted at a path PINS does not
+        # name, and the control is a pin at a path it DOES name: the first must
+        # be reported and the second must not. One without the other is a
+        # check that cannot fail.
+        root = Path(d) / "tree"
+        (root / "assets" / "planted").mkdir(parents=True, exist_ok=True)
+        (root / "assets" / "planted" / "PIN").write_text("{}")
+        if "assets/planted/PIN" not in unlisted_pins(root):
+            problems.append("a pin at a path PINS does not name was NOT reported, so an "
+                            "artefact could be added to the tree and fetched by nothing")
+        (root / "contract").mkdir(parents=True, exist_ok=True)
+        (root / "contract" / "PIN").write_text("{}")
+        listed = unlisted_pins(root)
+        if "contract/PIN" in listed:
+            problems.append("a pin PINS DOES name was reported unlisted, so every clone "
+                            "would fail the check")
+        if sorted(listed) != ["assets/planted/PIN"]:
+            problems.append("the unlisted walk reported %r, not the planted pin alone"
+                            % sorted(listed))
+
     for p in problems:
         print(f"  SELFTEST: {p}", file=sys.stderr)
     print("  fetch selftest: %s" % ("FAILED" if problems else "host_base, row override and "
                                     "no-host all behave; no URL decides a path; --require "
-                                    "reports an absent required row and only that"))
+                                    "reports an absent required row and only that; an "
+                                    "unlisted pin is reported and a listed one is not"))
     return 1 if problems else 0
 
 
@@ -256,6 +309,17 @@ def main(argv: Optional[Sequence[str]] = None) -> int:
     a = ap.parse_args(argv)
     if a.selftest:
         return selftest()
+
+    # BEFORE ANY FETCH, because an artefact missing from the tuple cannot be
+    # reported by a step that only walks the tuple.
+    stray = unlisted_pins(ROOT)
+    if stray:
+        print("these pins exist in the tree and PINS does not name them, so nothing "
+              "fetches them and no other step would have said so:", file=sys.stderr)
+        for q in stray:
+            print(f"    {q}", file=sys.stderr)
+        print("Add each to PINS in this file, or delete the pin.", file=sys.stderr)
+        return 1
 
     required = set()
     for r in a.require:

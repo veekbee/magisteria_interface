@@ -56,16 +56,39 @@ python3 tools/fetch_artefacts.py --selftest || fail=1
 # client exists to display, and 1,526 of the suite's checks read it. A gate
 # that let those skip would go green having run half of itself.
 python3 tools/fetch_artefacts.py --quiet --require assets/fixture/PIN || fail=1
+# THE DRESSING IS REQUIRED TOO, and for the fixture's reason rather than the
+# pyramid's. G-9's identity check is the whole of window 1: if the bytes are
+# absent it SKIPS AND SAYS SO, which is correct behaviour for a clone and
+# useless in a gate -- the gate would go green having never recomputed a
+# digest. 7.6 MB off a local host, so requiring it costs a fraction of a second.
+python3 tools/fetch_artefacts.py --quiet --require assets/dressing/da6-compact/PIN || fail=1
 # THE BYTES MUST NOT BE COMMITTABLE BY ACCIDENT. 141 MB of tile pyramid and
 # 437 MB of derived layers sit under assets/terrain/ once fetched, against a
 # ~10 MB threshold. The .gitignore keeps them out; this is the check that the
 # .gitignore still does, because a rule nobody verifies is a rule that survives
 # exactly until someone adds a negation to it -- and the layers arrived by
 # adding three negations to it.
-tracked=$(git ls-files assets/terrain/tiles assets/terrain/layers \
-  | grep -vE '^assets/terrain/(tiles|layers)/(PIN|README\.md|\.gdignore)$' || true)
+#
+# AND DA-6's DRESSING JOINS THEM UNDER A DIFFERENT RULE. Its four files are
+# 7.6 MB in total and UNDER the threshold, so the size argument above does not
+# reach them: they are fetched because decision 2129 answered decision 973's
+# question that way (owner ruling 2130). Same guard, because the reason bytes
+# must not be committable by accident does not depend on why they are fetched.
+allow='^assets/(terrain/(tiles|layers)|dressing/da6-compact)/(PIN|README\.md|\.gdignore)$'
+tracked=$(git ls-files assets/terrain/tiles assets/terrain/layers assets/dressing \
+  | grep -vE "$allow" || true)
+# A FILTER THAT CANNOT FIRE IS NOT A FILTER -- the lesson the engine-error awk
+# below already learned. If the allow-list ever widens to swallow a data file,
+# this guard goes silent and reports the swallowing as a pass, so the pattern is
+# asserted against a path it MUST report and one it must NOT.
+ctl_bad=$(printf 'assets/dressing/da6-compact/tiles.jsonl\n' | grep -vE "$allow" || true)
+ctl_ok=$(printf 'assets/dressing/da6-compact/PIN\n' | grep -vE "$allow" || true)
+if [ "$ctl_bad" != "assets/dressing/da6-compact/tiles.jsonl" ] || [ -n "$ctl_ok" ]; then
+  echo "-- the tracked-bytes allow-list does not discriminate: a fetched data file"
+  echo "   was reported as [$ctl_bad] and the pin as [$ctl_ok]"; fail=1
+fi
 if [ -n "$tracked" ]; then
-  echo "fetched tile bytes are tracked by git:"; echo "$tracked" | head -5; fail=1
+  echo "fetched bytes are tracked by git:"; echo "$tracked" | head -5; fail=1
 else echo "ok -- only the pins, READMEs and .gdignores are tracked"; fi
 
 echo "== no addons =="

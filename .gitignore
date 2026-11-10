@@ -77,3 +77,22 @@ shots/
 # Fetched, not committed (decision 948). tools/fetch_artefacts.py brings these in;
 # their sha256 lives in the neighbouring PIN and is authoritative.
 assets/fixture/fixture_client.bin
+
+# DA-6's compact dressing: the record the explorer's viewer draws (decision
+# 2129, owner ruling 2130). FETCHED AND NEVER COMMITTED -- and NOT because of
+# decision 948's size line, which these files are under: the largest is 7.3 MB
+# and the four total 7.6 MB against a 10,485,760-byte threshold. 948 partitions
+# how a large artefact is hosted; whether a public tree may carry a simulation
+# artefact's CONTENT is decision 973's question, and the owner answered it
+# "Fetched by PIN". Anyone who checks the sizes against the pyramid's reasoning
+# will find it does not apply here, and this paragraph is why.
+#
+# SAME SHAPE OF EXCEPTION AS THE PYRAMID, AND THE LEVEL MATTERS. The pattern
+# ends at the directory that HOLDS the files, not at `dressing/`, because
+# `/assets/dressing/**` would exclude the `da6-compact` directory itself and
+# git cannot re-include a file whose parent directory is excluded -- which
+# would take the PIN out with the bytes, and a clone with no pin cannot fetch
+# them or even say what is missing.
+/assets/dressing/da6-compact/**
+!/assets/dressing/da6-compact/PIN
+!/assets/dressing/da6-compact/.gdignore
