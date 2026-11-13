@@ -2,10 +2,11 @@
   "_form": "The claim about §25 backlog 730's reference: the humans lane's own fold of DA-6's compact dressing at the declared four years, and the renderer's palette. Same discipline as contract/PIN -- the files are DATA, this is the CLAIM about them -- in the shape tools/fetch_artefacts.py reads (`files` plus `fetched`).",
   "_why_this_is_a_SEPARATE_pin_from_the_dressing": "THE REFERENCE MUST NOT BE ABLE TO MOVE WITH THE THING IT CHECKS. assets/dressing/da6-compact/PIN describes the artefact under test; these files are what judges it. One pin for both would mean a single re-stage could move the dressing and its own expected answer together -- and a reference that moves with the thing it checks is a control that cannot fail, which is the defect class this project keeps meeting: it is why decision 2128's rename went unwitnessed by a key-set check drawing its expectation from the renamed constant, and it is why the client was told not to derive this comparison's expected table from its own fold. Two pins are two separately visible claims, with separate `--require` and separate rows in the check-count pin's `artefacts_seen`, so that `the dressing is here but the reference is not` is a sayable state. It also follows magisteria's own structure: 730's outputs are committed BESIDE and not INSIDE data/dressing/ precisely so that the dressing's four files and its `dressing_sha256` stay untouched (decision 2118's rejection honoured). `the reference crosses as the dressing did` is AS, not WITH.",
   "artefact": "the viewer's reference: DA-6 compact folded to 1890, 1940, 1990 and 2039, with the renderer's palette and every tile's centre",
-  "_centres_json_is_why_the_lattice_does_not_cross": "A tile is `[patch_id, i, j]` -- an index, not a position -- while routes' geometry and pins' polygons are EPSG:5070 metres. The mapping lived in the simulation's 2 km patch lattice: 20,465,308 bytes, OVER owner ruling 948's line, carrying the whole basin's elevation, slope, aspect, distance-to-channel and HUC ids for 179,470 patches -- of which this city touches 61, and of whose thirteen columns the centre rule reads two. What the viewer needed was 2,990 bytes, 0.0146% of the file. Put to the owner under owner ruling 973, who ruled that the RENDERER EMITS THE CENTRES (§25 backlog 732). So the lattice does not cross, this client implements no geometry rule, and the lattice's digest is carried in centres.json where the client still checks it against the manifest's. The client refuses to draw a tile it has no centre for, rather than omit it: a city with pieces silently missing is the one defect a person cannot catch by looking.",
+  "_centres_json_is_why_the_lattice_does_not_cross": "A tile is `[patch_id, i, j]` -- an index, not a position -- while routes' geometry and pins' polygons are EPSG:5070 metres. The mapping lived in the simulation's 2 km patch lattice: 20,465,308 bytes, OVER owner ruling 948's line, carrying the whole basin's elevation, slope, aspect, distance-to-channel and HUC ids for 179,470 patches -- of which this city touched 61 under the superseded footprint and touches 152 under the regenerated one (re-measured at this re-cut; the LATTICE itself did not move -- its digest is still f02f6d7cc4f54fe49bad54f7a51c05f70b54e41d4b4b1ee53d9b832aa5d43439, so the figures above stand), and of whose thirteen columns the centre rule reads two. The emitted centres.json carries 48,155 tile centres against the superseded 17,529. Put to the owner under owner ruling 973, who ruled that the RENDERER EMITS THE CENTRES (§25 backlog 732). So the lattice does not cross, this client implements no geometry rule, and the lattice's digest is carried in centres.json where the client still checks it against the manifest's. The client refuses to draw a tile it has no centre for, rather than omit it: a city with pieces silently missing is the one defect a person cannot catch by looking.",
   "ruled_by": [
     "decision 2129",
     "owner ruling 2130",
+    "owner ruling 2140",
     "§25 backlog 730",
     "decision 972",
     "decision 973",
@@ -15,44 +16,44 @@
     "repo": "git@github.com:veekbee/magisteria.git",
     "path": "data/dressing_renders/da6-compact"
   },
-  "artefact_committed_at": "82ede1311a71d64dbc642aeb1c3a5fe40a89d5c0",
-  "_artefact_committed_at_note": "The simulation-repo commit this staged SET is current as of -- the last commit to touch this directory. Not `source_commit`, which in the four asset pins means the commit a VENDOR TOOL READ to produce derived bytes; nothing is derived here, these are the committed bytes staged unchanged. ⚠ THE SEVEN FILES NO LONGER SHARE ONE LAST-TOUCHING COMMIT, and this field said they did until §25 backlog 732 landed. Measured at that tree: the four folds and palette.json were last touched at `a32ccf07` (§25 backlog 730), and render.json and centres.json at `82ede131` (§25 backlog 732, which also restamped render.json to carry the centres digest). Every file is still CHECKABLE against the single commit above -- `git show 82ede131:<path>` yields these bytes for all seven, because that commit contains the five it did not change -- so the cross-repo check below needs no per-file commit. The split is recorded because provenance and checkability are different questions, and a reader who assumes one commit authored all seven would be wrong about five of them.",
+  "artefact_committed_at": "ceb4a0af2b5ecabdd983f5051bce473bf681b8b7",
+  "_artefact_committed_at_note": "The simulation-repo commit this staged SET is current as of -- the last commit to touch this directory. Not `source_commit`, which in the four asset pins means the commit a VENDOR TOOL READ to produce derived bytes; nothing is derived here, these are the committed bytes staged unchanged. THE SEVEN FILES SHARE ONE LAST-TOUCHING COMMIT AGAIN, and the warning that stood here said they did not. Re-measured at this re-cut: `git log -1` names ceb4a0af for each of the seven separately. The split that warning recorded was real and is now history -- at §25 backlog 732's tree the four folds and palette.json were last touched at `a32ccf07` (§25 backlog 730) and render.json and centres.json at `82ede131` -- and it ended because owner ruling 2140 accepted a regeneration that rewrote all seven in one commit. THE PARAGRAPH SURVIVES RATHER THAN BEING DELETED because the distinction it was written to teach is what makes this field readable: provenance and checkability are different questions, the single commit above answers only the second, and the next time a backlog rewrites some of these files and not others a reader who assumed one commit authored all seven would be wrong again.",
   "files": {
-    "fold_1890.json": "88b27059800b1a04b743ad695b207e4891e414239e4b2e3df6f6f7000c8d73ab",
-    "fold_1940.json": "6c9f4b03ee4f392b375c498533fe675f15ceb92a8c5e438bb9f2dd2372438303",
-    "fold_1990.json": "a6ea4fde1ff5d71c188322d2dadd1aee65abcefbfaf8b44e34a8643846342709",
-    "fold_2039.json": "5cfe107ce874f30183c87c32221db8823c56753f7ef815beee6d44d052b50801",
-    "palette.json": "c13632ddc66a8d3275cdbbab38937d586ac0356df61b2de9d9818172f8fc5601",
-    "render.json": "62d4434e060d56f79afaa6671a254a7eb3d81196e7ac5309ba1906c5e8b23b10",
-    "centres.json": "da5141d2fb9c0c6f97c1a321e97b321dc0f5781331704bca9bb8cbc1b652ccaf"
+    "fold_1890.json": "41cc223f04e211d3c89a6fc7dbf27161621f8b9ffc0178f7a954bd452259b32a",
+    "fold_1940.json": "f30152ddc3a86d7a7f0e41a072bcc9ffa74f828b88fd0c1b9e0ac0720211daa2",
+    "fold_1990.json": "29b9446b47125cae1d5476770748310846501657169b6ae05ff467507ef3e504",
+    "fold_2039.json": "7245bc66e8ecc51d544513a0ae1a96dbd2fd34d209b74e77ecee6326395dbb22",
+    "palette.json": "2d34c62b1c969127e353bd488dc493d960ec0b10c8be169e689cfd1d71bebaeb",
+    "render.json": "b7a09450de5f57ed2dbc33742144463b87290744ac4461b4fd6de2c2c9199337",
+    "centres.json": "d144486719f117ba8ea985fbccaf31da01d3c334a6e31c56df07c2ce4bd16bdc"
   },
-  "reference_for_dressing_sha256": "sha256:194f2f19e35d4799914fa01a2b45e7768d031a9d258fa5b397ca24d610647d4a",
+  "reference_for_dressing_sha256": "sha256:d3da07b0800b74d2d18dcd073b2c708b56b62c5cc865c3fd7304b0735966f880",
   "_reference_for_dressing_sha256_note": "WHICH DRESSING THIS IS A FOLD OF, AND THE BINDING THE LOADER MUST ENFORCE. Every one of the four folds, and palette.json, carries this same value in its own `dressing_sha256` field. The client asserts all of them equal the dressing's RECOMPUTED identity -- not this field, and not each other alone -- because that is what stops a fold of one dressing being compared against another dressing's tiles and reported as a disagreement, or worse as an agreement. A reference stamped with a different dressing's sha256 is refused by name.",
   "_what_this_pin_deliberately_does_not_carry": "ANY `generated_by` OR `what` STRING FROM THESE FILES, for the reason the dressing's pin carries none from the manifest: the simulation's tool paths and its prose are not this public tree's to republish (decision 973). The palette's CLASS and ROUTE-class names are the exception and are not republished here either, but they do legitimately reach the viewer as data (decision 2129 (b) and (f): the palette and class list come from the committed reference and are never re-declared), which is exactly why they are read from the fetched file rather than copied into this pin or into any source file.",
   "_the_four_renders_are_NOT_fetched": "render_1890.png, render_1940.png, render_1990.png and render_2039.png exist beside these files in the simulation repo and are deliberately absent from this pin. They are the owner's render under §22.7, not the client's reference: the fold and the palette are what the comparison reads, and the owner's look at DA-9 is at the explorer's own drawing rather than at a committed image. CONSEQUENCE, STATED RATHER THAN LEFT IMPLIED: render.json below names an `images` digest for each of the four, and those four rows are UNCHECKED here because the bytes are not fetched. Everything else render.json names is checked and agrees.",
   "cross_check_against_render_json": {
     "_what": "render.json is the humans lane's own manifest of this artefact, and it carries a sha256 for each fold, for the palette and for each image. That makes it a SECOND OPINION on the staged bytes, written by the producing lane and independent of the digests in `files` above, which this client computed itself.",
-    "_result": "AGREES on all six fetched files it describes: the four folds, palette.json and centres.json. The four `images` rows are unchecked because the renders are not fetched. render.json does not describe its own bytes, so nothing cross-checks the `render.json` row in `files` -- that digest is this client's computation alone, and no second opinion exists for it.",
+    "_result": "RE-VERIFIED AT THIS RE-CUT against the regenerated bytes, not carried forward: AGREES on all six fetched files it describes -- the four folds, palette.json and centres.json, six compared and six agreeing, and render.json's own dressing_sha256 also equals the recomputed identity d3da07b0.... The four `images` rows are unchecked because the renders are not fetched. render.json does not describe its own bytes, so nothing cross-checks the `render.json` row in `files` -- that digest is this client's computation alone, and no second opinion exists for it.",
     "_if_it_ever_disagrees": "report it and stop. A disagreement means the staged bytes and the producing lane's record of them have diverged, and reconciling it here -- by preferring either number -- would destroy the only evidence of which one moved."
   },
   "fetched": {
     "_what": "All seven files. None of these bytes is committed; tools/fetch_artefacts.py is the only sanctioned way they arrive, and a clone with none of them is a working clone.",
-    "_why_fetched_is_NOT_decision_948": "THESE FILES ARE UNDER 948's LINE AND ARE FETCHED ANYWAY, as the dressing's are. The largest is fold_2039.json at 3,123,353 bytes and the seven total 9,948,731, against a 10,485,760-byte threshold. 948 partitions HOW A LARGE ARTEFACT IS HOSTED, not WHETHER A PUBLIC TREE MAY CARRY A SIMULATION ARTEFACT'S CONTENT; the second question is decision 973's and was answered *fetched by PIN* (decision 2129 (a), owner ruling 2130). `threshold_bytes` is deliberately absent: nothing in the fetcher reads it, and here it would assert the wrong reason.",
+    "_why_fetched_is_NOT_decision_948": "EVERY FILE HERE IS UNDER 948's LINE AND THE SEVEN TOGETHER ARE OVER IT, AND NEITHER FACT IS WHY THEY ARE FETCHED, exactly as in the dressing's pin. Measured at this re-cut: the largest is fold_2039.json at 7,972,802 bytes, under the 10,485,760-byte threshold, while the seven total 26,396,348 -- two and a half times it. Before the regeneration the largest was 3,123,353 and the total 9,948,731, under it on both readings, so a reader who checked these sizes last time and checks them now gets a different answer to the same question. THIS PIN TAKES NO POSITION ON WHETHER 948 READS PER FILE OR PER ARTEFACT: that is not ruled, and it does not change what happens here, because these bytes are fetched either way. 948 partitions HOW A LARGE ARTEFACT IS HOSTED, not WHETHER A PUBLIC TREE MAY CARRY A SIMULATION ARTEFACT'S CONTENT; the second question is decision 973's and was answered *\"fetched by PIN\"* (decision 2129 (a), owner ruling 2130), and that answer holds whatever the size. `threshold_bytes` is deliberately absent: nothing in the fetcher reads it, and here it would assert the wrong reason.",
     "_host_is_not_authoritative": "the sha256 in `files` is the whole of the check. A move of hosting is a one-field edit here and changes no contract (decision 948, decision 972).",
-    "host_base": "file:///Users/victoriabarnes/project_magisteria/artefact_host/da6-compact-renders-v1/",
-    "total_bytes": 9948731,
+    "host_base": "file:///Users/victoriabarnes/project_magisteria/artefact_host/da6-compact-renders-v2/",
+    "total_bytes": 26396348,
     "files": {
       "fold_1890.json": {
-        "bytes": 64586
+        "bytes": 696617
       },
       "fold_1940.json": {
-        "bytes": 2766378
+        "bytes": 7383488
       },
       "fold_1990.json": {
-        "bytes": 3045516
+        "bytes": 7740077
       },
       "fold_2039.json": {
-        "bytes": 3123353
+        "bytes": 7972802
       },
       "palette.json": {
         "bytes": 746
@@ -61,7 +62,7 @@
         "bytes": 1168
       },
       "centres.json": {
-        "bytes": 946984
+        "bytes": 2601450
       }
     }
   },

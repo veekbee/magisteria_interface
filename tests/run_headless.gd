@@ -530,11 +530,11 @@ func test_the_fetched_dressings_identity_holds_and_both_digests_are_literals_her
     check(d.identity_holds(),
             "the fetched dressing failed its identity: %s" % str(d.identity_problems))
     check(d.computed_manifest_sha256
-                    == "sha256:5530e5b3e83de47994f4bc5d2c5e1657cffbedcfd5a5273b070b29acb560b926",
+                    == "sha256:9f51fa8dcc31716879d7e24a1eba327674377e31f47525c90440222deb5e0cab",
             "the manifest file's digest is %s, not the value §22.8.9 calls base_dressing"
                     % d.computed_manifest_sha256)
     check(d.computed_dressing_sha256
-                    == "sha256:194f2f19e35d4799914fa01a2b45e7768d031a9d258fa5b397ca24d610647d4a",
+                    == "sha256:d3da07b0800b74d2d18dcd073b2c708b56b62c5cc865c3fd7304b0735966f880",
             "the dressing's content digest is %s, not the value the owner's rulings name"
                     % d.computed_dressing_sha256)
     check(d.computed_manifest_sha256 != d.computed_dressing_sha256,
@@ -1390,7 +1390,7 @@ func _digest_of(path: String) -> String:
 # --------------------------------------------------------------------------
 
 const LAT_SHA := "sha256:f02f6d7cc4f54fe49bad54f7a51c05f70b54e41d4b4b1ee53d9b832aa5d43439"
-const DRESS_SHA := "sha256:194f2f19e35d4799914fa01a2b45e7768d031a9d258fa5b397ca24d610647d4a"
+const DRESS_SHA := "sha256:d3da07b0800b74d2d18dcd073b2c708b56b62c5cc865c3fd7304b0735966f880"
 
 
 ## Write a synthetic centres.json and return its directory.
@@ -1571,8 +1571,8 @@ func test_the_committed_centres_place_every_tile_at_the_declared_years() -> void
                 % [d.is_present(), c.is_present()])
         return
     check(c.is_bound(), "the committed centres are not bound: %s" % str(c.problems))
-    check(c.declared_n == 17529,
-            "the centres declare %d entries, not the 17,529 measured" % c.declared_n)
+    check(c.declared_n == 48155,
+            "the centres declare %d entries, not the 48,155 measured" % c.declared_n)
     var tiles := DressingFold.read_rows(DressingFold.DIR + "tiles.jsonl")
     for year: int in DECLARED_YEARS:
         var fold := DressingFold.fold(tiles, year)
