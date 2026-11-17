@@ -119,7 +119,8 @@ func _initialize() -> void:
     _run(test_the_unexercised_fold_branches_do_what_the_rules_say, "test_the_unexercised_fold_branches_do_what_the_rules_say")
     _run(test_the_fetched_dressings_identity_holds_and_both_digests_are_literals_here, "test_the_fetched_dressings_identity_holds_and_both_digests_are_literals_here")
     _run(test_a_perturbed_dressing_fails_identity_and_an_unfetched_one_is_not_a_defect, "test_a_perturbed_dressing_fails_identity_and_an_unfetched_one_is_not_a_defect")
-    _run(test_the_dressing_loader_republishes_no_string_from_the_manifest, "test_the_dressing_loader_republishes_no_string_from_the_manifest")
+    _run(test_no_source_file_republishes_a_name_from_the_fetched_artefacts, "test_no_source_file_republishes_a_name_from_the_fetched_artefacts")
+    _run(test_the_forbidden_set_re_derives_from_the_artefacts_it_claims, "test_the_forbidden_set_re_derives_from_the_artefacts_it_claims")
     _run(test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control, "test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control")
     _run(test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name, "test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name")
     _run(test_every_pin_kind_refuses_each_required_field_by_name, "test_every_pin_kind_refuses_each_required_field_by_name")
@@ -648,34 +649,488 @@ func test_a_perturbed_dressing_fails_identity_and_an_unfetched_one_is_not_a_defe
     DirAccess.remove_absolute(dir)
 
 
-func test_the_dressing_loader_republishes_no_string_from_the_manifest() -> void:
-    """DECISION 973's SURFACE IS COMMENT PROSE, AND THIS IS THE CHECK ON IT.
+# --------------------------------------------------------------------------
+# §25 backlog 741: decision 973's leak guard, derived rather than typed
+# --------------------------------------------------------------------------
 
-    The manifest carries the simulation's own tool paths, a record path, a seed
-    and settlement identifiers. None of them is this public tree's to
-    republish, and the place they would leak is not the data -- which is
-    fetched and git-ignored -- but a comment, a test name or an error message,
-    all of which commit. So the loader's own source text is read back here and
-    required not to contain them.
+## The committed digests, and the sources they are derived from.
+const FORBIDDEN_DIGESTS := "res://tests/forbidden_names.json"
+const SESSION_FIXTURE_DIR := "res://tests/session_fixture"
+const VOCABULARY_PATH := "res://contract/dressing_vocabulary.json"
+const SCHEMA_PATH := "res://contract/schema.json"
+const SCANNED_DIR := "res://src"
 
-    WITH A CONTROL, because a reader that silently failed to open the file
-    would report every forbidden string as absent and pass. A string that IS
-    in the file must be found first.
+## THE RULE, and the same numbers `tools/recut_forbidden.py` applies. Two
+## implementations of one rule is a drift risk that this arrangement turns into
+## a check: the tool writes the digests, this re-derives them independently, and
+## the gate compares. If the two ever disagree about what the rule means, the
+## comparison below goes red and names the count.
+const RULE_MIN_LEN := 6
+const RULE_MIN_SEGMENTS := 2
+
+## Substrings shorter than this are not tested, and only substrings carrying an
+## underscore or a dot are tested at all. That is not a performance dodge: every
+## name the rule can forbid carries one by construction, and an explicit entry
+## without one is refused when it is added (see the tool). The floor is what
+## makes an embedded name catchable -- `var some_field_name_path` is one token and
+## would survive a whole-token-only test -- without reintroducing the collisions
+## a raw substring test produces: measured, the old `contains` semantics collide
+## on 56 of the manifest's 293 names, 18 of them four characters or fewer,
+## INCLUDING this file's own declared years 1877, 1890, 1940, 1990 and 2039.
+const SUBSTRING_FLOOR := 6
+
+## Ruled at one (owner's construal at the DA-11 mint). The gate reports it so
+## that a group which grew quietly would be visible rather than merely wrong.
+const REASONED_ALLOWANCES_RULED := 1
+
+
+static func _forbidden_shape(name: String) -> bool:
+    if name.length() < RULE_MIN_LEN or not name.contains("_"):
+        return false
+    var segments := 0
+    for part in name.split("_"):
+        if not (part as String).is_empty():
+            segments += 1
+    return segments >= RULE_MIN_SEGMENTS
+
+
+## Every key and every leaf string of a JSON document, which is both halves of
+## the derivation. Of the eight names the old typed list carried, ONE was a key
+## and seven were values only, so a keys-only derivation would have caught one
+## of eight; the artefact's own proportions run the other way, 261 keys against
+## 36 leaf strings, which is why neither half can stand for the set.
+static func _walk_strings(v, out: Dictionary) -> void:
+    match typeof(v):
+        TYPE_DICTIONARY:
+            for k in (v as Dictionary):
+                out[str(k)] = true
+                _walk_strings((v as Dictionary)[k], out)
+        TYPE_ARRAY:
+            for e in (v as Array):
+                _walk_strings(e, out)
+        TYPE_STRING:
+            out[str(v)] = true
+
+
+static func _names_of_json(path: String) -> Dictionary:
+    var out := {}
+    if not FileAccess.file_exists(path):
+        return out
+    var parsed = JSON.parse_string(FileAccess.get_file_as_string(path))
+    if parsed == null:
+        return out
+    _walk_strings(parsed, out)
+    return out
+
+
+## Every `.gd` under a directory, recursively.
+static func _gd_files(dir_path: String) -> PackedStringArray:
+    var out := PackedStringArray()
+    var d := DirAccess.open(dir_path)
+    if d == null:
+        return out
+    d.list_dir_begin()
+    var name := d.get_next()
+    while name != "":
+        if name.begins_with("."):
+            name = d.get_next()
+            continue
+        var full := dir_path.path_join(name)
+        if d.current_is_dir():
+            out.append_array(_gd_files(full))
+        elif name.ends_with(".gd"):
+            out.append(full)
+        name = d.get_next()
+    d.list_dir_end()
+    return out
+
+
+## The candidate strings of one file's whole text, COMMENTS INCLUDED.
+##
+## Comments are included because decision 973's surface IS comment prose: the
+## data is fetched and git-ignored, so the place a simulation name reaches this
+## public tree is a comment, a test name or an error message. A scan that read
+## only code would look at the one surface the ruling says is not the one.
+##
+## Two shapes, and the second is not decoration: a dotted name is not one `\w+`
+## run, so a register row's name would pass a word scan untouched. One of the
+## two names §25 backlog 741's row cites as missed by the old guard is dotted.
+static func _candidates_of(text: String, word: RegEx, dotted: RegEx,
+        into: Dictionary, where: String) -> void:
+    for m in word.search_all(text):
+        var s := m.get_string()
+        if not into.has(s):
+            into[s] = where
+    for m in dotted.search_all(text):
+        var s := m.get_string()
+        if not into.has(s):
+            into[s] = where
+
+
+## The allow side, derived from the two committed public contract files.
+static func _allow_set() -> Dictionary:
+    var allow := {}
+    var voc = JSON.parse_string(FileAccess.get_file_as_string(VOCABULARY_PATH))
+    if typeof(voc) == TYPE_DICTIONARY:
+        for group in (voc as Dictionary):
+            if str(group).begins_with("_"):
+                continue
+            var entries = (voc as Dictionary)[group]
+            if typeof(entries) != TYPE_DICTIONARY:
+                continue
+            for name in (entries as Dictionary):
+                if not str(name).begins_with("_"):
+                    allow[str(name)] = true
+    var schema = JSON.parse_string(FileAccess.get_file_as_string(SCHEMA_PATH))
+    if schema != null:
+        var seen := {}
+        _walk_strings(schema, seen)
+        var row_name := RegEx.create_from_string("^[a-z][a-z0-9_]*([.][a-z][a-z0-9_]*)+$")
+        var keys := {}
+        _collect_keys(schema, keys)
+        for k in keys:
+            allow[str(k)] = true
+        for s in seen:
+            if row_name.search(str(s)) != null:
+                allow[str(s)] = true
+    return allow
+
+
+## Keys only, for the schema's half of the allow side: its leaf strings are
+## prose, and allowing prose wholesale would allow whatever a sentence quoted.
+static func _collect_keys(v, out: Dictionary) -> void:
+    match typeof(v):
+        TYPE_DICTIONARY:
+            for k in (v as Dictionary):
+                out[str(k)] = true
+                _collect_keys((v as Dictionary)[k], out)
+        TYPE_ARRAY:
+            for e in (v as Array):
+                _collect_keys(e, out)
+
+
+## The forbidden digests a source derives, by this side's own reading.
+static func _derive_digests(names: Dictionary, allow: Dictionary) -> Dictionary:
+    var out := {}
+    for n in names:
+        var s := str(n)
+        if _forbidden_shape(s) and not allow.has(s):
+            out[s.sha256_text()] = true
+    return out
+
+
+## The fixture's planted key, by prefix rather than by name.
+##
+## Returns "" when the fixture has none, which every caller checks: a control
+## that silently planted nothing would report the matcher sound.
+func _planted_name() -> String:
+    var parsed = JSON.parse_string(FileAccess.get_file_as_string(
+            SESSION_FIXTURE_DIR.path_join("session.json")))
+    if typeof(parsed) != TYPE_DICTIONARY:
+        return ""
+    for k in (parsed as Dictionary):
+        if str(k).begins_with("zz_planted"):
+            return str(k)
+    return ""
+
+
+func test_no_source_file_republishes_a_name_from_the_fetched_artefacts() -> void:
+    """DECISION 973'S SURFACE IS COMMENT PROSE, AND THIS IS THE CHECK ON IT.
+
+    WHAT THIS REPLACED. The guard here carried EIGHT NAMES TYPED INTO THIS FILE
+    and read ONE of the seventy `.gd` files under `src/`. It passed for two
+    reasons, neither of them the one it was written for: the client reads none of
+    the simulation's newer fields, and the eight names were committed in this
+    public tree in order to be forbidden. Measured at this landing, six of the
+    eight are no longer derivable from the regenerated manifest at all, so a
+    rework that ONLY derived its set would have quietly stopped forbidding them
+    -- a regression wearing the fix's clothes. They survive as `explicit`
+    digests, with no plaintext anywhere.
+
+    REMOVING THE TYPED LIST STOPS NEW NAMES BEING PUBLISHED. It does not
+    unpublish the eight: they stay in this repository's history, where every
+    commit before this one carries them, and nothing here can reach back.
+
+    THE DIGESTS ARE PER NAME AND SORTED BY HEX. Per name is the owner's ruling:
+    a mismatch can then name its delta to whoever holds the artefact, where one
+    aggregate digest could only say that something moved. By hex rather than by
+    name because an alphabetical list would order the file by the very names it
+    exists not to publish.
+
+    AND THE MATCHER HAS A POSITIVE CONTROL, which the old guard did not have in
+    this form. Its control proved only that the FILE HAD BEEN READ; nothing
+    proved the comparison could fail. Here a planted name in a scratch file must
+    be refused, so a scanner that found every candidate and compared it with
+    nothing goes red.
     """
-    var f := FileAccess.open("res://src/dressing/dressing_load.gd", FileAccess.READ)
-    check(f != null, "the loader's source could not be read, so nothing below was checked")
-    if f == null:
+    var pin = JSON.parse_string(FileAccess.get_file_as_string(FORBIDDEN_DIGESTS))
+    check(typeof(pin) == TYPE_DICTIONARY,
+            "%s did not parse, so nothing below was checked" % FORBIDDEN_DIGESTS)
+    if typeof(pin) != TYPE_DICTIONARY:
         return
-    var src := f.get_as_text()
-    f.close()
-    check(src.contains("dressing_sha256"),
-            "the control failed: the source was read but does not contain a string it "
-                    + "certainly holds, so the absences below are not evidence")
-    for forbidden in ["build_dressing", "dressing_fields", "r_v_output", "layer1_annual",
-            "plant_set", "cement_plant", "power_plant_coal", "dem_clip_bilinear"]:
-        check(not src.contains(forbidden),
-                "the loader names `%s`, a string out of the manifest; this tree is public "
-                        % forbidden + "and that one is not (decision 973)")
+    var forbidden := {}
+    for key in ["derived", "explicit"]:
+        for d in (pin as Dictionary).get(key, []):
+            forbidden[str(d)] = key
+    check(forbidden.size() > 0, "the committed forbidden set is empty, so every absence "
+            + "below would be vacuous")
+    check((pin as Dictionary).get("explicit", []).size() > 0,
+            "no `explicit` digests: the names the regenerated manifest no longer carries "
+                    + "would have stopped being forbidden by this rework")
+
+    var word := RegEx.create_from_string("[A-Za-z_][A-Za-z0-9_]*")
+    var dotted := RegEx.create_from_string("[A-Za-z_][A-Za-z0-9_]*([.][A-Za-z_][A-Za-z0-9_]*)+")
+    var files := _gd_files(SCANNED_DIR)
+    check(files.size() >= 60, "the scan found %d `.gd` files under %s, where this tree has "
+            % [files.size(), SCANNED_DIR] + "about seventy: the walk is not reaching them")
+
+    var candidates := {}
+    var read_ok := 0
+    for path in files:
+        var f := FileAccess.open(path, FileAccess.READ)
+        if f == null:
+            check(false, "could not read %s, so its contents were not checked" % path)
+            continue
+        var text := f.get_as_text()
+        f.close()
+        read_ok += 1
+        _candidates_of(text, word, dotted, candidates, path)
+    check(read_ok == files.size(),
+            "%d of %d files were read; an unread file is an unchecked file"
+                    % [read_ok, files.size()])
+
+    # THE READER'S CONTROL, kept from the guard this replaces: a string that is
+    # certainly present must be found, or the absences below are not evidence.
+    check(candidates.has("dressing_sha256"),
+            "the control failed: the scan read %d files but did not find a candidate it "
+                    % read_ok + "certainly holds, so the absences below prove nothing")
+
+    var findings := _findings(candidates, forbidden)
+    for line in findings:
+        check(false, line)
+    print("leak guard: %d candidates over %d files against %d forbidden digests, %d finding(s)"
+            % [candidates.size(), read_ok, forbidden.size(), findings.size()])
+
+    # THE MATCHER'S POSITIVE CONTROL. A planted name in a scratch file outside
+    # `src/` must be refused. It is written outside the scanned tree on purpose:
+    # a control that planted a file under `src/` would leave one there if this
+    # test ever died between writing and removing it.
+    # THE PLANTED NAME IS READ FROM THE FIXTURE, NOT TYPED HERE. Once the scan
+    # covers every committed text file, a literal in this file is a finding in
+    # this file -- and a guard whose own control tripped it would have to exempt
+    # itself, which is how exempting whatever is inconvenient begins. So the
+    # control asks the fixture for the key it planted, by prefix, and the full
+    # name never appears in this tree's source at all.
+    var planted := _planted_name()
+    check(planted != "", "the session fixture carries no `zz_planted`-prefixed key, so the "
+            + "matcher's positive control has nothing to plant and proves nothing")
+    var planted_dir := "user://leak_guard_control"
+    DirAccess.make_dir_recursive_absolute(planted_dir)
+    var planted_path := planted_dir.path_join("planted.gd")
+    var pf := FileAccess.open(planted_path, FileAccess.WRITE)
+    check(pf != null, "the control file could not be written, so the matcher is unproven")
+    if pf != null and planted != "":
+        pf.store_string("## a scratch file: %s reached a comment here\n" % planted)
+        pf.close()
+        var ctl := {}
+        var cf := FileAccess.open(planted_path, FileAccess.READ)
+        # THE READ-BACK IS CHECKED. `FileAccess.open(...).get_as_text()` on a null
+        # handle is how a control reports nothing and looks like a pass; the same
+        # unchecked chain exists elsewhere in this tree and is not copied here.
+        check(cf != null, "the control file could not be read back, so the matcher is unproven")
+        if cf != null:
+            _candidates_of(cf.get_as_text(), word, dotted, ctl, planted_path)
+            cf.close()
+            var ctl_findings := _findings(ctl, forbidden)
+            check(not ctl_findings.is_empty(),
+                    "A PLANTED FORBIDDEN NAME WAS NOT REFUSED: this matcher cannot fail, so "
+                            + "the clean result above is not evidence of anything")
+        DirAccess.remove_absolute(planted_path)
+        DirAccess.remove_absolute(planted_dir)
+
+    # AND A NEGATIVE CONTROL ON THE SAME MATCHER, because one direction is not a
+    # control: a matcher that refused everything would pass the test above and
+    # make every source file a finding.
+    var benign := {"height": "control", "lattice": "control", "nodata": "control",
+            "the_year_is_1890": "control"}
+    check(_findings(benign, forbidden).is_empty(),
+            "the matcher refuses ordinary words, so it would refuse this tree's own prose: "
+                    + "the rule is not discriminating")
+
+
+## Every way a candidate matches the forbidden set, as sentences.
+##
+## WHOLE FIRST, THEN SUBSTRINGS CARRYING AN UNDERSCORE OR A DOT. The whole test
+## catches a name written as its own token; the substring test catches one
+## embedded in a longer identifier, which a whole-token test alone would miss.
+## Neither names the string it found, because naming it here would publish it in
+## a test log and in anything that quotes one.
+func _findings(candidates: Dictionary, forbidden: Dictionary) -> Array[String]:
+    var out: Array[String] = []
+    for c in candidates:
+        var s := str(c)
+        if forbidden.has(s.sha256_text()):
+            out.append(("%s names a string derived from a fetched artefact; this tree is "
+                    + "public and that name is not (decision 973, §25 backlog 741). The "
+                    + "name is not printed here for the reason it is forbidden: run "
+                    + "`python3 tools/recut_forbidden.py` with the artefact fetched to see "
+                    + "which one.") % str(candidates[c]))
+            continue
+        if not (s.contains("_") or s.contains(".")):
+            continue
+        if _carries_a_forbidden_segment_run(s, forbidden):
+            out.append(("%s carries a forbidden name INSIDE a longer identifier, which a "
+                    + "whole-token check would not have seen (decision 973, §25 backlog "
+                    + "741). The name is not printed here; `python3 "
+                    + "tools/recut_forbidden.py` names it where the artefact is fetched.")
+                    % str(candidates[c]))
+    return out
+
+
+## Does any run of this candidate's segments equal a forbidden name?
+##
+## SEGMENT BOUNDARIES, NOT EVERY SUBSTRING, AND THE ASSUMPTION IS STATED RATHER
+## THAN BURIED. Every name the rule can forbid is compound snake_case, and every
+## identifier it could hide inside is too, so a name embedded in a longer one is
+## embedded AT a boundary: `prefix_some_field_name_suffix` carries its run from
+## after an underscore to before one. A name buried off-boundary --
+## `xsome_field_namey` -- is not matched here, and that is a deliberate limit: it
+## is not a spelling anyone writes, and testing every substring of every
+## candidate instead costs roughly a thousand times the hashes for cases of that
+## shape alone. Whole-token matching above is unaffected; this is only the
+## embedded case.
+func _carries_a_forbidden_segment_run(s: String, forbidden: Dictionary) -> bool:
+    var starts: Array[int] = [0]
+    var ends: Array[int] = [s.length()]
+    for i in range(s.length()):
+        var ch := s[i]
+        if ch == "_" or ch == ".":
+            ends.append(i)
+            starts.append(i + 1)
+    for a in starts:
+        for b in ends:
+            if b - a < SUBSTRING_FLOOR:
+                continue
+            var sub := s.substr(a, b - a)
+            if not (sub.contains("_") or sub.contains(".")):
+                continue
+            if forbidden.has(sub.sha256_text()):
+                return true
+    return false
+
+
+func test_the_forbidden_set_re_derives_from_the_artefacts_it_claims() -> void:
+    """THE OTHER HALF, AND THE ONE THAT CAN SKIP.
+
+    The half above needs no artefact: it hashes this tree's own candidates
+    against committed digests, so it runs in every clone and in every gate and
+    never skips. THAT IS THE HALF THAT PROTECTS THE PUBLIC TREE, and splitting it
+    out is why §25 backlog 741's clause (c) no longer puts a skip in front of the
+    thing being guarded.
+
+    This half asks the other question -- does the committed set still match the
+    artefacts it says it came from -- and that one genuinely needs the bytes. A
+    clone without them takes a named skip; a gate, which fetches them, must not.
+
+    PER SOURCE, BECAUSE A NON-EMPTY CONTROL OVER THE UNION CANNOT FAIL. The
+    manifest alone makes the union non-empty, so a control taken over the whole
+    set would pass while the session half contributed nothing at all -- and at
+    this landing the session half has no live source anywhere: decision 2149 (1)
+    puts DA-11's session files in a git-ignored directory on the owner's machine.
+    That is what `tests/session_fixture` is for, and why it is committed,
+    synthetic and always present.
+    """
+    var pin = JSON.parse_string(FileAccess.get_file_as_string(FORBIDDEN_DIGESTS))
+    if typeof(pin) != TYPE_DICTIONARY:
+        check(false, "%s did not parse" % FORBIDDEN_DIGESTS)
+        return
+    var committed := {}
+    for d in (pin as Dictionary).get("derived", []):
+        committed[str(d)] = true
+
+    var allow := _allow_set()
+    check(allow.size() >= 10,
+            "the allow side derived %d names from the committed contract files, which is "
+                    % allow.size() + "not a vocabulary: the guard would refuse this client "
+                    + "for implementing the formats it exists to implement")
+    check(allow.has("era_starts"),
+            "the allow side does not carry the manifest field the loader exposes as its own "
+                    + "method, so the loader cannot name what it reads")
+    var voc = JSON.parse_string(FileAccess.get_file_as_string(VOCABULARY_PATH))
+    var reasoned := 0
+    if typeof(voc) == TYPE_DICTIONARY:
+        var group = (voc as Dictionary).get("client_own_names_colliding_by_coincidence", {})
+        if typeof(group) == TYPE_DICTIONARY:
+            for k in (group as Dictionary):
+                if not str(k).begins_with("_"):
+                    reasoned += 1
+    check(reasoned == REASONED_ALLOWANCES_RULED,
+            "%d reasoned allowance(s) where %d was ruled: a coincidence group that grew "
+                    % [reasoned, REASONED_ALLOWANCES_RULED] + "quietly is the typed allow "
+                    + "list this arrangement exists to avoid")
+
+    # THE SESSION SOURCE, WHICH IS COMMITTED AND SO NEVER SKIPS.
+    var fixture_names := {}
+    for rel in ["session.json", "year_1900/stats.json", "commands/advance.json"]:
+        var got := _names_of_json(SESSION_FIXTURE_DIR.path_join(rel))
+        check(got.size() > 0,
+                "the session fixture's %s read no names, so the second source contributes "
+                        % rel + "nothing and its half of the derivation is unexercised")
+        for n in got:
+            fixture_names[n] = true
+    var fixture_digests := _derive_digests(fixture_names, allow)
+    check(fixture_digests.size() > 0,
+            "the session fixture derived no forbidden names at all: decision 2149 (1)'s "
+                    + "second source is wired to nothing")
+    var planted := _planted_name()
+    check(planted != "", "the session fixture carries no `zz_planted`-prefixed key")
+    check(planted == "" or fixture_digests.has(planted.sha256_text()),
+            "the fixture's planted name does not derive, so nothing shows that the session "
+                    + "half of the derivation is read rather than merely declared")
+    for d in fixture_digests:
+        check(committed.has(str(d)),
+                "a name the session fixture derives is not in the committed set, so the "
+                        + "committed set is not what this side derives")
+
+    # THE MANIFEST'S SOURCE, WHICH CAN SKIP -- AND THE GATE MUST NOT.
+    var manifest_path := DressingLoad.DIR + "manifest.json"
+    if not FileAccess.file_exists(manifest_path):
+        print("forbidden-set re-derivation: SKIPPED -- the dressing is not fetched, so the "
+                + "manifest half could not be re-derived. The enforcement half above ran.")
+        return
+    var manifest_digests := _derive_digests(_names_of_json(manifest_path), allow)
+    check(manifest_digests.size() > 0,
+            "the manifest derived no forbidden names, which cannot be true of this artefact: "
+                    + "the derivation or the rule is broken")
+    var missing := 0
+    for d in manifest_digests:
+        if not committed.has(str(d)):
+            missing += 1
+    var extra := 0
+    for d in committed:
+        if not manifest_digests.has(str(d)) and not fixture_digests.has(str(d)):
+            extra += 1
+    # COUNTS AND NEVER DIGESTS. §25 backlog 741's clause (b): a mismatch must not
+    # be fixable by pasting this check's own output, so there is nothing here to
+    # paste. `tools/recut_forbidden.py` names the delta where the bytes are.
+    check(missing == 0,
+            "%d name(s) derive from the manifest and are not committed. Re-cut with "
+                    % missing + "`python3 tools/recut_forbidden.py --recut`; this check "
+                    + "prints counts and never digests, so it cannot be made green by "
+                    + "pasting its own output.")
+    check(extra == 0,
+            "%d committed digest(s) derive from neither source. A departed name REFUSES: "
+                    % extra + "either the artefact dropped it or the derivation broke, and "
+                    + "`tools/recut_forbidden.py` distinguishes those from a name that moved "
+                    + "to the allow side.")
+    # ONE FORMAT STRING, NOT TWO CONCATENATED. This parses correctly either way
+    # -- `%` binds tighter than `+`, so each piece formats its own values -- but
+    # tools/verify.sh's header records a real defect of exactly this shape that
+    # survived every green run, so the shape is not worth keeping for the sake
+    # of a line break.
+    print(("forbidden-set re-derivation: manifest %d, session fixture %d, committed %d, "
+            + "%d reasoned allowance(s)")
+            % [manifest_digests.size(), fixture_digests.size(), committed.size(), reasoned])
 
 
 # --------------------------------------------------------------------------
@@ -703,7 +1158,8 @@ func _ref_fold(year: int) -> Dictionary:
 ## reference does not carry at all. The reference's own entries prove the
 ## distinction matters -- its features come in FIVE different key sets and its
 ## routes in two, because `cost`, `sparse`, `outside_envelope` and
-## `pin_id`-versus-`schedule_row` are each present only sometimes.
+## `pin_id`-versus-its-schedule-side counterpart are each present only
+## sometimes.
 func _state_problems(what: String, mine: Dictionary, theirs: Dictionary) -> PackedStringArray:
     var out := PackedStringArray()
     for k in theirs:
@@ -1034,10 +1490,10 @@ func test_the_unexercised_fold_branches_do_what_the_rules_say() -> void:
     """
     var rows: Array = [
         {"tile": [1, 0, 0], "calendar_year": 1900, "event": "built", "class": "warehouse",
-                "era": "rail_streetcar", "by": "rule", "stratum": "s1", "storeys": 2,
+                "era": "zz_era_two", "by": "rule", "stratum": "s1", "storeys": 2,
                 "density_per_km2": 50.0},
         {"tile": [1, 0, 0], "calendar_year": 1910, "event": "cleared", "class": "warehouse",
-                "era": "rail_streetcar", "by": "rule"},
+                "era": "zz_era_two", "by": "rule"},
     ]
     var cleared: Dictionary = DressingFold.fold(rows, 1910)["1,0,0"]
     check(cleared["class"] == null, "`cleared` left the class as %s" % str(cleared["class"]))
@@ -1054,7 +1510,7 @@ func test_the_unexercised_fold_branches_do_what_the_rules_say() -> void:
     # `renewed` resets `since` and must NOT touch the class
     var renewed_rows: Array = [
         {"tile": [2, 0, 0], "calendar_year": 1900, "event": "built", "class": "warehouse",
-                "era": "rail_streetcar", "by": "rule", "stratum": "s1"},
+                "era": "zz_era_two", "by": "rule", "stratum": "s1"},
         {"tile": [2, 0, 0], "calendar_year": 1950, "event": "renewed", "class": "commercial",
                 "era": "automobile", "by": "rule"},
     ]
@@ -1077,7 +1533,7 @@ func test_the_unexercised_fold_branches_do_what_the_rules_say() -> void:
     # `densified` must NOT move `since` -- the asymmetry the manager confirmed
     var dens_rows: Array = [
         {"tile": [4, 0, 0], "calendar_year": 1900, "event": "built", "class": "residential_low",
-                "era": "rail_streetcar", "by": "rule", "stratum": "s1"},
+                "era": "zz_era_two", "by": "rule", "stratum": "s1"},
         {"tile": [4, 0, 0], "calendar_year": 1930, "event": "densified",
                 "class": "residential_middle", "era": "automobile", "by": "rule",
                 "stratum": "s1", "density_per_km2": 900.0},
@@ -1091,7 +1547,7 @@ func test_the_unexercised_fold_branches_do_what_the_rules_say() -> void:
     # `zoned` sets the zone and NEVER the class (decision 2097)
     var zoned_rows: Array = [
         {"tile": [5, 0, 0], "calendar_year": 1900, "event": "zoned", "class": "industrial",
-                "era": "rail_streetcar", "by": "rule"},
+                "era": "zz_era_two", "by": "rule"},
     ]
     var zoned: Dictionary = DressingFold.fold(zoned_rows, 1900)["5,0,0"]
     check(str(zoned["zone"]) == "industrial", "`zoned` did not set the zone")
@@ -1188,7 +1644,7 @@ func test_a_pin_file_the_manifest_does_not_name_is_refused() -> void:
 func test_two_eras_sharing_a_year_both_survive_the_slider_ticks() -> void:
     """⚠ THE DROP THIS EXISTS TO CATCH, AND IT IS SILENT.
 
-    `walking` and `rail_streetcar` both begin in 1877, so this dressing's five
+    `walking` and a second era both begin in 1877, so this dressing's five
     eras yield FOUR distinct tick positions. A tick list keyed by year -- the
     obvious shape -- keeps whichever era is read last and drops the other with
     no error: the slider shows four ticks, looks entirely reasonable, and the
@@ -1199,7 +1655,7 @@ func test_two_eras_sharing_a_year_both_survive_the_slider_ticks() -> void:
     implementation fails and a count of ticks does not.
     """
     var ticks := DressingLoad.era_ticks(
-            {"walking": 1877, "rail_streetcar": 1877, "automobile": 1930,
+            {"walking": 1877, "zz_era_two": 1877, "automobile": 1930,
             "freeway": 1950, "height": 2030}, 1877, 2039)
     check(ticks.size() == 4, "five eras over four distinct years gave %d ticks" % ticks.size())
     var first: Dictionary = ticks[0]
@@ -1208,7 +1664,7 @@ func test_two_eras_sharing_a_year_both_survive_the_slider_ticks() -> void:
     check(names.size() == 2,
             "THE 1877 TICK NAMES %d ERA(S), NOT 2: an era has been dropped where two share a "
             % names.size() + "year, and no count of ticks would show it")
-    check(str(names).contains("walking") and str(names).contains("rail_streetcar"),
+    check(str(names).contains("walking") and str(names).contains("zz_era_two"),
             "the 1877 tick does not name both eras: %s" % str(names))
     check(int((ticks[3] as Dictionary)["year"]) == 2030, "the last tick is not 2030")
     # clamped, and an era outside the range is dropped rather than drawn off-slider

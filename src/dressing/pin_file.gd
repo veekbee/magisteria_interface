@@ -60,17 +60,18 @@ extends RefCounted
 ## The format's whole top-level set, from the emission tool's own `TOP_KEYS`.
 ## `generated_by` is in the tool's set and is NOT written here, per above.
 ##
-## THE STAMP IS `schedule_plan_digest`, RENAMED FROM `schedule_content_digest`
-## BY DECISION 2128 (ii) (§25 backlog 726). The old name is not a synonym the
-## tool tolerates: it is REFUSED BY NAME on an emitted file. The two digests
+## THE STAMP IS `schedule_plan_digest`, AND DECISION 2128 (ii) RENAMED IT
+## (§25 backlog 726). The name it replaced is not a synonym the tool tolerates:
+## that name is REFUSED BY NAME on an emitted file, and 2128 (ii) carries the
+## spelling, which §25 backlog 741 keeps out of this tree. The two digests
 ## answer different questions -- the content digest names the schedule's
 ## REVISION, and it moved on 20 of that file's 35 committed transitions while
 ## the events stayed byte-identical; worse, a placed pin file moved it ITSELF
 ## through the register row that records the placement, so it could never name
 ## the plan a pin was authored against. `plan_digest` is taken over the
-## schedule's `master_seed` and `events` alone, which is what a dressing
-## actually reads, so it holds still when a register byte the schedule never
-## reads moves.
+## schedule's seed and its `events` alone, which is what a dressing actually
+## reads, so it holds still when a register byte the schedule never reads
+## moves.
 const TOP_KEYS := ["what", "form", "ruled_by", "base_dressing",
         "schedule_plan_digest", "pins"]
 
@@ -128,8 +129,8 @@ var why_refused: String = ""
 ## different number. `schedule_plan_digest` is the schedule's `plan_digest` as
 ## the author was given it; **nothing here derives it**, because deriving it
 ## would put a second copy of a register value in this repo -- and the plan
-## digest in particular is derived from the schedule's `master_seed` and
-## `events`, neither of which this repo holds.
+## digest in particular is derived from the schedule's seed and its `events`,
+## neither of which this repo holds.
 ##
 ## ONLY THEIR SHAPE IS CHECKED, `sha256:` and 64 hex digits, which is the same
 ## check the tool's own `form_problems` runs. Whether either names anything real

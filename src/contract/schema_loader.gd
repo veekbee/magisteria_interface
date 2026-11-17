@@ -32,8 +32,8 @@ extends RefCounted
 ## v2.0 is the first major advance this contract has taken. It removed
 ## `node.aft.population` and `node.wetland_extent` (their only writers are
 ## unimplemented subsystems, so they published as plausible zeros), dropped the
-## `aft` ladder with its only referencing row, and removed `master_seed`,
-## `subsystem_set` and the excluded-row count from the envelope. Before the bump
+## `aft` ladder with its only referencing row, and removed the envelope's seed,
+## its `subsystem_set` and the excluded-row count. Before the bump
 ## this build refused the artefact and yielded zero rows, naming both versions
 ## and the artefact sha -- which is the mismatch rule working, and is the reason
 ## the constant is bumped by hand rather than read from the file.

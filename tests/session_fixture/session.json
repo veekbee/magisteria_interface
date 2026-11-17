@@ -1,0 +1,8 @@
+{
+  "zz_fixture_note": "synthetic; see README.md. Not a session and not a schema.",
+  "zz_bound_name": "zz-not-a-bound",
+  "zz_generator_commit": "0000000000000000000000000000000000000000",
+  "zz_planted_fixture_name": "the name the guard's positive control looks for",
+  "zz_current_year": 1900,
+  "zz_pin_file_digest": "sha256:0000000000000000000000000000000000000000000000000000000000000000"
+}

@@ -1,0 +1,48 @@
+{
+  "_form": "THE PUBLIC VOCABULARY OF THE FORMATS THIS CLIENT IMPLEMENTS -- the dressing manifest's fields the loader exposes, the pin file's keys, and the fold's row and state keys. It is the ALLOW side of §25 backlog 741's leak guard: a name here is one the client must be able to write, because the client implements a format that names it. It is NOT a list of names that are secret, and it is not the guard's forbidden set -- that set is derived from the fetched artefacts and committed as digests in tests/forbidden_names.json, with no plaintext anywhere.",
+
+  "_why_this_file_exists_at_all": "741's guard derives its forbidden set from the fetched manifest's keys and leaf string values. Some of those names are ALSO the vocabulary of formats this client reads and writes: a loader that reads the manifest's era starts must name that field, and a pin file class that serialises the format's top-level keys must name those. Without an allow side the guard would refuse the client for implementing the contract it exists to implement. The allow side had to be DERIVED rather than typed, for the reason 741 removes the typed forbidden list in the first place -- a hand-kept list of eight names did not notice four newer ones -- so it is derived from this file and from contract/schema.json, and this file holds only names that are already public.",
+
+  "_what_an_entry_asserts": "that the name belongs to a format this client implements, and is already public in the ruling or the schema the `why` names. An entry is NOT a judgement that the name is harmless: it is a claim about where the name comes from, which a reader can check against the citation. Decision 973's question is whether the SIMULATION's own vocabulary reaches this tree; a format the client implements is this tree's business by construction.",
+
+  "_the_rule_this_file_is_the_exception_to": "a derived name is forbidden when it is compound snake_case -- six characters or more, carrying an underscore, with two or more segments. Measured at the landing: 52 of the manifest's 293 derived names pass that rule, and the rule cuts the collisions with this client's own 70 source files from 45 to 7. The rule drops ordinary words that appear in comment prose (`height` on 105 lines, `lattice` on 121, `nodata`, `derived`, `centres`, `bounds`, `footprint`) and keeps compound field names, which is the shape a leaked simulation name actually has. The seven that remain are this file's entries plus the reasoned allowance in tests/forbidden_names.json.",
+
+  "manifest_fields_the_loader_exposes": {
+    "era_starts": "the eras and their first years. `DressingLoad.era_starts()` is the method and the manifest key it reads; the slider's ticks are derived from it and from no second set of years (decision 2129 (c), owner ruling 2059 Q3). The client cannot read this field without naming it.",
+    "lattice": "the patch lattice's digest, which the client checks against the centres file's own (§25 backlog 732). Below the rule's six-character floor, so it is listed for completeness rather than need."
+  },
+
+  "pin_file_keys": {
+    "_public_by": "decision 2075 and §22.8.9 -- the emission format is this client's half of the round trip, and src/dressing/pin_file.gd validates against it.",
+    "ruled_by": "a top-level key of the format.",
+    "base_dressing": "a top-level key: the dressing a pin file's author looked at (§22.8.9's name for it).",
+    "schedule_plan_digest": "a top-level key, renamed by decision 2128 (ii) from the name it replaced. Both the current name and the refusal of the old one are the format's.",
+    "schedule_content_digest": "THE NAME THAT ONE REPLACED, and it is here because it is load-bearing rather than historical: tools/rewrite_pins.py searches an emitted file for this literal in order to REFUSE it (decision 2128 (ii), §25 backlog 726), and tests/run_headless.gd asserts that refusal. A tool that cannot write the name it rejects cannot reject it. Removing the literal would not remove a leak; it would remove a check.",
+    "authored_by": "required on every pin of every kind, and refused on the file itself.",
+    "pin_id": "a pin's identifier, which the explorer draws and the edit list keys on."
+  },
+
+  "fold_keys": {
+    "_public_by": "§25 backlog 730's fold format, which the client folds to and compares against the committed reference.",
+    "calendar_year": "a row's year, read by `DressingFold.fold`.",
+    "density_per_km2": "a state key carried forward by the fold."
+  },
+
+  "percept_fixture_keys": {
+    "_what": "A SECOND FORMAT'S VOCABULARY, not a coincidence. These are fields of this client's own percept fixture -- a format that predates any dressing work, is declared in this repository's own committed PINs and is carried in its own committed artefacts. One of them happens to be spelled like a dressing-manifest key; the spelling is shared and the provenance is not.",
+    "_why_it_cannot_simply_be_rewritten": "the artefact data carrying it is PINNED BY DIGEST. assets/fixture/fixture_client.json and assets/contours/contours_deepest_winter_band_snowpack_swe.json each hold the field under `/run/`, and editing a byte of either breaks the PIN that claims its content digest. Exempting pinned artefact data from the scan was considered and rejected: that silences a whole class of files, future artefacts included, to avoid naming one field.",
+    "master_seed": "the percept fixture run's seed, 20260820. DECLARED at assets/fixture/PIN:11 as that PIN's own field, and carried under `/run/` in assets/fixture/fixture_client.json and assets/contours/contours_deepest_winter_band_snowpack_swe.json. It was also an envelope field of contract/schema.json before v2.0 removed it (see src/contract/schema_loader.gd's version note), so it is public in this tree's own contract history as well as in its data."
+  },
+
+  "client_own_names_colliding_by_coincidence": {
+    "_what": "NOT format vocabulary, and the only group here that is not. A name in this group is one THIS CLIENT independently chose for its OWN data, which happens to be spelled the same as a key in the simulation's manifest. No contract file will ever list it, because it is not part of any shared format; and it is not a leak, because nothing about it came from the simulation. The guard cannot tell the difference, so the difference is recorded here, by name, with where it is used -- counted and few, so that a second one has to be ruled rather than appended.",
+    "_the_count_is_the_control": "one entry, as ruled. A group that grew quietly would become the typed allow list this whole arrangement exists to avoid, so `tools/recut_forbidden.py --selftest` asserts the count and the gate reports it. Raising it is a decision, not an edit.",
+    "speed_m_s": "the client's own output field, written by src/bench/flight_trace.gd:327 (a pose-derived speed per frame) and src/transducer/debug_player.gd:82 (a playback step's speed). Both predate any dressing work and neither reads the manifest. The manifest also happens to carry a `speed_m_s` key; the collision is the word, not the provenance."
+  },
+
+  "_not_in_here_on_purpose": {
+    "the_session_schemas": "decision 2149 (1) rules that DA-11's session files cross into this tree as field names with no value, AFTER this guard lands. Several of those names -- the stats panel's counts among them -- are manifest keys that pass the rule, so the rows that make them public must add them here WITH THEIR REASON, and a row that lands them without an entry will go red. That is the intended order and not a defect: the allow side grows by ruling, never by pasting the guard's own output.",
+    "the_bid_fields": "owner ruling 2150 keeps the generator's bid maps out of the first version, so their names are not this tree's and are not here.",
+    "anything_merely_convenient": "a name that collides because this client independently chose the same word for its own data is NOT format vocabulary, and it is kept in its own group above rather than mixed in with the formats'. There is exactly one, with its two call sites; the groups are separate so that a reader can see at a glance how much of the allow side is a contract and how much is a coincidence."
+  }
+}

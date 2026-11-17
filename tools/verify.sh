@@ -103,6 +103,28 @@ if [ -n "$tracked" ]; then
   echo "fetched bytes are tracked by git:"; echo "$tracked" | head -5; fail=1
 else echo "ok -- only the pins, READMEs and .gdignores are tracked"; fi
 
+echo "== the leak guard's digests (741) =="
+# THE WRITER'S SELFTEST, for the reason check_contract.py's runs first: the
+# comparison this tool feeds agrees with itself on any set it produced, so a
+# rule that forbade nothing and a digest that ignored its name would both make a
+# full, plausible, useless list. The selftest asserts the rule discriminates in
+# both directions and that the allow side is derived rather than empty.
+python3 tools/recut_forbidden.py --selftest || fail=1
+# AND THEN THE COMPARISON ITSELF, which needs the artefact. It is run here as
+# well as in the suite because this is where a stale list is cheap to see: the
+# suite's half re-derives in GDScript and compares counts, and two
+# implementations of one rule disagreeing is exactly what this pair catches.
+python3 tools/recut_forbidden.py --require-bytes || fail=1
+# AND THE ENFORCEMENT HALF OVER EVERY COMMITTED TEXT FILE, which needs no
+# artefact and so never skips. The enumeration is `git ls-files` because nothing
+# else can answer "committed": the fetched artefacts sit under assets/ beside
+# PINs that ARE committed, with the same extension, holding every forbidden name
+# by construction. The suite's own half scans src/ and carries the controls --
+# the planted name, the ordinary-word negative, the reader's control -- and this
+# one carries the breadth. NO --names HERE: this repository is public and so are
+# its build logs.
+python3 tools/recut_forbidden.py --scan || fail=1
+
 echo "== no addons =="
 [ -d addons ] && { echo "addons/ exists"; fail=1; } || echo "ok"
 

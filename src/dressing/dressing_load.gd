@@ -247,7 +247,7 @@ func _manifest() -> Dictionary:
 ## YEARS (decision 2129 (c); owner ruling 2059 Q3 rejected *different years*).
 ##
 ## ⚠ TWO ERAS SHARE A YEAR IN THIS DRESSING, AND A TICK LIST KEYED BY YEAR
-## SILENTLY LOSES ONE. `walking` and `rail_streetcar` both begin at 1877, so
+## SILENTLY LOSES ONE. Two of this dressing's five eras both begin at 1877, so
 ## five eras yield FOUR distinct positions. A Dictionary keyed on the year --
 ## the obvious shape, and the one this returned first -- keeps whichever era is
 ## read last and drops the other with no error anywhere: the slider would show
