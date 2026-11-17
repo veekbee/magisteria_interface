@@ -121,6 +121,9 @@ func _initialize() -> void:
     _run(test_a_perturbed_dressing_fails_identity_and_an_unfetched_one_is_not_a_defect, "test_a_perturbed_dressing_fails_identity_and_an_unfetched_one_is_not_a_defect")
     _run(test_no_source_file_republishes_a_name_from_the_fetched_artefacts, "test_no_source_file_republishes_a_name_from_the_fetched_artefacts")
     _run(test_the_forbidden_set_re_derives_from_the_artefacts_it_claims, "test_the_forbidden_set_re_derives_from_the_artefacts_it_claims")
+    _run(test_the_fold_memo_is_keyed_on_the_rows_identity_and_not_the_year_alone, "test_the_fold_memo_is_keyed_on_the_rows_identity_and_not_the_year_alone")
+    _run(test_the_fold_memo_folds_a_year_once_and_bounds_what_it_keeps, "test_the_fold_memo_folds_a_year_once_and_bounds_what_it_keeps")
+    _run(test_the_memoised_fold_equals_the_direct_fold_on_the_real_dressing, "test_the_memoised_fold_equals_the_direct_fold_on_the_real_dressing")
     _run(test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control, "test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control")
     _run(test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name, "test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name")
     _run(test_every_pin_kind_refuses_each_required_field_by_name, "test_every_pin_kind_refuses_each_required_field_by_name")
@@ -1131,6 +1134,165 @@ func test_the_forbidden_set_re_derives_from_the_artefacts_it_claims() -> void:
     print(("forbidden-set re-derivation: manifest %d, session fixture %d, committed %d, "
             + "%d reasoned allowance(s)")
             % [manifest_digests.size(), fixture_digests.size(), committed.size(), reasoned])
+
+
+# --------------------------------------------------------------------------
+# §25 backlog 742: the fold memo, and the staleness it exists to prevent
+# --------------------------------------------------------------------------
+
+## Two tiny rows sets that differ AT THE SAME YEAR, which is the only shape that
+## can tell a memo keyed on (rows, year) from one keyed on the year alone.
+static func _rows_a() -> Array:
+    return [{"tile": [1, 0, 0], "calendar_year": 1900, "event": "built", "class": "zz_c1"}]
+
+
+static func _rows_b() -> Array:
+    return [{"tile": [1, 0, 0], "calendar_year": 1900, "event": "built", "class": "zz_c2"},
+            {"tile": [1, 0, 1], "calendar_year": 1900, "event": "built", "class": "zz_c2"}]
+
+
+func test_the_fold_memo_is_keyed_on_the_rows_identity_and_not_the_year_alone() -> void:
+    """THE CHECK THE WHOLE OF §25 BACKLOG 742 TURNS ON, AND THE ONLY ONE THAT
+    DISCRIMINATES.
+
+    Every other property of a memo -- that it returns the right answer, that it
+    folds a year once, that it stays within its bound -- is equally true of a
+    memo keyed on the year alone, and that memo is WRONG in the one situation
+    DA-11 creates. A session's rows change with every placement: a route is drawn
+    as the tiles the router laid, and those arrive as new rows from the generator,
+    because what marks a tile route-laid is the row's own field and nothing in
+    this client turns endpoints into laid tiles. So the owner places a route,
+    steps back to a year already folded, and a year-keyed memo serves the
+    pre-placement city -- while the placing preview has just drawn the route on
+    screen. Two surfaces disagree, both look right, and nothing reports it.
+
+    So the test folds the SAME YEAR under two different identities and requires
+    the second answer to be the second rows set's. A memo that ignored the
+    identity would return the first, and would pass every other check here.
+    """
+    var memo := DressingFoldMemo.new()
+    var a := _rows_a()
+    var b := _rows_b()
+    var fa := memo.fold(a, "digest-a", 1900)
+    check(fa.size() == 1, "the first fold should hold one tile, not %d" % fa.size())
+
+    var fb := memo.fold(b, "digest-b", 1900)
+    check(fb.size() == 2,
+            "THE MEMO SERVED A STALE FOLD: the same year under a different rows identity "
+                    + "returned %d tile(s) where the new rows have 2. A memo keyed on the "
+                    % fb.size() + "year alone behaves exactly like this, and it is the "
+                    + "defect §25 backlog 742's key exists to prevent.")
+    check(memo.resets == 1,
+            "the identity moved once and the memo recorded %d reset(s), so a test cannot "
+                    % memo.resets + "tell this class from one that never noticed")
+    check(memo.resident_years() == [1900],
+            "after the reset the memo holds %s, so the old identity's folds were not dropped"
+                    % str(memo.resident_years()))
+
+    # AND BACK AGAIN, because clearing on every call would also pass the above.
+    var fa2 := memo.fold(a, "digest-a", 1900)
+    check(fa2.size() == 1, "folding the first rows again gave %d tile(s)" % fa2.size())
+    check(memo.resets == 2, "going back did not register as a second identity change")
+
+    # THE NEGATIVE CONTROL ON THE SAME MECHANISM: an unchanged identity must NOT
+    # reset, or the memo is simply a function call with counters on it.
+    var before := memo.resets
+    memo.fold(a, "digest-a", 1901)
+    check(memo.resets == before,
+            "an unchanged identity reset the cache, so nothing is ever memoised and the "
+                    + "cost reading 2141 took is unchanged")
+
+
+func test_the_fold_memo_folds_a_year_once_and_bounds_what_it_keeps() -> void:
+    """ONCE PER YEAR, AND FIVE YEARS RESIDENT.
+
+    The bound is the declared four plus the current year, and it is asserted
+    rather than described: owner ruling 2141 measured peak resident set at
+    491,814,912 B holding ONE fold, so 163 resident folds would trade a measured
+    CPU cost for an unmeasured memory one. Stepping year by year still folds once
+    per step, which is unavoidable -- each year is a different answer. What this
+    removes is folding the SAME year again, which is what a drag did once a frame.
+    """
+    var memo := DressingFoldMemo.new()
+    var a := _rows_a()
+    memo.fold(a, "d", 1900)
+    check(memo.misses == 1 and memo.hits == 0,
+            "the first fold of a year should be a miss: %d miss(es), %d hit(s)"
+                    % [memo.misses, memo.hits])
+    memo.fold(a, "d", 1900)
+    check(memo.hits == 1 and memo.misses == 1,
+            "THE SAME YEAR WAS FOLDED TWICE: %d miss(es), %d hit(s). This is the whole of "
+                    % [memo.misses, memo.hits] + "the row: a drag must fold no year twice.")
+
+    # THE DECLARED FOUR STAY, AND ONE SPARE SLOT ROTATES.
+    for y in DressingFoldMemo.DECLARED:
+        memo.fold(a, "d", int(y))
+    for y in range(1901, 1913):
+        memo.fold(a, "d", y)
+    var resident := memo.resident_years()
+    check(resident.size() <= DressingFoldMemo.RESIDENT_CAP,
+            ("%d years resident where the bound is %d: after twelve ordinary years the memo "
+                    + "is holding %s")
+                    % [resident.size(), DressingFoldMemo.RESIDENT_CAP, str(resident)])
+    for y in DressingFoldMemo.DECLARED:
+        check(resident.has(int(y)),
+                ("a declared year was evicted; the four the owner rules on must stay "
+                        + "resident, and the memo holds %s") % str(resident))
+    check(resident.has(1912),
+            ("the current year is not resident, so the one rotating slot is not holding the "
+                    + "year just asked for: %s") % str(resident))
+
+    # NO IDENTITY, NO MEMO -- AND STILL THE RIGHT ANSWER.
+    var bare := DressingFoldMemo.new()
+    var got := bare.fold(_rows_b(), "", 1900)
+    check(got.size() == 2,
+            "a memo with no identity returned %d tile(s) instead of folding correctly"
+                    % got.size())
+    check(bare.problem != "",
+            "a memo handed rows with no identity said nothing about it, so a view that "
+                    + "quietly stopped memoising would look like one that never did")
+    check(bare.resident_years().is_empty(),
+            "a memo with no identity cached %s: every rows set would share one bucket, "
+                    % str(bare.resident_years()) + "which is the staleness this key prevents")
+
+
+func test_the_memoised_fold_equals_the_direct_fold_on_the_real_dressing() -> void:
+    """THE MEMO MUST NOT CHANGE AN ANSWER, only how often it is computed.
+
+    Two tiny rows sets cannot show that: they exercise the key and the bound, not
+    the fold. This compares the memo's answer with `DressingFold.fold`'s own on
+    the staged dressing at the four declared years, which is where a difference
+    would actually matter. SKIPS AND SAYS SO without the bytes -- right for a
+    clone, and the gate requires them.
+    """
+    var d := DressingLoad.load_from()
+    if not d.is_present():
+        print("fold memo vs direct: SKIPPED -- %s" % d.why_absent)
+        return
+    var rows := DressingFold.read_rows(DressingFold.DIR + "tiles.jsonl")
+    check(rows.size() > 0, "the dressing is present but no tile rows were read")
+    var identity := str(d.per_file.get("tiles.jsonl", {}).get("computed", ""))
+    check(identity != "", "the loader computed no digest for the rows file, so the memo "
+            + "would have no identity to key on")
+    var memo := DressingFoldMemo.new()
+    for y in DECLARED_YEARS:
+        var year := int(y)
+        var direct := DressingFold.fold(rows, year)
+        var viaMemo := memo.fold(rows, identity, year)
+        check(viaMemo.size() == direct.size(),
+                "at %d the memo folded %d tiles and the direct fold %d"
+                        % [year, viaMemo.size(), direct.size()])
+        var differing := 0
+        for k in direct:
+            if not viaMemo.has(k) or str(viaMemo[k]) != str(direct[k]):
+                differing += 1
+        check(differing == 0,
+                "at %d, %d tile state(s) differ between the memoised fold and the direct "
+                        % [year, differing] + "one, so the memo changes an answer rather "
+                        + "than only how often it is computed")
+    check(memo.misses == DECLARED_YEARS.size(),
+            "%d miss(es) over %d declared years: the memo either refolded a year or served "
+                    % [memo.misses, DECLARED_YEARS.size()] + "one it had not computed")
 
 
 # --------------------------------------------------------------------------

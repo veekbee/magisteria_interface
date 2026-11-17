@@ -55,6 +55,19 @@ var _scale: float = 1.0
 var _moved: Dictionary = {}
 var _dragging: String = ""
 
+## §25 backlog 742. The fold is computed once per (rows identity, year) instead
+## of once per frame: `_draw()` runs every frame while a pin is dragged, and the
+## fold depends on nothing a redraw changes.
+##
+## THE IDENTITY IS THE LOADER'S ALREADY-VERIFIED DIGEST OF `tiles.jsonl`, not a
+## second hash of the same bytes. `DressingLoad` recomputes it from the file and
+## checks it against the PIN before this view draws anything, so taking it from
+## there keeps one source of truth for the claim "these are those rows". When
+## DA-11's session supplies rows instead, the identity becomes whatever that
+## session's reader can state, and the memo clears itself when it moves.
+var _memo := DressingFoldMemo.new()
+var _rows_digest: String = ""
+
 
 func _ready() -> void:
     _load = DressingLoad.load_from()
@@ -86,6 +99,16 @@ func _ready() -> void:
         return
     _palette = pal
     _tiles = DressingFold.read_rows(DressingFold.DIR + "tiles.jsonl")
+    _rows_digest = str(_load.per_file.get("tiles.jsonl", {}).get("computed", ""))
+    if _rows_digest.is_empty():
+        # UNREACHABLE AS WIRED, AND CHECKED ANYWAY. `identity_holds()` above
+        # already refuses a dressing whose per-file digests were not recomputed,
+        # so this cannot fire today; it is here because the memo without an
+        # identity silently stops memoising, and a view that got slower for a
+        # reason nobody could see is worse than one that says why.
+        _refusal = ("The tile rows arrived without the identity the fold is keyed on, so "
+                + "this view cannot tell one rows set from another.")
+        return
     _features = DressingFold.read_rows(DressingFold.DIR + "features.jsonl")
     _routes = DressingFold.read_rows(DressingFold.DIR + "routes.jsonl")
     set_year(_year)
@@ -111,7 +134,7 @@ func set_year(y: int) -> void:
     _year = clampi(y, LO, HI)
     if _refusal != "":
         return
-    var fold := DressingFold.fold(_tiles, _year)
+    var fold := _memo.fold(_tiles, _rows_digest, _year)
     # ⚠ THE REFUSAL, BEFORE ANYTHING IS DRAWN. A tile the centres do not place
     # is not skipped: a city drawn with pieces silently missing is exactly what
     # the owner cannot detect by looking, which is the one thing they are here
@@ -169,7 +192,7 @@ func _draw() -> void:
         _text(Vector2(28, 56), _refusal, Color(1, 0.85, 0.3))
         return
     draw_rect(Rect2(Vector2.ZERO, vp), DressingDraw.background_color(_palette))
-    var fold := DressingFold.fold(_tiles, _year)
+    var fold := _memo.fold(_tiles, _rows_digest, _year)
     var side := maxf(_centres.tile_m * _scale, 1.0)
 
     _unknown_classes.clear()
