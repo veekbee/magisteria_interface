@@ -110,8 +110,36 @@ const POLL_S := 0.5
 var _pending_stem: String = ""
 var _pending_verb: String = ""
 var _pending_confirm: Dictionary = {}
+## The payload as issued, so a priced answer can be re-issued as ITSELF.
+##
+## ⚠ NOT RECONSTRUCTED FROM THE VIEW. A priced `remove` must come back as the
+## same `pin_id`, and a priced `rewind` as the same `to_year` -- and the year on
+## screen can have moved between the price and the confirm. Rebuilding the
+## payload from the current view would confirm a different command than the one
+## that was priced.
+var _pending_payload: Dictionary = {}
 var _notice: String = ""
 var _poll_accum: float = 0.0
+
+## §25 backlog 754: the placing tools. Owner ruling at this row -- RECTANGLES
+## FIRST: one drag makes an axis-aligned four-vertex polygon for `zone`, `cap`,
+## `renew` and a polygon `feature`; free shapes come later.
+##
+## A FEATURE'S GEOMETRY FOLLOWS THE GESTURE RATHER THAN A SECOND KEY: a drag is
+## a polygon, a click is a point. The kind admits either, and the owner's key set
+## is the six ruled letters, so the alternative was a modifier nobody asked for.
+const TOOLS := {KEY_Z: "zone", KEY_F: "feature", KEY_C: "centre", KEY_T: "route",
+        KEY_K: "cap", KEY_W: "renew"}
+## A press and release closer than this in metres is a click, not a drag.
+const CLICK_M := 60.0
+
+var _tool: String = ""
+var _tool_choice: int = 0
+var _drag_a: Array = []
+var _points: Array = []
+var _selected: String = ""
+## The session's own working pin file, drawn so a placement is visible at once.
+var _session_pins: Array = []
 
 
 func _ready() -> void:
@@ -191,6 +219,18 @@ func _open_session() -> void:
         _panel = ["session %s at %d" % [_session.session_name, _session.year], built.problem]
         return
     _panel = ["session %s" % _session.session_name] + built.lines
+    _load_session_pins()
+
+
+## The session's working pin file. Empty when there is none, which is a state.
+func _load_session_pins() -> void:
+    _session_pins = []
+    if _session == null or not _session.is_present():
+        return
+    var doc := SessionRead.read_json(_session.dir + "pins.json")
+    var rows = doc.get("pins", [])
+    if typeof(rows) == TYPE_ARRAY:
+        _session_pins = rows
 
 
 ## Draw the session's panel down the right, or nothing when no session is open.
@@ -386,16 +426,62 @@ func _draw() -> void:
     # §25 backlog 754's, with the placing tools. The committed pin file is drawn
     # only when no session is open, so the owner is never shown one city's
     # outlines over another's tiles.
-    if not in_session and _pins != null and _pins.is_present():
+    if in_session:
+        # THE OWNER'S OWN PINS, SO A PLACEMENT IS VISIBLE AT ONCE. Without this a
+        # placement shows nothing until the next advance -- the worst moment to
+        # have no feedback. A pin the session has already applied is drawn in the
+        # edge colour; one dated after the year on screen is PENDING and drawn in
+        # the notice colour, because `from` is Y + 1 and the owner would
+        # otherwise see no difference between asked-for and built.
+        for pin: Dictionary in _session_pins:
+            var applied := int(pin.get("from", 0)) <= _year
+            _draw_pin(pin, edge if applied else Color(1, 0.9, 0.4), side)
+    elif _pins != null and _pins.is_present():
         for pin: Dictionary in _pins.at(_year):
             _draw_pin(pin, edge, side)
+    _draw_preview(side)
     _chrome(vp)
     _draw_panel(vp)
 
 
+## The gesture in progress, drawn as decision 2149 (5) describes it: a route as
+## a straight line while it is being placed, a polygon as its outline, a point as
+## a marker. Nothing here is a pin yet.
+func _draw_preview(side: float) -> void:
+    if _tool == "" or _points.is_empty():
+        return
+    var col := Color(0.4, 1.0, 0.6)
+    if _tool == "route":
+        var pts := PackedVector2Array()
+        for v in _points:
+            var xy: Array = v
+            pts.append(_to_screen(float(xy[0]), float(xy[1])))
+        for q in pts:
+            draw_rect(Rect2(q - Vector2(3, 3), Vector2(6, 6)), col)
+        if pts.size() >= 2:
+            draw_polyline(pts, col, maxf(side * 0.3, 1.0))
+        return
+    if _points.size() == 1:
+        var xy0: Array = _points[0]
+        var c := _to_screen(float(xy0[0]), float(xy0[1]))
+        draw_line(c - Vector2(8, 0), c + Vector2(8, 0), col, 2.0)
+        draw_line(c - Vector2(0, 8), c + Vector2(0, 8), col, 2.0)
+        return
+    var ring := PackedVector2Array()
+    for v in _points:
+        var xy: Array = v
+        ring.append(_to_screen(float(xy[0]), float(xy[1])))
+    ring.append(ring[0])
+    draw_polyline(ring, col, maxf(side * 0.3, 2.0))
+
+
 func _draw_pin(pin: Dictionary, edge: Color, side: float) -> void:
     var pid := str(pin.get("pin_id", ""))
-    var verts: Array = _moved[pid] if _moved.has(pid) else pin.get("polygon", [])
+    # `base_of` RATHER THAN `polygon`, so a point kind draws as its point. Before
+    # §25 backlog 754 a `centre` reported itself undrawable here, which was honest
+    # and is now avoidable. §25 backlog 755 still owns drawing what the GENERATOR
+    # made of a pin, from the fold; this draws the pin the owner wrote.
+    var verts: Array = _moved[pid] if _moved.has(pid) else PlacePin.base_of(pin)
     if verts.is_empty():
         # NAMED, NOT SKIPPED: a kind whose geometry this build cannot draw is
         # reported on screen rather than quietly absent.
@@ -407,6 +493,12 @@ func _draw_pin(pin: Dictionary, edge: Color, side: float) -> void:
     for v in verts:
         var xy: Array = v
         pts.append(_to_screen(float(xy[0]), float(xy[1])))
+    if pts.size() == 1:
+        # A marker: a one-vertex outline is not a shape.
+        draw_line(pts[0] - Vector2(7, 7), pts[0] + Vector2(7, 7), edge, 2.0)
+        draw_line(pts[0] - Vector2(7, -7), pts[0] + Vector2(7, -7), edge, 2.0)
+        _text(pts[0] + Vector2(10, -8), "%s  %s" % [str(pin.get("kind", "?")), pid], edge)
+        return
     pts.append(pts[0])
     draw_polyline(pts, edge, maxf(side * 0.5, 2.0))
     _text(pts[0] + Vector2(6, -8), "%s  %s" % [str(pin.get("kind", "?")), pid], edge)
@@ -456,6 +548,16 @@ func _chrome(vp: Vector2) -> void:
                 % ", ".join(PackedStringArray(_unknown_routes.keys())),
                 Color(0.8, 0.1, 0.6))
         line_y += 18.0
+    if _tool != "":
+        var choices := _tool_choices()
+        var choice := str(choices[_tool_choice]) if _tool_choice < choices.size() else "-"
+        _text(Vector2(20, line_y), "tool %s  [%s]  %d point(s)"
+                % [_tool, choice, _points.size()], Color(0.4, 1, 0.6))
+        line_y += 18.0
+    if _selected != "":
+        _text(Vector2(20, line_y), "selected %s  (x removes it)" % _selected,
+                Color(0.6, 0.9, 1))
+        line_y += 18.0
     if _notice != "":
         _text(Vector2(20, line_y), _notice, Color(1, 0.9, 0.4))
 
@@ -481,9 +583,10 @@ func _to_world(p: Vector2) -> PackedFloat64Array:
 
 ## Which pin's polygon contains a screen point, or "".
 func _pin_at(p: Vector2) -> String:
-    if _pins == null or not _pins.is_present():
+    var pins := _drawn_pins()
+    if pins.is_empty():
         return ""
-    for pin: Dictionary in _pins.at(_year):
+    for pin: Dictionary in pins:
         var pid := str(pin.get("pin_id", ""))
         var verts: Array = _moved[pid] if _moved.has(pid) else pin.get("polygon", [])
         if verts.is_empty():
@@ -494,7 +597,13 @@ func _pin_at(p: Vector2) -> String:
             poly.append(_to_screen(float(xy[0]), float(xy[1])))
         if Geometry2D.is_point_in_polygon(p, poly):
             return pid
-    return ""
+    # ⚠ AND THEN BY DISTANCE, OR `remove` WOULD WORK ON FOUR OF THE SIX KINDS.
+    # The loop above tests CONTAINMENT, and a `centre` or a point `feature` has
+    # no polygon to contain anything -- the same blind spot the point-kind guards
+    # cover on the drag. Half a tile, in float64 metres, so the pick does not
+    # depend on the zoom.
+    var w := _to_world(p)
+    return PlacePin.point_pick(pins, w[0], w[1], _centres.tile_m * 0.5)
 
 
 ## The edit list for everything the owner moved, as float64 bit patterns.
@@ -511,12 +620,17 @@ func _unhandled_input(e: InputEvent) -> void:
         return
     if e is InputEventMouseButton:
         var mb := e as InputEventMouseButton
-        if mb.button_index == MOUSE_BUTTON_LEFT:
-            if mb.pressed:
-                _dragging = _pin_at(mb.position)
-            else:
-                _dragging = ""
+        if mb.button_index != MOUSE_BUTTON_LEFT:
             return
+        if _tool != "":
+            _tool_click(mb)
+            return
+        if mb.pressed:
+            _dragging = _pin_at(mb.position)
+            _selected = _dragging
+        else:
+            _dragging = ""
+        return
     if e is InputEventMouseMotion and _dragging != "":
         var mm := e as InputEventMouseMotion
         # THE OFFSET IS COMPUTED IN float64 METRES, not from the screen delta
@@ -526,8 +640,18 @@ func _unhandled_input(e: InputEvent) -> void:
         var b := _to_world(mm.position)
         var dx := b[0] - a[0]
         var dy := b[1] - a[1]
+        # ⚠ THE FIRST POINT-KIND GUARD: AN EMPTY BASE IS REFUSED. `base_of`
+        # gives a point kind its own point (the second guard), so an empty base
+        # now means a pin with no geometry at all -- and a gesture that recorded
+        # one would put a zero-vertex pin into the edit list, which is a pin
+        # whose geometry a drag had deleted. Refused, and said out loud.
         var base: Array = _moved[_dragging] if _moved.has(_dragging) \
-                else _polygon_of(_dragging)
+                else _base_of(_dragging)
+        if base.is_empty():
+            _notice = "pin %s has no geometry to move" % _dragging
+            _dragging = ""
+            queue_redraw()
+            return
         var out: Array = []
         for v in base:
             var xy: Array = v
@@ -552,6 +676,165 @@ func _unhandled_input(e: InputEvent) -> void:
             _issue("rewind", {"to_year": _year})
         elif k == KEY_Y:
             _confirm()
+        elif TOOLS.has(k):
+            _tool = str(TOOLS[k])
+            _tool_choice = 0
+            _drag_a = []
+            _points = []
+            _notice = "%s: %s" % [_tool, _tool_hint()]
+            queue_redraw()
+        elif k == KEY_ESCAPE:
+            if _tool != "":
+                _tool = ""
+                _drag_a = []
+                _points = []
+                _notice = "no tool"
+                queue_redraw()
+        elif k == KEY_ENTER or k == KEY_KP_ENTER:
+            _commit_place()
+        elif k == KEY_BRACKETLEFT or k == KEY_BRACKETRIGHT:
+            var choices := _tool_choices()
+            if not choices.is_empty():
+                var step := 1 if k == KEY_BRACKETRIGHT else -1
+                _tool_choice = posmod(_tool_choice + step, choices.size())
+                _notice = "%s: %s" % [_tool, str(choices[_tool_choice])]
+                queue_redraw()
+        elif k == KEY_X:
+            _issue_remove()
+
+
+## What the current tool is waiting for, in words.
+func _tool_hint() -> String:
+    match _tool:
+        "route":
+            return "click the two ends, clicks between them are waypoints, Enter to place"
+        "centre":
+            return "click a point, Enter to place"
+        "feature":
+            return "drag a rectangle or click a point, Enter to place"
+        _:
+            return "drag a rectangle, Enter to place"
+
+
+## The classes or types this tool cycles with `[` and `]`.
+##
+## ⚠ DERIVED FROM THE FETCHED ARTEFACTS, AND NAMED NOWHERE IN THIS SOURCE. The
+## zone's classes come from the palette's own map, the route's from the palette's
+## route map, a feature's types from the reference's own feature rows. §25
+## backlog 755 lays the plain labels over them and rules the names it needs; this
+## row names none, so it needs no vocabulary entry at all -- and a class the
+## generator stops using stops being offered without anyone editing a list.
+func _tool_choices() -> Array:
+    var out: Array = []
+    match _tool:
+        "zone":
+            var pal = _palette.get("PALETTE", {})
+            if typeof(pal) == TYPE_DICTIONARY:
+                out = (pal as Dictionary).keys()
+        "route":
+            var rt = _palette.get("ROUTE", {})
+            if typeof(rt) == TYPE_DICTIONARY:
+                out = (rt as Dictionary).keys()
+        "feature":
+            var seen := {}
+            for f: Dictionary in (_session_features if _session_features.size() > 0 else _features):
+                var ty := str(f.get("type", ""))
+                if ty != "":
+                    seen[ty] = true
+            out = seen.keys()
+    out.sort()
+    return out
+
+
+## One click or release with a tool active.
+func _tool_click(mb: InputEventMouseButton) -> void:
+    var w := _to_world(mb.position)
+    if _tool == "route":
+        if mb.pressed:
+            _points.append([w[0], w[1]])
+            _notice = "route: %d point(s), Enter to place" % _points.size()
+            queue_redraw()
+        return
+    if mb.pressed:
+        _drag_a = [w[0], w[1]]
+        return
+    # THE RELEASE DECIDES WHAT THE GESTURE WAS: a drag is a rectangle, a press
+    # and release in the same place is a point.
+    if _drag_a.is_empty():
+        return
+    var dx := w[0] - float(_drag_a[0])
+    var dy := w[1] - float(_drag_a[1])
+    if sqrt(dx * dx + dy * dy) < CLICK_M:
+        _points = [[float(_drag_a[0]), float(_drag_a[1])]]
+        _notice = "%s: a point, Enter to place" % _tool
+    else:
+        _points = PlacePin.rect(float(_drag_a[0]), float(_drag_a[1]), w[0], w[1])
+        _notice = "%s: a rectangle, Enter to place" % _tool
+    _drag_a = []
+    queue_redraw()
+
+
+## Mint the pin the gesture describes and write it as a `place`.
+func _commit_place() -> void:
+    if _tool == "" or _session == null or not _session.is_present():
+        return
+    if _points.is_empty():
+        _notice = "%s: nothing placed yet" % _tool
+        queue_redraw()
+        return
+    # ⚠ `from` IS Y + 1, AND THAT IS THIS CLIENT'S RESTRICTION RATHER THAN THE
+    # RULE. Decision 2149 (3) allows any `from >= Y + 1`; the first version
+    # offers only the next year, because the owner is playing year by year and a
+    # later date has no use yet. A pin dated at or before Y is refused by the
+    # session with `rewind to from - 1 first`.
+    var from_year := _session.year + 1
+    var fields := {}
+    var choices := _tool_choices()
+    var choice := str(choices[_tool_choice]) if _tool_choice < choices.size() else ""
+    match _tool:
+        "route":
+            if _points.size() < 2:
+                _notice = "route: two ends are needed"
+                queue_redraw()
+                return
+            fields["endpoints"] = [_points[0], _points[_points.size() - 1]]
+            if _points.size() > 2:
+                fields["waypoints"] = _points.slice(1, _points.size() - 1)
+            fields["class"] = choice
+        "centre":
+            fields["point"] = _points[0]
+        "feature":
+            fields["type"] = choice
+            if _points.size() == 1:
+                fields["point"] = _points[0]
+            else:
+                fields["polygon"] = _points
+        _:
+            fields["polygon"] = _points
+            if _tool == "zone":
+                fields["class"] = choice
+    var id := PlacePin.next_id(_tool, from_year, PlacePin.ids_of(_session_pins))
+    var row := PlacePin.row(_tool, from_year, id, fields)
+    # REFUSED HERE BEFORE IT IS WRITTEN, by `PinFile`'s own rules rather than a
+    # second copy of them. The session will check it again, and so will the
+    # emission tool; this one only saves a round trip the owner would wait on.
+    var why := PlacePin.refusal_of(row)
+    if why != "":
+        _notice = "refused before writing: %s" % why
+        queue_redraw()
+        return
+    _issue("place", {"pins": [row]})
+    _points = []
+    _drag_a = []
+
+
+## Remove the selected pin, priced if the session has applied it.
+func _issue_remove() -> void:
+    if _selected == "":
+        _notice = "nothing selected to remove"
+        queue_redraw()
+        return
+    _issue("remove", {"pin_id": _selected})
 
 
 ## Issue one command, if a session is open and none is outstanding.
@@ -569,6 +852,7 @@ func _issue(verb: String, payload: Dictionary) -> void:
         return
     _pending_stem = str(got["stem"])
     _pending_verb = verb
+    _pending_payload = payload.duplicate(true)
     _pending_confirm = {}
     _notice = "%s issued as %s; the session is working" % [verb, _pending_stem]
     queue_redraw()
@@ -618,8 +902,8 @@ func _on_answer(answer: Dictionary) -> void:
     if cost >= 0.0:
         # PRICED: NOTHING WAS DONE. A rewind replays from the arc's start and can
         # cost the whole build, so it is never confirmed automatically.
-        _pending_confirm = {"verb": verb, "payload": {"to_year": _year}}
-        _notice = "a %s to %d costs about %.0f s -- press Y to confirm" % [verb, _year, cost]
+        _pending_confirm = {"verb": verb, "payload": _pending_payload.duplicate(true)}
+        _notice = "that %s costs about %.0f s -- press Y to confirm" % [verb, cost]
         queue_redraw()
         return
     _reread()
@@ -643,11 +927,32 @@ func _reread() -> void:
     var built := StatsPanel.of(stats)
     _panel = ["session %s" % _session.session_name]
     _panel += built.lines if built.problem == "" else [built.problem]
+    _load_session_pins()
     set_year(mini(_year, _session.year))
 
 
 func _polygon_of(pin_id: String) -> Array:
-    for pin: Dictionary in _pins.at(_year):
+    for pin: Dictionary in _drawn_pins():
         if str(pin.get("pin_id", "")) == pin_id:
             return pin.get("polygon", [])
+    return []
+
+
+## A pin's drag base: its polygon, or its own point for a point kind.
+##
+## THE SECOND POINT-KIND GUARD, via `PlacePin.base_of` so that the rule has one
+## implementation rather than one here and one in the minting class.
+func _base_of(pin_id: String) -> Array:
+    for pin: Dictionary in _drawn_pins():
+        if str(pin.get("pin_id", "")) == pin_id:
+            return PlacePin.base_of(pin)
+    return []
+
+
+## The pins on screen: the session's working file, or the committed one.
+func _drawn_pins() -> Array:
+    if _session != null and _session.is_present():
+        return _session_pins
+    if _pins != null and _pins.is_present():
+        return _pins.at(_year)
     return []

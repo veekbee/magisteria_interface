@@ -31,7 +31,30 @@
 #
 #   a              advance one year
 #   r              rewind to the year on screen -- PRICED FIRST, nothing is done
-#   y              confirm the priced rewind (a new command; never automatic)
+#   y              confirm a priced rewind or removal (a new command; never automatic)
+#
+# PLACING (§25 backlog 754), with a session open. RECTANGLES FIRST, by the
+# owner's ruling: one drag makes an axis-aligned four-vertex polygon.
+#
+#   z k w          zone / cap / renew -- drag a rectangle
+#   f              feature -- DRAG a rectangle for a polygon, or CLICK for a
+#                  point; the gesture decides which, so there is no second key
+#   c              centre -- click a point
+#   t              route -- click the two ends; clicks between them become
+#                  waypoints, and the router lays the path (none is invented here)
+#   [ ]            cycle the class or type, which are DERIVED from the fetched
+#                  palette and reference rather than listed in this client
+#   Enter          place it: the pin is minted, checked against the pin format,
+#                  and written as a `place` command
+#   Esc            put the tool down
+#   click, x       with no tool: select a pin, then remove it. A point kind is
+#                  picked within half a tile of its point, so this reaches all
+#                  six kinds and not only the four with polygons
+#
+# A placement is dated the year AFTER the session's current one, which is this
+# client's first-version restriction and not the rule. The session checks every
+# placement again, and the emission tool checks it a third time; a refusal is
+# shown in the session's own words.
 #
 # A rewind replays from the arc's start and can cost as much as a whole build,
 # which is why it is priced and confirmed by hand rather than run on a keypress.

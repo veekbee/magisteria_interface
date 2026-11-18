@@ -135,6 +135,11 @@ func _initialize() -> void:
     _run(test_a_session_fold_is_re_keyed_and_never_re_folded, "test_a_session_fold_is_re_keyed_and_never_re_folded")
     _run(test_a_route_class_the_palette_does_not_name_is_collected_and_not_drawn_silently, "test_a_route_class_the_palette_does_not_name_is_collected_and_not_drawn_silently")
     _run(test_the_command_schemas_optionality_is_machine_readable, "test_the_command_schemas_optionality_is_machine_readable")
+    _run(test_a_placed_pins_id_is_free_and_hyphenated, "test_a_placed_pins_id_is_free_and_hyphenated")
+    _run(test_a_rectangle_is_the_same_polygon_whichever_way_it_was_dragged, "test_a_rectangle_is_the_same_polygon_whichever_way_it_was_dragged")
+    _run(test_each_of_the_six_kinds_mints_a_row_the_pin_format_accepts, "test_each_of_the_six_kinds_mints_a_row_the_pin_format_accepts")
+    _run(test_a_coordinate_survives_the_command_writer, "test_a_coordinate_survives_the_command_writer")
+    _run(test_the_three_point_kind_guards_hold, "test_the_three_point_kind_guards_hold")
     _run(test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control, "test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control")
     _run(test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name, "test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name")
     _run(test_every_pin_kind_refuses_each_required_field_by_name, "test_every_pin_kind_refuses_each_required_field_by_name")
@@ -17530,3 +17535,219 @@ func test_the_command_schemas_optionality_is_machine_readable() -> void:
     check(absent == 0,
             "%d declared field(s) are absent from the fixture's commands and answers; the "
                     % absent + "gate requires 0")
+
+
+# --------------------------------------------------------------------------
+# §25 backlog 754: placing the six kinds, and the point-kind guards
+# --------------------------------------------------------------------------
+
+func test_a_placed_pins_id_is_free_and_hyphenated() -> void:
+    """THE CLIENT MINTS THE ID, AND THE HYPHENS ARE LOAD-BEARING.
+
+    Decision 2149 (3) says a placement is minted by the emission path; the code
+    requires otherwise -- `Session.place` takes rows each carrying "its own
+    `pin_id` unused" and refuses duplicates. So the client mints, in the ruled
+    form `<kind>-<from>-<n>`.
+
+    AN UNDERSCORED ID WOULD REFUSE THE CLIENT THAT WROTE IT. A pin id is a leaf
+    string of a session file, and §25 backlog 741's derivation reads leaf values
+    as well as keys -- so `zone_1883_1` would be a compound snake_case name this
+    client had invented, deriving as forbidden and failing the scan on its own
+    output. Hence hyphens, asserted rather than left to convention.
+    """
+    var taken := {}
+    check(PlacePin.next_id("zone", 1883, taken) == "zone-1883-1",
+            "the first id is %s" % PlacePin.next_id("zone", 1883, taken))
+    check(not PlacePin.next_id("zone", 1883, taken).contains("_"),
+            "a minted id carries an underscore, which 741's rule would forbid")
+    taken["zone-1883-1"] = true
+    taken["zone-1883-2"] = true
+    check(PlacePin.next_id("zone", 1883, taken) == "zone-1883-3",
+            "the lowest free n was not taken: got %s" % PlacePin.next_id("zone", 1883, taken))
+    # THE WHOLE ID IS THE KEY, not the kind and year separately.
+    check(PlacePin.next_id("centre", 1883, taken) == "centre-1883-1",
+            "another kind in the same year did not start at 1")
+    var pins := [{"pin_id": "a"}, {"pin_id": "b"}, {"no_id": 1}, "not a dictionary"]
+    var ids := PlacePin.ids_of(pins)
+    check(ids.size() == 2, "ids_of read %d ids from two identified pins" % ids.size())
+    check(ids.has("a") and ids.has("b"), "ids_of lost one of the two ids")
+
+
+func test_a_rectangle_is_the_same_polygon_whichever_way_it_was_dragged() -> void:
+    """RECTANGLES FIRST, by the owner's ruling at this row.
+
+    THE ORDER IS FIXED SO THAT ONE RECTANGLE IS ONE PIN. A polygon whose vertex
+    order depended on which corner the owner started from would make two
+    identical rectangles two different rows -- and nothing downstream would
+    notice, because both are valid.
+    """
+    var a := PlacePin.rect(10.0, 20.0, 30.0, 40.0)
+    var b := PlacePin.rect(30.0, 40.0, 10.0, 20.0)
+    var c := PlacePin.rect(10.0, 40.0, 30.0, 20.0)
+    check(a.size() == 4, "a rectangle has %d vertices" % a.size())
+    check(str(a) == str(b), "dragging the other way gave a different polygon:\n%s\n%s" % [a, b])
+    check(str(a) == str(c), "dragging the other diagonal gave a different polygon")
+    check(float((a[0] as Array)[0]) == 10.0 and float((a[0] as Array)[1]) == 20.0,
+            "the first vertex is not the low corner: %s" % str(a[0]))
+    # Axis aligned: two distinct x's and two distinct y's, nothing else.
+    var xs := {}
+    var ys := {}
+    for v in a:
+        xs[float((v as Array)[0])] = true
+        ys[float((v as Array)[1])] = true
+    check(xs.size() == 2 and ys.size() == 2,
+            "the rectangle is not axis-aligned: %d x's and %d y's" % [xs.size(), ys.size()])
+
+
+func test_each_of_the_six_kinds_mints_a_row_the_pin_format_accepts() -> void:
+    """ONE OF EACH, because the kinds differ in exactly the way that bites.
+
+    `zone`, `cap` and `renew` carry a polygon; `feature` carries a type and
+    EITHER a point or a polygon; `centre` carries a point; `route` carries a
+    class and two endpoints. A tool that built the wrong field set for one kind
+    would be refused by the session and the owner would see a round trip's delay
+    and a message about a format they never typed.
+
+    THE ANSWER COMES FROM `PinFile`, not from a second copy of §22.8.4's table
+    here: a duplicated table agrees with the original until the day the format
+    moves, and then disagrees silently.
+    """
+    var poly := PlacePin.rect(0.0, 0.0, 100.0, 100.0)
+    var pt := [50.0, 50.0]
+    # THE CLASS AND TYPE HERE ARE SYNTHETIC AND HYPHENATED ON PURPOSE. This row
+    # names no zone class and no feature type in its source -- the tool derives
+    # both from the fetched artefacts, and §25 backlog 755 rules the labels -- so
+    # a test that typed a real class would be the one place the name got in.
+    # `PinFile` requires a zone's `class` and a feature's `type` to be present
+    # and does not check either against a list (only a route's class and a sink's
+    # type are checked against one), so a synthetic value exercises the same path.
+    var cases := {
+        "zone": {"polygon": poly, "class": "a-zone-class"},
+        "cap": {"polygon": poly},
+        "renew": {"polygon": poly},
+        "centre": {"point": pt},
+        "feature": {"type": "a-feature-type", "point": pt},
+        "route": {"class": "streetcar", "endpoints": [[0.0, 0.0], [100.0, 100.0]]},
+    }
+    for kind in cases:
+        var row := PlacePin.row(str(kind), 1883, "%s-1883-1" % kind, cases[kind])
+        check(str(row.get("authored_by", "")) == "owner",
+                "%s was not authored by the owner" % kind)
+        check(int(row.get("from", 0)) == 1883, "%s's from year was lost" % kind)
+        var why := PlacePin.refusal_of(row)
+        check(why == "", "a minted %s row was refused: %s" % [kind, why])
+    # A polygon feature is the other admitted geometry.
+    var fp := PlacePin.row("feature", 1883, "feature-1883-2",
+            {"type": "a-feature-type", "polygon": poly})
+    check(PlacePin.refusal_of(fp) == "",
+            "a polygon feature was refused: %s" % PlacePin.refusal_of(fp))
+    # A route with waypoints, which is the one optional field a gesture produces.
+    var rw := PlacePin.row("route", 1883, "route-1883-1",
+            {"class": "rail", "endpoints": [[0.0, 0.0], [9.0, 9.0]],
+            "waypoints": [[4.0, 5.0]]})
+    check(PlacePin.refusal_of(rw) == "",
+            "a route with waypoints was refused: %s" % PlacePin.refusal_of(rw))
+    # AND THE CONTROL: a missing required field is refused, or the checks above
+    # would pass against a validator that accepts anything.
+    var bad := PlacePin.row("zone", 1883, "zone-1883-9", {"polygon": poly})
+    check(PlacePin.refusal_of(bad) != "", "a zone with no class was accepted")
+    var bad2 := PlacePin.row("centre", 1883, "centre-1883-9", {})
+    check(PlacePin.refusal_of(bad2) != "", "a centre with no point was accepted")
+    var bad3 := PlacePin.row("route", 1883, "route-1883-9", {"class": "monorail",
+            "endpoints": [[0.0, 0.0], [1.0, 1.0]]})
+    check(PlacePin.refusal_of(bad3) != "", "a route of an unknown class was accepted")
+
+
+func test_a_coordinate_survives_the_command_writer() -> void:
+    """THE DEFECT THIS ROW FIXES, AND IT WAS IN §25 backlog 753's OWN COMMIT.
+
+    `SessionCommands.write` called `JSON.stringify(doc, " ", true)` -- with
+    `full_precision` left FALSE. `PinFile.to_json`'s header records the cost,
+    measured: a float64 written at about fifteen significant digits does not
+    parse back to the same double, so a placed pin moves by ~1e-8 m, which no
+    check in this client can see.
+
+    IT WAS LATENT RATHER THAN WRONG: 753 writes only `years` and `to_year`, both
+    integers, so nothing was ever written badly. A `place` carries polygons,
+    points and endpoints and would have been the first float through that line.
+
+    ⚠ WHAT IS ASSERTED IS VALUE FIDELITY, NEVER BYTE-EQUALITY. The claim is that
+    the text carries the shortest repr that round-trips to THIS EXACT double,
+    whose bit pattern is below -- not that the bytes match another writer's. They
+    do not: `PinFile`'s header records this engine emitting a different repr of
+    the same double than the committed file's writer, and `emit_pins.emit`
+    re-canonicalises through Python in any case, so the session's bytes are the
+    session's. A test asserting bytes would be wrong and would look rigorous.
+    """
+    # FROM THE BIT PATTERN, NEVER FROM A LITERAL: a GDScript literal of this
+    # coordinate compiles to the wrong double (one ulp low), which is the defect
+    # the coordinate-witness test above exists for.
+    var x := "3a15f5aae1c639c1".hex_decode().to_float64_array()[0]
+    check(PackedFloat64Array([x]).to_byte_array().hex_encode() == "3a15f5aae1c639c1",
+            "the witness double did not rebuild from its bytes")
+    var dir := _scratch_session("precision")
+    var row := PlacePin.row("centre", 1883, "centre-1883-1", {"point": [x, 1.0]})
+    var got := SessionCommands.write(dir, "place", {"pins": [row]})
+    check(bool(got["ok"]), "the place command was not written: %s" % got["problem"])
+    var text := FileAccess.get_file_as_string(str(got["path"]))
+    check(text.contains("-1689313.6678021685"),
+            "the command does not carry the coordinate's shortest round-tripping repr; it "
+                    + "has: %s" % text.substr(maxi(0, text.find("point") - 10), 80))
+    # THE NEGATIVE CONTROL, and it is the whole point: this is exactly what the
+    # writer produced before the fix, and it does NOT round-trip to this double.
+    check(not text.contains("-1689313.66780217"),
+            "the command carries the fifteen-significant-digit form, so full_precision is "
+                    + "off again and every placed coordinate moves by ~1e-8 m")
+    _rm_rf(dir)
+
+
+func test_the_three_point_kind_guards_hold() -> void:
+    """A POINT PIN DRAGGED WOULD HAVE EMITTED A ZERO-VERTEX PIN.
+
+    Three guards, one defect: `_polygon_of` returns `[]` for a kind with no
+    polygon, the drag took that as its base, and `edit_list` encoded the empty
+    result -- a pin whose geometry a gesture had deleted, in a file the emission
+    tool would be handed.
+
+    ONE OF EACH KIND IS CHECKED, because the blind spot is exactly the kinds
+    that carry a point: a test over the polygon kinds alone passes while the
+    bug is live.
+    """
+    # Guard 2: a point kind carries its own base.
+    var poly := PlacePin.rect(0.0, 0.0, 10.0, 10.0)
+    check(PlacePin.base_of({"kind": "zone", "polygon": poly}).size() == 4,
+            "a polygon kind's base is not its polygon")
+    check(PlacePin.base_of({"kind": "centre", "point": [5.0, 5.0]}).size() == 1,
+            "a centre's base is not its own point, so a drag would see nothing to move")
+    check(PlacePin.base_of({"kind": "feature", "type": "t", "point": [5.0, 5.0]}).size() == 1,
+            "a point feature's base is not its own point")
+    check(PlacePin.base_of({"kind": "feature", "type": "t", "polygon": poly}).size() == 4,
+            "a polygon feature's base is not its polygon")
+    check(PlacePin.base_of({"kind": "centre"}).is_empty(),
+            "a pin with no geometry at all produced a base")
+    check(PlacePin.base_of({"kind": "zone", "polygon": []}).is_empty(),
+            "an empty polygon produced a non-empty base")
+
+    # Guard 3: a zero-vertex list is refused by the edit list AND named.
+    var moved := {"good": [[1.0, 2.0]], "empty": []}
+    var list := DressingPins.edit_list(moved)
+    check(list.size() == 1, "the edit list carried %d entries, not just the one with a "
+            % list.size() + "vertex")
+    check(list.has("good") and not list.has("empty"),
+            "the zero-vertex entry reached the edit list")
+    var named := DressingPins.zero_vertex_ids(moved)
+    check(named == ["empty"],
+            "the refused entry is not named, so the drop would be silent: %s" % str(named))
+
+    # The point pick, which is what makes `remove` reach a point kind at all.
+    var pins := [{"pin_id": "c1", "kind": "centre", "point": [100.0, 100.0]},
+            {"pin_id": "z1", "kind": "zone", "polygon": poly}]
+    check(PlacePin.point_pick(pins, 100.0, 100.0, 50.0) == "c1",
+            "a centre at the cursor was not picked")
+    check(PlacePin.point_pick(pins, 130.0, 100.0, 50.0) == "c1",
+            "a centre within the radius was not picked")
+    check(PlacePin.point_pick(pins, 400.0, 400.0, 50.0) == "",
+            "a centre far outside the radius was picked anyway")
+    check(PlacePin.point_pick([pins[1]], 0.0, 0.0, 50.0) == "",
+            "a polygon kind was picked by the point test, which would shadow the "
+                    + "containment test next door")

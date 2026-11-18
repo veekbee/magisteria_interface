@@ -98,7 +98,17 @@ static func write(dir: String, verb: String, payload: Dictionary) -> Dictionary:
         out["problem"] = ("Could not write %s (error %d). The session's directory may be "
                 % [tmp, FileAccess.get_open_error()]) + "read-only."
         return out
-    f.store_string(JSON.stringify(doc, " ", true) + "\n")
+    # ⚠ `full_precision` IS THE FOURTH ARGUMENT AND IT WAS FALSE UNTIL §25 backlog
+    # 754. `PinFile.to_json`'s header records the cost, measured: without it a
+    # float64 is written at about fifteen significant digits and does NOT parse
+    # back to the same double, so a placed pin moves by ~1e-8 m -- which no check
+    # in this client can see and which a bitwise round trip cannot survive.
+    #
+    # IT WAS LATENT RATHER THAN WRONG IN 753: that row's only payloads are
+    # `years` and `to_year`, both integers, so nothing was ever written badly.
+    # A `place` carries polygons, points and endpoints, and would have been the
+    # first float through this line.
+    f.store_string(JSON.stringify(doc, " ", true, true) + "\n")
     f.close()
     var err := DirAccess.rename_absolute(tmp, cmds + fname)
     if err != OK:

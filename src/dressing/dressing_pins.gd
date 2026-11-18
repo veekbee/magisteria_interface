@@ -256,6 +256,15 @@ static func edit_list(moved: Dictionary) -> Dictionary:
     var out := {}
     for pin_id in moved:
         var verts: Array = moved[pin_id]
+        # ⚠ A ZERO-VERTEX LIST IS REFUSED, NOT EMITTED — the third of §25 backlog
+        # 754's point-kind guards. A point pin has no `polygon`, so the drag's
+        # base used to fall through `_polygon_of` to `[]` and record an entry
+        # with no vertices at all; emitting it would hand the emission tool a pin
+        # whose geometry had been deleted by a gesture that looked like a move.
+        # It is dropped here AND named by `zero_vertex_ids` below, because a
+        # silent drop is the same defect one layer down.
+        if verts.is_empty():
+            continue
         var rows: Array = []
         for v in verts:
             var xy: Array = v
@@ -266,4 +275,18 @@ static func edit_list(moved: Dictionary) -> Dictionary:
             b.encode_double(8, float(xy[1]))
             rows.append(b.hex_encode())
         out[str(pin_id)] = rows
+    return out
+
+
+## The moved ids whose vertex list is empty, which `edit_list` refuses.
+##
+## SEPARATE SO THE REFUSAL CAN BE SAID OUT LOUD. `edit_list` dropping them
+## quietly would be the defect it exists to stop, one layer down: the caller
+## must be able to tell the owner that a gesture produced nothing.
+static func zero_vertex_ids(moved: Dictionary) -> Array:
+    var out: Array = []
+    for pin_id in moved:
+        if (moved[pin_id] as Array).is_empty():
+            out.append(str(pin_id))
+    out.sort()
     return out
