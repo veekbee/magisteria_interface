@@ -199,6 +199,47 @@ func fold_of(y: int) -> Dictionary:
     return SessionRead.read_json(dir + "year_%d/fold.json" % y)
 
 
+## The pin ids a session's fold already draws, so the pin can stand down.
+##
+## ⚠ TWO DIFFERENT MATCHES, BECAUSE THE GENERATOR WRITES TWO DIFFERENT ROWS.
+## A feature row carries `pin_id` outright. A route row laid from a pin carries
+## its pin's id as the row's **`route`** -- `lay_route`'s first argument is the
+## `route_id`, and `_apply_pin` passes `p["pin_id"]` into it -- with `by` set to
+## `"pin"`.
+##
+## ⚠ AND `by == "pin"` IS NOT BELT AND BRACES. The generator lays routes of its
+## own in the same years, with `by` set to `"rule"`; matching on the id alone
+## would draw a rule-laid route as the owner's the moment an id collided, and
+## matching on the DATE -- which is what this client did until §25 backlog 755 --
+## drew every rule-laid route of that year as the owner's. Measured on a real
+## session: its 1880 fold carries two routes and **both** are `"rule"`.
+##
+## ⚠ A CORRECTION OF MY OWN MEASUREMENT BELONGS HERE. I reported that a
+## session's route rows carry no `pin_id`. That was true of the two rule-laid
+## rows I had, and false in general: `lay_route` writes `row["pin_id"]` whenever
+## it is laying from a pin. The sample contained no pin-laid route, and I
+## generalised from it. The match below reads `route` and `by`, as ruled, and
+## would also have worked on `pin_id`.
+static func ids_drawn_by_fold(features: Array, routes: Array) -> Dictionary:
+    var out := {}
+    for row_v in features:
+        if typeof(row_v) != TYPE_DICTIONARY:
+            continue
+        var pid := str((row_v as Dictionary).get("pin_id", ""))
+        if pid != "":
+            out[pid] = true
+    for row_v in routes:
+        if typeof(row_v) != TYPE_DICTIONARY:
+            continue
+        var row: Dictionary = row_v
+        if str(row.get("by", "")) != "pin":
+            continue
+        var rid := str(row.get("route", ""))
+        if rid != "":
+            out[rid] = true
+    return out
+
+
 ## A session fold's tile rows, keyed as `DressingFold` keys its own state.
 ##
 ## ⚠ NOTHING IS COMPUTED HERE. A session's fold is ALREADY folded -- its rows

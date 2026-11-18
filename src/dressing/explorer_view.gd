@@ -222,6 +222,15 @@ func _open_session() -> void:
     _load_session_pins()
 
 
+## The pin ids the session's own fold already draws, so the pin stands down.
+##
+## BOTH KINDS THAT GET A FOLD ROW, matched the way the generator writes them --
+## see `SessionRead.ids_drawn_by_fold`, which holds the rule and the reason it is
+## not a date.
+func _ids_the_fold_draws() -> Dictionary:
+    return SessionRead.ids_drawn_by_fold(_session_features, _session_routes)
+
+
 ## The session's working pin file. Empty when there is none, which is a state.
 func _load_session_pins() -> void:
     _session_pins = []
@@ -411,15 +420,24 @@ func _draw() -> void:
             draw_rect(Rect2(p - Vector2(side, side) * 0.5, Vector2(side, side)), edge, false,
                     maxf(side * 0.18, 1.0))
 
+    # ⚠ A ROUTE IS DRAWN FROM ITS LAID TILES, NOT ITS GEOMETRY (§25 backlog 755:
+    # *a route as its laid tiles from the session's regenerated rows -- the client
+    # derives none*). The row carries both, and they are not the same claim: the
+    # geometry is the line the router was given, and the tiles are the ground it
+    # actually laid. Drawing the line would show the owner a route where no tile
+    # was taken -- the client deciding what a route covers, which is the thing
+    # this client does not do. The straight line survives only as the PLACING
+    # preview, where it is explicitly not yet a route.
     for r: Dictionary in DressingFold.routes_at(
             _session_routes if in_session else _routes, _year):
-        var pts := PackedVector2Array()
-        for v in r.get("geometry", []):
-            var xy: Array = v
-            pts.append(_to_screen(float(xy[0]), float(xy[1])))
-        if pts.size() >= 2:
-            draw_polyline(pts, DressingDraw.route_color(_palette,
-                    str(r.get("class", "")), _unknown_routes), maxf(side * 0.4, 1.0))
+        var col := DressingDraw.route_color(_palette, str(r.get("class", "")), _unknown_routes)
+        for tv in r.get("tiles", []):
+            var k := DressingFold.tile_key(tv)
+            if not _centres.has_centre(k):
+                continue
+            var c := _centres.centre_of(k)
+            var q := _to_screen(c[0], c[1])
+            draw_rect(Rect2(q - Vector2(side, side) * 0.5, Vector2(side, side)), col)
 
     # A SESSION'S PINS ARE ITS OWN FILE'S, AND THIS ROW DOES NOT DRAW THEM.
     # `pins.json` in a session directory is the working pin file; drawing it is
@@ -433,8 +451,32 @@ func _draw() -> void:
         # edge colour; one dated after the year on screen is PENDING and drawn in
         # the notice colour, because `from` is Y + 1 and the owner would
         # otherwise see no difference between asked-for and built.
+        var drawn_by_the_fold := _ids_the_fold_draws()
         for pin: Dictionary in _session_pins:
+            var kind := str(pin.get("kind", ""))
             var applied := int(pin.get("from", 0)) <= _year
+            # ⚠ WHO DRAWS WHAT, AND IT DIFFERS BY KIND BECAUSE THE FOLD DIFFERS.
+            #   zone, cap, renew  the fold NEVER carries them -- a zone pin
+            #                     writes no tile row, it sets the allowed-class
+            #                     mask -- so the pin is the only drawing there
+            #                     will ever be, applied or not. A missing zone
+            #                     colour is not a missing zone.
+            #   centre            likewise: it founds a subcentre and writes no
+            #                     row, so it stays a marker from the pin.
+            #   feature           once applied, the fold's own row is drawn (its
+            #                     tiles ARE the catalogue footprint the generator
+            #                     chose), so the pin stands down; matched by
+            #                     `pin_id`, which a session's feature rows carry.
+            #   route             once laid, the fold's laid tiles are drawn --
+            #                     matched by the row's `route` BEING the pin's
+            #                     id, with `by` = "pin", and NOT by date. The
+            #                     generator lays routes of its own in the same
+            #                     years, so a date match drew a rule-laid route
+            #                     as the owner's: real session, 1880, two routes,
+            #                     both "rule".
+            var pid := str(pin.get("pin_id", ""))
+            if (kind == "feature" or kind == "route") and drawn_by_the_fold.has(pid):
+                continue
             _draw_pin(pin, edge if applied else Color(1, 0.9, 0.4), side)
     elif _pins != null and _pins.is_present():
         for pin: Dictionary in _pins.at(_year):
@@ -493,13 +535,25 @@ func _draw_pin(pin: Dictionary, edge: Color, side: float) -> void:
     for v in verts:
         var xy: Array = v
         pts.append(_to_screen(float(xy[0]), float(xy[1])))
+    var kind := str(pin.get("kind", "?"))
     if pts.size() == 1:
         # A marker: a one-vertex outline is not a shape.
         draw_line(pts[0] - Vector2(7, 7), pts[0] + Vector2(7, 7), edge, 2.0)
         draw_line(pts[0] - Vector2(7, -7), pts[0] + Vector2(7, -7), edge, 2.0)
-        _text(pts[0] + Vector2(10, -8), "%s  %s" % [str(pin.get("kind", "?")), pid], edge)
+        var label := "%s  %s" % [kind, pid]
+        # ⚠ THE ONE PLACE "EVERY FIRST-VERSION KIND DRAWN" IS NARROWER THAN IT
+        # SOUNDS, said on screen rather than left as a silence. A POINT feature
+        # dated after the year on screen has no fold row yet, so its catalogue
+        # footprint does not exist to be drawn: the generator decides it at the
+        # next advance. A marker and these words are the honest drawing.
+        if kind == "feature":
+            label += "  (footprint is the generator's, at the next advance)"
+        _text(pts[0] + Vector2(10, -8), label, edge)
         return
-    pts.append(pts[0])
+    # A ROUTE IS AN OPEN LINE. Closing it would draw a ring through ground the
+    # router was never asked about.
+    if kind != "route":
+        pts.append(pts[0])
     draw_polyline(pts, edge, maxf(side * 0.5, 2.0))
     _text(pts[0] + Vector2(6, -8), "%s  %s" % [str(pin.get("kind", "?")), pid], edge)
 
@@ -728,9 +782,13 @@ func _tool_choices() -> Array:
     var out: Array = []
     match _tool:
         "zone":
-            var pal = _palette.get("PALETTE", {})
-            if typeof(pal) == TYPE_DICTIONARY:
-                out = (pal as Dictionary).keys()
+            # ⚠ THE RULED TEN, NOT THE PALETTE'S. §25 backlog 754 derived this
+            # from the render palette and was wrong both ways: the palette offers
+            # `transport`, which the format refuses, and omits the umbrella,
+            # which it accepts. The labels are design's
+            # (`notes/epoch-T/da11-play-loop.md` line 130) and the class the pin
+            # carries is the register's, unchanged.
+            out = PlacePin.zone_labels()
         "route":
             var rt = _palette.get("ROUTE", {})
             if typeof(rt) == TYPE_DICTIONARY:
@@ -812,7 +870,10 @@ func _commit_place() -> void:
         _:
             fields["polygon"] = _points
             if _tool == "zone":
-                fields["class"] = choice
+                # THE LABEL IS WHAT THE OWNER PICKED; THE CLASS IS WHAT THE FILE
+                # GETS. A pin carrying "shops and offices" would be refused by
+                # the format, which knows only the register's names.
+                fields["class"] = PlacePin.class_of_label(choice)
     var id := PlacePin.next_id(_tool, from_year, PlacePin.ids_of(_session_pins))
     var row := PlacePin.row(_tool, from_year, id, fields)
     # REFUSED HERE BEFORE IT IS WRITTEN, by `PinFile`'s own rules rather than a

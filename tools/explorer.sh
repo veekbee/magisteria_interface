@@ -42,8 +42,16 @@
 #   c              centre -- click a point
 #   t              route -- click the two ends; clicks between them become
 #                  waypoints, and the router lays the path (none is invented here)
-#   [ ]            cycle the class or type, which are DERIVED from the fetched
-#                  palette and reference rather than listed in this client
+#   [ ]            cycle the class or type. A ZONE's ten are design's own labels
+#                  -- homes, modest/middle/wealthy homes, shops and offices,
+#                  industry, warehouses, civic, parks, keep open -- and the pin
+#                  carries the register's class name, not the label. A route's
+#                  classes and a feature's types are still derived from the
+#                  fetched palette and reference.
+#
+# A feature type the format does not allow until a later year is refused by the
+# session, in its own words: the client has no published source for a type's
+# availability and does not guess at one.
 #   Enter          place it: the pin is minted, checked against the pin format,
 #                  and written as a `place` command
 #   Esc            put the tool down

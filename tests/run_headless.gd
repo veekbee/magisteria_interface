@@ -140,6 +140,11 @@ func _initialize() -> void:
     _run(test_each_of_the_six_kinds_mints_a_row_the_pin_format_accepts, "test_each_of_the_six_kinds_mints_a_row_the_pin_format_accepts")
     _run(test_a_coordinate_survives_the_command_writer, "test_a_coordinate_survives_the_command_writer")
     _run(test_the_three_point_kind_guards_hold, "test_the_three_point_kind_guards_hold")
+    _run(test_the_zone_tools_ten_are_the_formats_and_not_the_palettes, "test_the_zone_tools_ten_are_the_formats_and_not_the_palettes")
+    _run(test_a_whole_session_under_one_sha_is_accepted, "test_a_whole_session_under_one_sha_is_accepted")
+    _run(test_every_first_version_kind_has_a_base_to_draw, "test_every_first_version_kind_has_a_base_to_draw")
+    _run(test_every_committed_route_tile_can_be_drawn, "test_every_committed_route_tile_can_be_drawn")
+    _run(test_a_rule_laid_route_is_not_mistaken_for_the_owners, "test_a_rule_laid_route_is_not_mistaken_for_the_owners")
     _run(test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control, "test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control")
     _run(test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name, "test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name")
     _run(test_every_pin_kind_refuses_each_required_field_by_name, "test_every_pin_kind_refuses_each_required_field_by_name")
@@ -17751,3 +17756,233 @@ func test_the_three_point_kind_guards_hold() -> void:
     check(PlacePin.point_pick([pins[1]], 0.0, 0.0, 50.0) == "",
             "a polygon kind was picked by the point test, which would shadow the "
                     + "containment test next door")
+
+
+# --------------------------------------------------------------------------
+# §25 backlog 755: the zone tool's labels, and every first-version kind drawn
+# --------------------------------------------------------------------------
+
+func test_the_zone_tools_ten_are_the_formats_and_not_the_palettes() -> void:
+    """§25 backlog 754 DERIVED THIS LIST AND WAS WRONG IN BOTH DIRECTIONS.
+
+    754 took the zone classes from the fetched render palette. The format's set
+    is the nine bid classes plus the umbrella `residential`; the palette is those
+    nine plus `transport`. So the derived list OFFERED one the format refuses by
+    name and OMITTED one it accepts -- and the omitted one is this list's own
+    `homes`. The integration read found the first half; the second was the
+    manager's.
+
+    THE EVIDENCE THAT THE TWO SOURCES DIFFER IS ASSERTED BELOW, against the
+    fetched palette itself, so this is not a story about a past mistake but a
+    live check: if anyone re-derives from the palette, these checks fail.
+
+    WHAT CANNOT BE ASSERTED HERE, and it is stated rather than papered over:
+    `PinFile` list-checks a route's class and a sink's type and NOT a zone's
+    class, so acceptance of all ten is the session's answer and nothing else.
+    One of the ten was shown accepted on a real session at 754's integration
+    read. The other nine rest on the count, the two names, and the bijection.
+    """
+    var labels := PlacePin.zone_labels()
+    check(labels.size() == 10, "the tool offers %d labels, not ten" % labels.size())
+    var classes := {}
+    for label in labels:
+        var cls := PlacePin.class_of_label(str(label))
+        check(cls != "", "the label %s maps to no class" % label)
+        check(not classes.has(cls),
+                "two labels map to the class %s, so the map is not a bijection" % cls)
+        classes[cls] = true
+    check(classes.size() == 10, "%d distinct classes behind ten labels" % classes.size())
+    check(not classes.has("transport"),
+            "`transport` is offered as a zone class; the format refuses it by name")
+    check(classes.has("residential"),
+            "the umbrella class is missing, so `homes` cannot be placed")
+    for stratum in ["residential_low", "residential_middle", "residential_wealthy"]:
+        check(classes.has(stratum), "the stratum %s is not offered" % stratum)
+    check(PlacePin.class_of_label("not a label") == "",
+            "an unknown label returned a class, so a typo would place something")
+
+    # THE TWO SOURCES DIFFER, asserted against the palette rather than recalled.
+    var pal = JSON.parse_string(FileAccess.get_file_as_string(
+            DressingCentres.DIR + "palette.json"))
+    if typeof(pal) != TYPE_DICTIONARY:
+        print("755: the palette is not fetched, so the two sources are UNCOMPARED here")
+        return
+    var pal_classes: Dictionary = (pal as Dictionary).get("PALETTE", {})
+    check(pal_classes.has("transport"),
+            "the palette no longer carries `transport`; the defect this list fixes was that "
+                    + "the palette offered it, so either the artefact moved or the check is stale")
+    check(not pal_classes.has("residential"),
+            "the palette now carries the umbrella; the other half of the defect was that it "
+                    + "did not, so this check needs re-reading against the artefact")
+    # Every class the tool offers except the umbrella is one the palette can colour.
+    var uncoloured := 0
+    for cls in classes:
+        if str(cls) != "residential" and not pal_classes.has(str(cls)):
+            uncoloured += 1
+    check(uncoloured == 0,
+            "%d of the offered classes have no colour in the palette, so a zone the owner "
+                    % uncoloured + "placed would draw in UNKNOWN once it was taken")
+
+
+func test_a_whole_session_under_one_sha_is_accepted() -> void:
+    """THE RESUMED CASE, WHICH IS EVERY SESSION AFTER ITS FIRST `--once`.
+
+    §25 backlog 754's integration read found that a `--once` RESUMES by replay
+    from the arc's start and rewrites every `year_<Y>/fold.json` under the pin
+    file in force at that moment. So a real session's folds all carry ONE sha --
+    the current one -- and the split state the other binding test uses is what
+    only an un-resumed session shows.
+
+    THE OTHER TEST'S FIXTURE HOLDS THE SPLIT ON PURPOSE, so this case was
+    untested until now: the common state had no test and the rare one had two.
+    The rule is unchanged -- accept any sha the session HAS HAD, current
+    included -- and that is exactly why it survives both behaviours, where
+    equality with the year's first build would have failed on every resume.
+    """
+    var s := SessionRead.open_dir(RECORDED_SESSION_DIR)
+    check(s.problem == "", "the recorded session did not read: %s" % s.problem)
+    var years := s.years_present()
+    check(years.size() >= 3, "the fixture has %d years; too few to show this" % years.size())
+    # EVERY FOLD RESTAMPED TO THE CURRENT SHA, in memory, as a resume would.
+    var accepted := 0
+    for y in years:
+        var fold: Dictionary = s.fold_of(y).duplicate(true)
+        (fold["session"] as Dictionary)["pins_sha256"] = s.pins_sha256
+        var why := s.fold_problem(fold)
+        check(why == "", "year %d under the current sha was refused: %s" % [y, why])
+        if why == "":
+            accepted += 1
+    check(accepted == years.size(),
+            "%d of %d years were accepted under one sha" % [accepted, years.size()])
+    # AND THE START SHA REMAINS ALLOWED THOUGH NO FOLD NEED CARRY IT. The allowed
+    # set is a superset of what is on disk, which is the point of the rule.
+    check(s.shas_had.has(s.start_pins_sha256),
+            "the start file's sha stopped being allowed, so a fold written before a "
+                    + "placement would now be refused")
+    # It still refuses one the session never had, or the above proves nothing.
+    var alien: Dictionary = s.fold_of(years[0]).duplicate(true)
+    (alien["session"] as Dictionary)["pins_sha256"] = "sha256:" + "e".repeat(64)
+    check(s.fold_problem(alien) != "",
+            "a sha the session never had was accepted, so the binding admits anything")
+
+
+func test_every_first_version_kind_has_a_base_to_draw() -> void:
+    """"NONE NAMED UNDRAWABLE" -- one pin of each of the six kinds.
+
+    A ROUTE WAS THE ONE THAT FAILED. Its geometry is neither a polygon nor a
+    point, so `base_of` returned nothing and the view took its `has no polygon
+    this build can draw` line -- which made "every first-version kind drawn"
+    false for exactly one kind, and the kind nobody would check first.
+
+    THE ORDER OF A ROUTE'S BASE IS THE GENERATOR'S OWN: the first endpoint, the
+    waypoints, then the second endpoint, so the line drawn is the line the router
+    will be given rather than a different line through the same points.
+    """
+    var poly := PlacePin.rect(0.0, 0.0, 10.0, 10.0)
+    var pt := [5.0, 5.0]
+    var six := {
+        "zone": {"polygon": poly, "class": "residential"},
+        "cap": {"polygon": poly},
+        "renew": {"polygon": poly},
+        "centre": {"point": pt},
+        "feature": {"type": "a-feature-type", "point": pt},
+        "route": {"class": "rail", "endpoints": [[0.0, 0.0], [9.0, 9.0]]},
+    }
+    for kind in six:
+        var row := PlacePin.row(str(kind), 1884, "%s-1884-1" % kind, six[kind])
+        check(not PlacePin.base_of(row).is_empty(),
+                "a %s pin has no base, so the view would name it undrawable" % kind)
+        check(PlacePin.refusal_of(row) == "",
+                "the %s row used here is not even a valid pin: %s"
+                        % [kind, PlacePin.refusal_of(row)])
+    # The route's base, in the generator's order and including its waypoints.
+    var r := PlacePin.row("route", 1884, "route-1884-2", {"class": "rail",
+            "endpoints": [[0.0, 0.0], [9.0, 9.0]], "waypoints": [[4.0, 5.0]]})
+    var base := PlacePin.base_of(r)
+    check(base.size() == 3, "a route with one waypoint has a base of %d points" % base.size())
+    check(float((base[0] as Array)[0]) == 0.0 and float((base[2] as Array)[0]) == 9.0,
+            "the route's base does not run endpoint, waypoint, endpoint: %s" % str(base))
+    check(float((base[1] as Array)[0]) == 4.0,
+            "the waypoint is not between the endpoints: %s" % str(base))
+
+
+func test_every_committed_route_tile_can_be_drawn() -> void:
+    """A ROUTE IS NOW DRAWN FROM ITS LAID TILES, so a tile without a centre is
+    a piece of route that silently does not appear.
+
+    The drawing loop skips a tile it cannot place -- it has to, since inventing a
+    position is the one thing this client does not do -- and a skip is invisible.
+    So the artefact is checked here instead: every tile of every committed route
+    must have a centre. If a re-vendor ever breaks that, this says so rather than
+    the city quietly losing a road.
+    """
+    var routes_path := DressingLoad.DIR + "routes.jsonl"
+    if not FileAccess.file_exists(routes_path):
+        print("755: routes.jsonl is not fetched, so the route tiles are UNCHECKED here")
+        return
+    var load_ := DressingLoad.load_from()
+    if not load_.is_present() or not load_.identity_holds():
+        print("755: the dressing is not fetched or does not bind, so the centres are UNREAD")
+        return
+    var man = JSON.parse_string(FileAccess.get_file_as_string(DressingLoad.DIR + "manifest.json"))
+    var centres := DressingCentres.load_from(
+            str((man as Dictionary).get("lattice", "")), load_.computed_dressing_sha256)
+    check(centres.is_present() and centres.is_bound(),
+            "the centres are not bound, so route tiles cannot be checked")
+    if not (centres.is_present() and centres.is_bound()):
+        return
+    var tiles := 0
+    var missing := 0
+    for row: Dictionary in DressingFold.read_rows(routes_path):
+        for tv in row.get("tiles", []):
+            tiles += 1
+            if not centres.has_centre(DressingFold.tile_key(tv)):
+                missing += 1
+    check(tiles > 0, "the committed routes carry no tiles at all")
+    check(missing == 0,
+            "%d of %d committed route tiles have no centre, so that much route would be "
+                    % [missing, tiles] + "drawn as nothing at all")
+
+
+func test_a_rule_laid_route_is_not_mistaken_for_the_owners() -> void:
+    """THE MATCH IS THE ROW'S `route` AND ITS `by`, NOT THE DATE.
+
+    The generator lays a pin's route with the pin's own id: `_apply_pin` passes
+    `p["pin_id"]` as `lay_route`'s `route_id`, which becomes the row's `route`,
+    with `by` set to `"pin"`. It also lays routes of its OWN in the same years,
+    with `by` set to `"rule"`.
+
+    SO A DATE MATCH WAS WRONG, and this is the test that would have caught it:
+    until §25 backlog 755 this client treated any route in an applied pin's year
+    as that pin's, which drew a rule-laid route as the owner's and stood the
+    owner's pin down in favour of a road it had nothing to do with. Measured on a
+    real session: its 1880 fold carries two routes and BOTH are `"rule"`.
+
+    AND A CORRECTION OF MY OWN MEASUREMENT. I reported that a session's route
+    rows carry no `pin_id`; that was true of the two rule-laid rows I had and
+    false in general -- `lay_route` writes `row["pin_id"]` whenever it lays from
+    a pin. The sample held no pin-laid route and I generalised from it.
+    """
+    var id := "route-1884-1"
+    var rule_laid := {"route": id, "by": "rule", "class": "rail", "tiles": []}
+    var pin_laid := {"route": id, "by": "pin", "class": "rail", "tiles": []}
+    check(SessionRead.ids_drawn_by_fold([], [rule_laid]).is_empty(),
+            "a rule-laid route whose id matches a pin's was taken as the pin's, so the "
+                    + "owner's route would stand down for a road it did not place")
+    var pin_match := SessionRead.ids_drawn_by_fold([], [pin_laid])
+    check(pin_match.has(id),
+            "a pin-laid route was not matched to its pin, so it would be drawn twice -- "
+                    + "once from the fold and once from the pin")
+    check(pin_match.size() == 1, "%d ids matched one route row" % pin_match.size())
+    # Both at once: only the pin-laid one matches.
+    var both := SessionRead.ids_drawn_by_fold([], [rule_laid, pin_laid])
+    check(both.size() == 1 and both.has(id),
+            "with a rule-laid and a pin-laid route sharing an id, %d matched" % both.size())
+    # A feature matches on `pin_id` outright, and one without it does not.
+    var feats := SessionRead.ids_drawn_by_fold(
+            [{"pin_id": "feature-1884-1", "tiles": []}, {"feature_id": "x", "tiles": []}], [])
+    check(feats.size() == 1 and feats.has("feature-1884-1"),
+            "the feature match read %d ids, not just the one carrying a pin_id" % feats.size())
+    # A route row with no `route` at all contributes nothing rather than "".
+    check(SessionRead.ids_drawn_by_fold([], [{"by": "pin", "tiles": []}]).is_empty(),
+            "a pin-laid row with no route id contributed an empty id to the match set")

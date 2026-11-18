@@ -34,6 +34,61 @@ extends RefCounted
 
 const AUTHOR := "owner"
 
+## THE ZONE TOOL'S TEN, label then class, in the order design listed them.
+##
+## ⚠ THE LIST IS THE FORMAT'S `ZONE_CLASSES` AND NOT THE RENDER PALETTE'S. §25
+## backlog 754 derived it from the palette and was wrong in BOTH directions: the
+## palette is the nine bid classes **plus `transport`**, which the format refuses
+## by name, and **without `residential`**, which the format accepts and which is
+## this list's own *homes*. The integration read found the first half; the second
+## was the manager's. A derived list was the right instinct and the wrong source
+## -- a drawing palette is not a zonable set -- and there is no derivable source
+## for this one: a session's `quota_carried` is empty in an early year and its
+## `quotas_tiles` carries only the classes with demand that year, so both vary
+## under the owner and omit the strata.
+##
+## ⚠ THE LABELS ARE DESIGN'S, NOT THIS CLIENT'S. They are listed at
+## `notes/epoch-T/da11-play-loop.md` line 130 (heading 10's passage), which names
+## *homes* as the umbrella over "all three strata" and *keep open* as `reserved`;
+## the other eight follow by meaning. **The register's names are unchanged in the
+## file** -- the label is what the owner reads, the class is what the pin carries.
+##
+## ⚠ AND THE CLIENT CANNOT PROVE THESE TEN ARE ACCEPTABLE. `PinFile` list-checks
+## a route's class and a sink's type and NOT a zone's class, so acceptance is the
+## session's answer and nothing else. One of the ten has been shown accepted on a
+## real session (§25 backlog 754's integration read placed a zone and the
+## emission took it); the other nine are asserted here by count, by the absence
+## of `transport`, by the presence of `residential`, and by the map being a
+## bijection.
+const ZONE_LABELS: Array = [
+    ["homes", "residential"],
+    ["modest homes", "residential_low"],
+    ["middle homes", "residential_middle"],
+    ["wealthy homes", "residential_wealthy"],
+    ["shops and offices", "commercial"],
+    ["industry", "industrial"],
+    ["warehouses", "warehouse"],
+    ["civic", "institutional"],
+    ["parks", "recreational"],
+    ["keep open", "reserved"],
+]
+
+
+## The labels, in design's order.
+static func zone_labels() -> Array:
+    var out: Array = []
+    for pair in ZONE_LABELS:
+        out.append(str((pair as Array)[0]))
+    return out
+
+
+## The class a label stands for, or "".
+static func class_of_label(label: String) -> String:
+    for pair in ZONE_LABELS:
+        if str((pair as Array)[0]) == label:
+            return str((pair as Array)[1])
+    return ""
+
 
 ## An axis-aligned four-vertex polygon from two world corners, in float64 metres.
 ##
@@ -137,4 +192,21 @@ static func base_of(pin: Dictionary) -> Array:
     var pt = pin.get("point", null)
     if typeof(pt) == TYPE_ARRAY and (pt as Array).size() >= 2:
         return [pt]
+    # ⚠ A ROUTE'S BASE IS ITS ENDPOINTS AND WAYPOINTS, added at §25 backlog 755.
+    # Without this a route pin had no base at all and took the view's
+    # `has no polygon this build can draw` line -- so "every first-version kind
+    # drawn" was false for one of the six, and the kind that fails is the one
+    # whose geometry is neither a polygon nor a point. The order is the
+    # generator's own: the first endpoint, the waypoints, the second endpoint
+    # (`endpoints[0], *waypoints, endpoints[1]`), so the line drawn here is the
+    # line the router will be given.
+    var ends = pin.get("endpoints", null)
+    if typeof(ends) == TYPE_ARRAY and (ends as Array).size() == 2:
+        var out: Array = [(ends as Array)[0]]
+        var way = pin.get("waypoints", null)
+        if typeof(way) == TYPE_ARRAY:
+            for w in (way as Array):
+                out.append(w)
+        out.append((ends as Array)[1])
+        return out
     return []

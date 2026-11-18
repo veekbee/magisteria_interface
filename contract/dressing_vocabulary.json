@@ -87,6 +87,18 @@
     "cost_s": "a priced rewind's or removal's cost in seconds, shown while the session works, since a rewind can cost a whole build."
   },
 
+  "zone_classes_the_owner_places": {
+    "_public_by": "§25 backlog 755, decision 2149 (5), owner ruling 2150 -- the zone tool's ten. The labels are design's, listed at `notes/epoch-T/da11-play-loop.md` line 130; the CLASS NAMES are the register's and are unchanged in the pin file, because the label is what the owner reads and the class is what the format takes.",
+
+    "_why_only_three_entries": "The tool offers ten classes and only these three are compound snake_case, so 741's rule reaches only these three. The other seven -- the umbrella `residential`, `commercial`, `industrial`, `warehouse`, `institutional`, `recreational`, `reserved` -- carry no underscore, the rule drops them, and an entry for one would be noise that implied the rule had considered it.",
+
+    "_why_they_are_typed_rather_than_derived": "Because there is no derivable source and §25 backlog 754 proved it by getting this wrong. 754 derived the list from the fetched render palette, which is the nine bid classes PLUS `transport` -- refused by the format -- and WITHOUT `residential`, which the format accepts and which is this list's own `homes`. A drawing palette is not a zonable set. The session's own records are no better: `quota_carried` is empty in an early year and `quotas_tiles` carries only the classes with demand that year, so a list derived from either would change under the owner and omit the strata. So this one is ruled, which is what the allow side is for.",
+
+    "residential_low": "the `modest homes` label's class.",
+    "residential_middle": "the `middle homes` label's class.",
+    "residential_wealthy": "the `wealthy homes` label's class."
+  },
+
   "_not_in_here_on_purpose": {
     "the_session_schemas": "NO LONGER PENDING, AND THE PARAGRAPH IS KEPT BECAUSE IT PREDICTED CORRECTLY. It stood here from §25 backlog 741's landing, saying that decision 2149 (1)'s session field names would cross AFTER this guard, that several were manifest keys passing the rule, and that the row making them public would have to add them WITH THEIR REASON or go red. That row was §25 backlog 752 and it did: they are in `session_file_keys` above. What the prediction got wrong is the SIZE -- it said `several`, and 752's dispatch named two (`built_tiles`, `built_km2`); the measured answer is about thirty-three, because `stats.json` splices the whole ledger and fabric records in verbatim and nests the whole demand line. A reader estimating this work from either figure would have been wrong by more than an order of magnitude, which is why the count was measured against `tools/play_dressing.py` before a line was written rather than taken from the brief.",
     "the_bid_fields": "owner ruling 2150 keeps the generator's bid maps out of the first version, so their names are not this tree's and are not here.",
