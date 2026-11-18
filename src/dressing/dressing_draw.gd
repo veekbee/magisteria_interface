@@ -76,7 +76,30 @@ static func tile_rows(fold: Dictionary, palette: Dictionary, density_ref: float,
 
 
 ## A route's colour by its class, from the palette's ROUTE group.
-static func route_color(palette: Dictionary, route_class: String) -> Color:
+##
+## ⚠ `unknown_classes` IS NOT OPTIONAL POLISH; ITS ABSENCE WAS A DEFECT. Until
+## §25 backlog 753 this function took no such argument, so a route of a class the
+## palette does not name fell through `_rgb` to the palette's UNKNOWN colour and
+## **nothing said so** -- while the tile path next door has collected unknown
+## classes all along and the explorer names them on screen. The owner saw an
+## oddly coloured line and had no words for it, which is the asymmetry this
+## project's own standard forbids: *a pin the explorer cannot draw is named on
+## screen*, and *a city with pieces silently missing is the one defect a person
+## cannot catch by looking*.
+##
+## IT IS LIVE ON THE COMMITTED PATH AND NOT A SESSION'S PROBLEM. Measured on the
+## committed compact `routes.jsonl`: nine rows carrying FOUR route classes, of
+## which the palette's ROUTE group names two. The two it does not name are
+## router-laid edge types, and the generator's own renderer uses the same
+## five-name map, so the committed renders draw them in UNKNOWN too. **Giving
+## them colours is a palette change on the generator side and would move
+## committed renders**, so it is filed for the humans lane and is not this
+## client's; this client's job is to say which classes it could not colour.
+static func route_color(palette: Dictionary, route_class: String,
+        unknown_classes: Dictionary = {}) -> Color:
+    var g = palette.get("ROUTE", {})
+    if typeof(g) == TYPE_DICTIONARY and not (g as Dictionary).has(route_class):
+        unknown_classes[route_class] = true
     return shade(_rgb(palette, "ROUTE", route_class), 0.0)
 
 

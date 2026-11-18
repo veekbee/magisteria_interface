@@ -110,6 +110,9 @@
   "fold_json": {
     "_path": "year_<Y>/fold.json",
     "_mostly_not_new": "§25 backlog 730's fold format, already public and already read by this client. ONLY THE STAMP DIFFERS: a committed fold carries `dressing_sha256`, and a session's fold carries the block below instead -- §25 backlog 749 recorded that deliberately, with `no invented dressing_sha256`.",
+    "_two_fields_added_at_753": "`what` and `generated_by` were MISSING from this section until §25 backlog 753. The integration read of a real session found them: mechanical coverage reported them present-and-not-declared. Both were already handled correctly at runtime -- `generated_by` is erased at load, `what` is ignored -- so nothing misbehaved; the omission was in this declaration. The committed `fold_1890.json` carries the same two, which is where it should have been caught.",
+    "what": "string",
+    "generated_by": "string -- DROPPED at load",
     "session": {
       "name": "string",
       "pins_sha256": "string",
@@ -122,27 +125,61 @@
     "_what_binds_it": "NOT a recomputed identity: a session directory has no PIN and no committed digests, so the apparatus that binds a fetched dressing has no counterpart here. The binding is instead that the fold's `session.name` is this session's, its `year` is at most `session.json`'s `year`, and its `pins_sha256` is one THIS SESSION HAS HAD -- the start file's, or one recorded in a place or remove answer, or the current one. A placement re-stamps no fold already written, so a binding that demanded the current sha would refuse every past year after the first placement."
   },
 
+  "_optionality_is_machine_readable": "AND IT WAS NOT, UNTIL §25 backlog 753. The two sections below used to declare each verb's fields in one flat list, with `advance only` and `present when ok` written in prose. A mechanical coverage check cannot read prose, so it reported SIX fields absent against a real session -- a `place` command carrying no `years`, a refused answer carrying no `result` -- none of which was the session's fault. The convention below is readable by a checker: `_always` holds the fields every document of the kind carries; `_per_verb` and `_per_outcome` hold `required` and `optional` per case. A checker reads the document's own `verb` or `ok` and expects `_always` + that case's `required`, allowing that case's `optional`. Against the committed synthetic fixture the gate requires 0 absent.",
+
   "command_json": {
     "_path": "commands/<seq>-<verb>.json, written by THIS CLIENT",
-    "_filename": "`<seq>-<verb>.json` with `seq` a six-digit zero-padded integer one above the largest leading seq in `commands/` and `commands/done/`. THE NAME CARRIES THE ORDER: the session acts on waiting commands in name order, so a name that did not sort in issue order would reorder the owner's commands. A fixed name per verb cannot be used -- a command is consumed by being RENAMED into `commands/done/`, so the second file of the same name is refused as already consumed.",
+    "_filename": "`<seq>-<verb>.json` with `seq` a six-digit zero-padded integer one above the largest leading seq in `commands/` AND `commands/done/`. THE NAME CARRIES THE ORDER: the session acts on waiting commands in name order, so a name that did not sort in issue order would reorder the owner's commands. A fixed name per verb cannot be used -- a command is consumed by being RENAMED into `commands/done/`, so the second file of the same name is refused as already consumed and filed as `.again-N`. `.again-N` and `.answer` files count by their LEADING seq.",
     "_written_atomically": "to `<name>.json.tmp`, then renamed to `<name>.json`. The session globs `*.json` and reads after its own rename, so a half-written file would be refused as not JSON.",
-    "verb": "string -- one of `advance`, `rewind`, `place`, `remove`; REQUIRED IN THE BODY, not inferred from the filename",
-    "years": "integer -- `advance` only",
-    "to_year": "integer -- `rewind` only, required",
-    "confirm": "boolean -- `rewind` and `remove`; without it a priced answer comes back and nothing is done",
-    "pins": "array of pin rows in decision 2075's format -- `place` only, required; each row carries its own unused `pin_id`",
-    "pin_id": "string -- `remove` only, required"
+    "_always": {
+      "verb": "string -- one of `advance`, `rewind`, `place`, `remove`; REQUIRED IN THE BODY, never inferred from the filename"
+    },
+    "_per_verb": {
+      "advance": {
+        "required": {},
+        "optional": {"years": "integer -- how many years to step"}
+      },
+      "rewind": {
+        "required": {"to_year": "integer"},
+        "optional": {"confirm": "boolean -- without it a priced answer comes back and NOTHING is done"}
+      },
+      "place": {
+        "required": {"pins": "array of pin rows in decision 2075's format; each row carries its own unused `pin_id`"},
+        "optional": {}
+      },
+      "remove": {
+        "required": {"pin_id": "string"},
+        "optional": {"confirm": "boolean -- as `rewind`'s"}
+      }
+    }
   },
 
   "answer_json": {
     "_path": "commands/done/<stem>.answer.json",
     "_written_by": "the session, beside the consumed command",
-    "verb": "string|null -- null when the file itself was refused before a verb could be read",
-    "stamp": "string",
-    "year_issued": "integer",
-    "ok": "boolean",
-    "result": "object -- present when `ok`; a place or remove answer carries `pins_sha256`, which is how the fold binding learns a sha the session has had",
-    "refusal": "string -- present when not `ok`; SHOWN VERBATIM and never paraphrased",
-    "cost_s": "number -- inside `result` on a priced rewind or removal"
+    "_always": {
+      "verb": "string|null -- null when the file itself was refused before a verb could be read",
+      "stamp": "string",
+      "year_issued": "integer",
+      "ok": "boolean"
+    },
+    "_per_outcome": {
+      "ok": {
+        "required": {"result": "object"},
+        "optional": {}
+      },
+      "refused": {
+        "required": {"refusal": "string -- SHOWN VERBATIM and never paraphrased"},
+        "optional": {}
+      }
+    },
+    "_inside_result": {
+      "_what": "The keys of `result` this client reads. A result carries more per verb and the rest are ignored. `cost_s` IS DECLARED HERE AND NOT AT THE TOP LEVEL, which is the third defect §25 backlog 753 fixed: 752 declared it top-level while its own description said it sits inside `result` on a priced rewind. The description was right and the declaration was wrong.",
+      "priced": "boolean -- true means nothing was done and a confirm is owed",
+      "cost_s": "number -- the priced cost in seconds",
+      "to_year": "integer -- a rewind's target, echoed back",
+      "year": "integer -- the session's year after the command",
+      "pins_sha256": "string -- on a place or remove: how the fold binding learns a digest the session has had"
+    }
   }
 }

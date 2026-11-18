@@ -129,6 +129,12 @@ func _initialize() -> void:
     _run(test_the_panel_shows_the_ledgers_count_and_computes_none_of_its_own, "test_the_panel_shows_the_ledgers_count_and_computes_none_of_its_own")
     _run(test_the_panel_draws_only_fields_it_names, "test_the_panel_draws_only_fields_it_names")
     _run(test_every_name_the_recorded_session_contributes_is_ruled_on_the_allow_side, "test_every_name_the_recorded_session_contributes_is_ruled_on_the_allow_side")
+    _run(test_a_commands_sequence_number_is_one_above_both_directories, "test_a_commands_sequence_number_is_one_above_both_directories")
+    _run(test_a_command_is_written_atomically_and_carries_its_verb_in_the_body, "test_a_command_is_written_atomically_and_carries_its_verb_in_the_body")
+    _run(test_a_priced_answer_is_told_apart_from_a_refusal_and_from_a_done_command, "test_a_priced_answer_is_told_apart_from_a_refusal_and_from_a_done_command")
+    _run(test_a_session_fold_is_re_keyed_and_never_re_folded, "test_a_session_fold_is_re_keyed_and_never_re_folded")
+    _run(test_a_route_class_the_palette_does_not_name_is_collected_and_not_drawn_silently, "test_a_route_class_the_palette_does_not_name_is_collected_and_not_drawn_silently")
+    _run(test_the_command_schemas_optionality_is_machine_readable, "test_the_command_schemas_optionality_is_machine_readable")
     _run(test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control, "test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control")
     _run(test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name, "test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name")
     _run(test_every_pin_kind_refuses_each_required_field_by_name, "test_every_pin_kind_refuses_each_required_field_by_name")
@@ -1079,7 +1085,7 @@ func test_the_forbidden_set_re_derives_from_the_artefacts_it_claims() -> void:
 
     # THE SESSION SOURCE, WHICH IS COMMITTED AND SO NEVER SKIPS.
     var fixture_names := {}
-    for rel in ["session.json", "year_1900/stats.json", "commands/advance.json"]:
+    for rel in ["session.json", "year_1900/stats.json", "commands/000001-advance.json"]:
         var got := _names_of_json(SESSION_FIXTURE_DIR.path_join(rel))
         check(got.size() > 0,
                 "the session fixture's %s read no names, so the second source contributes "
@@ -17214,3 +17220,313 @@ func test_every_name_the_recorded_session_contributes_is_ruled_on_the_allow_side
     check(without.has(witness.sha256_text()),
             "withdrawing `%s` did not make exactly its own digest derive, so the allow side "
                     % witness + "is not what permits these names")
+
+
+# --------------------------------------------------------------------------
+# §25 backlog 753: stepping and rewinding, and the slider over a session's folds
+# --------------------------------------------------------------------------
+
+## A fresh, empty session-shaped directory under `user://`, for the WRITER.
+##
+## ⚠ WHY `user://` AND NOT A SESSION. The gate has no session: a real one is
+## git-ignored on the owner's machine and a clean clone has none, so a writer
+## tested only against a real session would be a writer nobody tested. The
+## committed synthetic fixture is READ-only in the repository, so writing goes
+## to a scratch copy here -- which exercises the real path, `tmp`-then-rename
+## and the seq allocation included, with no session anywhere.
+static func _scratch_session(tag: String) -> String:
+    var base := "user://t753-%s" % tag
+    _rm_rf(base)
+    DirAccess.make_dir_recursive_absolute(base + "/commands/done")
+    return base
+
+
+static func _rm_rf(path: String) -> void:
+    var d := DirAccess.open(path)
+    if d == null:
+        return
+    for fn in d.get_files():
+        DirAccess.remove_absolute(path.path_join(fn))
+    for sub in d.get_directories():
+        _rm_rf(path.path_join(sub))
+    DirAccess.remove_absolute(path)
+
+
+func test_a_commands_sequence_number_is_one_above_both_directories() -> void:
+    """THE NAME CARRIES THE ORDER, so the allocator is load-bearing.
+
+    The session acts on waiting commands in NAME ORDER. A name that did not sort
+    in issue order would reorder the owner's commands -- an advance running
+    before the placement it was meant to follow -- and a seq that collided with
+    one `commands/done/` already holds would be refused on the rename as
+    *consumed already*.
+
+    SO `done/` IS READ TOO, which is the half an obvious implementation misses:
+    a consumed command has LEFT `commands/`, so an allocator reading only the
+    pending side reissues numbers that have already been used. And `.again-N`
+    and `.answer` files count by their LEADING seq, because that is whose they
+    are -- reading the trailing `-1` of `000002-place.again-1.json` would hand
+    out 1 again.
+    """
+    check(SessionCommands.seq_of("000005-advance.json") == 5,
+            "a plain command's seq did not read as 5")
+    check(SessionCommands.seq_of("000002-place.answer.json") == 2,
+            "an answer's seq did not read as its command's 2")
+    check(SessionCommands.seq_of("000002-place.again-1.json") == 2,
+            "a repeated command's seq read the trailing -1 rather than the leading 2")
+    check(SessionCommands.seq_of("advance.json") == 0,
+            "a name with no seq at all did not read as 0")
+    check(SessionCommands.seq_of("12-advance.json") == 0,
+            "a short seq was accepted; the width is six digits")
+    check(SessionCommands.name_for(5, "advance") == "000005-advance.json",
+            "the name for seq 5 is %s" % SessionCommands.name_for(5, "advance"))
+
+    var dir := _scratch_session("seq")
+    check(SessionCommands.next_seq(dir) == 1,
+            "an empty session's first seq is %d, not 1" % SessionCommands.next_seq(dir))
+    # A CONSUMED COMMAND, i.e. one that is only in `done/`.
+    var done := dir + "/commands/done/"
+    for name in ["000001-advance.json", "000001-advance.answer.json",
+            "000002-place.json", "000002-place.answer.json",
+            "000002-place.again-1.json", "000004-rewind.json"]:
+        var f := FileAccess.open(done + name, FileAccess.WRITE)
+        check(f != null, "could not seed %s" % name)
+        if f != null:
+            f.store_string("{}\n")
+            f.close()
+    check(SessionCommands.next_seq(dir) == 5,
+            "with done/ holding up to 000004 the next seq is %d, not 5"
+                    % SessionCommands.next_seq(dir))
+    # AND THE PENDING SIDE COUNTS TOO.
+    var pend := FileAccess.open(dir + "/commands/000009-advance.json", FileAccess.WRITE)
+    if pend != null:
+        pend.store_string("{}\n")
+        pend.close()
+    check(SessionCommands.next_seq(dir) == 10,
+            "a pending command at 000009 did not move the next seq to 10, so one of the two "
+                    + "directories is not being read")
+    _rm_rf(dir)
+
+
+func test_a_command_is_written_atomically_and_carries_its_verb_in_the_body() -> void:
+    """TWO THINGS THE BRIEF GOT WRONG, BOTH ASSERTED HERE.
+
+    The verb lives in the BODY: the session reads `cmd.get("verb")` and refuses
+    an unknown one, so the brief's `{"years": n}` would have been refused as
+    `unknown verb None` -- every command, silently, forever.
+
+    And the file appears ATOMICALLY: the session globs `*.json` and reads the
+    file after its own rename, so a file still being written would be read short
+    and refused as not JSON. The write goes to `<name>.json.tmp` and is renamed.
+    **The assertion that no `.tmp` survives is the one that catches a rename
+    that silently did not happen** -- which would leave the command invisible to
+    the session and the client waiting on an answer that could never come.
+    """
+    var dir := _scratch_session("write")
+    var got := SessionCommands.write(dir, "advance", {"years": 1})
+    check(bool(got["ok"]), "the write failed: %s" % got["problem"])
+    check(str(got["stem"]) == "000001-advance",
+            "the first command's stem is %s" % got["stem"])
+    var cmds := dir + "/commands/"
+    check(FileAccess.file_exists(cmds + "000001-advance.json"),
+            "the command is not on disk under its own name")
+    check(not FileAccess.file_exists(cmds + "000001-advance.json.tmp"),
+            "a .tmp file survived the write, so the rename did not happen and the session "
+                    + "would never see this command")
+    var body = JSON.parse_string(FileAccess.get_file_as_string(cmds + "000001-advance.json"))
+    check(typeof(body) == TYPE_DICTIONARY, "the command did not parse as an object")
+    var doc: Dictionary = body if typeof(body) == TYPE_DICTIONARY else {}
+    check(str(doc.get("verb", "")) == "advance",
+            "the body carries verb %s; the session reads the verb from the body and would "
+                    % JSON.stringify(doc.get("verb", null)) + "refuse this as unknown")
+    check(int(doc.get("years", -1)) == 1, "the payload's own field did not survive")
+    # A SECOND COMMAND TAKES THE NEXT SEQ rather than colliding.
+    var two := SessionCommands.write(dir, "rewind", {"to_year": 1881})
+    check(bool(two["ok"]), "the second write failed: %s" % two["problem"])
+    check(str(two["stem"]) == "000002-rewind",
+            "the second command's stem is %s, so two commands would collide" % two["stem"])
+    # A directory that is not a session is refused rather than created.
+    var nowhere := SessionCommands.write("user://t753-absent", "advance", {})
+    check(not bool(nowhere["ok"]), "writing into a directory with no commands/ succeeded")
+    check(str(nowhere["problem"]) != "", "the refusal carries no reason")
+    _rm_rf(dir)
+
+
+func test_a_priced_answer_is_told_apart_from_a_refusal_and_from_a_done_command() -> void:
+    """THREE OUTCOMES, AND THE MIDDLE ONE IS THE TRAP.
+
+    A priced answer is `ok` -- nothing failed -- and carries `priced` with a
+    `cost_s` INSIDE `result`. Reading it as a success would make the client
+    believe a rewind had happened when the session had done nothing; reading it
+    as a refusal would lose the price the owner has to decide on. A rewind
+    replays from the arc's start and can cost as much as a whole build, which is
+    why it is never confirmed automatically.
+    """
+    check(SessionCommands.priced_cost({"ok": false, "refusal": "no"}) < 0.0,
+            "a refusal was read as a priced answer")
+    check(SessionCommands.priced_cost({"ok": true, "result": {"year": 1883}}) < 0.0,
+            "a completed command was read as a priced answer")
+    var priced := {"ok": true, "result": {"priced": true, "to_year": 1880, "cost_s": 941.7}}
+    var cost := SessionCommands.priced_cost(priced)
+    check(cost > 941.0 and cost < 942.0,
+            "a priced rewind's cost read as %f" % cost)
+    check(SessionCommands.priced_cost({"ok": true}) < 0.0,
+            "an answer with no result at all was read as priced")
+
+
+func test_a_session_fold_is_re_keyed_and_never_re_folded() -> void:
+    """A SESSION'S FOLD IS ALREADY FOLDED, which is the row's whole shape.
+
+    `year_<Y>/fold.json` carries the per-tile state `DressingFold.fold` derives
+    from the committed `tiles.jsonl`. So the session path computes no fold --
+    742's memo is not used there at all -- and this is a re-keying.
+
+    THE KEY MUST BE `DressingFold`'s, because it is also `centres.json`'s. A
+    second key format would place a session's tiles somewhere else, or nowhere,
+    and the missing-centre refusal would fire on a city that is perfectly
+    placeable.
+    """
+    var s := SessionRead.open_dir(RECORDED_SESSION_DIR)
+    check(s.problem == "", "the recorded session did not read: %s" % s.problem)
+    var doc := s.fold_of(1879)
+    var rows: Array = doc.get("tiles", [])
+    check(rows.size() > 0, "the fixture's 1879 fold carries no tile rows")
+    var state := SessionRead.state_of_fold(doc)
+    check(state.size() == rows.size(),
+            "%d rows became %d keys; a row was lost or two rows share a key"
+                    % [rows.size(), state.size()])
+    for row_v in rows:
+        var row: Dictionary = row_v
+        var k := DressingFold.tile_key(row["tile"])
+        check(state.has(k), "the row for tile %s is not under DressingFold's key" % k)
+        if state.has(k):
+            var kept: Dictionary = state[k]
+            check(kept.has("class") and kept.has("density_per_km2"),
+                    "the state kept under %s carries neither of the two fields the drawing "
+                            % k + "layer reads")
+    # A row with no tile names no place, so it is skipped rather than guessed at.
+    var holed := {"tiles": [{"class": "one"}, {"tile": [1, 0, 0], "class": "one"}]}
+    check(SessionRead.state_of_fold(holed).size() == 1,
+            "a fold row with no `tile` was given a key anyway")
+
+
+func test_a_route_class_the_palette_does_not_name_is_collected_and_not_drawn_silently() -> void:
+    """THE DEFECT THIS ROW FIXES, AND IT WAS LIVE ON THE COMMITTED PATH.
+
+    Before this row `route_color` took no collector, so a route of a class the
+    palette does not name was drawn in the palette's UNKNOWN colour and NOTHING
+    SAID SO -- while unknown TILE classes have been collected and named on
+    screen all along. The owner saw an oddly coloured line and had no words for
+    it, which is the asymmetry this project's own standard forbids.
+
+    THE COMMITTED DRESSING CARRIES SUCH CLASSES TODAY, so the count below is
+    read off the fetched artefact rather than invented. Colouring them is the
+    generator's palette's to change and would move committed renders, so this
+    client's job is only to say which it could not colour.
+    """
+    var palette := {"ROUTE": {"rail": [1, 2, 3]}, "UNKNOWN": [255, 0, 255]}
+    var seen := {}
+    DressingDraw.route_color(palette, "rail", seen)
+    check(seen.is_empty(), "a class the palette names was collected as unknown")
+    DressingDraw.route_color(palette, "not_a_route_class", seen)
+    check(seen.size() == 1, "a class the palette does not name was not collected")
+    check(seen.has("not_a_route_class"), "the collector did not record the class by name")
+    # The colour still comes back, so the city is drawn and not dropped.
+    var c := DressingDraw.route_color(palette, "not_a_route_class", seen)
+    check(c.r > 0.9 and c.b > 0.9, "an unnamed class did not fall back to the UNKNOWN colour")
+
+    # AND THE COMMITTED ARTEFACT'S OWN COUNT -- which can skip, and must say so.
+    var routes_path := DressingLoad.DIR + "routes.jsonl"
+    if not FileAccess.file_exists(routes_path):
+        print("753: routes.jsonl is not fetched, so the committed route classes are UNREAD "
+                + "here; the gate fetches before it tests")
+        return
+    var real = JSON.parse_string(FileAccess.get_file_as_string(
+            DressingCentres.DIR + "palette.json"))
+    check(typeof(real) == TYPE_DICTIONARY, "the committed palette did not parse")
+    var unknown := {}
+    var classes := {}
+    for row: Dictionary in DressingFold.read_rows(routes_path):
+        var cls := str(row.get("class", ""))
+        classes[cls] = true
+        DressingDraw.route_color(real, cls, unknown)
+    check(classes.size() == 4,
+            "the committed routes carry %d distinct classes, not the 4 measured at this row"
+                    % classes.size())
+    check(unknown.size() == 2,
+            "%d of the committed route classes are unnamed by the palette, not the 2 "
+                    % unknown.size() + "measured at this row -- the artefact or the palette "
+                    + "has moved and the on-screen line will say something different")
+
+
+func test_the_command_schemas_optionality_is_machine_readable() -> void:
+    """§25 backlog 752's INTEGRATION READ REPORTED SIX FIELDS ABSENT, AND NONE
+    WAS THE SESSION'S.
+
+    752 declared each verb's fields in one flat list with the optionality in
+    prose -- `advance` only, present when `ok`. A mechanical check cannot read
+    prose, so a `place` command carrying no `years` and a refused answer
+    carrying no `result` read as absences. The convention here is readable:
+    `_always` plus, per case, `required` and `optional`.
+
+    **The gate requires 0 absent against the committed synthetic fixture. The
+    real session's 0 absent is re-measured at the next integration read and
+    reported, not gated** -- a real session lives on one machine and a clean
+    clone has none, so a check written against it is a check that cannot run.
+    """
+    var parsed = JSON.parse_string(FileAccess.get_file_as_string(
+            "res://contract/session_schema.json"))
+    check(typeof(parsed) == TYPE_DICTIONARY, "the session schema did not parse")
+    var schema: Dictionary = parsed if typeof(parsed) == TYPE_DICTIONARY else {}
+    var cmd: Dictionary = schema.get("command_json", {})
+    var ans: Dictionary = schema.get("answer_json", {})
+    check(cmd.has("_always") and cmd.has("_per_verb"),
+            "the command schema carries no machine-readable optionality, so this check is "
+                    + "measuring nothing")
+    check(ans.has("_always") and ans.has("_per_outcome"),
+            "the answer schema carries no machine-readable optionality")
+    var per_verb: Dictionary = cmd.get("_per_verb", {})
+    check(per_verb.size() == 4,
+            "%d verbs are declared, not the session's four" % per_verb.size())
+    # `cost_s` BELONGS INSIDE `result` and 752 declared it at the top level.
+    check(not (ans.get("_always", {}) as Dictionary).has("cost_s"),
+            "cost_s is still declared at an answer's top level; the session puts it inside "
+                    + "`result`")
+    check((ans.get("_inside_result", {}) as Dictionary).has("cost_s"),
+            "cost_s is declared nowhere now, so moving it lost it")
+
+    var absent := 0
+    var checked := 0
+    var done := RECORDED_SESSION_DIR.path_join("commands/done")
+    for fn in DirAccess.get_files_at(done):
+        var name := str(fn)
+        if not name.ends_with(".json"):
+            continue
+        var doc := SessionRead.read_json(done.path_join(name))
+        if doc.is_empty():
+            continue
+        var is_answer := name.ends_with(".answer.json")
+        var always: Dictionary = (ans if is_answer else cmd).get("_always", {})
+        var required := {}
+        if is_answer:
+            var outcome := "ok" if bool(doc.get("ok", false)) else "refused"
+            required = ((ans.get("_per_outcome", {}) as Dictionary).get(outcome, {})
+                    as Dictionary).get("required", {})
+        else:
+            required = ((per_verb.get(str(doc.get("verb", "")), {})) as Dictionary) \
+                    .get("required", {})
+        checked += 1
+        for f in always:
+            if not doc.has(str(f)):
+                absent += 1
+                print("753: %s is missing the always-present %s" % [name, f])
+        for f in required:
+            if not doc.has(str(f)):
+                absent += 1
+                print("753: %s is missing the required %s" % [name, f])
+    check(checked >= 4,
+            "only %d command or answer files were checked; the fixture holds four of each "
+                    % checked + "kind, so the walk is not reading them")
+    check(absent == 0,
+            "%d declared field(s) are absent from the fixture's commands and answers; the "
+                    % absent + "gate requires 0")

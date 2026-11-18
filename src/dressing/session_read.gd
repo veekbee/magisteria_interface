@@ -199,6 +199,29 @@ func fold_of(y: int) -> Dictionary:
     return SessionRead.read_json(dir + "year_%d/fold.json" % y)
 
 
+## A session fold's tile rows, keyed as `DressingFold` keys its own state.
+##
+## ⚠ NOTHING IS COMPUTED HERE. A session's fold is ALREADY folded -- its rows
+## carry the per-tile state that `DressingFold.fold` derives from the committed
+## `tiles.jsonl` -- so this is a re-keying and not a second fold. The key is
+## `DressingFold.tile_key`'s, which is also the form `centres.json` uses, so a
+## tile drawn from a session lands at the same centre as the same tile drawn
+## from the committed dressing.
+##
+## A row without a `tile` is skipped rather than guessed at: a fold row with no
+## tile names no place, and inventing one would place a tile somewhere.
+static func state_of_fold(doc: Dictionary) -> Dictionary:
+    var out := {}
+    for row_v in doc.get("tiles", []):
+        if typeof(row_v) != TYPE_DICTIONARY:
+            continue
+        var row: Dictionary = row_v
+        if not row.has("tile"):
+            continue
+        out[DressingFold.tile_key(row["tile"])] = row
+    return out
+
+
 ## Parse, then STRIP. Never throws; an absent or malformed file is `{}`.
 static func read_json(path: String) -> Dictionary:
     if not FileAccess.file_exists(path):

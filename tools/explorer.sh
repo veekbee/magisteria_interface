@@ -23,9 +23,19 @@
 # panel's place and still draws the city; the city's own bindings are what gate
 # the drawing.
 #
-# AND THE CITY BESIDE THE PANEL IS STILL THE COMMITTED DRESSING. The slider over
-# a session's own folds is §25 backlog 753; until then the two are a readout and
-# a city, not one city. The panel says so on screen.
+# WITH A SESSION OPEN THE SLIDER DRAWS THE SESSION'S OWN CITY (§25 backlog 753)
+# and the committed dressing is not drawn at all -- one city on screen, never
+# two. The slider runs from the arc's first year to the year the session has
+# built to, and grows as you advance; a rewind DELETES the years above its
+# target, so it shrinks too, and the year on screen is clamped down with it.
+#
+#   a              advance one year
+#   r              rewind to the year on screen -- PRICED FIRST, nothing is done
+#   y              confirm the priced rewind (a new command; never automatic)
+#
+# A rewind replays from the arc's start and can cost as much as a whole build,
+# which is why it is priced and confirmed by hand rather than run on a keypress.
+# A refusal from the session is shown in its own words, never paraphrased.
 #   left-drag      move a pin (inside its outline)
 #   ESC            close
 #

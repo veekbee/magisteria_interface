@@ -86,6 +86,33 @@ const SESSION_ENV := "MAGISTERIA_SESSION"
 var _session: SessionRead = null
 var _panel: Array = []
 
+## §25 backlog 753: the session's own city, for the year on screen.
+##
+## A SESSION'S FOLD IS ALREADY FOLDED. `year_<Y>/fold.json` carries the per-tile
+## state that `DressingFold` computes from the committed `tiles.jsonl`, so on the
+## session path there is no fold to compute and 742's memo is not used at all --
+## it stays for the no-session path, where it is still what makes dragging
+## possible. Nothing here re-folds, re-sorts by its own rule, or derives a tile's
+## state: the session hands over a year and this draws it.
+var _session_fold: Dictionary = {}
+var _session_features: Array = []
+var _session_routes: Array = []
+
+## The route classes the palette does not name, collected rather than assumed.
+##
+## SEPARATE FROM `_unknown_classes` ON PURPOSE: a tile class and a route class
+## are different vocabularies and a reader told only that "some class" was
+## unnamed cannot tell which drawing is wrong.
+var _unknown_routes: Dictionary = {}
+
+## The command issued and not yet answered, and what came back.
+const POLL_S := 0.5
+var _pending_stem: String = ""
+var _pending_verb: String = ""
+var _pending_confirm: Dictionary = {}
+var _notice: String = ""
+var _poll_accum: float = 0.0
+
 
 func _ready() -> void:
     _load = DressingLoad.load_from()
@@ -142,18 +169,28 @@ func _open_session() -> void:
     if not _session.is_present():
         _panel = ["session %s" % dir, _session.problem]
         return
+    # ⚠ THE SESSION'S BASE DRESSING MUST BE THE ONE THIS CLONE FETCHED, and the
+    # check is by id because the identity cannot be used: `centres.json` is
+    # stamped with the COMMITTED dressing's `dressing_sha256`, and a session's
+    # city is not that dressing. What makes the centres usable for a session's
+    # tiles is the LATTICE -- a tile is an index into it, so a tile's position
+    # depends on the lattice and not on the city -- and the centres' load
+    # already refuses a lattice that is not the manifest's. So the lattice half
+    # is enforced upstream; the half that was missing is this one.
+    var want := _manifest_field("dressing_id")
+    if want != "" and _session.base_dressing_id != want:
+        _refusal = ("This session was opened against dressing %s and this clone has fetched "
+                + "%s. A tile is an index into a lattice, so drawing one city's tiles at "
+                + "another's centres would place a city that never existed.")\
+                % [_session.base_dressing_id, want]
+        return
+    _year = _session.year
     var stats := _session.stats_of(_session.year)
     var built := StatsPanel.of(stats)
     if built.problem != "":
         _panel = ["session %s at %d" % [_session.session_name, _session.year], built.problem]
         return
     _panel = ["session %s" % _session.session_name] + built.lines
-    # SAID ON SCREEN RATHER THAN ASSUMED UNDERSTOOD. The panel is the session's
-    # and the city beside it is still the committed dressing: §25 backlog 752
-    # builds the readout, and the slider over the session's own folds is 753.
-    # A reader who took the two for one city would misread both.
-    _panel.append("")
-    _panel.append("the city drawn is the committed dressing, not this session's")
 
 
 ## Draw the session's panel down the right, or nothing when no session is open.
@@ -170,26 +207,53 @@ func _draw_panel(vp: Vector2) -> void:
 
 
 func _lattice_of_manifest() -> String:
+    return _manifest_field("lattice")
+
+
+## One top-level field of the fetched manifest, or "".
+func _manifest_field(name: String) -> String:
     var parsed = JSON.parse_string(FileAccess.get_file_as_string(
             DressingLoad.DIR + "manifest.json"))
     if typeof(parsed) != TYPE_DICTIONARY:
         return ""
-    return str((parsed as Dictionary).get("lattice", ""))
+    return str((parsed as Dictionary).get(name, ""))
 
 
 ## The eras and their first years, for the slider's ticks. A year carrying two
 ## eras names both (see `DressingLoad.era_ticks`).
+## THE SPAN IS THE SESSION'S WHEN THERE IS ONE, and that is not cosmetic: a
+## session has folds only for the years it has stepped, so a slider running to
+## 2039 would offer years with no city behind them. It runs to the session's
+## current year and grows as the owner advances -- and SHRINKS after a rewind,
+## which deletes the year directories above its target.
+func _span_lo() -> int:
+    return _session.first_year if _session != null and _session.is_present() else LO
+
+
+func _span_hi() -> int:
+    return _session.year if _session != null and _session.is_present() else HI
+
+
+## The eras and their first years, for the slider's ticks. A year carrying two
+## eras names both (see `DressingLoad.era_ticks`).
+##
+## Only the ticks INSIDE the span are drawn: early in a session most era starts
+## lie beyond it, and a tick drawn outside the axis it belongs to is a label
+## pointing at nothing.
 func era_ticks() -> Array:
     if _load == null:
         return []
-    return DressingLoad.era_ticks(_load.era_starts(), LO, HI)
+    return DressingLoad.era_ticks(_load.era_starts(), _span_lo(), _span_hi())
 
 
 func set_year(y: int) -> void:
-    _year = clampi(y, LO, HI)
+    _year = clampi(y, _span_lo(), _span_hi())
     if _refusal != "":
         return
-    var fold := _memo.fold(_tiles, _rows_digest, _year)
+    if _session != null and _session.is_present() and not _load_session_year(_year):
+        queue_redraw()
+        return
+    var fold := _fold_now()
     # ⚠ THE REFUSAL, BEFORE ANYTHING IS DRAWN. A tile the centres do not place
     # is not skipped: a city drawn with pieces silently missing is exactly what
     # the owner cannot detect by looking, which is the one thing they are here
@@ -205,6 +269,36 @@ func set_year(y: int) -> void:
         return
     _fit(fold)
     queue_redraw()
+
+
+## The year's fold: the session's, already folded, or the committed dressing's.
+func _fold_now() -> Dictionary:
+    if _session != null and _session.is_present():
+        return _session_fold
+    return _memo.fold(_tiles, _rows_digest, _year)
+
+
+## Read one of the session's years and bind it. False means refused.
+##
+## ⚠ A FOLD THAT FAILS ITS BINDING IS A REFUSAL, not a skipped draw. The owner
+## is being asked to look at a city; a fold from another session, or stepped
+## under a pin file this session never had, would be a different city drawn
+## under this one's name.
+func _load_session_year(y: int) -> bool:
+    if not _session.years_present().has(y):
+        _refusal = ("This session has no fold for %d. It stands at %d, and a rewind deletes "
+                + "the years above its target rather than keeping a city no pin file "
+                + "regrows.") % [y, _session.year]
+        return false
+    var doc := _session.fold_of(y)
+    var why := _session.fold_problem(doc)
+    if why != "":
+        _refusal = "Year %d's fold is not this session's:\n\n%s" % [y, why]
+        return false
+    _session_fold = SessionRead.state_of_fold(doc)
+    _session_features = doc.get("features", [])
+    _session_routes = doc.get("routes", [])
+    return true
 
 
 ## Fit the year's extent to the viewport, in float64 before any narrowing.
@@ -247,10 +341,12 @@ func _draw() -> void:
         _text(Vector2(28, 56), _refusal, Color(1, 0.85, 0.3))
         return
     draw_rect(Rect2(Vector2.ZERO, vp), DressingDraw.background_color(_palette))
-    var fold := _memo.fold(_tiles, _rows_digest, _year)
+    var fold := _fold_now()
     var side := maxf(_centres.tile_m * _scale, 1.0)
+    var in_session := _session != null and _session.is_present()
 
     _unknown_classes.clear()
+    _unknown_routes.clear()
     for row: Dictionary in DressingDraw.tile_rows(fold, _palette,
             float(_palette.get("density_ref", 1.0)), _unknown_classes):
         var c := _centres.centre_of(str(row["key"]))
@@ -258,7 +354,14 @@ func _draw() -> void:
         draw_rect(Rect2(p - Vector2(side, side) * 0.5, Vector2(side, side)), row["color"])
 
     var edge := DressingDraw.edge_color(_palette)
-    for f: Dictionary in DressingFold.features_at(_features, _year):
+    # THE SAME TWO SORT RULES EITHER WAY. A session's rows are already standing
+    # at their year, so the filter is idempotent -- but `features_at` and
+    # `routes_at` also impose §25 backlog 730's two DIFFERENT sort orders
+    # (features by `feature_id` alone, routes by `(calendar_year, route)`), and
+    # drawing a session's rows in file order would be a second ordering rule
+    # nobody ruled.
+    for f: Dictionary in DressingFold.features_at(
+            _session_features if in_session else _features, _year):
         var keys: Array = []
         for t in f.get("tiles", []):
             keys.append(DressingFold.tile_key(t))
@@ -268,16 +371,22 @@ func _draw() -> void:
             draw_rect(Rect2(p - Vector2(side, side) * 0.5, Vector2(side, side)), edge, false,
                     maxf(side * 0.18, 1.0))
 
-    for r: Dictionary in DressingFold.routes_at(_routes, _year):
+    for r: Dictionary in DressingFold.routes_at(
+            _session_routes if in_session else _routes, _year):
         var pts := PackedVector2Array()
         for v in r.get("geometry", []):
             var xy: Array = v
             pts.append(_to_screen(float(xy[0]), float(xy[1])))
         if pts.size() >= 2:
-            draw_polyline(pts, DressingDraw.route_color(_palette, str(r.get("class", ""))),
-                    maxf(side * 0.4, 1.0))
+            draw_polyline(pts, DressingDraw.route_color(_palette,
+                    str(r.get("class", "")), _unknown_routes), maxf(side * 0.4, 1.0))
 
-    if _pins != null and _pins.is_present():
+    # A SESSION'S PINS ARE ITS OWN FILE'S, AND THIS ROW DOES NOT DRAW THEM.
+    # `pins.json` in a session directory is the working pin file; drawing it is
+    # §25 backlog 754's, with the placing tools. The committed pin file is drawn
+    # only when no session is open, so the owner is never shown one city's
+    # outlines over another's tiles.
+    if not in_session and _pins != null and _pins.is_present():
         for pin: Dictionary in _pins.at(_year):
             _draw_pin(pin, edge, side)
     _chrome(vp)
@@ -305,21 +414,50 @@ func _draw_pin(pin: Dictionary, edge: Color, side: float) -> void:
 
 func _chrome(vp: Vector2) -> void:
     var edge := DressingDraw.edge_color(_palette)
-    _text(Vector2(20, 24), "DA-6 compact   %d" % _year, edge)
+    var in_session := _session != null and _session.is_present()
+    var head := "DA-6 compact   %d" % _year
+    if in_session:
+        head = "session %s   %d   (built to %d)" % [_session.session_name, _year, _session.year]
+    _text(Vector2(20, 24), head, edge)
     var y := vp.y - 30.0
     draw_line(Vector2(20, y), Vector2(vp.x - 20, y), edge, 1.0)
-    var span := float(HI - LO)
-    for t: Dictionary in era_ticks():
-        var fx := 20.0 + (vp.x - 40.0) * (float(int(t["year"]) - LO) / span)
-        draw_line(Vector2(fx, y - 7), Vector2(fx, y + 7), edge, 1.0)
-        _text(Vector2(fx - 10, y + 24), "%d %s" % [int(t["year"]),
-                " ".join(t["eras"] as PackedStringArray)], edge)
-    var hx := 20.0 + (vp.x - 40.0) * (float(_year - LO) / span)
+    var lo := _span_lo()
+    var hi := _span_hi()
+    # ⚠ A SESSION AT ITS FIRST YEAR HAS A SPAN OF ZERO, which is a real state
+    # (open a session, step nothing) and would divide by zero here. The axis is
+    # still drawn, with the one year at its start, rather than skipped.
+    var span := float(hi - lo)
+    if span > 0.0:
+        for t: Dictionary in era_ticks():
+            var fx := 20.0 + (vp.x - 40.0) * (float(int(t["year"]) - lo) / span)
+            draw_line(Vector2(fx, y - 7), Vector2(fx, y + 7), edge, 1.0)
+            _text(Vector2(fx - 10, y + 24), "%d %s" % [int(t["year"]),
+                    " ".join(t["eras"] as PackedStringArray)], edge)
+    var hx := 20.0 + (vp.x - 40.0) * ((float(_year - lo) / span) if span > 0.0 else 0.0)
     draw_line(Vector2(hx, y - 12), Vector2(hx, y + 12), Color(0.85, 0.2, 0.2), 2.0)
+    # THE AXIS'S END IS THE SESSION'S CURRENT YEAR, not the arc's last: the
+    # slider cannot reach a year the session has not stepped.
+    _text(Vector2(vp.x - 80, y + 24), "%d" % hi, edge)
+    var line_y := 44.0
     if not _unknown_classes.is_empty():
-        _text(Vector2(20, 44), "classes the palette does not name: %s"
+        _text(Vector2(20, line_y), "classes the palette does not name: %s"
                 % ", ".join(PackedStringArray(_unknown_classes.keys())),
                 Color(0.8, 0.1, 0.6))
+        line_y += 18.0
+    # ⚠ NAMED, NOT SILENTLY COLOURED. Before §25 backlog 753 a route of a class
+    # the palette does not name was drawn in the UNKNOWN colour with nothing
+    # said, while unknown TILE classes were named above -- an asymmetry that let
+    # the owner see an oddly coloured line with no words for it. The committed
+    # compact dressing carries two such classes today, so this line appears on
+    # the no-session path too. Colouring them is the generator's palette's to
+    # change and would move committed renders, so it is not done here.
+    if not _unknown_routes.is_empty():
+        _text(Vector2(20, line_y), "route classes the palette does not name: %s"
+                % ", ".join(PackedStringArray(_unknown_routes.keys())),
+                Color(0.8, 0.1, 0.6))
+        line_y += 18.0
+    if _notice != "":
+        _text(Vector2(20, line_y), _notice, Color(1, 0.9, 0.4))
 
 
 func _text(at: Vector2, s: String, col: Color) -> void:
@@ -405,6 +543,107 @@ func _unhandled_input(e: InputEvent) -> void:
             set_year(_year + 1)
         elif k >= KEY_1 and k <= KEY_4:
             set_year(int(DECLARED[k - KEY_1]))
+        elif k == KEY_A:
+            _issue("advance", {"years": 1})
+        elif k == KEY_R:
+            # THE GESTURE IS: SLIDE BACK, THEN PRESS R. The target is the year on
+            # screen, so the owner rewinds to what they are looking at. Nothing
+            # is done by this: the session answers with a price and `Y` confirms.
+            _issue("rewind", {"to_year": _year})
+        elif k == KEY_Y:
+            _confirm()
+
+
+## Issue one command, if a session is open and none is outstanding.
+func _issue(verb: String, payload: Dictionary) -> void:
+    if _session == null or not _session.is_present():
+        return
+    if _pending_stem != "":
+        _notice = "waiting on %s already; one command at a time" % _pending_verb
+        queue_redraw()
+        return
+    var got := SessionCommands.write(_session.dir, verb, payload)
+    if not bool(got["ok"]):
+        _notice = str(got["problem"])
+        queue_redraw()
+        return
+    _pending_stem = str(got["stem"])
+    _pending_verb = verb
+    _pending_confirm = {}
+    _notice = "%s issued as %s; the session is working" % [verb, _pending_stem]
+    queue_redraw()
+
+
+## Re-issue a priced command with `confirm`, under a NEW seq.
+##
+## ⚠ A NEW FILE, NOT THE SAME ONE. A command is consumed by being renamed into
+## `commands/done/`, so re-writing the priced command's own name would be
+## refused as consumed already. The confirm is its own command.
+func _confirm() -> void:
+    if _pending_confirm.is_empty():
+        return
+    var verb := str(_pending_confirm["verb"])
+    var payload: Dictionary = _pending_confirm["payload"]
+    payload["confirm"] = true
+    _pending_confirm = {}
+    _issue(verb, payload)
+
+
+## Poll for the outstanding command's answer. Never blocks a frame.
+func _process(delta: float) -> void:
+    if _session == null or _pending_stem == "":
+        return
+    _poll_accum += delta
+    if _poll_accum < POLL_S:
+        return
+    _poll_accum = 0.0
+    var answer := SessionCommands.answer_of(_session.dir, _pending_stem)
+    if answer.is_empty():
+        return
+    _on_answer(answer)
+
+
+## One answer, read and acted on.
+func _on_answer(answer: Dictionary) -> void:
+    var verb := _pending_verb
+    _pending_stem = ""
+    _pending_verb = ""
+    if not bool(answer.get("ok", false)):
+        # ⚠ VERBATIM. The session's refusal names what it refused and why, and a
+        # paraphrase would be this client's guess at the generator's reasoning.
+        _notice = "refused: %s" % str(answer.get("refusal", "(no reason given)"))
+        queue_redraw()
+        return
+    var cost := SessionCommands.priced_cost(answer)
+    if cost >= 0.0:
+        # PRICED: NOTHING WAS DONE. A rewind replays from the arc's start and can
+        # cost the whole build, so it is never confirmed automatically.
+        _pending_confirm = {"verb": verb, "payload": {"to_year": _year}}
+        _notice = "a %s to %d costs about %.0f s -- press Y to confirm" % [verb, _year, cost]
+        queue_redraw()
+        return
+    _reread()
+    _notice = "%s done" % verb
+    queue_redraw()
+
+
+## Re-read the session after a command that changed it, and clamp the year.
+##
+## ⚠ THE YEAR IS CLAMPED DOWN BECAUSE A REWIND DELETES YEARS. The session removes
+## `year_<y>/` above a rewind's target, so the year on screen can cease to exist
+## while it is being looked at. Re-reading `session.json` and clamping is what
+## stops the view holding a city the session no longer has.
+func _reread() -> void:
+    var dir := _session.dir
+    _session = SessionRead.open_dir(dir)
+    if not _session.is_present():
+        _refusal = "The session stopped reading after a command:\n\n%s" % _session.problem
+        return
+    var stats := _session.stats_of(_session.year)
+    var built := StatsPanel.of(stats)
+    _panel = ["session %s" % _session.session_name]
+    _panel += built.lines if built.problem == "" else [built.problem]
+    set_year(mini(_year, _session.year))
 
 
 func _polygon_of(pin_id: String) -> Array:
