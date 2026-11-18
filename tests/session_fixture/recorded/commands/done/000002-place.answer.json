@@ -1,0 +1,13 @@
+{
+ "ok": true,
+ "result": {
+  "lines": [],
+  "pins_sha256": "sha256:bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "placed": [
+   "zone-1879-1"
+  ]
+ },
+ "stamp": "not-a-stamp",
+ "verb": "place",
+ "year_issued": 1878
+}

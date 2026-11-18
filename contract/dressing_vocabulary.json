@@ -40,8 +40,55 @@
     "speed_m_s": "the client's own output field, written by src/bench/flight_trace.gd:327 (a pose-derived speed per frame) and src/transducer/debug_player.gd:82 (a playback step's speed). Both predate any dressing work and neither reads the manifest. The manifest also happens to carry a `speed_m_s` key; the collision is the word, not the provenance."
   },
 
+  "session_file_keys": {
+    "_public_by": "decision 2149 (1) and owner ruling 2150 -- DA-11's play loop. The session directory's SCHEMAS cross into this tree as field names with no value, and a client cannot read a field it may not name. Added by §25 backlog 752, one entry per name, BY THE ROW THAT FIRST NAMES IT IN CODE and never by pasting the guard's output.",
+
+    "_what_an_entry_here_asserts": "that the name is a field of the session format this client reads or writes -- `session.json`, `year_<Y>/stats.json`, `year_<Y>/fold.json`, `commands/*.json` and their answers under `commands/done/` -- and that a source file in this tree names it because it reads or writes that field. A NAME THE CLIENT DOES NOT READ IS NOT HERE, which is the whole discipline: `session.json`'s `admissibility` block is declared in the schema and read past without naming one inner field, and `at_the_cap`'s rows carry a `schedule_row` key that §25 backlog 741 forbids EXPLICITLY and permanently, so the panel reads those rows by `kind`, `type` and `tiles` and never names it. Decision 2149 (1) puts the schemas in this tree; it does not put every field of them in this client's source.",
+
+    "_the_teeth_and_they_are_real": "THESE NAMES ARE ALSO DERIVED. The committed synthetic session under `tests/session_fixture/recorded/` is one of the guard's derivation sources, so every name below is read out of a file the guard walks. An entry deleted from here therefore does not merely lose a comment: the name falls out of the allow side, the derivation puts its digest in the forbidden set, and `tools/recut_forbidden.py` goes red naming the departure before anything else runs -- and after a re-cut the scan refuses the source file that names it. That is what makes `by ruling` a mechanism rather than an intention, and `tests/run_headless.gd` proves it by dropping one name from the allow side and asserting the derived set grows by exactly that digest.",
+
+    "dressing_id": "the id of the dressing the session plays, under which an accepted city replaces it in place.",
+    "base_dressing_id": "the committed dressing the session was opened against. The explorer keys its era ticks on it and refuses by id when it is not the dressing this clone fetched (§25 backlog 753).",
+    "pins_sha256": "the session's working pin file's sha256. The fold binding compares a fold's own against the shas this session has had, which is what catches a year drawn from a fold written before the last placement.",
+    "start_pins": "the pin file the session opened over, as `{path, sha256}`. Its sha is the first the session ever had, and therefore the first member of the set a fold may legitimately carry.",
+    "last_step_s": "the wall cost of the last advance, shown so the owner knows what a step costs before asking for another.",
+    "code_state": "NAMED ONLY IN ORDER TO DROP IT. A map of the generator's `*.py` files to their digests, i.e. a listing of the private tree's layout, which decision 973 makes not this tree's to republish. The reader deletes it at load so it cannot reach a screen, a log line or a crash dump.",
+    "generator_commit": "NAMED ONLY IN ORDER TO DROP IT, for the same reason -- a private-repo commit sha. The reader deletes it at load and nothing draws it.",
+
+    "built_tiles": "the ledger's built-tile count. THE PANEL'S COUNT IS THIS ONE (§25 backlog 750's rule), with the fold's own count beside it and their agreement stated.",
+    "built_km2": "the ledger's built area, shown against the bound's cap.",
+    "quota_carried": "the ledger's quota carried by class.",
+    "at_the_cap": "the ledger's at-the-cap rows. Read by `kind`, `type` and `tiles` only -- see `_what_an_entry_here_asserts`.",
+
+    "density_pw": "the fabric's person-weighted density.",
+    "transit_share": "the fabric's transit share.",
+    "irrigated_take_km2": "the fabric's irrigated land built over.",
+
+    "capacity_less_occupancy": "§22.7's D1 as the running line `capacity - occupancy >= 0`, which decision 2149 (4) asks the panel to show every year.",
+
+    "ledger_tiles": "the ledger's count as the `built` block restates it, which is the field the panel actually reads.",
+    "cap_tiles": "the bound's built-tile cap, the count's denominator.",
+    "cap_km2": "the bound's footprint cap.",
+    "feature_in_window": "a named part of §25 backlog 750's rule, shown so that the count's parts are legible rather than a single number the owner must trust.",
+    "feature_outside": "the same rule's excluded part -- a structure seated off the window.",
+
+    "quotas_tiles": "the demand line's next-year quotas by class, in tiles.",
+    "quotas_note": "the generator's own note on what the quotas precede. DRAWN AS DATA READ AT RUNTIME, never copied into a source file -- the same standing as the palette's class names, which reach the viewer from the fetched file and are not re-declared (decision 2129 (b)).",
+    "strata_note": "likewise: the generator's note that a stratum's tile figure is a BOUND, because its tiles depend on a saturation only the step knows (§25 backlog 749's construal of decision 2149 (4)).",
+    "tiles_at_least": "a stratum's tile lower bound, labelled as a bound for the reason `strata_note` gives.",
+    "serviceable_open_tiles": "the serviceable open tiles standing, which the owner places against.",
+    "enclosed_open_tiles": "the vacant enclosed lots.",
+    "enclosed_note": "the generator's note on when the enclosed count was last read -- a figure whose meaning depends on it, so showing the number without the note would mislead.",
+    "holds_releasing": "the holds releasing in the demand year.",
+    "arc_start": "the arc's first year, which is the floor a rewind is priced against.",
+
+    "to_year": "`rewind`'s target year. THIS ONE THE CLIENT WRITES rather than reads: the command file is the client's half of the format.",
+    "year_issued": "the year a command was issued at, as the answer reports it back.",
+    "cost_s": "a priced rewind's or removal's cost in seconds, shown while the session works, since a rewind can cost a whole build."
+  },
+
   "_not_in_here_on_purpose": {
-    "the_session_schemas": "decision 2149 (1) rules that DA-11's session files cross into this tree as field names with no value, AFTER this guard lands. Several of those names -- the stats panel's counts among them -- are manifest keys that pass the rule, so the rows that make them public must add them here WITH THEIR REASON, and a row that lands them without an entry will go red. That is the intended order and not a defect: the allow side grows by ruling, never by pasting the guard's own output.",
+    "the_session_schemas": "NO LONGER PENDING, AND THE PARAGRAPH IS KEPT BECAUSE IT PREDICTED CORRECTLY. It stood here from §25 backlog 741's landing, saying that decision 2149 (1)'s session field names would cross AFTER this guard, that several were manifest keys passing the rule, and that the row making them public would have to add them WITH THEIR REASON or go red. That row was §25 backlog 752 and it did: they are in `session_file_keys` above. What the prediction got wrong is the SIZE -- it said `several`, and 752's dispatch named two (`built_tiles`, `built_km2`); the measured answer is about thirty-three, because `stats.json` splices the whole ledger and fabric records in verbatim and nests the whole demand line. A reader estimating this work from either figure would have been wrong by more than an order of magnitude, which is why the count was measured against `tools/play_dressing.py` before a line was written rather than taken from the brief.",
     "the_bid_fields": "owner ruling 2150 keeps the generator's bid maps out of the first version, so their names are not this tree's and are not here.",
     "anything_merely_convenient": "a name that collides because this client independently chose the same word for its own data is NOT format vocabulary, and it is kept in its own group above rather than mixed in with the formats'. There is exactly one, with its two call sites; the groups are separate so that a reader can see at a glance how much of the allow side is a contract and how much is a coincidence."
   }

@@ -1,0 +1,89 @@
+{
+ "what": "a synthetic session's year; every figure invented",
+ "generated_by": "nothing-generated-this",
+ "year": 1878,
+ "ledger": {
+  "capacity": 30,
+  "occupancy": 27.0,
+  "vacancy": 3.0,
+  "plan": 27.0,
+  "quota_carried": {
+   "one": 0.0,
+   "two": 0.5
+  },
+  "residues": [
+   {
+    "from": "low",
+    "to": "middle",
+    "persons": 1.0,
+    "filtered": 0
+   }
+  ],
+  "built_tiles": 5,
+  "built_km2": 20.0,
+  "at_the_cap": [
+   {
+    "kind": "kindone",
+    "type": "typeone",
+    "tiles": 1
+   }
+  ]
+ },
+ "fabric": {
+  "density_pw": 12.5,
+  "transit_share": 0.25,
+  "irrigated_take_km2": {
+   "nodea": 0.5
+  }
+ },
+ "d1": {
+  "capacity_less_occupancy": 3.0,
+  "holds": true
+ },
+ "built": {
+  "ledger_tiles": 5,
+  "fold": {
+   "classed": 4,
+   "feature_in_window": 1,
+   "feature_outside": 0,
+   "sparse": 0,
+   "total": 5
+  },
+  "agree": true,
+  "cap_tiles": 100,
+  "built_km2": 20.0,
+  "cap_km2": 400.0,
+  "rule": "invented; it stands where the generator states its own rule"
+ },
+ "demand": {
+  "year": 1879,
+  "era": "two",
+  "occupancy": 27.0,
+  "arrivals": 10.0,
+  "quotas_tiles": {
+   "one": 2,
+   "two": 1
+  },
+  "quotas_note": "invented; it stands where the generator puts its own note",
+  "strata": {
+   "low": {
+    "people": 6.0,
+    "tiles_at_least": 2
+   },
+   "middle": {
+    "people": 3.0,
+    "tiles_at_least": 1
+   },
+   "wealthy": {
+    "people": 1.0,
+    "tiles_at_least": 1
+   }
+  },
+  "strata_note": "invented; the tile figure is a bound and the note says so",
+  "serviceable_open_tiles": 7,
+  "enclosed_open_tiles": 2,
+  "enclosed_note": "invented; it stands where the generator says when this was read",
+  "holds_releasing": 1,
+  "arc_start": 1877
+ }
+}

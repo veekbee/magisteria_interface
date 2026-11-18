@@ -17,9 +17,19 @@ reworked to stop being an example of.
 So the session source is committed, synthetic, and always present. Its field
 names are **deliberately not the real schema's**: the real names cross into this
 tree later, as field names with no value, on the rows that make them public
-(decision 2149 (1)). Every name here is prefixed `zz_` so that no reader can
-mistake one for a name that came from the simulation, and so that the planted
-name is visibly the test's own.
+(decision 2149 (1)). Every name in **this directory's own three files** is
+prefixed `zz_` so that no reader can mistake one for a name that came from the
+simulation, and so that the planted name is visibly the test's own.
+
+**There are now two fixtures here with different jobs, and the distinction is
+load-bearing** — see `recorded/README.md`. The `zz_`
+rule above is this directory's; it is not `recorded/`'s, and it could not be.
+
+**AND THIS FILE MAY NOT DESCRIBE THE OTHER ONE**, which is why the account of
+it lives there rather than here. Spelling the other fixture's field names in
+this file would lapse THIS file's exemption, and it would then be refused for
+naming the planted key above — which is its job. That happened on the first cut
+of this split, and the scan named it.
 
 **The values are shaped like a session's and mean nothing.** A year, a count, a
 digest-shaped string of zeroes. Nothing here was read off a real session, and

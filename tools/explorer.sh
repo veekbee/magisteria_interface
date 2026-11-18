@@ -10,6 +10,22 @@
 #   bash tools/explorer.sh
 #
 #   left / right   step one year          1 2 3 4   jump to 1890, 1940, 1990, 2039
+#
+# A PLAY SESSION'S PANEL (§25 backlog 752, decision 2149 (4)), optional:
+#
+#   MAGISTERIA_SESSION=/path/to/runs/play/<name> bash tools/explorer.sh
+#
+# draws that session's year panel and next year's demand down the right. The
+# path is not committed and not guessed: a session directory is git-ignored and
+# lives on the owner's machine, so the environment is the only place it can come
+# from. With nothing set this is the viewer it was before -- the committed
+# dressing and nothing else. A session that will not read says why in the
+# panel's place and still draws the city; the city's own bindings are what gate
+# the drawing.
+#
+# AND THE CITY BESIDE THE PANEL IS STILL THE COMMITTED DRESSING. The slider over
+# a session's own folds is §25 backlog 753; until then the two are a readout and
+# a city, not one city. The panel says so on screen.
 #   left-drag      move a pin (inside its outline)
 #   ESC            close
 #

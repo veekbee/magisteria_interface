@@ -1,0 +1,148 @@
+{
+  "_form": "THE SCHEMAS OF DA-11's PLAY-SESSION FILES, as field names and types with NO VALUE. Decision 2149 (1) and owner ruling 2150 put exactly this much of the session into the public tree: the shape of the files the explorer reads and writes, and nothing of the generator that writes them. A session's VALUES live in a git-ignored directory on the owner's machine and never commit, never upload, and never reach this file.",
+
+  "_ruled_by": [
+    "decision 2149 (1), (3), (4)",
+    "owner ruling 2150",
+    "decision 2152",
+    "decision 973",
+    "§25 backlog 752",
+    "§25 backlog 749 (the session this describes)",
+    "§25 backlog 730 (the fold format, already public)",
+    "decision 2075 (the pin file format, already public)"
+  ],
+
+  "_why_a_schema_rather_than_a_sample": "A sample session directory would be the fastest way to build a reader and is the one thing that may not cross: a sample IS its values -- a ledger's counts, a demand's arrivals, an admissibility reading. So the shape is declared here and the reader is built against a SYNTHETIC session (`tests/session_fixture/recorded/`) authored from this file, whose every figure is invented. STATED PLAINLY, BECAUSE IT BOUNDS WHAT THE GREEN MEANS: a suite passing against that fixture proves the reader against this schema and never against the generator. The first real session the owner opens is the first integration, and the first place a disagreement between this file and `tools/play_dressing.py` can appear.",
+
+  "_types": "`string`, `integer`, `number`, `boolean`, `object`, `array`; `|null` means the field is present and may be null; `[a, b]` is a fixed-length array; `{k: t}` is an object whose keys vary and whose values are `t`. A field marked `IGNORED` is declared so that a reader knows it exists and is read past without naming its contents. A field marked `DROPPED` is deleted at load.",
+
+  "_what_is_deliberately_not_declared_here": {
+    "the_admissibility_block": "`session.json` carries an `admissibility` object recording both of decision 2112's readings as last recomputed. IT IS DECLARED AS AN OPAQUE OBJECT AND ITS FIELDS ARE NOT NAMED. Nothing in this client reads them, decision 2149 (4) does not put them on the panel, and naming them would move several of the generator's own quantities into this tree for no reader -- which is decision 973's question answered the wrong way out of mere completeness.",
+    "the_at_the_cap_rows_full_key_set": "An at-the-cap row carries a key naming its schedule-side source. §25 backlog 741 forbids that name EXPLICITLY and permanently -- it is one of the eight carried as a digest with no live source -- so it is not declared, not read and not drawn. The row is read by `kind`, `type` and `tiles`, and a real session's further keys are ignored.",
+    "the_bid_fields": "the generator's bid maps stay out of the first version entirely (decision 2149 (1), owner ruling 2150), so no field of them is declared.",
+    "why_ignoring_is_the_rule_and_not_an_omission": "A reader that rendered every key it found would draw whatever a later generator adds to these files -- with no ruling, no vocabulary entry and no way for the guard to see it, because the name would never appear in this client's source. So unknown keys are IGNORED, never rendered (§25 backlog 752's construal Q6b), and a new field is invisible here until a row rules it."
+  },
+
+  "session_json": {
+    "_path": "session.json",
+    "_written_by": "the session, after every command",
+    "what": "string",
+    "generated_by": "string -- DROPPED at load (decision 973: the generator's tool path is not this tree's to republish)",
+    "name": "string",
+    "bound": "string",
+    "terrain": "string",
+    "through": "integer|null",
+    "dressing_id": "string",
+    "base_dressing_id": "string",
+    "generator_commit": "string -- DROPPED at load (a private-repo commit sha)",
+    "code_state": "object -- DROPPED at load (a listing of the private tree's layout)",
+    "master_seed": "integer",
+    "start_pins": {"path": "string", "sha256": "string"},
+    "emission": {"base_dressing": "string", "schedule_plan_digest": "string"},
+    "pins_sha256": "string",
+    "year": "integer -- years less than or equal to this are built",
+    "years": "[integer, integer] -- the arc's first and last year, not the stepped range",
+    "finished": "boolean",
+    "last_step_s": "number|null",
+    "admissibility": "object -- IGNORED; see `_what_is_deliberately_not_declared_here`"
+  },
+
+  "stats_json": {
+    "_path": "year_<Y>/stats.json",
+    "_written_by": "the session, after every advance",
+    "_ruled_by": "decision 2149 (4): the year's panel and the next year's demand",
+    "what": "string",
+    "generated_by": "string -- DROPPED at load",
+    "year": "integer",
+    "ledger": {
+      "capacity": "integer",
+      "occupancy": "number",
+      "vacancy": "number",
+      "plan": "number",
+      "quota_carried": "{string: number}",
+      "residues": "array of {from: string, to: string, persons: number, filtered: integer}",
+      "built_tiles": "integer",
+      "built_km2": "number",
+      "at_the_cap": "array of {kind: string, type: string, tiles: integer} -- further keys IGNORED"
+    },
+    "fabric": {
+      "density_pw": "number",
+      "transit_share": "number",
+      "irrigated_take_km2": "{string: number}"
+    },
+    "d1": {
+      "capacity_less_occupancy": "number",
+      "holds": "boolean"
+    },
+    "built": {
+      "ledger_tiles": "integer",
+      "fold": {
+        "classed": "integer",
+        "feature_in_window": "integer",
+        "feature_outside": "integer",
+        "sparse": "integer",
+        "total": "integer"
+      },
+      "agree": "boolean",
+      "cap_tiles": "integer",
+      "built_km2": "number",
+      "cap_km2": "number",
+      "rule": "string -- the generator's own statement of §25 backlog 750's rule, drawn as data and never copied into a source file"
+    },
+    "demand": {
+      "_null_at_the_last_year": "the whole object is null when no year follows",
+      "year": "integer",
+      "era": "string",
+      "occupancy": "number",
+      "arrivals": "number",
+      "quotas_tiles": "{string: integer}",
+      "quotas_note": "string",
+      "strata": "{string: {people: number, tiles_at_least: integer}}",
+      "strata_note": "string",
+      "serviceable_open_tiles": "integer",
+      "enclosed_open_tiles": "integer",
+      "enclosed_note": "string",
+      "holds_releasing": "integer",
+      "arc_start": "integer"
+    }
+  },
+
+  "fold_json": {
+    "_path": "year_<Y>/fold.json",
+    "_mostly_not_new": "§25 backlog 730's fold format, already public and already read by this client. ONLY THE STAMP DIFFERS: a committed fold carries `dressing_sha256`, and a session's fold carries the block below instead -- §25 backlog 749 recorded that deliberately, with `no invented dressing_sha256`.",
+    "session": {
+      "name": "string",
+      "pins_sha256": "string",
+      "generator_commit": "string -- DROPPED at load"
+    },
+    "year": "integer",
+    "tiles": "as §25 backlog 730",
+    "features": "as §25 backlog 730",
+    "routes": "as §25 backlog 730",
+    "_what_binds_it": "NOT a recomputed identity: a session directory has no PIN and no committed digests, so the apparatus that binds a fetched dressing has no counterpart here. The binding is instead that the fold's `session.name` is this session's, its `year` is at most `session.json`'s `year`, and its `pins_sha256` is one THIS SESSION HAS HAD -- the start file's, or one recorded in a place or remove answer, or the current one. A placement re-stamps no fold already written, so a binding that demanded the current sha would refuse every past year after the first placement."
+  },
+
+  "command_json": {
+    "_path": "commands/<seq>-<verb>.json, written by THIS CLIENT",
+    "_filename": "`<seq>-<verb>.json` with `seq` a six-digit zero-padded integer one above the largest leading seq in `commands/` and `commands/done/`. THE NAME CARRIES THE ORDER: the session acts on waiting commands in name order, so a name that did not sort in issue order would reorder the owner's commands. A fixed name per verb cannot be used -- a command is consumed by being RENAMED into `commands/done/`, so the second file of the same name is refused as already consumed.",
+    "_written_atomically": "to `<name>.json.tmp`, then renamed to `<name>.json`. The session globs `*.json` and reads after its own rename, so a half-written file would be refused as not JSON.",
+    "verb": "string -- one of `advance`, `rewind`, `place`, `remove`; REQUIRED IN THE BODY, not inferred from the filename",
+    "years": "integer -- `advance` only",
+    "to_year": "integer -- `rewind` only, required",
+    "confirm": "boolean -- `rewind` and `remove`; without it a priced answer comes back and nothing is done",
+    "pins": "array of pin rows in decision 2075's format -- `place` only, required; each row carries its own unused `pin_id`",
+    "pin_id": "string -- `remove` only, required"
+  },
+
+  "answer_json": {
+    "_path": "commands/done/<stem>.answer.json",
+    "_written_by": "the session, beside the consumed command",
+    "verb": "string|null -- null when the file itself was refused before a verb could be read",
+    "stamp": "string",
+    "year_issued": "integer",
+    "ok": "boolean",
+    "result": "object -- present when `ok`; a place or remove answer carries `pins_sha256`, which is how the fold binding learns a sha the session has had",
+    "refusal": "string -- present when not `ok`; SHOWN VERBATIM and never paraphrased",
+    "cost_s": "number -- inside `result` on a priced rewind or removal"
+  }
+}

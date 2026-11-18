@@ -69,6 +69,24 @@ var _memo := DressingFoldMemo.new()
 var _rows_digest: String = ""
 
 
+## §25 backlog 752: a play session's directory, when one is named.
+##
+## NAMED BY THE ENVIRONMENT AND OPTIONAL BY DESIGN. A session lives in a
+## git-ignored directory on the owner's machine, so its path cannot be committed
+## and must not be guessed. With nothing set, this view is exactly what it was
+## before 752 -- the committed dressing, drawn from fetched artefacts.
+##
+## ⚠ A SESSION THAT FAILS TO READ DOES NOT BLOCK THE CITY. The refusal is drawn
+## in the panel's place instead. That asymmetry is deliberate: the dressing's
+## bindings gate the drawing because the owner is being asked to rule on what
+## they see, while a panel is a readout beside it -- and a session the owner
+## pointed at wrongly should say so without taking the city away.
+const SESSION_ENV := "MAGISTERIA_SESSION"
+
+var _session: SessionRead = null
+var _panel: Array = []
+
+
 func _ready() -> void:
     _load = DressingLoad.load_from()
     if not _load.is_present():
@@ -112,6 +130,43 @@ func _ready() -> void:
     _features = DressingFold.read_rows(DressingFold.DIR + "features.jsonl")
     _routes = DressingFold.read_rows(DressingFold.DIR + "routes.jsonl")
     set_year(_year)
+    _open_session()
+
+
+## Open the session named by the environment, if any, and build its panel.
+func _open_session() -> void:
+    var dir := OS.get_environment(SESSION_ENV)
+    if dir.is_empty():
+        return
+    _session = SessionRead.open_dir(dir)
+    if not _session.is_present():
+        _panel = ["session %s" % dir, _session.problem]
+        return
+    var stats := _session.stats_of(_session.year)
+    var built := StatsPanel.of(stats)
+    if built.problem != "":
+        _panel = ["session %s at %d" % [_session.session_name, _session.year], built.problem]
+        return
+    _panel = ["session %s" % _session.session_name] + built.lines
+    # SAID ON SCREEN RATHER THAN ASSUMED UNDERSTOOD. The panel is the session's
+    # and the city beside it is still the committed dressing: §25 backlog 752
+    # builds the readout, and the slider over the session's own folds is 753.
+    # A reader who took the two for one city would misread both.
+    _panel.append("")
+    _panel.append("the city drawn is the committed dressing, not this session's")
+
+
+## Draw the session's panel down the right, or nothing when no session is open.
+func _draw_panel(vp: Vector2) -> void:
+    if _panel.is_empty():
+        return
+    var w := 420.0
+    var x := vp.x - w - 16.0
+    draw_rect(Rect2(Vector2(x - 12, 12), Vector2(w + 12, vp.y - 72)), Color(0, 0, 0, 0.55))
+    var y := 34.0
+    for line in _panel:
+        _text(Vector2(x, y), str(line), Color(0.92, 0.92, 0.88))
+        y += 17.0
 
 
 func _lattice_of_manifest() -> String:
@@ -226,6 +281,7 @@ func _draw() -> void:
         for pin: Dictionary in _pins.at(_year):
             _draw_pin(pin, edge, side)
     _chrome(vp)
+    _draw_panel(vp)
 
 
 func _draw_pin(pin: Dictionary, edge: Color, side: float) -> void:

@@ -1,0 +1,46 @@
+{
+ "what": "a synthetic session folded to one year; every figure invented",
+ "generated_by": "nothing-generated-this",
+ "session": {
+  "name": "not-a-session",
+  "pins_sha256": "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "generator_commit": "0000000000000000000000000000000000000000"
+ },
+ "year": 1877,
+ "tiles": [
+  {
+   "tile": [
+    1,
+    0,
+    0
+   ],
+   "class": null,
+   "density_per_km2": 0.0,
+   "feature": null,
+   "route": null,
+   "since": null,
+   "sink": false,
+   "storeys": 0,
+   "stratum": null,
+   "zone": null
+  },
+  {
+   "tile": [
+    1,
+    0,
+    1
+   ],
+   "class": "one",
+   "density_per_km2": 1.0,
+   "feature": null,
+   "route": null,
+   "since": 1877,
+   "sink": false,
+   "storeys": 1,
+   "stratum": "low",
+   "zone": null
+  }
+ ],
+ "features": [],
+ "routes": []
+}

@@ -124,6 +124,11 @@ func _initialize() -> void:
     _run(test_the_fold_memo_is_keyed_on_the_rows_identity_and_not_the_year_alone, "test_the_fold_memo_is_keyed_on_the_rows_identity_and_not_the_year_alone")
     _run(test_the_fold_memo_folds_a_year_once_and_bounds_what_it_keeps, "test_the_fold_memo_folds_a_year_once_and_bounds_what_it_keeps")
     _run(test_the_memoised_fold_equals_the_direct_fold_on_the_real_dressing, "test_the_memoised_fold_equals_the_direct_fold_on_the_real_dressing")
+    _run(test_the_session_reader_reads_the_recorded_fixture_and_destroys_what_973_forbids, "test_the_session_reader_reads_the_recorded_fixture_and_destroys_what_973_forbids")
+    _run(test_a_session_folds_binding_accepts_the_years_stepped_before_a_placement, "test_a_session_folds_binding_accepts_the_years_stepped_before_a_placement")
+    _run(test_the_panel_shows_the_ledgers_count_and_computes_none_of_its_own, "test_the_panel_shows_the_ledgers_count_and_computes_none_of_its_own")
+    _run(test_the_panel_draws_only_fields_it_names, "test_the_panel_draws_only_fields_it_names")
+    _run(test_every_name_the_recorded_session_contributes_is_ruled_on_the_allow_side, "test_every_name_the_recorded_session_contributes_is_ruled_on_the_allow_side")
     _run(test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control, "test_the_explorer_refuses_a_pin_without_provenance_of_every_kind_with_its_control")
     _run(test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name, "test_the_explorer_checks_the_digests_shape_only_and_cannot_check_what_they_name")
     _run(test_every_pin_kind_refuses_each_required_field_by_name, "test_every_pin_kind_refuses_each_required_field_by_name")
@@ -16897,3 +16902,315 @@ func test_a_float64_coordinate_survives_the_emission_bit_for_bit() -> void:
     check(text.contains("1328912.2044408391"),
             "the writer did not emit coordinate B's correct repr, so the check above is not "
                     + "measuring precision")
+
+
+# --------------------------------------------------------------------------
+# §25 backlog 752: the session reader and the stats panel (decision 2149 (1), (4))
+# --------------------------------------------------------------------------
+
+const RECORDED_SESSION_DIR := "res://tests/session_fixture/recorded"
+
+
+## Every `.json` under the recorded session, at any depth.
+##
+## WALKED RATHER THAN LISTED, unlike the guard's own three fixture files above,
+## and the difference is deliberate: a listed set cannot notice a file somebody
+## adds to the fixture, and the whole point of the check below is that no name
+## enters this subtree without a ruling. A walk sees the new file; a list of
+## three paths would have reported a clean derivation over two thirds of it.
+static func _recorded_session_files(dir_path: String) -> PackedStringArray:
+    var out := PackedStringArray()
+    var d := DirAccess.open(dir_path)
+    if d == null:
+        return out
+    for fn in d.get_files():
+        if (fn as String).ends_with(".json"):
+            out.append(dir_path.path_join(fn))
+    for sub in d.get_directories():
+        out.append_array(_recorded_session_files(dir_path.path_join(sub)))
+    return out
+
+
+func test_the_session_reader_reads_the_recorded_fixture_and_destroys_what_973_forbids() -> void:
+    """THE THREE PRIVATE FIELDS ARE ERASED, NOT MERELY LEFT UNREAD.
+
+    `generated_by` is the generator's tool path, `code_state` a map of its `*.py`
+    files to their digests -- a listing of the private tree's layout -- and
+    `generator_commit` a private-repo commit sha. Decision 973 makes none of
+    them this public tree's to republish.
+
+    WHY ERASURE AND NOT A CONVENTION. A reader that simply never looked at them
+    would pass a test that only checked the fields it does read, and the fields
+    would still be sitting in a parsed dictionary for the next person to log,
+    draw or dump on a crash. So the assertion is on their ABSENCE from the
+    parsed documents, at every depth -- `generator_commit` is nested inside a
+    fold's `session` block, which is exactly the copy a top-level erase would
+    have missed, and did in the first cut of `strip`.
+    """
+    var s := SessionRead.open_dir(RECORDED_SESSION_DIR)
+    check(s.problem == "", "the recorded session fixture did not read: %s" % s.problem)
+    check(s.is_present(), "the recorded session read without a refusal but reports absent")
+    check(s.session_name == "not-a-session",
+            "the session's name read as %s" % JSON.stringify(s.session_name))
+    check(s.year == 1879, "the session's year read as %d, not the fixture's 1879" % s.year)
+    check(s.first_year == 1877 and s.last_year == 2039,
+            "the arc read as [%d, %d], not the fixture's [1877, 2039]" % [s.first_year, s.last_year])
+    check(s.master_seed == 20260820, "the master seed read as %d" % s.master_seed)
+    check(s.last_step_s > 1.4 and s.last_step_s < 1.6,
+            "the last step's cost read as %f, not the fixture's 1.5" % s.last_step_s)
+    check(s.years_present() == [1877, 1878, 1879],
+            "the years with folds read as %s, not the fixture's three" % str(s.years_present()))
+
+    # THE ERASURE, over all three kinds of document the reader opens.
+    var docs := {
+        "session.json": SessionRead.read_json(RECORDED_SESSION_DIR.path_join("session.json")),
+        "year_1879/stats.json": s.stats_of(1879),
+        "year_1879/fold.json": s.fold_of(1879),
+    }
+    for name in docs:
+        var doc: Dictionary = docs[name]
+        check(not doc.is_empty(), "%s did not parse, so its erasure is untested" % name)
+        for field in SessionRead.DROPPED:
+            check(not _json_carries_key(doc, str(field)),
+                    ("%s still carries `%s` after the load, at some depth: a field decision "
+                            % [name, field]) + "973 forbids is one erase away from a log line")
+
+    # AND THE CONTROL: the fixture must actually HAVE carried them, or the
+    # erasure above is a test of nothing. Read the bytes, not the parse.
+    var raw := FileAccess.get_file_as_string(RECORDED_SESSION_DIR.path_join("session.json"))
+    for field in SessionRead.DROPPED:
+        check(raw.contains(str(field)),
+                ("the fixture's session.json does not contain `%s` at all, so the erasure "
+                        % field) + "test above would pass against a reader that erases nothing")
+
+
+## Whether a key appears anywhere in a parsed document.
+static func _json_carries_key(v, key: String) -> bool:
+    match typeof(v):
+        TYPE_DICTIONARY:
+            var d: Dictionary = v
+            if d.has(key):
+                return true
+            for k in d:
+                if _json_carries_key(d[k], key):
+                    return true
+        TYPE_ARRAY:
+            for e in (v as Array):
+                if _json_carries_key(e, key):
+                    return true
+    return false
+
+
+func test_a_session_folds_binding_accepts_the_years_stepped_before_a_placement() -> void:
+    """THE BINDING THAT WOULD HAVE BEEN WRONG, AND THE STATE THAT PROVES IT.
+
+    A session directory has no PIN and no `dressing_sha256`, so the recomputed
+    identity that binds a fetched dressing has no counterpart. The obvious
+    substitute -- refuse any fold whose `pins_sha256` is not `session.json`'s --
+    is WRONG, and wrong in a way that would have shipped: a placement moves the
+    pin file and re-stamps no fold already written, so the first thing the owner
+    does would make every earlier year refuse. The binding instead admits any
+    digest the session HAS HAD: the start file's, one recorded in a place or
+    remove answer, or the current one.
+
+    THE FIXTURE HOLDS EXACTLY THAT STATE, and the first two checks assert it
+    does -- otherwise this test would pass against a fixture with one sha
+    throughout, which is to say against nothing.
+    """
+    var s := SessionRead.open_dir(RECORDED_SESSION_DIR)
+    check(s.problem == "", "the recorded session did not read: %s" % s.problem)
+    var old_stamp: Dictionary = s.fold_of(1877).get("session", {})
+    var old_sha := str(old_stamp.get("pins_sha256", ""))
+    check(old_sha != "" and old_sha != s.pins_sha256,
+            "the fixture's 1877 fold carries the session's CURRENT pin sha, so the state "
+                    + "this test exists to catch is not present in the fixture")
+    check(s.shas_had.size() >= 2,
+            "the session reports %d pin sha(s) ever held; with fewer than two the "
+                    % s.shas_had.size() + "binding cannot be distinguished from `the current one`")
+    check(s.shas_had.has(old_sha),
+            "the start file's sha is not among the shas the session has had, so the answers "
+                    + "under commands/done/ are not being read")
+
+    # EVERY STEPPED YEAR DRAWS, including the two from before the placement.
+    for y in [1877, 1878, 1879]:
+        var why := s.fold_problem(s.fold_of(y))
+        check(why == "", "year %d's fold was refused: %s" % [y, why])
+
+    # AND THE THREE REFUSALS, each naming both sides.
+    var alien: Dictionary = s.fold_of(1879).duplicate(true)
+    (alien["session"] as Dictionary)["name"] = "someone-elses-session"
+    var why_alien := s.fold_problem(alien)
+    check(why_alien != "", "a fold from another session was accepted")
+    check(why_alien.contains("someone-elses-session") and why_alien.contains("not-a-session"),
+            "the refusal names only one of the two sessions: %s" % why_alien)
+
+    var ahead: Dictionary = s.fold_of(1879).duplicate(true)
+    ahead["year"] = 1999
+    var why_ahead := s.fold_problem(ahead)
+    check(why_ahead != "", "a fold for a year the session has not reached was accepted")
+    check(why_ahead.contains("1999") and why_ahead.contains("1879"),
+            "the refusal names only one of the two years: %s" % why_ahead)
+
+    var unknown: Dictionary = s.fold_of(1879).duplicate(true)
+    var never := "sha256:" + "c".repeat(64)
+    (unknown["session"] as Dictionary)["pins_sha256"] = never
+    var why_unknown := s.fold_problem(unknown)
+    check(why_unknown != "", "a fold under a pin file the session never had was accepted")
+    check(why_unknown.contains(never) and why_unknown.contains(s.pins_sha256),
+            "the refusal names only one of the two digests: %s" % why_unknown)
+
+    # A committed dressing's fold is not a session's and must not be bound to one.
+    var committed_fold := {"year": 1879, "dressing_sha256": "sha256:" + "d".repeat(64)}
+    check(s.fold_problem(committed_fold) != "",
+            "a committed dressing's fold, which carries no session block, was accepted as "
+                    + "this session's")
+
+
+func test_the_panel_shows_the_ledgers_count_and_computes_none_of_its_own() -> void:
+    """§25 backlog 750's RULE, READ RATHER THAN REIMPLEMENTED.
+
+    The dispatch's words: the panel's built count is the ledger's, not a count
+    of its own. So the test forces the two counts APART -- the generator's
+    ledger figure against a fold total that disagrees -- and asserts the panel
+    still shows the ledger's, and says they disagree.
+
+    A PANEL THAT RECOMPUTED WOULD PASS EVERY TEST WRITTEN AGAINST AGREEING
+    NUMBERS, which is every test anyone would write against a real session,
+    because the generator's two counts agree at all 163 years on both committed
+    dressings. The disagreement has to be manufactured or it is never seen.
+    """
+    var s := SessionRead.open_dir(RECORDED_SESSION_DIR)
+    var stats := s.stats_of(1879)
+    check(not stats.is_empty(), "1879's stats did not read")
+    var p := StatsPanel.of(stats)
+    check(p.problem == "", "the panel refused the fixture's 1879 stats: %s" % p.problem)
+    check(p.lines.size() > 10, "the panel built %d lines; that is not a panel" % p.lines.size())
+
+    var built_line := _line_containing(p.lines, "built tiles")
+    check(built_line != "", "the panel drew no built-tiles line at all")
+    check(built_line.contains("8") and built_line.contains("100"),
+            "the built line does not show the fixture's 8 of 100: %s" % built_line)
+    check(_line_containing(p.lines, "agrees").contains("yes"),
+            "the panel does not report the generator's own agreement on an agreeing year")
+
+    # NOW FORCE THEM APART.
+    var skewed: Dictionary = stats.duplicate(true)
+    var b: Dictionary = skewed["built"]
+    (b["fold"] as Dictionary)["total"] = 99
+    (b["fold"] as Dictionary)["classed"] = 98
+    b["agree"] = false
+    var q := StatsPanel.of(skewed)
+    check(q.problem == "", "the panel refused a stats block whose two counts disagree: %s" % q.problem)
+    var skewed_line := _line_containing(q.lines, "built tiles")
+    check(skewed_line.contains("8"),
+            "with the fold's total at 99 the panel's built line reads %s: it is showing a "
+                    % skewed_line + "count of its own, not the ledger's")
+    check(not skewed_line.contains("99"),
+            "the panel's built line carries the fold's 99: the count drawn is not the ledger's")
+    check(_line_containing(q.lines, "agrees").contains("NO"),
+            "the two counts disagree and the panel does not say so")
+
+    # The last year has no next year, and that is a state rather than a fault.
+    var last: Dictionary = stats.duplicate(true)
+    last["demand"] = null
+    var r := StatsPanel.of(last)
+    check(r.problem == "", "a year with no demand was refused: %s" % r.problem)
+    check(_line_containing(r.lines, "no demand") != "",
+            "a year with no next year draws no line saying so")
+    # And a missing block is a refusal, not a panel drawn around a hole.
+    var holed: Dictionary = stats.duplicate(true)
+    holed.erase("ledger")
+    check(StatsPanel.of(holed).problem != "",
+            "stats without a ledger block drew a panel anyway")
+
+
+func test_the_panel_draws_only_fields_it_names() -> void:
+    """UNKNOWN KEYS ARE IGNORED, NEVER RENDERED (752's construal Q6b).
+
+    A panel that rendered what it found would draw whatever a later generator
+    adds to `stats.json` -- with no ruling, no vocabulary entry, and nothing the
+    leak guard could catch, because the name would never appear in this client's
+    source. The live case is real: an at-the-cap row carries a key naming its
+    schedule-side source, which §25 backlog 741 forbids explicitly and
+    permanently, so the row is read by `kind`, `type` and `tiles` and that key is
+    read past. **It is not named here either**, which is why the probe below
+    uses an invented key: a test that spelled the forbidden name would be the
+    leak it is checking for.
+    """
+    var s := SessionRead.open_dir(RECORDED_SESSION_DIR)
+    var stats := s.stats_of(1878)
+    var before := StatsPanel.of(stats)
+    check(before.problem == "", "1878's stats were refused: %s" % before.problem)
+
+    var probed: Dictionary = stats.duplicate(true)
+    probed["madeupblock"] = {"madeupinner": 7}
+    (probed["ledger"] as Dictionary)["madeuptotal"] = 1234
+    var caps: Array = (probed["ledger"] as Dictionary)["at_the_cap"]
+    (caps[0] as Dictionary)["madeuprow"] = "madeupvalue"
+    var after := StatsPanel.of(probed)
+    check(after.problem == "", "stats with unknown keys were refused: %s" % after.problem)
+    check(after.lines.size() == before.lines.size(),
+            "three unknown keys changed the panel from %d lines to %d: it is rendering what "
+                    % [before.lines.size(), after.lines.size()] + "it finds rather than what it names")
+    for needle in ["madeupblock", "madeupinner", "madeuptotal", "madeuprow", "madeupvalue", "1234"]:
+        check(_line_containing(after.lines, needle) == "",
+                "the panel drew the unknown key or value `%s`" % needle)
+
+
+## The first line containing a needle, or "".
+static func _line_containing(lines: Array, needle: String) -> String:
+    for l in lines:
+        if str(l).contains(needle):
+            return str(l)
+    return ""
+
+
+func test_every_name_the_recorded_session_contributes_is_ruled_on_the_allow_side() -> void:
+    """THE TEETH ON `BY RULING`, AND THEY ARE A MECHANISM RATHER THAN A HABIT.
+
+    The recorded session is one of the guard's derivation sources, so every
+    compound name in it is read by the same rule that reads the fetched
+    manifest's. Each is on the allow side because §25 backlog 752 put it in
+    `contract/dressing_vocabulary.json`'s `session_file_keys` with its reason.
+
+    SO THE DERIVATION OVER THIS SUBTREE MUST BE EMPTY -- and the second half of
+    this test is what makes that worth asserting: drop ONE name from the allow
+    side and the derivation must produce exactly that name's digest. Without
+    that half, an empty derivation would equally well mean the walk read no
+    files, which is the way this check would actually fail.
+    """
+    var files := _recorded_session_files(RECORDED_SESSION_DIR)
+    check(files.size() >= 10,
+            "the walk found %d json file(s) under the recorded session; the fixture has "
+                    % files.size() + "eleven, so the walk is not reading it")
+    var names := {}
+    for path in files:
+        var got := _names_of_json(path)
+        check(got.size() > 0, "%s read no names at all" % path)
+        for n in got:
+            names[n] = true
+    check(names.size() > 60,
+            "the recorded session contributed %d names; the schema has far more, so the "
+                    % names.size() + "walk or the reader of it is losing most of the subtree")
+
+    var allow := _allow_set()
+    var derived := _derive_digests(names, allow)
+    check(derived.is_empty(),
+            "%d name(s) in the recorded session are forbidden by the rule and not on the "
+                    % derived.size() + "allow side: a session field reached this tree without a ruling")
+
+    # THE HALF THAT CAN FAIL. One name withdrawn must come straight back.
+    var witness := "built_tiles"
+    check(allow.has(witness),
+            "`%s` is not on the allow side, so the withdrawal below proves nothing" % witness)
+    check(names.has(witness),
+            "the recorded session does not contain `%s`, so withdrawing it from the allow "
+                    % witness + "side could not make it derive")
+    var narrowed := allow.duplicate()
+    narrowed.erase(witness)
+    var without := _derive_digests(names, narrowed)
+    check(without.size() == 1,
+            "withdrawing one allowed name made %d name(s) derive, not one" % without.size())
+    check(without.has(witness.sha256_text()),
+            "withdrawing `%s` did not make exactly its own digest derive, so the allow side "
+                    % witness + "is not what permits these names")
