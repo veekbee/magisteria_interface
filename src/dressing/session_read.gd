@@ -57,6 +57,15 @@ var master_seed: int = 0
 var year: int = 0
 var first_year: int = 0
 var last_year: int = 0
+## True when the session has never been advanced, which is a STATE and not a fault.
+##
+## The generator's own encoding: `Session.year` returns the schedule's start less
+## one while nothing has been stepped, and `session.json`'s `year` means "years
+## less than or equal to this are built" -- which for an unstepped session has to
+## name no years at all. A reader that demanded `year` inside `years` refused the
+## owner's own session on the first launch of the play, and that was this
+## client's defect, not the generator's.
+var unstepped: bool = false
 var finished: bool = false
 ## Negative means the schema's `null` — no advance has been priced yet.
 var last_step_s: float = -1.0
@@ -99,9 +108,18 @@ static func open_dir(dir_path: String) -> SessionRead:
         return s
     s.first_year = int(years[0])
     s.last_year = int(years[1])
-    if s.year < s.first_year or s.year > s.last_year:
+    # ⚠ THE ARC'S FIRST YEAR LESS ONE IS LEGAL AND MEANS "NOTHING BUILT YET".
+    # Refusing it was this client's defect: it turned a session the generator had
+    # just written correctly into "outside its own arc", and the owner met that
+    # on their first launch. `recorded/README.md` had already named the reason no
+    # test caught it -- the fixture was authored from the schema and held only a
+    # STEPPED session, so the suite proved the reader against the schema and
+    # never against the generator's initial state. `unstepped/` is that state.
+    s.unstepped = s.year == s.first_year - 1
+    if s.year < s.first_year - 1 or s.year > s.last_year:
         var msg := "session.json's year %d is outside its own arc " % s.year
-        msg += "[%d, %d]." % [s.first_year, s.last_year]
+        msg += "[%d, %d], which starts at one less than %d " % [s.first_year, s.last_year, s.first_year]
+        msg += "for a session that has not been advanced."
         s.problem = msg
         return s
     var step = doc.get("last_step_s", null)
@@ -129,6 +147,11 @@ func _collect_shas() -> void:
     if pins_sha256 != "":
         shas_had[pins_sha256] = true
     var done := dir + "commands/done/"
+    # A session that has answered nothing may not have the directory at all, and
+    # listing a path that is not there is an engine error the gate reads as a
+    # failure. The absence is a state: no answer has moved the pin file.
+    if not DirAccess.dir_exists_absolute(done):
+        return
     for fn in DirAccess.get_files_at(done):
         if not fn.ends_with(".answer.json"):
             continue
@@ -178,6 +201,35 @@ func fold_problem(fold: Dictionary) -> String:
         m3 += "which this session has never had (its current one is %s)." % pins_sha256
         return m3
     return ""
+
+
+## The years a slider may offer over this session, or an EMPTY range.
+##
+## ⚠ THE RULE LIVES HERE RATHER THAN IN THE VIEW BECAUSE THE VIEW CANNOT BE
+## BUILT BY THE GATE. `ExplorerView` is a scene node that needs a tree and the
+## fetched dressing, so a span computed inside it is a span nothing asserts --
+## and the naive computation is wrong in a way no reader would notice by eye:
+## `(first_year, year)` INVERTS for an unstepped session, whose year is one
+## BELOW its first, giving a slider whose high end sits under its low end.
+##
+## An empty range means "this session offers no years"; the caller then uses its
+## own committed span, because the committed city is what is on screen.
+func slider_span() -> Vector2i:
+    if not has_span():
+        return Vector2i.ZERO
+    return Vector2i(first_year, year)
+
+
+## True when this session has years a slider can offer at all.
+##
+## ⚠ THE PREDICATE IS THE SIGNAL, NOT THE VALUE. `slider_span` has to say
+## "none" somehow, and the first cut of this row said it with `Vector2i.ZERO`
+## alone -- a sentinel that reads as data, so a caller skipping the check would
+## draw a slider from 0 to 0 and believe it. Emptiness is a question about the
+## session, so it is asked of the session; the zero stays only as the harmless
+## answer to a question nobody should be asking of the range itself.
+func has_span() -> bool:
+    return is_present() and not unstepped
 
 
 ## The years this session has folds for, ascending.

@@ -129,6 +129,9 @@ func _initialize() -> void:
     _run(test_the_panel_shows_the_ledgers_count_and_computes_none_of_its_own, "test_the_panel_shows_the_ledgers_count_and_computes_none_of_its_own")
     _run(test_the_panel_draws_only_fields_it_names, "test_the_panel_draws_only_fields_it_names")
     _run(test_every_name_the_recorded_session_contributes_is_ruled_on_the_allow_side, "test_every_name_the_recorded_session_contributes_is_ruled_on_the_allow_side")
+    _run(test_a_session_created_and_never_advanced_opens_rather_than_being_refused, "test_a_session_created_and_never_advanced_opens_rather_than_being_refused")
+    _run(test_the_span_of_an_unstepped_session_is_empty_rather_than_inverted, "test_the_span_of_an_unstepped_session_is_empty_rather_than_inverted")
+    _run(test_a_year_genuinely_outside_the_arc_is_still_refused, "test_a_year_genuinely_outside_the_arc_is_still_refused")
     _run(test_a_commands_sequence_number_is_one_above_both_directories, "test_a_commands_sequence_number_is_one_above_both_directories")
     _run(test_a_command_is_written_atomically_and_carries_its_verb_in_the_body, "test_a_command_is_written_atomically_and_carries_its_verb_in_the_body")
     _run(test_a_priced_answer_is_told_apart_from_a_refusal_and_from_a_done_command, "test_a_priced_answer_is_told_apart_from_a_refusal_and_from_a_done_command")
@@ -282,6 +285,8 @@ func _initialize() -> void:
     _run(test_the_instrument_repeats_and_recovers_a_known_exponent, "test_the_instrument_repeats_and_recovers_a_known_exponent")
     _run(test_walk_mode_is_shut_for_986s_reasons_and_itemises_which, "test_walk_mode_is_shut_for_986s_reasons_and_itemises_which")
     _run(test_the_strata_are_the_membership_functions_on_real_ground, "test_the_strata_are_the_membership_functions_on_real_ground")
+    # LAST ON PURPOSE: it reads what every `_run` above recorded.
+    _run(test_every_test_function_is_registered_with_the_runner, "test_every_test_function_is_registered_with_the_runner")
     stage_the_main_scene()
 
 
@@ -16926,6 +16931,10 @@ func test_a_float64_coordinate_survives_the_emission_bit_for_bit() -> void:
 
 const RECORDED_SESSION_DIR := "res://tests/session_fixture/recorded"
 
+## The state the owner's first launch met: created, never advanced.
+## See `tests/session_fixture/unstepped/README.md` for what it cost to learn.
+const UNSTEPPED_SESSION_DIR := "res://tests/session_fixture/unstepped"
+
 
 ## Every `.json` under the recorded session, at any depth.
 ##
@@ -17196,6 +17205,11 @@ func test_every_name_the_recorded_session_contributes_is_ruled_on_the_allow_side
     files, which is the way this check would actually fail.
     """
     var files := _recorded_session_files(RECORDED_SESSION_DIR)
+    # THE UNSTEPPED FIXTURE IS A DERIVATION SOURCE TOO. It was added after the
+    # recorded one and a walk rooted only at `recorded/` would have read none of
+    # it -- the same "the walk did not read it" failure this test's second half
+    # exists to catch, one directory up.
+    files.append_array(_recorded_session_files(UNSTEPPED_SESSION_DIR))
     check(files.size() >= 10,
             "the walk found %d json file(s) under the recorded session; the fixture has "
                     % files.size() + "eleven, so the walk is not reading it")
@@ -17230,6 +17244,141 @@ func test_every_name_the_recorded_session_contributes_is_ruled_on_the_allow_side
     check(without.has(witness.sha256_text()),
             "withdrawing `%s` did not make exactly its own digest derive, so the allow side "
                     % witness + "is not what permits these names")
+
+
+# --------------------------------------------------------------------------
+# The owner's first launch: a session created and never advanced (2026-11-19)
+# --------------------------------------------------------------------------
+
+
+## One session.json under `user://`, with `year` and `years` as given.
+##
+## WRITTEN RATHER THAN EDITED IN MEMORY, because `open_dir` reads a directory and
+## the guard under test is in that read. A doc mutated after loading would test a
+## path the owner's launch never takes.
+static func _session_doc_at(tag: String, year: int, years: Array) -> String:
+    var base := _scratch_session(tag)
+    var sha := "sha256:" + "a".repeat(64)
+    var doc := {
+        "what": "a session-shaped document written by the gate; not a session",
+        "name": "not-a-session",
+        "bound": "not-a-bound",
+        "dressing_id": "not-a-dressing",
+        "base_dressing_id": "not-a-dressing",
+        "master_seed": 1,
+        "start_pins": {"path": "not-a-path", "sha256": sha},
+        "pins_sha256": sha,
+        "year": year,
+        "years": years,
+        "finished": false,
+        "last_step_s": null,
+    }
+    var f := FileAccess.open(base + "/session.json", FileAccess.WRITE)
+    f.store_string(JSON.stringify(doc, " ", true, true) + "\n")
+    f.close()
+    return base
+
+
+func test_a_session_created_and_never_advanced_opens_rather_than_being_refused() -> void:
+    """THE REGRESSION, AND IT WAS THE OWNER'S FIRST LAUNCH THAT FOUND IT.
+
+    A session that has been created and not yet advanced carries `year` one
+    BELOW its arc's first year. That is the generator's own encoding -- its
+    `Session.year` returns the schedule's start less one while nothing has been
+    stepped, and `year` means *years less than or equal to this are built*,
+    which for an unstepped session must name none. This reader refused it as
+    "outside its own arc", so the owner's own session would not open.
+
+    WHY NO TEST CAUGHT IT, which is the part worth keeping: the recorded fixture
+    was authored from the schema and held only a STEPPED session, so every
+    assertion agreed with an assumption no assertion contained -- that a session
+    the owner opens has been advanced at least once. `unstepped/` is that
+    assumption's control, and this is the test that would have stopped it.
+    """
+    var s := SessionRead.open_dir(UNSTEPPED_SESSION_DIR)
+    check(s.problem == "", "the unstepped session was refused: %s" % s.problem)
+    check(s.is_present(), "the unstepped session read without a refusal but reports absent")
+    check(s.unstepped, "the session reports itself stepped, so nothing downstream can tell")
+    check(s.year == 1876 and s.first_year == 1877,
+            "the fixture read as year %d against first %d; the point of it is year == first - 1"
+                    % [s.year, s.first_year])
+    check(s.year == s.first_year - 1,
+            "the unstepped year is not the arc's first less one, so this fixture is not the state")
+    check(s.years_present().is_empty(),
+            "%d fold(s) were found for a session that has built nothing" % s.years_present().size())
+
+    # THE DIGESTS, AND WHY THEY ARE THE SAME ONE HERE. Nothing has moved the pin
+    # file, so the start digest IS the current one -- `recorded/` makes them
+    # differ on purpose and this one must not.
+    check(s.pins_sha256 == s.start_pins_sha256,
+            "the unstepped session's current digest differs from its start digest")
+    check(s.shas_had.size() == 1,
+            "%d digest(s) collected where the session has had exactly one" % s.shas_had.size())
+    check(s.shas_had.has(s.pins_sha256), "the one digest the session has had is not in the set")
+
+    # AND THE ABSENT COMMANDS DIRECTORY MUST NOT BE AN ERROR. This fixture has
+    # none; listing a path that is not there is an engine error, and the gate
+    # reads an engine error as a failure.
+    check(not DirAccess.dir_exists_absolute(UNSTEPPED_SESSION_DIR.path_join("commands/done")),
+            "the unstepped fixture grew a commands directory, so it no longer covers the absence")
+
+
+func test_the_span_of_an_unstepped_session_is_empty_rather_than_inverted() -> void:
+    """THE HALF A ONE-LINE FIX WOULD HAVE LEFT BEHIND.
+
+    The slider ran `(first_year, year)`. For an unstepped session that is
+    `(1877, 1876)` -- a high end BELOW its low end, an axis running backwards.
+    Opening the session without this would have replaced a refusal nobody wanted
+    with a slider nobody could read.
+
+    AND THE RULE SITS IN THE READER BECAUSE THE GATE CANNOT BUILD THE VIEW.
+    `ExplorerView` is a scene node needing a tree and the fetched dressing, so a
+    span computed inside it is a span nothing asserts -- a control that cannot
+    fail, which is the defect class this suite exists to refuse.
+    """
+    var un := SessionRead.open_dir(UNSTEPPED_SESSION_DIR)
+    check(not un.has_span(),
+            "an unstepped session says it has a span, so the view will ask for one")
+    check(un.slider_span() == Vector2i.ZERO,
+            "the range an unstepped session returns is %s, not the harmless zero: a caller "
+                    % str(un.slider_span()) + "that skipped `has_span` would get a drawable range")
+    check(un.first_year > un.year,
+            "the witness is gone: this fixture no longer has first_year above year, so the "
+                    + "naive span would not invert and this test proves nothing")
+
+    var rec := SessionRead.open_dir(RECORDED_SESSION_DIR)
+    var span := rec.slider_span()
+    check(rec.has_span(),
+            "the recorded session says it has no span, so the empty answer means nothing")
+    check(span == Vector2i(1877, 1879),
+            "the recorded session's span read as %s, not its [1877, 1879]" % str(span))
+    check(span.x <= span.y, "the recorded session's own span is inverted")
+
+
+func test_a_year_genuinely_outside_the_arc_is_still_refused() -> void:
+    """THE GUARD MUST STILL BITE, or the fix traded one defect for a worse one.
+
+    Accepting `first - 1` is accepting ONE state, not abandoning the check. A
+    year two below the arc, or any year above its last, is a file this client
+    cannot draw and must refuse by name -- the refusal is what tells the owner
+    their session and their clone disagree, rather than drawing some other
+    year's city under this one's label.
+    """
+    var ok := SessionRead.open_dir(_session_doc_at("unstepped-ok", 1876, [1877, 2039]))
+    check(ok.problem == "", "first - 1 was refused: %s" % ok.problem)
+    check(ok.unstepped, "first - 1 read as a stepped session")
+
+    var low := SessionRead.open_dir(_session_doc_at("unstepped-low", 1875, [1877, 2039]))
+    check(low.problem != "", "a year TWO below the arc was accepted")
+    check(not low.is_present(), "a year two below the arc reported present")
+
+    var high := SessionRead.open_dir(_session_doc_at("unstepped-high", 2040, [1877, 2039]))
+    check(high.problem != "", "a year above the arc's last was accepted")
+
+    var first := SessionRead.open_dir(_session_doc_at("unstepped-first", 1877, [1877, 2039]))
+    check(first.problem == "", "the arc's own first year was refused: %s" % first.problem)
+    check(not first.unstepped,
+            "the arc's first year read as unstepped; one advance has built it")
 
 
 # --------------------------------------------------------------------------
@@ -17986,3 +18135,66 @@ func test_a_rule_laid_route_is_not_mistaken_for_the_owners() -> void:
     # A route row with no `route` at all contributes nothing rather than "".
     check(SessionRead.ids_drawn_by_fold([], [{"by": "pin", "tiles": []}]).is_empty(),
             "a pin-laid row with no route id contributed an empty id to the match set")
+
+
+# --------------------------------------------------------------------------
+# The registry's own control (2026-11-19)
+# --------------------------------------------------------------------------
+
+
+func test_every_test_function_is_registered_with_the_runner() -> void:
+    """A TEST NOBODY RUNS IS NOT A TEST, AND THIS SUITE HAD NO WAY TO SAY SO.
+
+    Rows are registered by hand in `_init`. I wrote three tests for the
+    unstepped-session defect, gated, and got ALL GREEN over 7,973 checks --
+    with all three never called, because I had not added them to the list. The
+    run was green and the fix was unverified, which is worse than red.
+
+    WHAT GAVE IT AWAY WAS AN ARITHMETIC ACCIDENT, not a check: the count rose by
+    exactly one, and the one was a loop over the fixture's `.json` files picking
+    up the new fixture's single file. Three tests' worth of checks were missing
+    and nothing said so. Had I added a test with no new files, the count would
+    have been unchanged and I would have had no signal at all.
+
+    SO THE REGISTRY GETS A CONTROL. `get_method_list` is the engine's own answer
+    to what methods exist; `_per_test` is what actually ran. Anything in the
+    first and not the second is a test that was written and never called.
+
+    THIS TEST RUNS LAST and allows its own name, because `_run` records a row
+    only when the row returns -- so at this moment every name is recorded except
+    this one. The size assertion below is the negative control on that ordering:
+    registered first, it would see an empty `_per_test` and must fail.
+    """
+    var registered := {}
+    for n in _per_test:
+        registered[n] = true
+    check(registered.size() > 200,
+            "only %d row(s) had run when the registry's control ran; it is registered in the "
+                    % registered.size() + "wrong place and is reading an empty record")
+    check(not registered.has(_current_test),
+            "this test is already recorded, so allowing its own name below hides a real gap")
+    registered[_current_test] = true
+
+    # ONE EXEMPTION, NAMED RATHER THAN PATTERNED. The main scene's row runs from
+    # `_process`, after the staged frames, so it cannot have been recorded by
+    # the time this runs -- the frames have not happened yet. It is spelled out
+    # so that a second row of its kind has to be exempted deliberately, and the
+    # check below refuses a name that has stopped existing: an exemption for a
+    # method nobody has is an exemption that hides the next gap.
+    var staged := "test_the_main_scene_populated_itself"
+    var has_staged := false
+    for m in get_method_list():
+        if str(m.get("name", "")) == staged:
+            has_staged = true
+    check(has_staged,
+            "the one exempted row `%s` no longer exists, so the exemption is stale" % staged)
+    registered[staged] = true
+
+    var missing: Array = []
+    for m in get_method_list():
+        var n := str(m.get("name", ""))
+        if n.begins_with("test_") and not registered.has(n):
+            missing.append(n)
+    missing.sort()
+    check(missing.is_empty(),
+            "%d test function(s) exist and are never run: %s" % [missing.size(), str(missing)])

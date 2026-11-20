@@ -21,14 +21,18 @@ tree later, as field names with no value, on the rows that make them public
 prefixed `zz_` so that no reader can mistake one for a name that came from the
 simulation, and so that the planted name is visibly the test's own.
 
-**There are now two fixtures here with different jobs, and the distinction is
-load-bearing** — see `recorded/README.md`. The `zz_`
-rule above is this directory's; it is not `recorded/`'s, and it could not be.
+**There are now THREE fixtures here with different jobs, and the distinction is
+load-bearing** — see `recorded/README.md` and `unstepped/README.md`. The `zz_`
+rule above is this directory's; it is neither of theirs, and it could not be.
 
-**AND THIS FILE MAY NOT DESCRIBE THE OTHER ONE**, which is why the account of
-it lives there rather than here. Spelling the other fixture's field names in
-this file would lapse THIS file's exemption, and it would then be refused for
-naming the planted key above — which is its job. That happened on the first cut
+The third was added on 2026-11-19 because the second one could not fail: it held
+only a session that had been stepped, and the owner's first launch met one that
+had not. Its own README says what that cost.
+
+**AND THIS FILE MAY NOT DESCRIBE THE OTHER TWO**, which is why each account
+lives with its own fixture rather than here. Spelling either fixture's field
+names in this file would lapse THIS file's exemption, and it would then be
+refused for naming the planted key above — which is its job. That happened on the first cut
 of this split, and the scan named it.
 
 **The values are shaped like a session's and mean nothing.** A year, a count, a

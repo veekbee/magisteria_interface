@@ -40,7 +40,7 @@
     "start_pins": {"path": "string", "sha256": "string"},
     "emission": {"base_dressing": "string", "schedule_plan_digest": "string"},
     "pins_sha256": "string",
-    "year": "integer -- years less than or equal to this are built",
+    "year": "integer -- years less than or equal to this are built, AND IT IS THE ARC'S FIRST LESS ONE BEFORE THE FIRST ADVANCE: a session that has built nothing must name no years, so a reader demanding `year` inside `years` refuses a correctly written session (it did, at the owner's first launch, 2026-11-19)",
     "years": "[integer, integer] -- the arc's first and last year, not the stepped range",
     "finished": "boolean",
     "last_step_s": "number|null",

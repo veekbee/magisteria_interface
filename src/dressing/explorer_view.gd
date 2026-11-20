@@ -212,6 +212,20 @@ func _open_session() -> void:
                 + "another's centres would place a city that never existed.")\
                 % [_session.base_dressing_id, want]
         return
+    # ⚠ AN UNSTEPPED SESSION HAS NO CITY OF ITS OWN, AND THAT IS NOT A FAULT.
+    # Its year is the arc's first less one, there is no `year_<Y>/` yet, and so
+    # there is no fold, no stats and nothing of this session's to draw. The
+    # committed city STAYS ON SCREEN -- the header's asymmetry: the dressing's
+    # bindings gate the drawing, a panel is a readout beside it. And `_year` is
+    # left where it is on purpose: no city exists at the session's year, here or
+    # anywhere, so moving the view to it would show an empty map and call it the
+    # session's.
+    if _session.unstepped:
+        _panel = ["session %s" % _session.session_name,
+                "not advanced yet, so nothing is built.",
+                "the arc starts at %d; press `a` to build it." % _session.first_year]
+        _load_session_pins()
+        return
     _year = _session.year
     var stats := _session.stats_of(_session.year)
     var built := StatsPanel.of(stats)
@@ -276,11 +290,20 @@ func _manifest_field(name: String) -> String:
 ## current year and grows as the owner advances -- and SHRINKS after a rewind,
 ## which deletes the year directories above its target.
 func _span_lo() -> int:
-    return _session.first_year if _session != null and _session.is_present() else LO
+    if _session == null or not _session.has_span():
+        return LO
+    return _session.slider_span().x
 
 
+## ⚠ AN UNSTEPPED SESSION HAS NO SPAN AT ALL, and the obvious code returns its
+## year -- which is the arc's first LESS ONE, so the slider's high end would sit
+## BELOW its low end and the axis would run backwards. Both ends therefore fall
+## back to the committed span together, which is the city actually on screen in
+## that state; splitting them would label a committed city with a session's arc.
 func _span_hi() -> int:
-    return _session.year if _session != null and _session.is_present() else HI
+    if _session == null or not _session.has_span():
+        return HI
+    return _session.slider_span().y
 
 
 ## The eras and their first years, for the slider's ticks. A year carrying two

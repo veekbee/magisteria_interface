@@ -27,6 +27,13 @@ and the first place a disagreement between the schema and `play_dressing.py`
 can appear. The manager has that check recorded against the first integration
 rather than dropped.
 
+**THAT BILL ARRIVED ON 2026-11-19, AND THIS PARAGRAPH WAS RIGHT ABOUT THE
+MECHANISM AND WRONG ABOUT NOTHING EXCEPT WHICH HALF WOULD BREAK FIRST.** The
+owner's first launch met a session that had been created and never advanced, and
+the reader refused it: this fixture holds a STEPPED session, so every test here
+agreed with an assumption no test contained. See `../unstepped/README.md`, which
+is that assumption's control.
+
 ## Why its names are not `zz_`-prefixed, and what happens because of that
 
 They cannot be. The reader is built to read `built_tiles`, `capacity_less_occupancy`
